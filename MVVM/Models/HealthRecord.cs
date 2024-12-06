@@ -19,36 +19,24 @@ namespace ACS_View.MVVM.Models
         public bool HasMentalIllness { get; set; }
         public bool IsSmoker { get; set; }
         public bool HasCancer { get; set; }
-        public bool IsOld => VerificarIdade60AnosOuMais(BirthDate);
-        public bool IsBaby => VerificarIdadeMenor2Anos(BirthDate);
+        public bool IsOld => GetAge(BirthDate) >= 60;
+        public bool IsBaby => GetAge(BirthDate) < 2;
         public bool HasDisabilities { get; set; }
         public string? Observacao { get; set; }
         public bool HasObs { get; set; }
 
-        static bool VerificarIdade60AnosOuMais(DateTime dataNascimento)
+        static int GetAge(DateTime birthDate)
         {
-            DateTime hoje = DateTime.Today;
-            int idade = hoje.Year - dataNascimento.Year;
+            DateTime today = DateTime.Today;
 
-            if (hoje.Month < dataNascimento.Month || (hoje.Month == dataNascimento.Month && hoje.Day < dataNascimento.Day))
+            var age = DateTime.Today.Year - birthDate.Year;
+
+            if (DateTime.Today.Month < birthDate.Month || (DateTime.Today.Month == birthDate.Month && DateTime.Today.Day < birthDate.Day))
             {
-                idade--;
+                age--;
             }
 
-            return idade >= 60;
-        }
-
-        static bool VerificarIdadeMenor2Anos(DateTime dataNascimento)
-        {
-            DateTime hoje = DateTime.Today;
-            int idade = hoje.Year - dataNascimento.Year;
-
-            if (hoje.Month < dataNascimento.Month || (hoje.Month == dataNascimento.Month && hoje.Day < dataNascimento.Day))
-            {
-                idade--;
-            }
-
-            return idade < 2;
+            return age;
         }
     }
 }

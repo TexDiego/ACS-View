@@ -8,17 +8,6 @@ namespace ACS_View.MVVM.ViewModel
     {
         private readonly HealthRecordService _healthRecordService;
 
-        private ObservableCollection<HealthRecord> _pessoasCom60AnosOuMais;
-        public ObservableCollection<HealthRecord> PessoasCom60AnosOuMais
-        {
-            get => _pessoasCom60AnosOuMais;
-            set
-            {
-                _pessoasCom60AnosOuMais = value;
-                OnPropertyChanged();
-            }
-        }
-
         private int _totalGestantes;
         public int TotalGestantes
         {

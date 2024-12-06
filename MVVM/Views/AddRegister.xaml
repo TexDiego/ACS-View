@@ -75,6 +75,7 @@
                             Margin="0,0,20,0"
                             MaxLength="70"
                             Keyboard="Text"
+                            TextChanged="Entry_Name_TextChanged"
                             Text="{Binding Nome}"/>
 
                     </Grid>
@@ -105,6 +106,7 @@
                             Margin="0,0,20,0"
                             MaxLength="15"
                             Keyboard="Numeric"
+                            TextChanged="Entry_Sus_TextChanged"
                             Text="{Binding NumeroSUS}"/>
 
                     </Grid>

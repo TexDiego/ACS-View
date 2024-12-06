@@ -1,6 +1,8 @@
 using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ACS_View.MVVM.Views;
 
@@ -127,6 +129,55 @@ public partial class AddRegister : ContentPage
         catch (Exception ex)
         {
             await DisplayAlert("Erro inesperado", ex.TargetSite.ToString(), "Voltar");
+        }
+    }
+
+    private bool isTextChanging = false; // Flag para evitar loops no evento TextChanged
+
+    private async void Entry_Name_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (isTextChanging) return;
+
+        try
+        {
+            // Define a flag para evitar loops
+            isTextChanging = true;
+
+            // Remove múltiplos espaços consecutivos
+            var correctedText = Regex.Replace(e.NewTextValue ?? string.Empty, @"\s+", " ");
+
+            // Remove caracteres inválidos (apenas letras e espaços permitidos)
+            correctedText = Regex.Replace(correctedText, @"[^a-zA-Z\s]", string.Empty);
+
+            // Garante que não haja espaço inicial
+            correctedText = correctedText.TrimStart();
+
+            // Atualiza o texto apenas se houve alteração
+            if (correctedText != e.NewTextValue)
+            {
+                ((Entry)sender).Text = correctedText;
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro na inserção de um ou mais caracteres inválidos", ex.Message, "Voltar");
+        }
+        finally
+        {
+            // Reseta a flag
+            isTextChanging = false;
+        }
+    }
+
+    private void Entry_Sus_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Regex para permitir apenas números
+        var regex = new Regex("^[0-9]*$");
+
+        if (!string.IsNullOrEmpty(e.NewTextValue) && !regex.IsMatch(e.NewTextValue))
+        {
+            // Reverte para o texto anterior caso contenha caracteres inválidos
+            ((Entry)sender).Text = e.OldTextValue;
         }
     }
 }

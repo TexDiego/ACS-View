@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             xmlns:local="clr-namespace:ACS_View.MVVM.Models"
+             x:Class="ACS_View.MVVM.Views.Registers"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:RegistersViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Style x:Key="buttons" TargetType="Button">
+            <Setter Property="BorderColor" Value="#C93919"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="BackgroundColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Margin" Value="20,10,20,0"/>
+            <Setter Property="MaximumHeightRequest" Value="60"/>
+        </Style>
+        <Style x:Key="Lbl_Datas" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Start"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+        </Style>
+
+        <ResourceDictionary>
+            <local:SUSFormatConverter x:Key="SUSFormatConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="auto,*,auto">
+
+        <VerticalStackLayout
+            Grid.Row="0"
+            VerticalOptions="Start">
+            
+            <Label
+                x:Name="Lbl_Title"
+                TextColor="#0084B1"
+                Text="Cadastros"
+                Margin="30"
+                FontSize="30"
+                FontAttributes="Bold" 
+                HorizontalOptions="Center"
+                LineBreakMode="WordWrap"
+                VerticalTextAlignment="Center"
+                HorizontalTextAlignment="Center"/>
+
+            <Border
+                Margin="20"
+                Stroke="#C93919"
+                StrokeThickness="2"
+                StrokeShape="RoundRectangle 15"
+                Padding="0">
+
+                <SearchBar
+                    x:Name="SB"
+                    Placeholder="Pesquisar"
+                    TextColor="#0084B1"
+                    FontSize="20"
+                    MaxLength="30"
+                    CancelButtonColor="#0084B1"
+                    IsSpellCheckEnabled="True"
+                    BackgroundColor="White"
+                    TextChanged="SB_TextChanged"/>
+
+            </Border>
+
+        </VerticalStackLayout>
+        
+        <CollectionView
+            Grid.Row="1"
+            x:Name="collectionView"
+            ItemsSource="{Binding Person}"
+            SelectionMode="None"
+            CanReorderItems="False"
+            BackgroundColor="Transparent"
+            CanMixGroups="False"
+            Margin="20,0">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border
+                            Margin="0,5"
+                            StrokeShape="RoundRectangle 15"
+                            StrokeThickness="2"
+                            Stroke="#C93919">
+
+                        <Grid
+                                RowDefinitions="*,*,*,*"
+                                ColumnDefinitions="5*,*,*"
+                                BackgroundColor="White"
+                                Padding="5">
+
+                            <Label
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="{Binding Nome}"
+                                    FontAttributes="Bold"
+                                    FontSize="20"
+                                    LineBreakMode="CharacterWrap"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                            <VerticalStackLayout
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,5,0,0">
+
+                                <Label
+                                    Text="{Binding Nascimento, StringFormat='{0:dd/MM/yyyy}'}"
+                                    FontAttributes="None"
+                                    FontSize="18"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                                <Label
+                                    Text="{Binding Idade}"
+                                    FontSize="18"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                            </VerticalStackLayout>
+                            
+                            <ImageButton
+                                    x:Name="Btn_Edit"
+                                    Source="pencil.png"
+                                    Grid.Column="1"
+                                    Grid.RowSpan="4"
+                                    WidthRequest="25"
+                                    HeightRequest="25"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding Sus}"/>
+
+                            <Label
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Text="{Binding Sus, Converter={StaticResource SUSFormatConverter}}"
+                                    FontSize="18"
+                                    LineBreakMode="NoWrap"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                            <Label
+                                x:Name="Lbl_Obs"
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                FontSize="18"
+                                Margin="10,5"
+                                IsVisible="{Binding HasObs}"
+                                Style="{StaticResource Lbl_Datas}"
+                                Text="{Binding Observacao}"/>
+
+                            <ImageButton
+                                    x:Name="Btn_Delete"
+                                    Source="bin.png"
+                                    Grid.Column="2"
+                                    Grid.RowSpan="4"
+                                    HeightRequest="25"
+                                    WidthRequest="25"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding Sus}"/>
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+        <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20">
+
+            <Button
+                x:Name="Btn_AddRegister"
+                Style="{StaticResource buttons}"
+                Text="Adicionar Cadastro"
+                Clicked="Btn_AddRegister_Clicked"/>
+
+            <Button
+                x:Name="Btn_RegistersGoBack"
+                Style="{StaticResource buttons}"
+                Text="Voltar"
+                Clicked="Btn_RegistersGoBack_Clicked"/>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

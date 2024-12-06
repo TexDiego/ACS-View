@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             x:Class="ACS_View.MVVM.Views.NotesPage"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:NotesPageViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Style TargetType="Button">
+            <Setter Property="HeightRequest" Value="50"/>
+            <Setter Property="BorderColor" Value="#C93919"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="BackgroundColor" Value="#0084B1"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid
+        RowDefinitions="auto,*,auto"
+        ColumnDefinitions="*">
+
+        <VerticalStackLayout Grid.Row="0">
+            <Label
+                Text="Anotações"
+                Margin="30"
+                FontSize="30"
+                FontAttributes="Bold"
+                TextColor="#0084B1"
+                HorizontalOptions="Center"/>
+
+            <Border
+                Margin="20,20,20,0"
+                StrokeShape="RoundRectangle 15"
+                StrokeThickness="2"
+                Stroke="#C93919"
+                Padding="5"
+                BackgroundColor="White">
+
+                <Editor
+                    x:Name="NotesContent"
+                    Text="{Binding Content, Mode=TwoWay}"
+                    HorizontalTextAlignment="Start"
+                    VerticalTextAlignment="Start"
+                    MaxLength="500"
+                    TextColor="#0084B1"
+                    BackgroundColor="Transparent"
+                    MinimumHeightRequest="100"
+                    MaximumHeightRequest="150"/>
+            </Border>
+
+            <Button
+                x:Name="Btn_SaveNote"
+                Text="Adicionar Anotação"
+                Margin="20,10,20,20"
+                Clicked="Btn_SaveNote_Clicked"
+                Command="{Binding SalvarNota}"/>
+        </VerticalStackLayout>
+
+        <CollectionView
+            Grid.Row="1"
+            x:Name="NotesCollectionView"
+            ItemsSource="{Binding Notes}"
+            Margin="20,0">
+            
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border
+                        Margin="0,5"
+                        StrokeShape="RoundRectangle 15"
+                        StrokeThickness="2"
+                        Stroke="#C93919">
+                        
+                        <Grid
+                            ColumnDefinitions="*,auto"
+                            Padding="10"
+                            BackgroundColor="White">
+                            
+                            <VerticalStackLayout Grid.Column="0">
+                                
+                                <Label
+                                    Text="{Binding Content}"
+                                    FontAttributes="Bold"
+                                    FontSize="20"
+                                    TextColor="#0084B1"/>
+
+                                <HorizontalStackLayout Margin="0,10,0,0">
+
+                                    <Label
+                                        Text="Criado em: "
+                                        FontSize="14"
+                                        VerticalTextAlignment="Center"
+                                        TextColor="#C93919"/>
+
+                                    <Label
+                                        Text="{Binding CreationDate, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
+                                        FontSize="14"
+                                        VerticalTextAlignment="Center"
+                                        TextColor="#0084B1"/>
+                                    
+                                </HorizontalStackLayout>                             
+                                
+                            </VerticalStackLayout>
+                            
+                            <ImageButton
+                                Grid.Column="1"
+                                Source="bin.png"
+                                Margin="0,0,5,0"
+                                MaximumHeightRequest="35"
+                                MaximumWidthRequest="35"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                CommandParameter="{Binding Id}"
+                                HorizontalOptions="End"
+                                VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button
+            Margin="20"
+            x:Name="Btn_Back"
+            Grid.Row="2"
+            Text="Voltar"
+            Clicked="Btn_Back_Clicked"/>
+    </Grid>
+</ContentPage>

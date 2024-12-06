@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             x:Class="ACS_View.MVVM.Views.AddRegister"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:AddRegisterViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Style x:Key="buttons" TargetType="Button">
+            <Setter Property="BorderColor" Value="#C93919"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="BackgroundColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Margin" Value="20,5,20,5"/>
+            <Setter Property="MaximumHeightRequest" Value="60"/>
+        </Style>
+        <Style x:Key="labels" TargetType="Label">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="30,5"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Color" Value="#C93919"/>
+            <Setter Property="HorizontalOptions" Value="End"/>
+        </Style>
+    </ContentPage.Resources>
+
+
+    <Grid RowDefinitions="auto,*,auto">
+
+        <Label
+                Grid.Row="0"
+                Text="Cadastrar"
+                Margin="30"
+                FontSize="30"
+                FontAttributes="Bold"
+                TextColor="#0084B1"
+                VerticalOptions="Start" 
+                HorizontalOptions="Center"/>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout>
+
+                <Border
+                    Margin="20,0"
+                    Stroke="#C93919"
+                    StrokeShape="RoundRectangle 15"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="Nome:"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            x:Name="Entry_Name"
+                            TextColor="#0084B1"
+                            VerticalOptions="Center"
+                            FontSize="18"
+                            Margin="0,0,20,0"
+                            MaxLength="70"
+                            Keyboard="Text"
+                            Text="{Binding Nome}"/>
+
+                    </Grid>
+                </Border>
+
+                <Border
+                    Margin="20,10"
+                    Stroke="#C93919"
+                    StrokeShape="RoundRectangle 15"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="SUS:"/>
+
+                        <Entry
+                            x:Name="Entry_Sus"
+                            Grid.Column="1"
+                            TextColor="#0084B1"
+                            VerticalOptions="Center"
+                            FontSize="18"
+                            Margin="0,0,20,0"
+                            MaxLength="15"
+                            Keyboard="Numeric"
+                            Text="{Binding NumeroSUS}"/>
+
+                    </Grid>
+                </Border>
+
+
+
+                <Border
+                    Margin="20,0"
+                    Stroke="#C93919"
+                    StrokeShape="RoundRectangle 15"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                             Grid.Column="0"
+                             Style="{StaticResource labels}"
+                             Margin="20,10,10,10"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Start"
+                            Text="DN:"/>
+
+                        <DatePicker
+                            x:Name="Entry_Birth"
+                            Grid.Column="1"
+                            TextColor="#0084B1"
+                            VerticalOptions="Center"
+                            FontSize="18"
+                            Margin="0,0,20,0"
+                            Date="{Binding Nascimento}">
+
+                        </DatePicker>
+
+                    </Grid>
+                </Border>
+
+                <Border
+                    Margin="20,10,20,0"
+                    Stroke="#C93919"
+                    StrokeShape="RoundRectangle 15"
+                    BackgroundColor="White">
+
+                    <Grid RowDefinitions="auto,*">
+                        
+                        <Label
+                            Grid.Row="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,0,5"
+                            Text="Observação"/>
+                        
+                        <Editor
+                            Grid.Row="1"
+                            Margin="20,0"
+                            x:Name="Entry_Obs"
+                            TextColor="#0084B1"
+                            FontSize="18"
+                            MaxLength="200"
+                            AutoSize="TextChanges"
+                            Text="{Binding Observacao}"/>
+                        
+                    </Grid>
+
+                    
+
+                </Border>
+
+
+                <Grid
+                    Margin="0,20,30,0"
+                    ColumnDefinitions="2*,*"
+                    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*"
+                    RowSpacing="5">
+
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Gestante"/>
+
+                    <CheckBox 
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        x:Name="CB_Gestante"
+                        IsChecked="{Binding Gestante}"/>
+
+                    <Label
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Diabetes"/>
+
+                    <CheckBox
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        x:Name="CB_DB"
+                        IsChecked="{Binding Diabetes}"/>
+
+                    <Label
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Hipertensão"/>
+
+                    <CheckBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        x:Name="CB_HAS"
+                        IsChecked="{Binding Hipertensao}"/>
+
+                    <Label
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Tuberculose"/>
+
+                    <CheckBox
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        x:Name="CB_TB"
+                        IsChecked="{Binding Tuberculose}"/>
+
+                    <Label
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Hanseníase"/>
+
+                    <CheckBox
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        x:Name="CB_HAN"
+                        IsChecked="{Binding Hanseniase}"/>
+
+                    <Label
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Acamado"/>
+
+                    <CheckBox
+                        Grid.Row="5"
+                        Grid.Column="1"
+                        x:Name="CB_Acamado"
+                        IsChecked="{Binding Acamado}"/>
+
+                    <Label
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Domiciliado"/>
+
+                    <CheckBox
+                        Grid.Row="6"
+                        Grid.Column="1"
+                        x:Name="CB_Domiciliado"
+                        IsChecked="{Binding Domiciliado}"/>
+
+                    <Label
+                        Grid.Row="7"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Condição mental"/>
+
+                    <CheckBox
+                        Grid.Row="7"
+                        Grid.Column="1"
+                        x:Name="CB_Mental"
+                        IsChecked="{Binding Mental}"/>
+
+                    <Label
+                        Grid.Row="8"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Fumante"/>
+
+                    <CheckBox
+                        Grid.Row="8"
+                        Grid.Column="1"
+                        x:Name="CB_Smoker"
+                        IsChecked="{Binding Fumante}"/>
+
+                    <Label
+                        Grid.Row="9"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Deficiência"/>
+
+                    <CheckBox
+                        Grid.Row="9"
+                        Grid.Column="1"
+                        x:Name="CB_Disability"
+                        IsChecked="{Binding Deficiente}"/>
+
+                    <Label
+                        Grid.Row="10"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Câncer"/>
+
+                    <CheckBox
+                        Grid.Row="10"
+                        Grid.Column="1"
+                        x:Name="CB_Cancer"
+                        IsChecked="{Binding Cancer}"/>
+
+                </Grid>
+
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout
+                Grid.Row="2"
+                Margin="0,20">
+
+            <Button
+                    Style="{StaticResource buttons}"
+                    Text="Salvar"
+                    Clicked="Button_Clicked"/>
+
+            <Grid>
+
+                <Button
+                        x:Name="Btn_AddGoBack"
+                        Style="{StaticResource buttons}"
+                        Text="Voltar"
+                        Clicked="Btn_AddGoBack_Clicked"/>
+
+                <ActivityIndicator
+                        IsRunning="{Binding IsLoading}"
+                        Color="#C93919"
+                        BackgroundColor="Transparent"
+                        MaximumHeightRequest="30"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"/>
+
+            </Grid>
+
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,684 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             x:Class="ACS_View.MVVM.Views.OverallView"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:OverallViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        
+        <Style x:Key="infos" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+        </Style>
+        
+        <Style x:Key="borders" TargetType="Border">
+            <Setter Property="Stroke" Value="#C93919"/>
+            <Setter Property="StrokeShape" Value="RoundRectangle 15"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BackgroundColor" Value="White"/>
+        </Style>
+
+        <Style x:Key="buttons" TargetType="Button">
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style x:Key="buttons2" TargetType="Button">
+            <Setter Property="BorderColor" Value="#C93919"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="BackgroundColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Margin" Value="20,5,20,5"/>
+            <Setter Property="MaximumHeightRequest" Value="60"/>
+        </Style>
+        
+    </ContentPage.Resources>
+    
+    <Grid RowDefinitions="auto,*,auto">
+
+
+        <Label 
+                Grid.Row="0"
+                Text="Visão Geral"
+                Margin="20"
+                FontAttributes="Bold"
+                TextColor="#0084B1"
+                FontSize="30"
+                HorizontalOptions="Center"/>
+
+        <ScrollView Grid.Row="1">
+            <Grid
+                ColumnDefinitions="*,*"
+                RowDefinitions="*,*,*,*,*,*,*,*"
+                Margin="20,0,20,20"
+                RowSpacing="10"
+                ColumnSpacing="10">
+
+                <Border 
+                    Grid.ColumnSpan="2"
+                    Grid.Row="0"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="TOTAL"/>
+
+                        <Label
+                            x:Name="Lbl_Total"
+                            Style="{StaticResource infos}"
+                            Text="{Binding Total}"/>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AITotal"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Total"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    Clicked="Btn_Total_Clicked"/>
+
+                <Border 
+                    Grid.Column="0"
+                    Grid.Row="1"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="GESTANTES"/>
+
+                        <Label
+                            x:Name="Lbl_Gestantes"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalGestantes}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIGestantes"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_Gestantes"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Clicked="Btn_Gestantes_Clicked"/>
+
+                    <Border 
+                        Grid.Column="0"
+                        Grid.Row="2"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="HAS"/>
+
+                            <Label
+                            x:Name="Lbl_HAS"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalHipertensos}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIHAS"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_HAS"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Clicked="Btn_HAS_Clicked"/>
+
+                    <Border 
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="DB"/>
+
+                            <Label
+                            x:Name="Lbl_DB"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalDiabeticos}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIDB"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_DB"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Clicked="Btn_DB_Clicked"/>
+
+                    <Border 
+                        Grid.Column="1"
+                        Grid.Row="2"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="HAS + DB"/>
+
+                            <Label
+                            x:Name="Lbl_HASDB"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalDiabetesHipertensao}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIHASDB"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_HASDB"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Clicked="Btn_HASDB_Clicked"/>
+
+                    <Border 
+                        Grid.Column="0"
+                        Grid.Row="3"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="HAN"/>
+
+                            <Label
+                            x:Name="Lbl_HAN"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalHanseniase}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIHAN"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_HAN"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Clicked="Btn_HAN_Clicked"/>
+
+                    <Border 
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="TB"/>
+
+                            <Label
+                            x:Name="Lbl_TB"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalTuberculose}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AITB"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_TB"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Clicked="Btn_TB_Clicked"/>
+
+                    <Border 
+                        Grid.Column="0"
+                        Grid.Row="4"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="ACAMADOS"/>
+
+                            <Label
+                            x:Name="Lbl_Acamados"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalDomiciliados}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIDOM"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_Acamados"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Clicked="Btn_Acamados_Clicked"/>
+
+                    <Border 
+                        Grid.Column="1"
+                        Grid.Row="4"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="DOMICILIADOS"/>
+
+                            <Label
+                            x:Name="Lbl_Domiciliados"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalAcamados}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIACA"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_Domiciliados"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        Clicked="Btn_Domiciliados_Clicked"/>
+
+                    <Border
+                        Grid.Column="0"
+                        Grid.Row="5"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="MENOR DE 2 ANOS"/>
+
+                            <Label
+                            x:Name="Lbl_Menor2Anos"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalMenores2Anos}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIMENOR"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_Menor2Anos"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Clicked="Btn_Menor2Anos_Clicked"/>
+
+                    <Border
+                        Grid.Column="1"
+                        Grid.Row="5"
+                        Style="{StaticResource borders}">
+
+                        <VerticalStackLayout>
+
+                            <Label
+                            Style="{StaticResource infos}"
+                            Text="CONDIÇÃO MENTAL"/>
+
+                            <Label
+                            x:Name="Lbl_Mental"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalMental}"/>
+
+                        </VerticalStackLayout>
+
+                    </Border>
+
+                    <ActivityIndicator
+                        x:Name="AIMENTAL"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        MaximumHeightRequest="40"
+                        MaximumWidthRequest="40"
+                        IsVisible="False"
+                        Color="#C93919"
+                        Grid.Row="5"
+                        Grid.Column="1"
+                        IsRunning="{Binding IsLoading}"/>
+
+                    <Button
+                        x:Name="Btn_Mental"
+                        Style="{StaticResource buttons}"
+                        Grid.Row="5"
+                        Grid.Column="1"
+                        Clicked="Btn_Mental_Clicked"/>
+
+                <Border
+                    Grid.Column="0"
+                    Grid.Row="6"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                                Style="{StaticResource infos}"
+                                Text="FUMANTE"/>
+
+                        <Label
+                            x:Name="Lbl_Fumante"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalFumante}"/>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIFUMANTE"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Fumante"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    Clicked="Btn_Fumante_Clicked"/>
+
+                <Border
+                    Grid.Column="1"
+                    Grid.Row="6"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="DEFICIENTE"/>
+
+                        <Label
+                            x:Name="Lbl_Deficiente"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalDeficiente}"/>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIDEFICIENTE"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Deficiente"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    Clicked="Btn_Deficiente_Clicked"/>
+
+                <Border
+                    Grid.Column="0"
+                    Grid.Row="7"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="CANCER"/>
+
+                        <Label
+                            x:Name="Lbl_Cancer"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalCancer}"/>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AICANCER"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="7"
+                    Grid.Column="0"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Cancer"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="7"
+                    Grid.Column="0"
+                    Clicked="Btn_Cancer_Clicked"/>
+
+                <Border
+                    Grid.Column="1"
+                    Grid.Row="7"
+                    Style="{StaticResource borders}">
+
+                    <VerticalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="IDOSO"/>
+
+                        <Label
+                            x:Name="Lbl_Idoso"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalOld}"/>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIOLD"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="7"
+                    Grid.Column="1"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Old"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="7"
+                    Grid.Column="1"
+                    Clicked="Btn_Old_Clicked"/>
+
+            </Grid>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" Margin="0,0,0,20">
+
+            <Button
+                    x:Name="Btn_OverallAdd"
+                    Style="{StaticResource buttons2}"
+                    Text="Adicionar Cadastro"
+                    Clicked="Btn_OverallAdd_Clicked"/>
+
+            <Button
+                    x:Name="Btn_Notes"
+                    Style="{StaticResource buttons2}"
+                    Text="Anotações"
+                    Clicked="Btn_Notes_Clicked"/>
+
+            <Button
+                    x:Name="Btn_OverallViewExit"
+                    Grid.Row="3"
+                    Style="{StaticResource buttons2}"
+                    Text="Sair"
+                    VerticalOptions="End"
+                    Clicked="Btn_OverallViewExit_Clicked"/>
+
+        </VerticalStackLayout>
+
+    </Grid>
+            
+</ContentPage>

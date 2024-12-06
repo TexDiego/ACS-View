@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.MVVM.Views.LoginPage"
+             BackgroundColor="#E6EBED"
+             NavigationPage.HasNavigationBar="False">
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="Margin" Value="20,30,20,0"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="TextColor" Value="#C93919"/>
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="MinimumWidthRequest" Value="250"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            <Setter Property="VerticalTextAlignment" Value="Center"/>
+        </Style>
+    </ContentPage.Resources>
+    
+    <VerticalStackLayout
+        Margin="20">
+
+        <Image
+            Margin="20,50,20,150"/>
+
+        <Border
+            Stroke="#C93919"
+            BackgroundColor="White"
+            Padding="10"
+            StrokeShape="RoundRectangle 30"
+            StrokeThickness="2">
+
+            <VerticalStackLayout>
+
+                <Label 
+                    Text="LOGIN"/>
+
+                <Entry/>
+
+                <Label 
+                    Text="SENHA"/>
+
+                <Entry
+                    IsPassword="True"/>
+
+                <Button
+                    x:Name="Btn_Login"
+                    Text="Entrar"
+                    Margin="20,20,20,0"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    BackgroundColor="#0084B1"
+                    BorderColor="#C93919"
+                    BorderWidth="2"
+                    CornerRadius="15"
+                    Clicked="Btn_Login_Clicked"/>
+
+                <Button
+                    Text="Esqueci minha senha"
+                    BackgroundColor="Transparent"
+                    TextColor="#0084B1"
+                    HorizontalOptions="End"
+                    Margin="0,5,20,0"
+                    Clicked="Button_Clicked"/>
+            </VerticalStackLayout>
+        </Border>
+
+    </VerticalStackLayout>
+</ContentPage>

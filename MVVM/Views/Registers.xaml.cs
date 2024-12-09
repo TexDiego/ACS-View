@@ -57,10 +57,6 @@ public partial class Registers : ContentPage
     {
         base.OnAppearing();
 
-        SB.Text = string.Empty;
-        _filter = "Nome";
-        _order = "Crescente";
-
         try
         {
             _addRegisterViewModel.IsLoading = true;
@@ -142,6 +138,58 @@ public partial class Registers : ContentPage
 
         if (selectedOption == Btn_order.Text)
             return;
+
+        _order = selectedOption;
+        Btn_order.Text = $"Ordem {_order}";
+
+        await RefreshCollectionAsync();
+    }
+
+    private async Task RefreshCollectionAsync()
+    {
+        try
+        {
+            _addRegisterViewModel.IsLoading = true;
+            await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
+        try
+        {
+            await Task.Delay(300, _throttleCts.Token);
+            _throttleCts.Token.ThrowIfCancellationRequested();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                viewModel.UpdateDatas(_condition, e.NewTextValue, _filter, _order);
+            });
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore exception, tarefa foi cancelada
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro de pesquisa", ex.Message, "Voltar");
+        }
+    }
+
+    private async void Btn_filter_Clicked(object sender, EventArgs e)
+    {
+        var selectedOption = await DisplayActionSheet("Ordenar conteúdo por:", "Voltar", null, "Nome", "Idade");
+
+        if (selectedOption == "Voltar")
+            return; // Não faz nada se o usuário escolheu "Voltar"
+
+        _filter = selectedOption;
+        Btn_filter.Text = $"Ordenar por {_filter}";
+
+        await RefreshCollectionAsync();
+    }
+
+    private async void Btn_order_Clicked(object sender, EventArgs e)
+    {
+        var selectedOption = await DisplayActionSheet("Ordenar por ordem:", "Voltar", null, "Crescente", "Decrescente");
+
+        if (selectedOption == "Voltar")
+            return; // Não faz nada se o usuário escolheu "Voltar"
 
         _order = selectedOption;
         Btn_order.Text = $"Ordem {_order}";

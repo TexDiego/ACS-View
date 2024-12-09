@@ -7,12 +7,16 @@ public partial class OverallView : ContentPage
 {
     private readonly DatabaseService _dbService;
     private OverallViewModel _overallViewModel;
+    private HealthRecordService _healthRecordService;
+    private AddRegisterViewModel _addRegisterViewModel;
 
-    public OverallView(DatabaseService dbService, HealthRecordService healthRecordService, OverallViewModel overallViewModel)
+    public OverallView(DatabaseService dbService, HealthRecordService healthRecordService, OverallViewModel overallViewModel, AddRegisterViewModel addRegisterViewModel)
     {
         InitializeComponent();
         _dbService = dbService;
         _overallViewModel = overallViewModel;
+        _healthRecordService = healthRecordService;
+        _addRegisterViewModel = addRegisterViewModel;
         _ = InitializeAsync(); // Evita travamento por não bloquear a UI
     }
 
@@ -127,7 +131,7 @@ public partial class OverallView : ContentPage
         {
             activityIndicator.IsVisible = true;
             _overallViewModel.IsLoading = true; // Ativa o indicador de carregamento
-            await Navigation.PushAsync(new Registers(page));
+            await Navigation.PushAsync(new Registers(page, _dbService, _healthRecordService, _addRegisterViewModel));
         }
         catch (Exception ex)
         {

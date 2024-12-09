@@ -57,19 +57,75 @@
                 Stroke="#C93919"
                 StrokeThickness="2"
                 StrokeShape="RoundRectangle 15"
-                Padding="0">
+                Padding="0"
+                BackgroundColor="White">
 
-                <SearchBar
-                    x:Name="SB"
-                    Placeholder="Pesquisar"
-                    TextColor="#0084B1"
-                    FontSize="20"
-                    MaxLength="30"
-                    CancelButtonColor="#0084B1"
-                    IsSpellCheckEnabled="True"
-                    BackgroundColor="White"
-                    TextChanged="SB_TextChanged"/>
+                <VerticalStackLayout>
+                    
+                    <SearchBar
+                        x:Name="SB"
+                        Placeholder="Pesquisar"
+                        TextColor="#0084B1"
+                        FontSize="20"
+                        MaxLength="30"
+                        CancelButtonColor="#0084B1"
+                        IsSpellCheckEnabled="True"
+                        BackgroundColor="White"
+                        TextChanged="SB_TextChanged"/>
 
+                    <Grid
+                        RowDefinitions="auto,*"
+                        ColumnDefinitions="*,auto,*">
+
+                        <BoxView
+                            Grid.Row="0"
+                            Grid.ColumnSpan="3"
+                            Color="#C93919"
+                            HeightRequest="2"/>
+
+                        <Button
+                            Grid.Column="0"
+                            Grid.Row="1"
+                            x:Name="Btn_filter"
+                            Style="{StaticResource buttons}"
+                            Margin="0"
+                            Padding="5"
+                            BorderWidth="0"
+                            CornerRadius="0"
+                            MaximumHeightRequest="40"
+                            FontSize="15"
+                            FontAutoScalingEnabled="True"
+                            Text="Filtar por Nome"
+                            Clicked="Btn_filter_Clicked"/>
+
+                        <BoxView 
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            HorizontalOptions="Center"
+                            Color="#C93919"
+                            WidthRequest="2"/>
+
+                        <Button
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            x:Name="Btn_order"
+                            Style="{StaticResource buttons}"
+                            Margin="0"
+                            Padding="5"
+                            BorderWidth="0"
+                            CornerRadius="0"
+                            MaximumHeightRequest="40"
+                            FontSize="15"
+                            FontAutoScalingEnabled="True"
+                            Text="Ordem Crescente"
+                            Clicked="Btn_order_Clicked"/>
+
+                    </Grid>
+                    
+                    
+                    
+                </VerticalStackLayout>
+                
             </Border>
 
         </VerticalStackLayout>

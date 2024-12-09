@@ -128,7 +128,7 @@ public partial class AddRegister : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro inesperado", ex.TargetSite.ToString(), "Voltar");
+            await DisplayAlert("Erro inesperado", ex.Message, "Voltar");
         }
     }
 

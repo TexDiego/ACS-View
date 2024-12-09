@@ -16,13 +16,11 @@ namespace ACS_View.MVVM.ViewModel
         public ICommand DeleteCommand { get; }
         public ICommand EditCommand { get; }
 
-        public RegistersViewModel() { Console.WriteLine("vm acessada"); }
+        public RegistersViewModel() { }
 
-        public RegistersViewModel(HealthRecordService healthRecordService, string condition, string search)
+        public RegistersViewModel(HealthRecordService healthRecordService, string condition, string search, string filter, string order)
         {
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
-            LoadHealthRecordsAndUpdateDatasAsync(condition, search).ConfigureAwait(false); // Evitar deadlocks
-
             _healthRecord = new ObservableCollection<HealthRecord>();
 
             DeleteCommand = new Command<string>(async susNumber =>
@@ -49,7 +47,7 @@ namespace ACS_View.MVVM.ViewModel
                         }
 
                         // Atualiza a lista visível na UI
-                        UpdateDatas(condition, search);
+                        UpdateDatas(condition, search, filter, order);
                     }
                 }
                 catch (Exception ex)
@@ -67,14 +65,16 @@ namespace ACS_View.MVVM.ViewModel
                     await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record));
                 }
             });
+
+            Task.Run(async () => await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order)).Wait();
         }
 
-        private async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string search)
+        private async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string search, string filter, string order)
         {
             try
             {
                 _healthRecords = await _healthRecordService.GetAllRecordsAsync();
-                UpdateDatas(condition, search);
+                UpdateDatas(condition, search, filter, order);
             }
             catch (Exception ex)
             {
@@ -82,15 +82,12 @@ namespace ACS_View.MVVM.ViewModel
             }
         }
 
-
-        public void UpdateDatas(string condition, string search)
+        public void UpdateDatas(string condition, string search, string filter, string order)
         {
             try
             {
-                // Filtra os registros
-                var filteredRecords = FilterRecords(condition, search);
+                var filteredRecords = FilterRecords(condition, search, filter, order);
 
-                // Atualiza a ObservableCollection com os resultados filtrados
                 _person.Clear();
 
                 foreach (var record in filteredRecords)
@@ -151,31 +148,61 @@ namespace ACS_View.MVVM.ViewModel
             return $"{anos} anos";
         }
 
-
-
-        private List<HealthRecord> FilterRecords(string condition, string search)
+        private List<HealthRecord> FilterRecords(string condition, string search, string filter, string order)
         {
-            IEnumerable<HealthRecord> filteredRecords = condition switch
+            try
             {
-                "GESTANTE" => _healthRecords.Where(r => r.IsPregnant),
-                "DB" => _healthRecords.Where(r => r.HasDiabetes),
-                "HAS" => _healthRecords.Where(r => r.HasHypertension),
-                "HASDB" => _healthRecords.Where(r => r.IsDiabetesAndHypertension),
-                "TB" => _healthRecords.Where(r => r.HasTuberculosis),
-                "HAN" => _healthRecords.Where(r => r.HasLeprosy),
-                "ACAMADO" => _healthRecords.Where(r => r.IsHomebound),
-                "DOMICILIADO" => _healthRecords.Where(r => r.IsBedridden),
-                "MENOR" => _healthRecords.Where(r => r.IsBaby),
-                "MENTAL" => _healthRecords.Where(r => r.HasMentalIllness),
-                "DEFICIENTE" => _healthRecords.Where(r => r.HasDisabilities),
-                "FUMANTE" => _healthRecords.Where(r => r.IsSmoker),
-                "CANCER" => _healthRecords.Where(r => r.HasCancer),
-                "IDOSO" => _healthRecords.Where(r => r.IsOld),
-                _ => _healthRecords,
-            };
+                // Aplicar filtro inicial baseado em condição
+                var filteredRecords = condition switch
+                {
+                    "GESTANTE" => _healthRecords.Where(r => r.IsPregnant),
+                    "DB" => _healthRecords.Where(r => r.HasDiabetes),
+                    "HAS" => _healthRecords.Where(r => r.HasHypertension),
+                    "HASDB" => _healthRecords.Where(r => r.IsDiabetesAndHypertension),
+                    "TB" => _healthRecords.Where(r => r.HasTuberculosis),
+                    "HAN" => _healthRecords.Where(r => r.HasLeprosy),
+                    "ACAMADO" => _healthRecords.Where(r => r.IsHomebound),
+                    "DOMICILIADO" => _healthRecords.Where(r => r.IsBedridden),
+                    "MENOR" => _healthRecords.Where(r => r.IsBaby),
+                    "MENTAL" => _healthRecords.Where(r => r.HasMentalIllness),
+                    "DEFICIENTE" => _healthRecords.Where(r => r.HasDisabilities),
+                    "FUMANTE" => _healthRecords.Where(r => r.IsSmoker),
+                    "CANCER" => _healthRecords.Where(r => r.HasCancer),
+                    "IDOSO" => _healthRecords.Where(r => r.IsOld),
+                    _ => _healthRecords,
+                };
 
-            return filteredRecords.Where(r => r.Name.ToLower().Normalize().Contains(search.ToLower().Normalize().TrimStart().TrimEnd())
-                                           || r.SusNumber.Contains(search.TrimStart().TrimEnd())).ToList();
+                // Normalizar e aplicar o termo de pesquisa
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    string normalizedSearch = search.Trim().ToLowerInvariant();
+                    filteredRecords = filteredRecords.Where(r =>
+                        (r.Name?.ToLowerInvariant().Contains(normalizedSearch) ?? false) ||
+                        (r.SusNumber?.Contains(normalizedSearch) ?? false));
+                }
+
+                // Aplicar ordenação
+                var sortedRecords = filter switch
+                {
+                    "Nome" => order == "Crescente"
+                        ? filteredRecords.OrderBy(r => r.Name).ToList()
+                        : filteredRecords.OrderByDescending(r => r.Name).ToList(),
+
+                    "Idade" => order == "Decrescente"
+                        ? filteredRecords.OrderBy(r => r.BirthDate).ToList()
+                        : filteredRecords.OrderByDescending(r => r.BirthDate).ToList(),
+
+                    _ => filteredRecords.ToList()
+                };
+
+                return sortedRecords;
+            }
+            catch (Exception ex)
+            {
+                // Log para identificar possíveis problemas
+                Console.WriteLine($"Erro no filtro: {ex.Message}");
+                return new List<HealthRecord>();
+            }
         }
     }
 }

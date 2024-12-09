@@ -8,6 +8,7 @@ public partial class LoginPage : ContentPage
 	DatabaseService _databaseService;
 	HealthRecordService _healthRecordService;
 	OverallViewModel _overallViewModel;
+	AddRegisterViewModel _addRegisterViewModel;
 	public LoginPage()
 	{
 		InitializeComponent();
@@ -15,13 +16,14 @@ public partial class LoginPage : ContentPage
 		_databaseService = new DatabaseService();
 		_healthRecordService = new HealthRecordService(_databaseService);
         _overallViewModel = new OverallViewModel(_healthRecordService);
+		_addRegisterViewModel = new AddRegisterViewModel();
     }
 
     private async void Btn_Login_Clicked(object sender, EventArgs e)
     {
 		try
 		{
-		await Navigation.PushAsync(new OverallView(_databaseService, _healthRecordService, _overallViewModel));
+		await Navigation.PushAsync(new OverallView(_databaseService, _healthRecordService, _overallViewModel, _addRegisterViewModel));
 		}
 		catch (Exception ex)
 		{

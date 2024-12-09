@@ -11,16 +11,18 @@ public partial class Registers : ContentPage
     private HealthRecordService _healthRecordService;
     private AddRegisterViewModel _addRegisterViewModel;
     private string _condition;
+    private string _filter;
+    private string _order;
 
-    public Registers(string condition)
+    public Registers(string condition, DatabaseService databaseService, HealthRecordService healthRecordService, AddRegisterViewModel addRegisterViewModel)
 	{
 		InitializeComponent();
 
         try
         {
-            _databaseService = new DatabaseService();
-            _healthRecordService = new HealthRecordService(_databaseService);
-            _addRegisterViewModel = new AddRegisterViewModel();
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
+            _addRegisterViewModel = addRegisterViewModel ?? throw new ArgumentNullException(nameof(addRegisterViewModel));
             _condition = condition;
         }
         catch (Exception ex)
@@ -55,14 +57,15 @@ public partial class Registers : ContentPage
     {
         base.OnAppearing();
 
-        SB.Text = "";
-
         try
         {
             _addRegisterViewModel.IsLoading = true;
 
-            viewModel = new RegistersViewModel(_healthRecordService, _condition, string.Empty);
+            // Recarregar dados sempre que a página aparecer
+            viewModel = new RegistersViewModel(_healthRecordService, _condition, string.Empty, _filter, _order);
             BindingContext = viewModel;
+            await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
+
             Lbl_Title.Text = CapitalizeTitle(_condition);
         }
         catch (Exception ex)
@@ -87,24 +90,69 @@ public partial class Registers : ContentPage
 
     private async void SB_TextChanged(object sender, TextChangedEventArgs e)
     {
+        _throttleCts?.Cancel();
+        _throttleCts = new CancellationTokenSource();
+
         try
         {
-            _throttleCts?.Cancel();
-            _throttleCts = new CancellationTokenSource();
+            await Task.Delay(300, _throttleCts.Token);
+            _throttleCts.Token.ThrowIfCancellationRequested();
 
-            await Task.Delay(300, _throttleCts.Token)
-                .ContinueWith(t =>
-                {
-                    if (!t.IsCanceled)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                            viewModel.UpdateDatas(_condition, e.NewTextValue));
-                    }
-                });
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                viewModel.UpdateDatas(_condition, e.NewTextValue, _filter, _order);
+            });
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore exception, tarefa foi cancelada
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro de SearchBar", ex.Message, "Voltar");
+            await DisplayAlert("Erro de pesquisa", ex.Message, "Voltar");
+        }
+    }
+
+    private async void Btn_filter_Clicked(object sender, EventArgs e)
+    {
+        var selectedOption = await DisplayActionSheet("Ordenar conteúdo por:", "Voltar", null, "Nome", "Idade");
+
+        if (selectedOption == "Voltar")
+            return; // Não faz nada se o usuário escolheu "Voltar"
+
+        _filter = selectedOption;
+        Btn_filter.Text = $"Ordenar por {_filter}";
+
+        await RefreshCollectionAsync();
+    }
+
+    private async void Btn_order_Clicked(object sender, EventArgs e)
+    {
+        var selectedOption = await DisplayActionSheet("Ordenar por ordem:", "Voltar", null, "Crescente", "Decrescente");
+
+        if (selectedOption == "Voltar")
+            return; // Não faz nada se o usuário escolheu "Voltar"
+
+        _order = selectedOption;
+        Btn_order.Text = $"Ordem {_order}";
+
+        await RefreshCollectionAsync();
+    }
+
+    private async Task RefreshCollectionAsync()
+    {
+        try
+        {
+            _addRegisterViewModel.IsLoading = true;
+            await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro", ex.Message, "Voltar");
+        }
+        finally
+        {
+            _addRegisterViewModel.IsLoading = false;
         }
     }
 }

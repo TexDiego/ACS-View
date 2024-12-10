@@ -42,9 +42,9 @@ public partial class OverallView : ContentPage
 
     private async void Btn_OverallViewExit_Clicked(object sender, EventArgs e)
     {
-        var answer = await this.ShowPopupAsync(new DisplayPopUp("Sair", "Deseja desconectar-se?", true, "Cancelar", true, "Sair"));
+        var answer = await this.ShowPopupAsync(new DisplayPopUp("Sair", "Deseja desconectar-se?", true, "Sair", true, "Cancelar"));
 
-        if (answer != null && Convert.ToBoolean(answer))
+        if (!Convert.ToBoolean(answer))
         {
             await Navigation.PopAsync();
         }
@@ -163,5 +163,10 @@ public partial class OverallView : ContentPage
         {
             await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
+    }
+
+    private void Btn_Casas_Clicked(object sender, EventArgs e)
+    {
+
     }
 }

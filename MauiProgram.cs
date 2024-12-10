@@ -1,5 +1,6 @@
 ﻿using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 
 namespace ACS_View
@@ -11,6 +12,7 @@ namespace ACS_View
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

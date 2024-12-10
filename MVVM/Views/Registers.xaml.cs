@@ -1,5 +1,6 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
@@ -27,7 +28,7 @@ public partial class Registers : ContentPage
         }
         catch (Exception ex)
         {
-            DisplayAlert("Erro", ex.Message, "Voltar");
+            this.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 
@@ -73,7 +74,7 @@ public partial class Registers : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro de OnAppearing", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
         finally
         {
@@ -112,21 +113,21 @@ public partial class Registers : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro de pesquisa", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 
     private async void Btn_filter_Clicked(object sender, EventArgs e)
     {
-        var selectedOption = await DisplayActionSheet("Ordenar conteúdo por:", "Voltar", null, "Nome", "Idade");
+        //var selectedOption = await DisplayActionSheet("Ordenar conteúdo por:", "Voltar", null, "Nome", "Idade");
 
-        if (selectedOption == "Voltar" || string.IsNullOrEmpty(selectedOption))
-            return; // Não faz nada se o usuário escolheu "Voltar"
+        var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar por:", "Nome", "Idade", "Voltar", 1));
 
-        if (selectedOption == Btn_filter.Text)
+        if (selectedOption == null || Convert.ToString(selectedOption) == Btn_filter.Text.Substring(12))
             return;
 
-        _filter = selectedOption;
+        _filter = Convert.ToString(selectedOption) ?? string.Empty;
+
         Btn_filter.Text = $"Ordenar por {_filter}";
 
         await RefreshCollectionAsync();
@@ -134,15 +135,13 @@ public partial class Registers : ContentPage
 
     private async void Btn_order_Clicked(object sender, EventArgs e)
     {
-        var selectedOption = await DisplayActionSheet("Ordenar por ordem:", "Voltar", null, "Crescente", "Decrescente");
+        var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar em:", "Crescente", "Decrescente", "Voltar", 2));
 
-        if (selectedOption == "Voltar" || string.IsNullOrEmpty(selectedOption))
-            return; // Não faz nada se o usuário escolheu "Voltar"
-
-        if (selectedOption == Btn_order.Text)
+        if (selectedOption == null || Convert.ToString(selectedOption) == Btn_order.Text.Substring(6))
             return;
 
-        _order = selectedOption;
+        _order = Convert.ToString(selectedOption) ?? string.Empty;
+
         Btn_order.Text = $"Ordem {_order}";
 
         await RefreshCollectionAsync();
@@ -157,7 +156,7 @@ public partial class Registers : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
         finally
         {

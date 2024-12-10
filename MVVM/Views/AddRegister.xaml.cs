@@ -1,6 +1,7 @@
 using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using CommunityToolkit.Maui.Views;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -68,7 +69,7 @@ public partial class AddRegister : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
         finally
         {
@@ -82,20 +83,20 @@ public partial class AddRegister : ContentPage
         {
             if (String.IsNullOrEmpty(Entry_Name.Text) || String.IsNullOrEmpty(Entry_Sus.Text))
             {
-                await DisplayAlert("Ops", "Nome e SUS devem ser preenchidos", "Ok");
+                await this.ShowPopupAsync(new DisplayPopUp("Ops", "Nome e SUS devem ser preenchidos", false, "", true, "Ok"));
                 return;
             }
 
             if (Entry_Sus.Text.Length != 15)
             {
-                await DisplayAlert("Ops", "O número do SUS deve conter 15 dígitos", "Ok");
+                await this.ShowPopupAsync(new DisplayPopUp("Ops", "O número do SUS deve conter 15 dígitos", false, "", true, "Ok"));
                 return;
             }
 
             // Evitar referência nula
             if (_addRegisterViewModel == null)
             {
-                await DisplayAlert("Erro", "ViewModel não foi inicializada corretamente.", "OK");
+                await this.ShowPopupAsync(new DisplayPopUp("Erro", "ViewModel não foi iniciada corretamente", true, "Voltar", false, ""));
                 return;
             }
 
@@ -128,7 +129,7 @@ public partial class AddRegister : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro inesperado", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 
@@ -160,7 +161,7 @@ public partial class AddRegister : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro na inserção de um ou mais caracteres inválidos", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", "Erro na inserção de caracter inválido\n\n" + ex.Message, true, "Voltar", false, ""));
         }
         finally
         {

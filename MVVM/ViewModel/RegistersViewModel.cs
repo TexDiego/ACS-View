@@ -1,6 +1,7 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -27,8 +28,8 @@ namespace ACS_View.MVVM.ViewModel
             {
                 try
                 {
-                    bool result = await Application.Current.MainPage.DisplayAlert("Confirmar", "Tem certeza de que deseja excluir o cadastro? SUS: " + susNumber, "Excluir", "Cancelar");
-                    if (!result) return;
+                    bool result = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Confirmar", "Tem certeza de que deseja excluir o cadastro?\n\nSUS: " + susNumber, true, "Excluir", true, "Cancelar")));
+                    if (result) return;
 
                     var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
                     if (record != null)
@@ -52,7 +53,7 @@ namespace ACS_View.MVVM.ViewModel
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível deletar o registro.\n\n{ex.Message}", "OK");
+                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível deletar o registro.\n\n{ex.Message}", true, "Voltar", false, ""));
                 }
             });
 

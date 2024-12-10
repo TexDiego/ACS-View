@@ -95,7 +95,7 @@
                             MaximumHeightRequest="40"
                             FontSize="15"
                             FontAutoScalingEnabled="True"
-                            Text="Filtar por Nome"
+                            Text="Ordenar por Nome"
                             Clicked="Btn_filter_Clicked"/>
 
                         <BoxView 
@@ -120,10 +120,8 @@
                             Text="Ordem Crescente"
                             Clicked="Btn_order_Clicked"/>
 
-                    </Grid>
-                    
-                    
-                    
+                    </Grid>                  
+                                        
                 </VerticalStackLayout>
                 
             </Border>

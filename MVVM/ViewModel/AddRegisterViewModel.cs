@@ -1,5 +1,7 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui.Views;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModel
@@ -82,18 +84,18 @@ namespace ACS_View.MVVM.ViewModel
                     // Atualiza o cadastro existente
                     novoCadastro.SusNumber = registroExistente.SusNumber; // Certifique-se de atualizar o mesmo ID.
                     await _healthRecordService.AtualizarCadastroAsync(novoCadastro);
-                    await Application.Current.MainPage.DisplayAlert("Sucesso", "Cadastro atualizado com sucesso.", "OK");
+                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro atualizado com sucesso.", false, "", true, "Voltar"));
                 }
                 else
                 {
                     // Adiciona novo cadastro
                     await _healthRecordService.AdicionarCadastroAsync(novoCadastro);
-                    await Application.Current.MainPage.DisplayAlert("Sucesso", "Cadastro adicionado com sucesso.", "OK");
+                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro adicionado com sucesso.", false, "", true, "OK"));
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", $"Ocorreu um erro ao salvar: {ex.Message}", "OK");
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
 
             if (Application.Current.MainPage.BindingContext is OverallViewModel overallViewModel)

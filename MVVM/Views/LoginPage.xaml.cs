@@ -1,5 +1,6 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
@@ -23,15 +24,23 @@ public partial class LoginPage : ContentPage
     {
 		try
 		{
-		await Navigation.PushAsync(new OverallView(_databaseService, _healthRecordService, _overallViewModel, _addRegisterViewModel));
+			await Navigation.PushAsync(new OverallView(_databaseService, _healthRecordService, _overallViewModel, _addRegisterViewModel));
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlert("Erro", ex.Message, "Voltar");
+			this.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
 		}
     }
 
-    private void Button_Clicked(object sender, EventArgs e)
+    private async void Button_Clicked(object sender, EventArgs e)
     {
+		try
+		{
+			
+		}
+		catch (Exception ex)
+		{
+			await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+		}
     }
 }

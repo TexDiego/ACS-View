@@ -1,5 +1,6 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
@@ -35,20 +36,26 @@ public partial class OverallView : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", $"Falha ao inicializar o banco de dados: {ex.Message}", "OK");
+            this.ShowPopup(new DisplayPopUp("Erro", $"Falha ao inicializar o banco de dados: {ex.Message}", true, "Voltar", false, ""));
         }
     }
 
     private async void Btn_OverallViewExit_Clicked(object sender, EventArgs e)
     {
-		if (await DisplayAlert("Sair", "Deseja desconectar-se?", "Sim", "Cancelar"))
-			await Navigation.PopAsync();
+        var answer = await this.ShowPopupAsync(new DisplayPopUp("Sair", "Deseja desconectar-se?", true, "Cancelar", true, "Sair"));
+
+        if (answer != null && Convert.ToBoolean(answer))
+        {
+            await Navigation.PopAsync();
+        }
     }
 
     private async void Btn_OverallAdd_Clicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new AddRegister());
     }
+
+    #region conditions buttons
 
     private void Btn_Gestantes_Clicked(object sender, EventArgs e)
     {
@@ -125,6 +132,8 @@ public partial class OverallView : ContentPage
         ViewRegisterAsync(AIOLD, "IDOSO");
     }
 
+    #endregion
+
     private async void ViewRegisterAsync(ActivityIndicator activityIndicator, string page)
     {
         try
@@ -135,7 +144,7 @@ public partial class OverallView : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
         finally
         {
@@ -152,7 +161,7 @@ public partial class OverallView : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 }

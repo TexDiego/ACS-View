@@ -1,5 +1,6 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
+using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
@@ -34,7 +35,7 @@ public partial class NotesPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro de OnAppearing", ex.Message, "Voltar");
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 
@@ -57,8 +58,8 @@ public partial class NotesPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlert("Erro", ex.Message, "Voltar");
-		}
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+        }
     }
 
     private void Btn_SaveNote_Clicked(object sender, EventArgs e)

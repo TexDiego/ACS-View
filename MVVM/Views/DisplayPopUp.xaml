@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    x:Class="ACS_View.MVVM.Views.DisplayPopUp"
+    Color="Transparent"
+    CanBeDismissedByTappingOutsideOfPopup="False">
+
+
+    <Border
+        StrokeShape="RoundRectangle 15"
+        BackgroundColor="White"
+        Stroke="#C93919"
+        StrokeThickness="2"
+        MaximumWidthRequest="300"
+        Padding="5,5,5,0">
+
+        <VerticalStackLayout MaximumWidthRequest="300">
+
+            <Label 
+                x:Name="Lbl_title"
+                FontAttributes="Bold"
+                TextColor="#0084B1"
+                FontSize="24"
+                Margin="15,15,15,5"/>
+
+            <BoxView
+                Color="#0084B1"
+                HeightRequest="2"
+                Margin="15,0"/>
+
+            <Label
+                x:Name="Lbl_message"
+                FontAttributes="None"
+                TextColor="#0084B1"
+                FontSize="18"
+                Margin="15,10,30,30"/>
+
+            <Grid
+                ColumnDefinitions="auto,auto"
+                HorizontalOptions="End"
+                ColumnSpacing="5">
+
+                <Button
+                    Grid.Column="0"
+                    x:Name="Btn_Accept"
+                    CornerRadius="10"
+                    Margin="15,10,5,15"
+                    TextColor="White"
+                    BorderWidth="0"
+                    BackgroundColor="#0084B1"
+                    Clicked="Btn_Accept_Clicked"/>
+                
+                <Button
+                    Grid.Column="1"
+                    x:Name="Btn_Voltar"
+                    Margin="5,10,15,15"
+                    TextColor="White"
+                    BorderWidth="0"
+                    CornerRadius="10"
+                    BackgroundColor="#C93919"
+                    Clicked="Btn_Voltar_Clicked"/>                
+
+            </Grid>
+
+        </VerticalStackLayout>
+
+    </Border>
+
+</tk:Popup>

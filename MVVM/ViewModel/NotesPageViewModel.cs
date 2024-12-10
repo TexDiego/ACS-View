@@ -1,5 +1,7 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -49,8 +51,8 @@ namespace ACS_View.MVVM.ViewModel
         {
             try
             {
-                bool confirm = await Application.Current.MainPage.DisplayAlert("Confirmação", "Deseja excluir esta nota?", "Sim", "Não");
-                if (!confirm) return;
+                bool confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Confirmação", "Deseja excluir esta nota?", true, "Excluir", true, "Cancelar")));
+                if (confirm == null || confirm) return;
 
                 int rowsAffected = await _noteService.DeleteNoteAsync(id);
                 if (rowsAffected > 0)
@@ -63,13 +65,13 @@ namespace ACS_View.MVVM.ViewModel
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível excluir a nota.", "OK");
+                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível excluir a nota.", true, "Voltar", false, ""));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao deletar: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Erro", "Ocorreu um erro ao tentar excluir a nota.", "OK");
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
 
@@ -77,7 +79,7 @@ namespace ACS_View.MVVM.ViewModel
         {
             if (string.IsNullOrWhiteSpace(Content))
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", "O conteúdo não pode estar vazio.", "OK");
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Ops", "O conteúdo não pode estar vazio", false, "", true, "Ok"));
                 return;
             }
 
@@ -103,39 +105,12 @@ namespace ACS_View.MVVM.ViewModel
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar registros: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível carregar as notas.", "OK");
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível carregar as notas.", true, "Voltar", false, ""));
             }
             finally
             {
                 IsLoading = false;
             }
-        }
-
-
-
-        private void UpdateDatas()
-        {
-            _notes.Clear();
-            foreach (var note in Notes)
-            {
-                _notes.Add(new Note
-                {
-                    Content = note.Content,
-                    CreationDate = note.CreationDate
-                });
-            }
-            OnPropertyChanged(nameof(Notes));
-        }
-
-
-        private List<string> GetContent(List<Note> note)
-        {
-            return note.Select(note => note.Content).ToList();
-        }
-
-        private List<DateTime> GetDateTimes(List<Note> note)
-        {
-            return note.Select(note => note.CreationDate).ToList();
         }
     }
 }

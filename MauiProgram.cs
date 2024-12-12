@@ -24,6 +24,8 @@ namespace ACS_View
 #endif
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<HealthRecordService>();
+            builder.Services.AddSingleton<HouseService>();
+            builder.Services.AddSingleton<FamilyService>();
             builder.Services.AddTransient<OverallView>(); // Use AddTransient para criar novas instâncias quando necessário
 
 

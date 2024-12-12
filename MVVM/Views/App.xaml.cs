@@ -1,4 +1,5 @@
 ﻿using ACS_View.MVVM.Models.Services;
+using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views
 {
@@ -16,7 +17,14 @@ namespace ACS_View.MVVM.Views
             base.OnStart();
 
             // Inicializa o banco de dados
-            await AppServiceLocator.Instance.DatabaseService.InitializeDatabaseAsync();
+            try
+            {
+                AppServiceLocator.Instance.DatabaseService.InitializeDatabaseAsync();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, false, "", true, "Voltar"));
+            }            
         }
     }
 }

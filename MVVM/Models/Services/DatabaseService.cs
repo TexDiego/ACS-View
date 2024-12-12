@@ -10,13 +10,33 @@ namespace ACS_View.MVVM.Models.Services
         {
             var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "health_app.db");
             _database = new SQLiteAsyncConnection(dbPath);
+
+            InitializeDatabaseAsync();
         }
 
         public async Task InitializeDatabaseAsync()
         {
-            await _database.CreateTableAsync<HealthRecord>();
-            await _database.CreateTableAsync<Note>();
+            await EnsureTableExistsAsync<HealthRecord>();
+            await EnsureTableExistsAsync<Note>();
+            await EnsureTableExistsAsync<House>();
+            await EnsureTableExistsAsync<Family>();
         }
+
+        private async Task EnsureTableExistsAsync<T>() where T : new()
+        {
+            var tableName = typeof(T).Name;
+
+            // Verificar se a tabela existe
+            var result = await _database.ExecuteScalarAsync<int>(
+                $"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='{tableName}'");
+
+            if (result == 0)
+            {
+                // Criar tabela diretamente
+                await _database.CreateTableAsync<T>();
+            }
+        }
+
 
         public SQLiteAsyncConnection GetConnection()
         {

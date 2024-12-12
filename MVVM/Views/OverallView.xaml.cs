@@ -1,6 +1,9 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModel;
 using CommunityToolkit.Maui.Views;
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+using System.Globalization;
 
 namespace ACS_View.MVVM.Views;
 
@@ -60,6 +63,25 @@ public partial class OverallView : ContentPage
     private void Btn_Gestantes_Clicked(object sender, EventArgs e)
     {
         ViewRegisterAsync(AIGestantes, "GESTANTE");
+    }
+
+    private async void Btn_Casas_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            AICasas.IsVisible = true;
+            _overallViewModel.IsLoading = true;
+            await Navigation.PushAsync(new HousesPage());
+        }
+        catch (Exception ex)
+        {
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+        }
+        finally
+        {
+            _overallViewModel.IsLoading = false; // Desativa o indicador de carregamento
+            AICasas.IsVisible = false;
+        }
     }
 
     private void Btn_HAS_Clicked(object sender, EventArgs e)
@@ -165,8 +187,33 @@ public partial class OverallView : ContentPage
         }
     }
 
-    private void Btn_Casas_Clicked(object sender, EventArgs e)
+    private async void Btn_Menu_Clicked(object sender, EventArgs e)
     {
+        string option = Convert.ToString(await this.ShowPopupAsync(new Menu()));
 
+        if (option == "1")
+        {
+            await Navigation.PushAsync(new AddRegister());
+        }
+
+        if (option == "2")
+        {
+            await Navigation.PushAsync(new HousesPage());
+        }
+
+        if (option == "3")
+        {
+            await Navigation.PushAsync(new NotesPage());
+        }
+
+        if (option == "4")
+        {
+            var answer = await this.ShowPopupAsync(new DisplayPopUp("Sair", "Deseja desconectar-se?", true, "Sair", true, "Cancelar"));
+
+            if (!Convert.ToBoolean(answer))
+            {
+                await Navigation.PopAsync();
+            }
+        }
     }
 }

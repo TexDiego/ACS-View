@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.MVVM.Views.AddHouse"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.Resources>
+        <Style x:Key="Button" TargetType="Button">
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="BackgroundColor" Value="#0084B1"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="BorderColor" Value="#C93919"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="CornerRadius" Value="15"/>
+        </Style>
+        <Style x:Key="Border" TargetType="Border">
+            <Setter Property="HeightRequest" Value="70"/>
+            <Setter Property="Stroke" Value="#C93919"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+            <Setter Property="StrokeShape" Value="RoundRectangle 15"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BackgroundColor" Value="White"/>
+        </Style>
+        <Style x:Key="Label" TargetType="Label">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="TextColor" Value="#0084B1"/>
+        </Style>
+    </ContentPage.Resources>
+    
+    <Grid RowDefinitions="auto,*,auto">
+        
+        <Label 
+            Grid.Row="0"
+            Text="Adicionar casa"
+            Margin="20,10,20,10"
+            FontAttributes="Bold"
+            TextColor="#0084B1"
+            FontSize="30"
+            HorizontalOptions="Center"/>
+
+        <ScrollView Grid.Row="1" Margin="20,0">
+
+            <Grid RowDefinitions="*,*,*,*,*,*,*,*" RowSpacing="10">
+                
+                <Border Grid.Row="0" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*,auto">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="CEP: "/>
+
+                        <Entry
+                            x:Name="Entry_CEP"
+                            Grid.Column="1"
+                            MaxLength="8"
+                            FontAttributes="None"
+                            MinimumWidthRequest="120"
+                            TextChanged="Entry_CEP_TextChanged"/>
+
+                        <ImageButton
+                            Grid.Column="2"
+                            Margin="30,0"
+                            x:Name="Btn_SearchCEP"
+                            Source="loupe.png"
+                            MaximumHeightRequest="30"
+                            MaximumWidthRequest="30"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            Clicked="Btn_SearchCEP_Clicked"/>
+
+                    </Grid>
+                
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Logradouro: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            x:Name="Logradouro"
+                            Grid.Column="1"
+                            FontAttributes="None"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="2" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Número: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            MaxLength="5"
+                            FontAttributes="None"
+                            Keyboard="Numeric"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="3" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Complemento: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            FontAttributes="None"
+                            MaxLength="30"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="4" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Bairro: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            x:Name="Bairro"
+                            Grid.Column="1"
+                            FontAttributes="None"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="5" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Cidade: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            x:Name="Cidade"
+                            Grid.Column="1"
+                            FontAttributes="None"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="6" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="Estado: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            x:Name="Estado"
+                            Grid.Column="1"
+                            FontAttributes="None"/>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Grid.Row="7" Style="{StaticResource Border}">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Style="{StaticResource Label}"
+                            Grid.Column="0"
+                            Text="País: "
+                            HorizontalOptions="Start"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            MaxLength="20"
+                            FontAttributes="None"
+                            Text="Brasil"/>
+
+                    </Grid>
+
+                </Border>
+
+            </Grid>           
+            
+        </ScrollView>
+
+        <ActivityIndicator
+            x:Name="AI"
+            Grid.Row="1"
+            BackgroundColor="Transparent"
+            Color="#C93919"
+            IsRunning="False"
+            IsVisible="False"
+            HeightRequest="60"
+            WidthRequest="60"/>
+
+        <VerticalStackLayout Grid.Row="2" Margin="20">
+
+            <Button
+                Style="{StaticResource Button}"
+                x:Name="Btn_Salvar"
+                Text="Salvar"
+                Margin="0,0,0,10"
+                Clicked="Btn_Salvar_Clicked"/>
+
+            <Button
+                Style="{StaticResource Button}"
+                x:Name="Btn_Voltar"
+                Text="Voltar"
+                Clicked="Btn_Voltar_Clicked"/>
+
+        </VerticalStackLayout>
+        
+    </Grid>
+    
+</ContentPage>

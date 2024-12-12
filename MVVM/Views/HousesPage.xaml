@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.MVVM.Views.HousesPage"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+    
+    <Grid
+        RowDefinitions="auto,*,auto">
+        
+        <Label
+            Grid.Row="0"
+            Text="Residências"
+            Margin="20,10,20,10"
+            FontAttributes="Bold"
+            TextColor="#0084B1"
+            FontSize="30"
+            HorizontalOptions="Center"/>
+
+        <ScrollView
+            Grid.Row="1">
+            
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20,0,0">
+
+            <Button
+                x:Name="Btn_AddHouse"
+                Text="Adicionar casa"
+                Margin="20,0,20,5"
+                FontSize="18"
+                TextColor="White"
+                FontAttributes="Bold"
+                MaximumHeightRequest="60"
+                BorderColor="#C93919"
+                BorderWidth="2"
+                CornerRadius="15"
+                HeightRequest="40"
+                Clicked="Btn_AddHouse_Clicked"/>
+
+            <Button
+                x:Name="Btn_Voltar"
+                Text="Voltar"
+                Margin="20,5,20,20"
+                FontSize="18"
+                TextColor="White"
+                FontAttributes="Bold"
+                MaximumHeightRequest="60"
+                BorderColor="#C93919"
+                BorderWidth="2"
+                CornerRadius="15"
+                HeightRequest="40"
+                Clicked="Btn_Voltar_Clicked"/>
+            
+        </VerticalStackLayout>
+        
+    </Grid>
+    
+</ContentPage>

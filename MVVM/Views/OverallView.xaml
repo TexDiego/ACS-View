@@ -51,13 +51,13 @@
 
 
         <Label 
-                Grid.Row="0"
-                Text="Visão Geral"
-                Margin="20"
-                FontAttributes="Bold"
-                TextColor="#0084B1"
-                FontSize="30"
-                HorizontalOptions="Center"/>
+            Grid.Row="0"
+            Text="Visão Geral"
+            Margin="20,10,20,10"
+            FontAttributes="Bold"
+            TextColor="#0084B1"
+            FontSize="30"
+            HorizontalOptions="Center"/>
 
         <ScrollView Grid.Row="1">
             
@@ -646,29 +646,15 @@
             </Grid>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Margin="0,0,0,20">
-
-            <Button
-                    x:Name="Btn_OverallAdd"
-                    Style="{StaticResource buttons2}"
-                    Text="Adicionar Cadastro"
-                    Clicked="Btn_OverallAdd_Clicked"/>
-
-            <Button
-                    x:Name="Btn_Notes"
-                    Style="{StaticResource buttons2}"
-                    Text="Anotações"
-                    Clicked="Btn_Notes_Clicked"/>
-
-            <Button
-                    x:Name="Btn_OverallViewExit"
-                    Grid.Row="3"
-                    Style="{StaticResource buttons2}"
-                    Text="Sair"
-                    VerticalOptions="End"
-                    Clicked="Btn_OverallViewExit_Clicked"/>
-
-        </VerticalStackLayout>
+        <Button
+            x:Name="Btn_Menu"
+            Grid.Row="2"
+            Margin="20"
+            FontSize="18"
+            Style="{StaticResource buttons2}"
+            Text="Menu"
+            VerticalOptions="End"
+            Clicked="Btn_Menu_Clicked"/>
 
     </Grid>
             

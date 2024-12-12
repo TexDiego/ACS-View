@@ -10,6 +10,10 @@ public partial class LoginPage : ContentPage
 	HealthRecordService _healthRecordService;
 	OverallViewModel _overallViewModel;
 	AddRegisterViewModel _addRegisterViewModel;
+	HouseService _houseService;
+	HousesPageViewModel _housesPageViewModel;
+	FamilyService _familyService;
+
 	public LoginPage()
 	{
 		InitializeComponent();
@@ -18,7 +22,10 @@ public partial class LoginPage : ContentPage
 		_healthRecordService = new HealthRecordService(_databaseService);
         _overallViewModel = new OverallViewModel(_healthRecordService);
 		_addRegisterViewModel = new AddRegisterViewModel();
-    }
+		_houseService = new HouseService(_databaseService);
+		_housesPageViewModel = new HousesPageViewModel(_houseService);
+		_familyService = new FamilyService(_databaseService);
+	}
 
     private async void Btn_Login_Clicked(object sender, EventArgs e)
     {

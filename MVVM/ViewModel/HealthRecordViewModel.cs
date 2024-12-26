@@ -2,7 +2,7 @@
 using ACS_View.MVVM.Models.Services;
 using System.Collections.ObjectModel;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
     public class HealthRecordViewModel : BaseViewModel
     {

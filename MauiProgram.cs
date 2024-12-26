@@ -10,6 +10,7 @@ namespace ACS_View
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
             builder
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()
@@ -20,14 +21,14 @@ namespace ACS_View
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
+
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<HealthRecordService>();
+            builder.Services.AddSingleton<NoteService>();
             builder.Services.AddSingleton<HouseService>();
             builder.Services.AddSingleton<FamilyService>();
-            builder.Services.AddTransient<OverallView>(); // Use AddTransient para criar novas instâncias quando necessário
-
 
             return builder.Build();
         }

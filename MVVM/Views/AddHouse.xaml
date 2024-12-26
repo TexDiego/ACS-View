@@ -33,11 +33,12 @@
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="PlaceholderColor" Value="#C93919"/>
         </Style>
     </ContentPage.Resources>
-    
+
     <Grid RowDefinitions="auto,*,auto">
-        
+
         <Label 
             Grid.Row="0"
             Text="Adicionar casa"
@@ -50,7 +51,7 @@
         <ScrollView Grid.Row="1" Margin="20,0">
 
             <Grid RowDefinitions="*,*,*,*,*,*,*,*" RowSpacing="10">
-                
+
                 <Border Grid.Row="0" Style="{StaticResource Border}">
 
                     <Grid ColumnDefinitions="auto,*,auto">
@@ -64,6 +65,8 @@
                             x:Name="Entry_CEP"
                             Grid.Column="1"
                             MaxLength="8"
+                            Keyboard="Numeric"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"
                             MinimumWidthRequest="120"
                             TextChanged="Entry_CEP_TextChanged"/>
@@ -80,7 +83,7 @@
                             Clicked="Btn_SearchCEP_Clicked"/>
 
                     </Grid>
-                
+
                 </Border>
 
                 <Border Grid.Row="1" Style="{StaticResource Border}">
@@ -96,6 +99,7 @@
                         <Entry
                             x:Name="Logradouro"
                             Grid.Column="1"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -113,6 +117,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
+                            x:Name="Numero"
                             Grid.Column="1"
                             MaxLength="5"
                             FontAttributes="None"
@@ -133,6 +138,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
+                            x:Name="Complemento"
                             Grid.Column="1"
                             FontAttributes="None"
                             MaxLength="30"/>
@@ -154,6 +160,7 @@
                         <Entry
                             x:Name="Bairro"
                             Grid.Column="1"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -173,6 +180,7 @@
                         <Entry
                             x:Name="Cidade"
                             Grid.Column="1"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -192,6 +200,7 @@
                         <Entry
                             x:Name="Estado"
                             Grid.Column="1"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -211,6 +220,7 @@
                         <Entry
                             Grid.Column="1"
                             MaxLength="20"
+                            Placeholder="*Obrigatório"
                             FontAttributes="None"
                             Text="Brasil"/>
 
@@ -218,8 +228,8 @@
 
                 </Border>
 
-            </Grid>           
-            
+            </Grid>
+
         </ScrollView>
 
         <ActivityIndicator
@@ -248,7 +258,7 @@
                 Clicked="Btn_Voltar_Clicked"/>
 
         </VerticalStackLayout>
-        
+
     </Grid>
-    
+
 </ContentPage>

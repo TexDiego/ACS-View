@@ -5,12 +5,12 @@ using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
-    public class NotesPageViewModel : BaseViewModel
+    public partial class NotesPageViewModel : BaseViewModel
     {
         private readonly NoteService _noteService;
-        private readonly ObservableCollection<Note> _notes = new();
+        private readonly ObservableCollection<Note> _notes = [];
         public ObservableCollection<Note> Notes => _notes;
         public ObservableCollection<Note> _note { get; private set; }
         public event Action ScrollToTopRequested;
@@ -44,7 +44,6 @@ namespace ACS_View.MVVM.ViewModel
 
             SalvarNota = new Command(async () => await SalvarNotaAsync(), () => true);
             DeleteCommand = new Command<int>(async id => await DeleteNoteAsync(id));
-
         }
 
         private async Task DeleteNoteAsync(int id)
@@ -86,6 +85,8 @@ namespace ACS_View.MVVM.ViewModel
             var newNote = new Note { Content = Content, CreationDate = DateTime.Now };
             await _noteService.SaveNoteAsync(newNote);
             await LoadNotesAsync();
+
+            Console.WriteLine("Nota salva");
 
             ScrollToTopRequested?.Invoke(); // Dispara o evento
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:Class="ACS_View.MVVM.Views.AddRegister"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
@@ -151,13 +151,13 @@
                     BackgroundColor="White">
 
                     <Grid RowDefinitions="auto,*">
-                        
+
                         <Label
                             Grid.Row="0"
                             Style="{StaticResource labels}"
                             Margin="20,10,0,5"
                             Text="Observação"/>
-                        
+
                         <Editor
                             Grid.Row="1"
                             Margin="20,0"
@@ -167,10 +167,10 @@
                             MaxLength="200"
                             AutoSize="TextChanges"
                             Text="{Binding Observacao}"/>
-                        
+
                     </Grid>
 
-                    
+
 
                 </Border>
 

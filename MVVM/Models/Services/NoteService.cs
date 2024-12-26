@@ -2,14 +2,9 @@
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class NoteService
+    public class NoteService(DatabaseService dbService)
     {
-        private readonly SQLiteAsyncConnection _database;
-
-        public NoteService(DatabaseService dbService)
-        {
-            _database = dbService.GetConnection();
-        }
+        private readonly SQLiteAsyncConnection _database = dbService.GetConnection();
 
         public Task<List<Note>> GetAllNotesAsync() => _database.Table<Note>().OrderBy(n => n.CreationDate).ToListAsync();
 

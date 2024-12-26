@@ -3,22 +3,32 @@ using System.Linq.Expressions;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class HealthRecordService
+    public class HealthRecordService(DatabaseService dbService)
     {
-        private readonly SQLiteAsyncConnection _database;
-
-        public HealthRecordService(DatabaseService dbService)
-        {
-            _database = dbService.GetConnection();
-        }
+        private readonly SQLiteAsyncConnection _database = dbService.GetConnection();
 
         public Task<List<HealthRecord>> GetAllRecordsAsync() => _database.Table<HealthRecord>().OrderBy(r => r.Name).ToListAsync();
 
-        public Task<HealthRecord> GetRecordBySusAsync(string susNumber) =>
-            _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == susNumber);
+        public Task<HealthRecord> GetRecordBySusAsync(string sus) =>
+            _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == sus);
 
         public Task<List<HealthRecord>> GetRecordByCondition(string condition) =>
             _database.Table<HealthRecord>().Where(r => r.Equals(condition)).OrderBy(r => r.Name).ToListAsync();
+
+        public Task<List<HealthRecord>> GetRecordByNameOrSus(string search) =>
+            _database.Table<HealthRecord>()
+            .Where(p => p.Name.ToLower().Contains(search.ToLower())
+                     || p.SusNumber.Contains(search))
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        public Task<List<HealthRecord>> GetRecordByIdsAndSus(int idFamily, int idHouse, string sus)
+        {
+            return _database.Table<HealthRecord>()
+                .Where(p => p.FamilyId == idFamily && p.HouseId == idHouse && p.SusNumber == sus)
+                .OrderBy(p => p.Name)
+                .ToListAsync();
+        }
 
         public Task<int> SaveRecordAsync(HealthRecord record) => _database.InsertOrReplaceAsync(record);
 
@@ -32,11 +42,11 @@ namespace ACS_View.MVVM.Models.Services
             await _database.UpdateAsync(registro);
         }
 
-        public async Task DeleteRecordAsync(string susNumber)
+        public async Task DeleteRecordAsync(string sus)
         {
             try
             {
-                var recordToDelete = await _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == susNumber);
+                var recordToDelete = await _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == sus);
                 if (recordToDelete != null)
                 {
                     await _database.DeleteAsync(recordToDelete);
@@ -93,6 +103,50 @@ namespace ACS_View.MVVM.Models.Services
 
                 return age < 2;
             });
+        }
+
+        public async Task<List<HealthRecord>> GetRecordsByFamilyAndHouseAsync(int idFamily, int idHouse)
+        {
+            return await _database.Table<HealthRecord>()
+                     .Where(record => record.FamilyId == idFamily && record.HouseId == idHouse)
+                     .ToListAsync() ?? [];
+        }
+
+        public async Task UpdateRecordAsync(HealthRecord record)
+        {
+            await _database.UpdateAsync(record);
+        }
+
+        public async Task<List<HealthRecord>> GetRecordsByHouseID(int idHouse)
+        {
+            try
+            {
+                Console.WriteLine($"Consulta ao banco iniciada para HouseId: {idHouse}");
+
+                var records = await _database.Table<HealthRecord>()
+                    .Where(p => p.HouseId == idHouse)
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
+
+                if (records == null || !records.Any())
+                {
+                    Console.WriteLine("Nenhum registro encontrado no banco para o HouseId especificado.");
+                }
+                else
+                {
+                    foreach (var record in records)
+                    {
+                        Console.WriteLine($"Registro encontrado: Nome={record.Name}, HouseId={record.HouseId}, FamilyId={record.FamilyId}");
+                    }
+                }
+
+                return records ?? [];
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar registros no banco: {ex.Message}");
+                return [];
+            }
         }
     }
 }

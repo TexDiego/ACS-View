@@ -5,7 +5,7 @@
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     x:Class="ACS_View.MVVM.Views.DisplayPopUp"
     Color="Transparent"
-    CanBeDismissedByTappingOutsideOfPopup="True">
+    CanBeDismissedByTappingOutsideOfPopup="False">
 
 
     <Border
@@ -48,24 +48,24 @@
                     x:Name="Btn_Accept"
                     CornerRadius="10"
                     Margin="15,10,5,15"
+                    FontSize="15"
                     TextColor="White"
                     BorderWidth="0"
                     HeightRequest="40"
-                    WidthRequest="80"
                     BackgroundColor="#0084B1"
                     Clicked="Btn_Accept_Clicked"/>
-                
+
                 <Button
                     Grid.Column="1"
                     x:Name="Btn_Voltar"
                     Margin="5,10,15,15"
                     TextColor="White"
                     BorderWidth="0"
+                    FontSize="15"
                     CornerRadius="10"
                     HeightRequest="40"
-                    WidthRequest="80"
                     BackgroundColor="#C93919"
-                    Clicked="Btn_Voltar_Clicked"/>                
+                    Clicked="Btn_Voltar_Clicked"/>
 
             </Grid>
 

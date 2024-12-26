@@ -5,13 +5,13 @@ using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
-    public class RegistersViewModel : BaseViewModel
+    public partial class RegistersViewModel : BaseViewModel
     {
         private readonly HealthRecordService _healthRecordService;
-        private List<HealthRecord> _healthRecords = new();
-        private readonly ObservableCollection<Pessoa> _person = new();
+        private List<HealthRecord> _healthRecords = [];
+        private readonly ObservableCollection<Pessoa> _person = [];
         public ObservableCollection<Pessoa> Person => _person;
         public ObservableCollection<HealthRecord> _healthRecord { get; private set; }
         public ICommand DeleteCommand { get; }
@@ -19,10 +19,16 @@ namespace ACS_View.MVVM.ViewModel
 
         public RegistersViewModel() { }
 
-        public RegistersViewModel(HealthRecordService healthRecordService, string condition, string search, string filter, string order)
+        public RegistersViewModel(
+            HealthRecordService healthRecordService,
+            DatabaseService databaseService,
+            string condition,
+            string search,
+            string filter,
+            string order)
         {
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
-            _healthRecord = new ObservableCollection<HealthRecord>();
+            _healthRecord = [];
 
             DeleteCommand = new Command<string>(async susNumber =>
             {
@@ -60,10 +66,11 @@ namespace ACS_View.MVVM.ViewModel
             EditCommand = new Command<string>(async (susNumber) =>
             {
                 var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
+
                 if (record != null)
                 {
                     // Navegar para a página de edição e passar os dados do registro
-                    await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record));
+                    await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record, databaseService, record.HouseId, record.FamilyId));
                 }
             });
 
@@ -102,6 +109,7 @@ namespace ACS_View.MVVM.ViewModel
                         Nascimento = record.BirthDate,
                         Idade = CalcularIdadeCompleta(record.BirthDate)
                     });
+                    Console.WriteLine($"IDHouse de {record.Name}: {record.HouseId}");
                 }
 
                 OnPropertyChanged(nameof(Person));
@@ -162,8 +170,8 @@ namespace ACS_View.MVVM.ViewModel
                     "HASDB" => _healthRecords.Where(r => r.IsDiabetesAndHypertension),
                     "TB" => _healthRecords.Where(r => r.HasTuberculosis),
                     "HAN" => _healthRecords.Where(r => r.HasLeprosy),
-                    "ACAMADO" => _healthRecords.Where(r => r.IsHomebound),
-                    "DOMICILIADO" => _healthRecords.Where(r => r.IsBedridden),
+                    "ACAMADO" => _healthRecords.Where(r => r.IsBedridden),
+                    "DOMICILIADO" => _healthRecords.Where(r => r.IsHomebound),
                     "MENOR" => _healthRecords.Where(r => r.IsBaby),
                     "MENTAL" => _healthRecords.Where(r => r.HasMentalIllness),
                     "DEFICIENTE" => _healthRecords.Where(r => r.HasDisabilities),

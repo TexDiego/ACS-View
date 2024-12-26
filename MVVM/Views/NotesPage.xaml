@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:Class="ACS_View.MVVM.Views.NotesPage"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
@@ -30,14 +30,14 @@
         <VerticalStackLayout Grid.Row="0">
             <Label
                 Text="Anotações"
-                Margin="30"
+                Margin="20,15"
                 FontSize="30"
                 FontAttributes="Bold"
                 TextColor="#0084B1"
                 HorizontalOptions="Center"/>
 
             <Border
-                Margin="20,20,20,0"
+                Margin="20,15,20,0"
                 StrokeShape="RoundRectangle 15"
                 StrokeThickness="2"
                 Stroke="#C93919"
@@ -62,6 +62,7 @@
                 Margin="20,10,20,20"
                 Clicked="Btn_SaveNote_Clicked"
                 Command="{Binding SalvarNota}"/>
+            
         </VerticalStackLayout>
 
         <CollectionView
@@ -69,7 +70,7 @@
             x:Name="NotesCollectionView"
             ItemsSource="{Binding Notes}"
             Margin="20,0">
-            
+
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border
@@ -77,14 +78,14 @@
                         StrokeShape="RoundRectangle 15"
                         StrokeThickness="2"
                         Stroke="#C93919">
-                        
+
                         <Grid
                             ColumnDefinitions="*,auto"
                             Padding="10"
                             BackgroundColor="White">
-                            
+
                             <VerticalStackLayout Grid.Column="0">
-                                
+
                                 <Label
                                     Text="{Binding Content}"
                                     FontAttributes="Bold"
@@ -104,11 +105,11 @@
                                         FontSize="14"
                                         VerticalTextAlignment="Center"
                                         TextColor="#0084B1"/>
-                                    
-                                </HorizontalStackLayout>                             
-                                
+
+                                </HorizontalStackLayout>
+
                             </VerticalStackLayout>
-                            
+
                             <ImageButton
                                 Grid.Column="1"
                                 Source="bin.png"

@@ -1,0 +1,118 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             x:Class="ACS_View.MVVM.Views.FamiliesPage"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:FamiliesViewModel/>
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="auto,*,auto">
+
+        <VerticalStackLayout Grid.Row="0" VerticalOptions="Start">
+            <Label TextColor="#0084B1"
+                   Text="Família"
+                   Margin="20,15"
+                   FontSize="30"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   LineBreakMode="WordWrap"
+                   VerticalTextAlignment="Center"
+                   HorizontalTextAlignment="Center"/>
+        </VerticalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <CollectionView ItemsSource="{Binding Families}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border StrokeThickness="2"
+                                Stroke="#0084B1"
+                                StrokeShape="RoundRectangle 15"
+                                Margin="20,10,20,0"
+                                Padding="10"
+                                BackgroundColor="White">
+
+                            <Grid
+                                ColumnDefinitions="*,40,40"
+                                ColumnSpacing="10">
+                                
+                                <CollectionView Grid.Column="0" ItemsSource="{Binding PessoasFamilia}">
+                                    
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+
+                                            <Label
+                                                Text="{Binding Name}"
+                                                TextColor="#0084B1"
+                                                FontSize="18"
+                                                Margin="0,2"
+                                                LineBreakMode="WordWrap"/>
+
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                
+                                <ImageButton
+                                    Grid.Column="1" 
+                                    VerticalOptions="Center" 
+                                    Source="pencil.png" 
+                                    HeightRequest="25" 
+                                    WidthRequest="25" 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}" 
+                                    CommandParameter="{Binding IdFamily}"/>
+                                    
+                                <ImageButton 
+                                    Grid.Column="2" 
+                                    VerticalOptions="Center" 
+                                    Source="bin.png" 
+                                    HeightRequest="25" 
+                                    WidthRequest="25" 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}" 
+                                    CommandParameter="{Binding IdFamily}"/>
+                                    
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20,0,0">
+            
+            <Button 
+                x:Name="Btn_AddFamily" 
+                Text="Adicionar família" 
+                Margin="20,0,20,5" 
+                FontSize="18" 
+                TextColor="White" 
+                FontAttributes="Bold" 
+                MaximumHeightRequest="60" 
+                BackgroundColor="#0084B1" 
+                BorderColor="#C93919" 
+                BorderWidth="2" 
+                CornerRadius="15" 
+                HeightRequest="40" 
+                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}" 
+                CommandParameter="{Binding IdFamily}"/>
+            
+            <Button 
+                x:Name="Btn_Voltar" 
+                Text="Voltar" 
+                Margin="20,5,20,20" 
+                FontSize="18" 
+                TextColor="White" 
+                FontAttributes="Bold" 
+                MaximumHeightRequest="60" 
+                BackgroundColor="#0084B1" 
+                BorderColor="#C93919" 
+                BorderWidth="2" 
+                CornerRadius="15" 
+                HeightRequest="40" 
+                Clicked="Btn_Voltar_Clicked"/>
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

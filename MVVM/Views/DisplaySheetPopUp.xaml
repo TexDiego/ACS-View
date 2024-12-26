@@ -55,6 +55,7 @@
                 x:Name="Btn_Voltar"
                 Margin="10,10,15,15"
                 CornerRadius="10"
+                FontSize="18"
                 BorderWidth="0"
                 TextColor="White"
                 BackgroundColor="#C93919"

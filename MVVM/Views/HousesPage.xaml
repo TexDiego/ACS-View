@@ -1,25 +1,203 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:Class="ACS_View.MVVM.Views.HousesPage"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-    
+
+    <ContentPage.BindingContext>
+        <vm:HousesPageViewModel/>
+    </ContentPage.BindingContext>
+
     <Grid
         RowDefinitions="auto,*,auto">
-        
-        <Label
+
+        <VerticalStackLayout
             Grid.Row="0"
-            Text="Residências"
-            Margin="20,10,20,10"
-            FontAttributes="Bold"
-            TextColor="#0084B1"
-            FontSize="30"
-            HorizontalOptions="Center"/>
+            VerticalOptions="Start">
+
+            <Label
+                x:Name="Lbl_Title"
+                TextColor="#0084B1"
+                Text="Residências"
+                Margin="20,15"
+                FontSize="30"
+                FontAttributes="Bold" 
+                HorizontalOptions="Center"
+                LineBreakMode="WordWrap"
+                VerticalTextAlignment="Center"
+                HorizontalTextAlignment="Center"/>
+
+            <Border
+                Margin="20,15,20,20"
+                Stroke="#C93919"
+                StrokeThickness="2"
+                StrokeShape="RoundRectangle 15"
+                Padding="0"
+                BackgroundColor="White">
+
+                <VerticalStackLayout>
+
+                    <SearchBar
+                        x:Name="SB"
+                        Placeholder="Pesquisar"
+                        TextColor="#0084B1"
+                        FontSize="20"
+                        MaxLength="30"
+                        CancelButtonColor="#0084B1"
+                        IsSpellCheckEnabled="True"
+                        BackgroundColor="White"
+                        TextChanged="SB_TextChanged"/>
+
+                    <BoxView 
+                        HorizontalOptions="Center"
+                        Color="#C93919"
+                        WidthRequest="2"/>
+
+                    <Button
+                        x:Name="Btn_order"
+                        Margin="0"
+                        Padding="5"
+                        BorderWidth="0"
+                        CornerRadius="0"
+                        TextColor="White"
+                        MaximumHeightRequest="40"
+                        Background="#0084B1"
+                        FontSize="15"
+                        FontAutoScalingEnabled="True"
+                        Text="Ordem Crescente"
+                        Clicked="Btn_order_Clicked"/>
+
+                </VerticalStackLayout>
+
+            </Border>
+
+        </VerticalStackLayout>
 
         <ScrollView
             Grid.Row="1">
-            
+
+            <CollectionView
+                ItemsSource="{Binding Casa}">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            StrokeThickness="2"
+                            Stroke="#0084B1"
+                            StrokeShape="RoundRectangle 15"
+                            Margin="20,10,20,0"
+                            Padding="10"
+                            BackgroundColor="White">
+
+                            <VerticalStackLayout>
+
+                                <Grid
+                                    ColumnDefinitions="*,40,40"
+                                    RowDefinitions="*,*,*,35"
+                                    RowSpacing="5"
+                                    ColumnSpacing="10">
+
+                                    <Label
+                                        Grid.Column="0"
+                                        Grid.Row="0"
+                                        VerticalOptions="Center"
+                                        VerticalTextAlignment="Center"
+                                        x:Name="Lbl_Rua"
+                                        FontSize="18"
+                                        Margin="10,0,0,0"
+                                        LineBreakMode="WordWrap"
+                                        TextColor="#0084B1"
+                                        FontAttributes="Bold"
+                                        MaximumWidthRequest="250"
+                                        Text="{Binding Rua}"/>
+
+                                    <HorizontalStackLayout
+                                        Grid.Column="0"
+                                        Grid.Row="1"
+                                        Margin="10,0,0,0">
+
+                                        <Label
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Start"
+                                            HorizontalTextAlignment="Center"
+                                            FontSize="18"
+                                            TextColor="#0084B1"
+                                            FontAttributes="Bold"
+                                            Text="Número: "/>
+
+                                        <Label
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Start"
+                                            HorizontalTextAlignment="Center"
+                                            x:Name="Lbl_Num"
+                                            Margin="0,0,10,0"
+                                            FontSize="18"
+                                            LineBreakMode="WordWrap"
+                                            TextColor="#0084B1"
+                                            FontAttributes="Bold"
+                                            MaximumWidthRequest="250"
+                                            Text="{Binding Numero}"/>
+
+                                    </HorizontalStackLayout>
+                                    
+                                    <ImageButton
+                                        Grid.Column="1"
+                                        Grid.RowSpan="3"
+                                        VerticalOptions="Center"
+                                        Source="pencil.png"
+                                        HeightRequest="25"
+                                        WidthRequest="25"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                        CommandParameter="{Binding Id}"/>
+
+                                    <ImageButton
+                                        Grid.Column="2"
+                                        Grid.RowSpan="3"
+                                        VerticalOptions="Center"
+                                        Source="bin.png"
+                                        HeightRequest="25"
+                                        WidthRequest="25"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                        CommandParameter="{Binding Id}"/>
+
+                                    <Label
+                                        Grid.Column="0"
+                                        Grid.Row="2"
+                                        VerticalOptions="Center"
+                                        TextColor="#C93919"
+                                        Opacity="0.7"
+                                        FontAttributes="Italic"
+                                        Margin="10,0,0,0"
+                                        FontSize="18"
+                                        IsVisible="{Binding PossuiComplemento}"
+                                        x:Name="Lbl_Complemento"
+                                        Text="{Binding Complemento}"/>
+
+                                    <Button
+                                        x:Name="Btn_Families"
+                                        Grid.Row="3"
+                                        Grid.ColumnSpan="4"
+                                        CornerRadius="10"
+                                        BackgroundColor="#0084B1"
+                                        Text="Famílias"
+                                        TextColor="White"
+                                        FontSize="15"
+                                        VerticalOptions="Center"
+                                        HorizontalOptions="Fill"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
+                                        CommandParameter="{Binding Id}"/>
+
+                                </Grid>
+
+                            </VerticalStackLayout>
+
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
         </ScrollView>
 
         <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20,0,0">
@@ -32,6 +210,7 @@
                 TextColor="White"
                 FontAttributes="Bold"
                 MaximumHeightRequest="60"
+                BackgroundColor="#0084B1"
                 BorderColor="#C93919"
                 BorderWidth="2"
                 CornerRadius="15"
@@ -46,14 +225,15 @@
                 TextColor="White"
                 FontAttributes="Bold"
                 MaximumHeightRequest="60"
+                BackgroundColor="#0084B1"
                 BorderColor="#C93919"
                 BorderWidth="2"
                 CornerRadius="15"
                 HeightRequest="40"
                 Clicked="Btn_Voltar_Clicked"/>
-            
+
         </VerticalStackLayout>
-        
+
     </Grid>
-    
+
 </ContentPage>

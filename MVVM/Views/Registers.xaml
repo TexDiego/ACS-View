@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              xmlns:local="clr-namespace:ACS_View.MVVM.Models"
              x:Class="ACS_View.MVVM.Views.Registers"
              NavigationPage.HasNavigationBar="False"
@@ -39,12 +39,12 @@
         <VerticalStackLayout
             Grid.Row="0"
             VerticalOptions="Start">
-            
+
             <Label
                 x:Name="Lbl_Title"
                 TextColor="#0084B1"
                 Text="Cadastros"
-                Margin="30"
+                Margin="30,15"
                 FontSize="30"
                 FontAttributes="Bold" 
                 HorizontalOptions="Center"
@@ -53,7 +53,7 @@
                 HorizontalTextAlignment="Center"/>
 
             <Border
-                Margin="20"
+                Margin="20,15"
                 Stroke="#C93919"
                 StrokeThickness="2"
                 StrokeShape="RoundRectangle 15"
@@ -61,7 +61,7 @@
                 BackgroundColor="White">
 
                 <VerticalStackLayout>
-                    
+
                     <SearchBar
                         x:Name="SB"
                         Placeholder="Pesquisar"
@@ -90,6 +90,7 @@
                             Style="{StaticResource buttons}"
                             Margin="0"
                             Padding="5"
+                            FontAttributes="None"
                             BorderWidth="0"
                             CornerRadius="0"
                             MaximumHeightRequest="40"
@@ -111,6 +112,7 @@
                             x:Name="Btn_order"
                             Style="{StaticResource buttons}"
                             Margin="0"
+                            FontAttributes="None"
                             Padding="5"
                             BorderWidth="0"
                             CornerRadius="0"
@@ -120,14 +122,14 @@
                             Text="Ordem Crescente"
                             Clicked="Btn_order_Clicked"/>
 
-                    </Grid>                  
-                                        
+                    </Grid>
+
                 </VerticalStackLayout>
-                
+
             </Border>
 
         </VerticalStackLayout>
-        
+
         <CollectionView
             Grid.Row="1"
             x:Name="collectionView"
@@ -144,7 +146,7 @@
                             Margin="0,5"
                             StrokeShape="RoundRectangle 15"
                             StrokeThickness="2"
-                            Stroke="#C93919">
+                            Stroke="#0084B1">
 
                         <Grid
                                 RowDefinitions="*,*,*,*"
@@ -178,7 +180,7 @@
                                     Style="{StaticResource Lbl_Datas}"/>
 
                             </VerticalStackLayout>
-                            
+
                             <ImageButton
                                     x:Name="Btn_Edit"
                                     Source="pencil.png"
@@ -203,19 +205,22 @@
                                 Grid.Column="0"
                                 FontSize="18"
                                 Margin="10,5"
+                                Opacity="0.7"
+                                FontAttributes="Italic"
+                                TextColor="#C93919"
                                 IsVisible="{Binding HasObs}"
                                 Style="{StaticResource Lbl_Datas}"
                                 Text="{Binding Observacao}"/>
 
                             <ImageButton
-                                    x:Name="Btn_Delete"
-                                    Source="bin.png"
-                                    Grid.Column="2"
-                                    Grid.RowSpan="4"
-                                    HeightRequest="25"
-                                    WidthRequest="25"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding Sus}"/>
+                                x:Name="Btn_Delete"
+                                Source="bin.png"
+                                Grid.Column="2"
+                                Grid.RowSpan="4"
+                                HeightRequest="25"
+                                WidthRequest="25"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                CommandParameter="{Binding Sus}"/>
 
                         </Grid>
                     </Border>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModel"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:Class="ACS_View.MVVM.Views.OverallView"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
@@ -11,7 +11,7 @@
     </ContentPage.BindingContext>
 
     <ContentPage.Resources>
-        
+
         <Style x:Key="infos" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Center"/>
             <Setter Property="FontAttributes" Value="Bold"/>
@@ -19,7 +19,7 @@
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="HorizontalTextAlignment" Value="Center"/>
         </Style>
-        
+
         <Style x:Key="borders" TargetType="Border">
             <Setter Property="Stroke" Value="#C93919"/>
             <Setter Property="StrokeShape" Value="RoundRectangle 15"/>
@@ -44,26 +44,26 @@
             <Setter Property="Margin" Value="20,5,20,5"/>
             <Setter Property="MaximumHeightRequest" Value="60"/>
         </Style>
-        
+
     </ContentPage.Resources>
-    
+
     <Grid RowDefinitions="auto,*,auto">
 
 
         <Label 
             Grid.Row="0"
             Text="Visão Geral"
-            Margin="20,10,20,10"
+            Margin="20,15"
             FontAttributes="Bold"
             TextColor="#0084B1"
             FontSize="30"
             HorizontalOptions="Center"/>
 
         <ScrollView Grid.Row="1">
-            
+
             <Grid
                 RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
-                Margin="20,0,20,20"
+                Margin="20,15,20,20"
                 Padding="5"
                 RowSpacing="10">
 
@@ -116,10 +116,10 @@
                         <Label
                             x:Name="Lbl_Casas"
                             Style="{StaticResource infos}"
-                            Text="0"/>
+                            Text="{Binding TotalHouses}"/>
 
                     </HorizontalStackLayout>
-                    
+
                 </Border>
 
                 <ActivityIndicator
@@ -154,9 +154,9 @@
                             Style="{StaticResource infos}"
                             Text="{Binding TotalGestantes}"/>
 
-                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
 
-                    </Border>
+                </Border>
 
                 <ActivityIndicator
                     x:Name="AIGestantes"
@@ -287,20 +287,20 @@
                         Grid.Row="6"
                         Style="{StaticResource borders}">
 
-                        <HorizontalStackLayout>
+                    <HorizontalStackLayout>
 
-                            <Label
+                        <Label
                             Style="{StaticResource infos}"
                             Text="Hanseníases: "/>
 
-                            <Label
+                        <Label
                             x:Name="Lbl_HAN"
                             Style="{StaticResource infos}"
                             Text="{Binding TotalHanseniase}"/>
 
-                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
 
-                    </Border>
+                </Border>
 
                 <ActivityIndicator
                     x:Name="AIHAN"
@@ -657,5 +657,5 @@
             Clicked="Btn_Menu_Clicked"/>
 
     </Grid>
-            
+
 </ContentPage>

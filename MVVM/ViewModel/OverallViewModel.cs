@@ -1,12 +1,11 @@
-﻿using ACS_View.MVVM.Models;
-using ACS_View.MVVM.Models.Services;
-using System.Collections.ObjectModel;
+﻿using ACS_View.MVVM.Models.Services;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
-    public class OverallViewModel : BaseViewModel
+    public partial class OverallViewModel : BaseViewModel
     {
         private readonly HealthRecordService _healthRecordService;
+        private readonly HouseService _houseService;
 
         private int _totalGestantes;
         public int TotalGestantes
@@ -162,6 +161,17 @@ namespace ACS_View.MVVM.ViewModel
             }
         }
 
+        private int _totalHouses;
+        public int TotalHouses
+        {
+            get => _totalHouses;
+            set
+            {
+                _totalHouses = value;
+                OnPropertyChanged();
+            }
+        }
+
         private int _Total;
         public int Total
         {
@@ -182,9 +192,10 @@ namespace ACS_View.MVVM.ViewModel
 
         public OverallViewModel() { }
 
-        public OverallViewModel(HealthRecordService healthRecordService)
+        public OverallViewModel(HealthRecordService healthRecordService, HouseService houseService)
         {
             _healthRecordService = healthRecordService;
+            _houseService = houseService;
             AtualizarContagens();
         }
 
@@ -194,6 +205,7 @@ namespace ACS_View.MVVM.ViewModel
             {
                 IsLoading = true;
 
+                TotalHouses = await _houseService.GetTotalCountAsync();
                 TotalGestantes = await _healthRecordService.GetConditionCountAsync(r => r.IsPregnant);
                 TotalDiabeticos = await _healthRecordService.GetConditionCountAsync(r => r.HasDiabetes);
                 TotalHipertensos = await _healthRecordService.GetConditionCountAsync(r => r.HasHypertension);

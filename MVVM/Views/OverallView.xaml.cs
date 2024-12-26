@@ -1,27 +1,32 @@
 using ACS_View.MVVM.Models.Services;
-using ACS_View.MVVM.ViewModel;
+using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls;
-using System.Globalization;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class OverallView : ContentPage
 {
     private readonly DatabaseService _dbService;
-    private OverallViewModel _overallViewModel;
-    private HealthRecordService _healthRecordService;
-    private AddRegisterViewModel _addRegisterViewModel;
+    private readonly OverallViewModel _overallViewModel;
+    private readonly HealthRecordService _healthRecordService;
+    private readonly AddRegisterViewModel _addRegisterViewModel;
+    private readonly AddHouseViewModel _addHouseViewModel;
+    private readonly HouseService _houseService;
+    private readonly NoteService _noteService;
+    private readonly NotesPageViewModel _notesPageViewModel;
 
-    public OverallView(DatabaseService dbService, HealthRecordService healthRecordService, OverallViewModel overallViewModel, AddRegisterViewModel addRegisterViewModel)
+    public OverallView()
     {
         InitializeComponent();
-        _dbService = dbService;
-        _overallViewModel = overallViewModel;
-        _healthRecordService = healthRecordService;
-        _addRegisterViewModel = addRegisterViewModel;
-        _ = InitializeAsync(); // Evita travamento por não bloquear a UI
+
+        _dbService = new DatabaseService();
+        _noteService = new NoteService(_dbService);
+        _healthRecordService = new HealthRecordService(_dbService);
+        _houseService = new HouseService(_dbService);
+        _overallViewModel = new OverallViewModel(_healthRecordService, _houseService);
+        _addRegisterViewModel = new AddRegisterViewModel(_healthRecordService);
+        _addHouseViewModel = new AddHouseViewModel(_houseService);
+        _notesPageViewModel = new NotesPageViewModel(_noteService);
     }
 
     protected override void OnAppearing()
@@ -29,18 +34,6 @@ public partial class OverallView : ContentPage
         base.OnAppearing();
         BindingContext = _overallViewModel;
         _overallViewModel.AtualizarContagens();
-    }
-
-    private async Task InitializeAsync()
-    {
-        try
-        {
-            await _dbService.InitializeDatabaseAsync(); // Inicialize o banco de dados sem bloquear
-        }
-        catch (Exception ex)
-        {
-            this.ShowPopup(new DisplayPopUp("Erro", $"Falha ao inicializar o banco de dados: {ex.Message}", true, "Voltar", false, ""));
-        }
     }
 
     private async void Btn_OverallViewExit_Clicked(object sender, EventArgs e)
@@ -55,7 +48,7 @@ public partial class OverallView : ContentPage
 
     private async void Btn_OverallAdd_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new AddRegister());
+        await Navigation.PushAsync(new AddRegister(_dbService));
     }
 
     #region conditions buttons
@@ -71,7 +64,7 @@ public partial class OverallView : ContentPage
         {
             AICasas.IsVisible = true;
             _overallViewModel.IsLoading = true;
-            await Navigation.PushAsync(new HousesPage());
+            await Navigation.PushAsync(new HousesPage(_dbService, _houseService, _addHouseViewModel));
         }
         catch (Exception ex)
         {
@@ -179,7 +172,7 @@ public partial class OverallView : ContentPage
     {
         try
         {
-            await Navigation.PushAsync(new NotesPage());
+            await Navigation.PushAsync(new NotesPage(_notesPageViewModel));
         }
         catch (Exception ex)
         {
@@ -193,17 +186,17 @@ public partial class OverallView : ContentPage
 
         if (option == "1")
         {
-            await Navigation.PushAsync(new AddRegister());
+            await Navigation.PushAsync(new AddRegister(_dbService));
         }
 
         if (option == "2")
         {
-            await Navigation.PushAsync(new HousesPage());
+            await Navigation.PushAsync(new HousesPage(_dbService, _houseService, _addHouseViewModel));
         }
 
         if (option == "3")
         {
-            await Navigation.PushAsync(new NotesPage());
+            await Navigation.PushAsync(new NotesPage(_notesPageViewModel));
         }
 
         if (option == "4")

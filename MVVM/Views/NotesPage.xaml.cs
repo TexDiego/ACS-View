@@ -1,24 +1,18 @@
-using ACS_View.MVVM.Models.Services;
-using ACS_View.MVVM.ViewModel;
+using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class NotesPage : ContentPage
 {
-	NotesPageViewModel _viewModel;
-    DatabaseService _databaseService;
-    NoteService _noteService;
+    private  NotesPageViewModel _viewModel;
 
-    public NotesPage()
+    public NotesPage(NotesPageViewModel viewModel)
     {
         InitializeComponent();
-        _databaseService = new DatabaseService();
-        _noteService = new NoteService(_databaseService);
-        _viewModel = new NotesPageViewModel(_noteService);
-        BindingContext = _viewModel; // Configurando aqui
+        _viewModel = viewModel;
+        BindingContext = viewModel;
     }
-
 
     protected override async void OnAppearing()
     {
@@ -26,9 +20,6 @@ public partial class NotesPage : ContentPage
 
         try
         {
-            _databaseService = new DatabaseService();
-            _noteService = new NoteService(_databaseService);
-            _viewModel = new NotesPageViewModel(_noteService);
             _viewModel.ScrollToTopRequested += ScrollToTop;
 
             await _viewModel.LoadNotesAsync();
@@ -52,12 +43,12 @@ public partial class NotesPage : ContentPage
 
     private async void Btn_Back_Clicked(object sender, EventArgs e)
     {
-		try
-		{
-			await Navigation.PopAsync();
-		}
-		catch (Exception ex)
-		{
+        try
+        {
+            await Navigation.PopAsync();
+        }
+        catch (Exception ex)
+        {
             await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }

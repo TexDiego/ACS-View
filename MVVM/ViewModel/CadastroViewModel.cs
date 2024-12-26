@@ -2,7 +2,7 @@
 using ACS_View.MVVM.Models.Services;
 using System.Windows.Input;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
     public class CadastroViewModel : BaseViewModel
     {
@@ -90,9 +90,9 @@ namespace ACS_View.MVVM.ViewModel
             IsBedridden = false;
             IsHomebound = false;
             IsUnderTwoYears = false;
-            HasMentalIllness= false;
+            HasMentalIllness = false;
             IsDisabled = false;
-            IsSmoker= false;
+            IsSmoker = false;
             HasCancer = false;
             IsOld = false;
 

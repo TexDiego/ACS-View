@@ -1,50 +1,64 @@
-﻿using SQLite;
+﻿using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui.Views;
+using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
     public class DatabaseService
     {
-        private SQLiteAsyncConnection _database;
+        private readonly SQLiteAsyncConnection _database;
+        private readonly string _dataBasePath =
+            Path.Combine(Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData),
+                "health_app.db");
 
         public DatabaseService()
         {
-            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "health_app.db");
-            _database = new SQLiteAsyncConnection(dbPath);
+            try
+            {
+                _database = new SQLiteAsyncConnection(_dataBasePath);
 
-            InitializeDatabaseAsync();
+                Task.Run(async () => await InitializeDatabaseAsync());
+            }
+            catch (Exception ex)
+            {
+                Application.Current.MainPage.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
         }
 
         public async Task InitializeDatabaseAsync()
         {
-            await EnsureTableExistsAsync<HealthRecord>();
-            await EnsureTableExistsAsync<Note>();
-            await EnsureTableExistsAsync<House>();
-            await EnsureTableExistsAsync<Family>();
-        }
-
-        private async Task EnsureTableExistsAsync<T>() where T : new()
-        {
-            var tableName = typeof(T).Name;
-
-            // Verificar se a tabela existe
-            var result = await _database.ExecuteScalarAsync<int>(
-                $"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='{tableName}'");
-
-            if (result == 0)
+            Console.WriteLine("Database initialization started...");
+            try
             {
-                // Criar tabela diretamente
-                await _database.CreateTableAsync<T>();
+                await _database.CreateTablesAsync<HealthRecord, Note, House, Family>();
+
+                Console.WriteLine("Database initialization completed successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during database initialization: {ex.Message}\n");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}\n");
+                throw new InvalidOperationException("Falha ao inicializar o banco de dados.", ex);
             }
         }
-
 
         public SQLiteAsyncConnection GetConnection()
         {
-            if (_database == null)
+            try
             {
-                throw new InvalidOperationException("A conexão não foi inicializada. Certifique-se de chamar InitializeDatabaseAsync primeiro.");
+                if (_database == null)
+                {
+                    Task.Run(async () => await InitializeDatabaseAsync());
+                    //throw new InvalidOperationException("A conexão não foi inicializada. Certifique-se de chamar InitializeDatabaseAsync primeiro.");
+                }
+                return _database;
             }
-            return _database;
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro: ", ex.Message);
+                throw;
+            }
         }
     }
 }

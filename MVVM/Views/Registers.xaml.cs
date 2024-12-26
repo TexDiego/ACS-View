@@ -1,5 +1,5 @@
 using ACS_View.MVVM.Models.Services;
-using ACS_View.MVVM.ViewModel;
+using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
@@ -7,17 +7,21 @@ namespace ACS_View.MVVM.Views;
 public partial class Registers : ContentPage
 {
     private CancellationTokenSource _throttleCts;
+    private readonly DatabaseService _databaseService;
     private RegistersViewModel viewModel;
-    private DatabaseService _databaseService;
-    private HealthRecordService _healthRecordService;
-    private AddRegisterViewModel _addRegisterViewModel;
+    private readonly HealthRecordService _healthRecordService;
+    private readonly AddRegisterViewModel _addRegisterViewModel;
     private string _condition;
     private string _filter;
     private string _order;
 
-    public Registers(string condition, DatabaseService databaseService, HealthRecordService healthRecordService, AddRegisterViewModel addRegisterViewModel)
-	{
-		InitializeComponent();
+    public Registers(
+        string condition,
+        DatabaseService databaseService,
+        HealthRecordService healthRecordService,
+        AddRegisterViewModel addRegisterViewModel)
+    {
+        InitializeComponent();
 
         try
         {
@@ -66,7 +70,7 @@ public partial class Registers : ContentPage
             _addRegisterViewModel.IsLoading = true;
 
             // Recarregar dados sempre que a página aparecer
-            viewModel = new RegistersViewModel(_healthRecordService, _condition, string.Empty, _filter, _order);
+            viewModel = new RegistersViewModel(_healthRecordService, _databaseService, _condition, string.Empty, _filter, _order);
             BindingContext = viewModel;
             await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
 
@@ -84,12 +88,12 @@ public partial class Registers : ContentPage
 
     private async void Btn_RegistersGoBack_Clicked(object sender, EventArgs e)
     {
-		await Navigation.PopAsync();
+        await Navigation.PopAsync();
     }
 
     private async void Btn_AddRegister_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new AddRegister());
+        await Navigation.PushAsync(new AddRegister(_databaseService));
     }
 
     private async void SB_TextChanged(object sender, TextChangedEventArgs e)

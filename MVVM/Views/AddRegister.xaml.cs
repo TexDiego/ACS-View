@@ -1,22 +1,24 @@
 using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
-using ACS_View.MVVM.ViewModel;
+using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class AddRegister : ContentPage
 {
     private readonly AddRegisterViewModel _addRegisterViewModel;
+    private readonly DatabaseService _databaseService;
+    int? HouseId = 0;
+    int? FamilyId = 0;
 
-    public AddRegister()
+    public AddRegister(DatabaseService databaseService)
     {
         InitializeComponent();
 
         // Inicializando as dependências e a ViewModel apenas uma vez
-        var databaseService = new DatabaseService();
+        _databaseService = databaseService;
         var healthRecordService = new HealthRecordService(databaseService);
         _addRegisterViewModel = new AddRegisterViewModel(healthRecordService);
 
@@ -27,12 +29,12 @@ public partial class AddRegister : ContentPage
         Entry_Birth.Date = DateTime.Today;
     }
 
-    public AddRegister(HealthRecord healthRecord)
+    public AddRegister(HealthRecord healthRecord, DatabaseService databaseService, int houseId, int familyId)
     {
         InitializeComponent();
 
         // Inicializando as dependências e a ViewModel apenas uma vez
-        var databaseService = new DatabaseService();
+        _databaseService = databaseService;
         var healthRecordService = new HealthRecordService(databaseService);
         _addRegisterViewModel = new AddRegisterViewModel(healthRecordService);
 
@@ -54,6 +56,8 @@ public partial class AddRegister : ContentPage
         CB_Disability.IsChecked = healthRecord.HasDisabilities;
         CB_Smoker.IsChecked = healthRecord.IsSmoker;
         CB_Cancer.IsChecked = healthRecord.HasCancer;
+        HouseId = houseId;
+        FamilyId = familyId;
 
         Entry_Birth.MinimumDate = DateTime.Today.AddYears(-120);
         Entry_Birth.MaximumDate = DateTime.Today;
@@ -116,6 +120,8 @@ public partial class AddRegister : ContentPage
             _addRegisterViewModel.Fumante = CB_Smoker.IsChecked;
             _addRegisterViewModel.Cancer = CB_Cancer.IsChecked;
             _addRegisterViewModel.HasObs = !string.IsNullOrEmpty(Entry_Obs.Text);
+            _addRegisterViewModel.HouseId = HouseId ?? 0;
+            _addRegisterViewModel.FamilyId = FamilyId ?? 0;
 
             Entry_Sus.Unfocus();
             Entry_Name.Unfocus();

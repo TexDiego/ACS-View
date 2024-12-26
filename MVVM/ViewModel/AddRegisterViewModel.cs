@@ -4,7 +4,7 @@ using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using System.Windows.Input;
 
-namespace ACS_View.MVVM.ViewModel
+namespace ACS_View.MVVM.ViewModels
 {
     public class AddRegisterViewModel : BaseViewModel
     {
@@ -28,6 +28,8 @@ namespace ACS_View.MVVM.ViewModel
         public bool Cancer { get; set; }
         public string? Observacao { get; set; }
         public bool HasObs { get; set; }
+        public int FamilyId { get; set; }
+        public int HouseId { get; set; }
 
         private bool _isLoading;
 
@@ -72,7 +74,9 @@ namespace ACS_View.MVVM.ViewModel
                 IsSmoker = Fumante,
                 HasCancer = Cancer,
                 Observacao = Observacao,
-                HasObs = HasObs
+                HasObs = HasObs,
+                HouseId = HouseId,
+                FamilyId = FamilyId
             };
 
             try
@@ -127,6 +131,8 @@ namespace ACS_View.MVVM.ViewModel
             Cancer = false;
             Observacao = string.Empty;
             HasObs = false;
+            FamilyId = 0;
+            HouseId = 0;
 
             OnPropertyChanged(nameof(Nome));
             OnPropertyChanged(nameof(NumeroSUS));
@@ -145,6 +151,8 @@ namespace ACS_View.MVVM.ViewModel
             OnPropertyChanged(nameof(Deficiente));
             OnPropertyChanged(nameof(HasObs));
             OnPropertyChanged(nameof(Cancer));
+            OnPropertyChanged(nameof(HouseId));
+            OnPropertyChanged(nameof(FamilyId));
         }
     }
 }

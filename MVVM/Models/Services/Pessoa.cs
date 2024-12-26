@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ACS_View.MVVM.Models.Services
+﻿namespace ACS_View.MVVM.Models.Services
 {
     public class Pessoa
     {
@@ -14,6 +8,7 @@ namespace ACS_View.MVVM.Models.Services
         public string Idade { get; set; }
         public string? Observacao { get; set; }
         public bool HasObs { get; set; }
+        public int IdHouse { get; set; }
+        public int IdFamily { get; set; }
     }
-
 }

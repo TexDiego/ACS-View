@@ -4,10 +4,10 @@ namespace ACS_View.MVVM.Views;
 
 public partial class Menu : Popup
 {
-	public Menu()
-	{
-		InitializeComponent();
-	}
+    public Menu()
+    {
+        InitializeComponent();
+    }
 
     private void Btn_AddRegister_Clicked(object sender, EventArgs e)
     {

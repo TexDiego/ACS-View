@@ -53,13 +53,9 @@ public partial class AddFamilyPage : ContentPage
                 return;
             }
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                if (viewModel.SearchCommand.CanExecute(null))
+            if (viewModel.SearchCommand.CanExecute(null))
                 viewModel.SearchCommand.Execute(e.NewTextValue);
             Scroll_View_Search.IsVisible = true;
-
-            });
         }
         catch (TaskCanceledException)
         {
@@ -75,6 +71,5 @@ public partial class AddFamilyPage : ContentPage
     private void ImageButton_Clicked(object sender, EventArgs e)
     {
         Entry_Search.Text = string.Empty;
-        Entry_Search.Unfocus();
     }
 }

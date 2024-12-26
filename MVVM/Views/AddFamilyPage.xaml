@@ -83,7 +83,8 @@
                         x:Name="Scroll_View_Search"
                         Grid.Row="2"
                         Margin="0,15,0,0"
-                        IsVisible="False">
+                        IsVisible="False"
+                        MaximumHeightRequest="200">
 
                         <CollectionView ItemsSource="{Binding PessoasPesquisadas}" ItemsLayout="VerticalList">
 
@@ -95,32 +96,26 @@
                                         HorizontalOptions="Fill"
                                         BackgroundColor="#E6EBED"
                                         StrokeShape="RoundRectangle 10"
-                                        Margin="0,5,0,0"
-                                        HeightRequest="-1"
-                                        MaximumHeightRequest="200">
+                                        Margin="0,5,0,0">
                                         
                                         <Grid
-                                            RowDefinitions="auto"
-                                            ColumnDefinitions="auto,*"
+                                            ColumnDefinitions="*,40"
                                             HorizontalOptions="Fill"
                                             VerticalOptions="Fill"
                                             Padding="10">
 
                                             <Label
-                                                Grid.Row="0"
                                                 Grid.Column="0"
                                                 TextColor="#0084B1"
                                                 FontAttributes="Bold"
                                                 FontSize="18"
                                                 HorizontalOptions="Start"
                                                 VerticalOptions="Center"
-                                                LineBreakMode="WordWrap"
-                                                MaximumWidthRequest="215"
+                                                LineBreakMode="CharacterWrap"
                                                 Text="{Binding Nome}"/>
 
                                             <ImageButton
                                                 Grid.Column="1"
-                                                Grid.Row="0"
                                                 Source="add.png"
                                                 HeightRequest="35"
                                                 WidthRequest="35"
@@ -164,7 +159,8 @@
                             Padding="15"
                             BackgroundColor="White">
 
-                            <Grid>
+                            <Grid
+                                ColumnDefinitions="*,40">
 
                                 <Label
                                     Grid.Column="0"
@@ -177,7 +173,7 @@
                                     Text="{Binding Nome}"/>
 
                                 <ImageButton
-                                    Source="bin.png"
+                                    Source="removeperson.png"
                                     Grid.Column="1"
                                     HeightRequest="35"
                                     WidthRequest="35"

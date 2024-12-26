@@ -13,6 +13,8 @@ namespace ACS_View.MVVM.ViewModels
         private readonly DatabaseService _databaseService;
         private readonly FamilyService _familyService;
         private readonly HealthRecordService _healthRecordService;
+        private CancellationTokenSource _debounceTimer;
+
 
         private List<HealthRecord> peopleToAdd = [];
 
@@ -189,12 +191,27 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
+                // Cancela o temporizador anterior
+                _debounceTimer?.Cancel();
+                _debounceTimer = new CancellationTokenSource();
+
+                // Aguarda 300ms antes de executar a busca
+                await Task.Delay(300, _debounceTimer.Token);
+
+                // Se a pesquisa estiver vazia, limpa os resultados
+                if (string.IsNullOrWhiteSpace(search))
+                {
+                    _pessoasPesquisada.Clear();
+                    return;
+                }
+
+                // Executa a busca
                 var pesquisa = await _healthRecordService.GetRecordByNameOrSus(search);
-                Console.WriteLine(pesquisa.Count);
+                Console.WriteLine($"Registros encontrados: {pesquisa.Count}");
 
                 _pessoasPesquisada.Clear();
 
-                if (pesquisa != null && search != null)
+                if (pesquisa != null)
                 {
                     foreach (var pessoa in pesquisa)
                     {
@@ -207,6 +224,10 @@ namespace ACS_View.MVVM.ViewModels
                         Console.WriteLine($"Nome: {pessoa.Name}\nSUS: {pessoa.SusNumber}");
                     }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignora se o debounce foi cancelado
             }
             catch (Exception ex)
             {

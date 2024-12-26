@@ -19,6 +19,7 @@ namespace ACS_View.MVVM.Models.Services
             _database.Table<HealthRecord>()
             .Where(p => p.Name.ToLower().Contains(search.ToLower())
                      || p.SusNumber.Contains(search))
+            .Take(10)
             .OrderBy(p => p.Name)
             .ToListAsync();
 

@@ -64,7 +64,7 @@ public partial class OverallView : ContentPage
         {
             AICasas.IsVisible = true;
             _overallViewModel.IsLoading = true;
-            await Navigation.PushAsync(new HousesPage(_dbService, _houseService, _addHouseViewModel));
+            await Navigation.PushAsync(new HousesPage(_dbService, _houseService));
         }
         catch (Exception ex)
         {
@@ -191,7 +191,7 @@ public partial class OverallView : ContentPage
 
         if (option == "2")
         {
-            await Navigation.PushAsync(new HousesPage(_dbService, _houseService, _addHouseViewModel));
+            await Navigation.PushAsync(new HousesPage(_dbService, _houseService));
         }
 
         if (option == "3")

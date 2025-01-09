@@ -17,8 +17,7 @@ namespace ACS_View.MVVM.Models.Services
             try
             {
                 _database = new SQLiteAsyncConnection(_dataBasePath);
-
-                Task.Run(async () => await InitializeDatabaseAsync());
+                Task.Run(async () => await InitializeDatabaseAsync()).Wait();
             }
             catch (Exception ex)
             {
@@ -50,7 +49,7 @@ namespace ACS_View.MVVM.Models.Services
                 if (_database == null)
                 {
                     Task.Run(async () => await InitializeDatabaseAsync());
-                    //throw new InvalidOperationException("A conexão não foi inicializada. Certifique-se de chamar InitializeDatabaseAsync primeiro.");
+                    throw new InvalidOperationException("A conexão não foi inicializada. Certifique-se de chamar InitializeDatabaseAsync primeiro.");
                 }
                 return _database;
             }

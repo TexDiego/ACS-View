@@ -91,7 +91,7 @@ namespace ACS_View.MVVM.ViewModels
                     {
                         // Atualiza o registro existente
                         novoCadastro.CasaId = registroExistente.CasaId;
-                        await _houseService.UpdateHouse(novoCadastro);
+                        await _houseService.UpdateHouseAsync(novoCadastro);
 
                         await Application.Current.MainPage.ShowPopupAsync(
                             new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));

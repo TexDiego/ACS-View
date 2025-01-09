@@ -12,9 +12,6 @@ namespace ACS_View.MVVM.Models.Services
         public Task<HealthRecord> GetRecordBySusAsync(string sus) =>
             _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == sus);
 
-        public Task<List<HealthRecord>> GetRecordByCondition(string condition) =>
-            _database.Table<HealthRecord>().Where(r => r.Equals(condition)).OrderBy(r => r.Name).ToListAsync();
-
         public Task<List<HealthRecord>> GetRecordByNameOrSus(string search) =>
             _database.Table<HealthRecord>()
             .Where(p => p.Name.ToLower().Contains(search.ToLower())
@@ -22,14 +19,6 @@ namespace ACS_View.MVVM.Models.Services
             .Take(10)
             .OrderBy(p => p.Name)
             .ToListAsync();
-
-        public Task<List<HealthRecord>> GetRecordByIdsAndSus(int idFamily, int idHouse, string sus)
-        {
-            return _database.Table<HealthRecord>()
-                .Where(p => p.FamilyId == idFamily && p.HouseId == idHouse && p.SusNumber == sus)
-                .OrderBy(p => p.Name)
-                .ToListAsync();
-        }
 
         public Task<int> SaveRecordAsync(HealthRecord record) => _database.InsertOrReplaceAsync(record);
 

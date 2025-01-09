@@ -6,32 +6,84 @@ namespace ACS_View.MVVM.Models.Services
     {
         private readonly SQLiteAsyncConnection _connection = databaseService.GetConnection();
 
-        public Task<List<House>> GetAllHousesAsync() => _connection.Table<House>().OrderBy(h => h.CasaId).ToListAsync();
+        public async Task<List<House>> GetAllHousesAsync()
+        {
+            try
+            {
+                // Consulta SQL direta para buscar todas as casas
+                return await _connection.QueryAsync<House>("SELECT * FROM House");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar casas: {ex.Message}");
+                return new List<House>();
+            }
+        }
 
-        public Task<House> GetHousesById(int id) => _connection.Table<House>().FirstOrDefaultAsync(h => h.CasaId == id);
+        public async Task<House> GetHousesById(int id)
+        {
+            try
+            {
+                // Consulta SQL direta para buscar uma casa pelo ID
+                var result = await _connection.QueryAsync<House>("SELECT * FROM House WHERE CasaId = ?", id);
+                return result.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar casa por ID: {ex.Message}");
+                throw;
+            }
+        }
 
         public async Task<int> SaveHouseAsync(House house)
         {
-            return await _connection.InsertAsync(house);
+            try
+            {
+                // Inserção direta no banco de dados
+                return await _connection.ExecuteAsync(
+                    "INSERT INTO House (CasaId, CEP, Rua, NumeroCasa, Bairro, Cidade, Estado, Pais, Complemento, PossuiComplemento) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    house.CasaId,
+                    house.CEP,
+                    house.Rua,
+                    house.NumeroCasa,
+                    house.Bairro,
+                    house.Cidade,
+                    house.Estado,
+                    house.Pais,
+                    house.Complemento,
+                    house.PossuiComplemento
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao salvar casa: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<int> GetTotalCountAsync()
         {
-            return await _connection.Table<House>().CountAsync();
+            try
+            {
+                // Consulta SQL para contar o total de registros
+                var result = await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM House");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao contar casas: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<int> GetMaxIdAsync()
         {
             try
             {
-                // Obtém todos os registros e pega o maior valor de CasaId
-                var maxId = await _connection.Table<House>()
-                                             .OrderByDescending(h => h.CasaId)
-                                             .Take(1)
-                                             .ToListAsync();
-
-                // Retorna o ID máximo ou 0 se não houver registros
-                return maxId.FirstOrDefault()?.CasaId ?? 0;
+                // Consulta SQL para obter o ID máximo
+                var result = await _connection.ExecuteScalarAsync<int?>("SELECT MAX(CasaId) FROM House");
+                return result ?? 0;
             }
             catch (Exception ex)
             {
@@ -40,22 +92,40 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
-        public async Task UpdateHouse(House house)
+        public async Task UpdateHouseAsync(House house)
         {
-            await _connection.UpdateAsync(house);
+            try
+            {
+                // Atualização direta com consulta SQL
+                await _connection.ExecuteAsync(
+                    "UPDATE House SET CEP = ?, Rua = ?, NumeroCasa = ?, Bairro = ?, Cidade = ?, Estado = ?, Pais = ?, Complemento = ?, PossuiComplemento = ? " +
+                    "WHERE CasaId = ?",
+                    house.CEP,
+                    house.Rua,
+                    house.NumeroCasa,
+                    house.Bairro,
+                    house.Cidade,
+                    house.Estado,
+                    house.Pais,
+                    house.Complemento,
+                    house.PossuiComplemento,
+                    house.CasaId
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao atualizar casa: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task DeleteHouseAsync(int id)
         {
             try
             {
-                var recordToDelete = await _connection.Table<House>().FirstOrDefaultAsync(r => r.CasaId == id);
-
-                if (recordToDelete != null)
-                {
-                    await _connection.DeleteAsync(recordToDelete);
-                    Console.WriteLine("Registro deletado do banco de dados.");
-                }
+                // Exclusão direta pelo ID
+                await _connection.ExecuteAsync("DELETE FROM House WHERE CasaId = ?", id);
+                Console.WriteLine("Registro deletado do banco de dados.");
             }
             catch (Exception ex)
             {

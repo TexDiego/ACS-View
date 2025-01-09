@@ -95,11 +95,17 @@ namespace ACS_View.MVVM.ViewModels
                     }).ToList();
                 }
 
+                // Aplicar ordenação por Rua, Número e Complemento
+                var orderedHouses = filteredHouses
+                    .OrderBy(h => h.Rua?.ToLowerInvariant()) // Ordenar por rua (case-insensitive)
+                    .ThenBy(h => int.TryParse(h.NumeroCasa, out var numero) ? numero : int.MaxValue) // Ordenar por número (tratando strings como inteiros)
+                    .ThenBy(h => h.Complemento?.ToLowerInvariant()); // Ordenar por complemento (case-insensitive)
+
                 // Atualiza a coleção de casas na UI
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     Houses.Clear();
-                    foreach (var house in filteredHouses)
+                    foreach (var house in orderedHouses)
                     {
                         Houses.Add(house);
                     }
@@ -191,17 +197,6 @@ namespace ACS_View.MVVM.ViewModels
             {
                 await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
-        }
-
-        private IEnumerable<House> FilterRecords(IEnumerable<House> houses, string search)
-        {
-            var normalizedSearch = search?.Trim().ToLowerInvariant();
-
-            var filtered = string.IsNullOrWhiteSpace(normalizedSearch)
-                ? houses
-                : houses.Where(h => h.Rua?.ToLowerInvariant().Contains(normalizedSearch) ?? false);
-
-            return filtered ?? houses.ToList();
         }
     }
 }

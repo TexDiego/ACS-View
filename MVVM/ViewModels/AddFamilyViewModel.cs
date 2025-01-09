@@ -139,6 +139,8 @@ namespace ACS_View.MVVM.ViewModels
                 // Limpar campos e atualizar dados
                 LimparCampos();
                 await LoadDataAsync();
+
+                await Application.Current.MainPage.Navigation.PopAsync();
             }
             catch (Exception ex)
             {

@@ -13,13 +13,36 @@
     <ContentPage.Content>
         <Grid RowDefinitions="auto,*,auto,auto" RowSpacing="10" Margin="10">
 
-            <!-- Barra de pesquisa -->
-            <SearchBar Placeholder="Buscar por rua..."
-                       PlaceholderColor="Black"
-                       Grid.Row="0"
-                       Text="{Binding SearchText, Mode=TwoWay}"
-                       TextColor="Black"
-                       TextChanged="SearchBar_TextChanged" />
+            <Grid ColumnDefinitions="*,auto" Grid.Row="0">
+                
+                <!-- Barra de pesquisa -->
+                <Image
+                    Grid.Column="0"
+                    Source="loupe.png"
+                    HeightRequest="19"
+                    WidthRequest="19"
+                    HorizontalOptions="Start"
+                    Margin="21,0,0,0"/>
+
+                <SearchBar
+                    Grid.Column="0"
+                    Placeholder="Buscar..."
+                    PlaceholderColor="Black"                       
+                    Text="{Binding SearchText, Mode=TwoWay}"
+                    TextColor="Black"
+                    BackgroundColor="Transparent"
+                    TextChanged="SearchBar_TextChanged" />
+                
+                <!-- Botão de adicionar residência -->
+                <ImageButton
+                    Grid.Column="1"
+                    Source="addHouse.png"
+                    HeightRequest="30"
+                    WidthRequest="30"
+                    Margin="20,0"
+                    Command="{Binding NewHouseCommand}"/>
+                
+            </Grid>
 
             <!-- Lista de residências -->
             <CollectionView ItemsSource="{Binding Houses}"
@@ -33,36 +56,39 @@
                             StrokeShape="RoundRectangle 8"
                             Padding="10"
                             Margin="0,5">
-                            
+
                             <VerticalStackLayout>
 
-                                <!-- Rua e Número -->
+                                <!-- Rua -->
                                 <Label Text="{Binding Rua}"
                                        FontSize="18"
                                        Opacity="0.7"
                                        TextColor="Black"
                                        FontAttributes="Bold" />
 
+                                <!-- Número e Complemento -->
                                 <HorizontalStackLayout Margin="0,0,0,10">
 
-                                    <Label Text="Número: " TextColor="Black" Opacity="0.7"/>
+                                    <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
 
-                                    <Label Text="{Binding NumeroCasa}" TextColor="Black" Opacity="0.7"/>
+                                    <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,20,0"/>
 
-                                </HorizontalStackLayout>                                
+                                    <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
+
+                                </HorizontalStackLayout>
 
                                 <!-- Botões de ação -->
                                 <Grid 
                                     ColumnDefinitions="*,auto,auto"
                                     ColumnSpacing="10">
-                                    
+
                                     <Button
                                         Text="Famílias"
                                         TextColor="White"
                                         Grid.Column="0"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
                                         CommandParameter="{Binding CasaId}" />
-                                    
+
                                     <Button
                                         Text="Editar"
                                         Grid.Column="1"
@@ -77,25 +103,13 @@
                                         TextColor="White"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
                                         CommandParameter="{Binding CasaId}" />
-                                    
+
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            
-            <!-- Botão de criar residência -->
-            <Button
-                Grid.Row="2"
-                Text="Nova Residência"
-                CornerRadius="10"
-                BorderColor="#C93919"
-                BorderWidth="1"
-                BackgroundColor="#0084B1"
-                FontSize="18"
-                TextColor="White"
-                Command="{Binding NewHouseCommand}"/>
 
             <!-- Botão de voltar -->
             <Button

@@ -13,8 +13,6 @@
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BorderColor" Value="#C93919"/>
-            <Setter Property="BorderWidth" Value="2"/>
             <Setter Property="BackgroundColor" Value="#0084B1"/>
             <Setter Property="TextColor" Value="White"/>
             <Setter Property="FontAttributes" Value="Bold"/>
@@ -26,7 +24,8 @@
         <Style x:Key="Lbl_Datas" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Start"/>
             <Setter Property="Margin" Value="10,0,0,0"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
         </Style>
 
         <ResourceDictionary>
@@ -54,33 +53,45 @@
 
             <Border
                 Margin="20,15"
-                Stroke="#C93919"
+                Stroke="Grey"
                 StrokeThickness="2"
-                StrokeShape="RoundRectangle 15"
+                StrokeShape="RoundRectangle 10"
                 Padding="0"
                 BackgroundColor="White">
 
                 <VerticalStackLayout>
 
-                    <SearchBar
-                        x:Name="SB"
-                        Placeholder="Pesquisar"
-                        TextColor="#0084B1"
-                        FontSize="20"
-                        MaxLength="30"
-                        CancelButtonColor="#0084B1"
-                        IsSpellCheckEnabled="True"
-                        BackgroundColor="White"
-                        TextChanged="SB_TextChanged"/>
+                    <Grid ColumnDefinitions="auto">
+
+                        <SearchBar
+                            Grid.Column="0"
+                            x:Name="SB"
+                            Placeholder="Pesquisar"
+                            TextColor="#0084B1"
+                            FontSize="20"
+                            MaxLength="30"
+                            CancelButtonColor="#0084B1"
+                            IsSpellCheckEnabled="True"
+                            BackgroundColor="White"
+                            TextChanged="SB_TextChanged"/>
+
+                        <Image
+                            Grid.Column="0"
+                            HorizontalOptions="Start"
+                            Source="loupe.png"
+                            HeightRequest="21"
+                            WidthRequest="21"
+                            Margin="21,0,0,0"/>
+                    </Grid>
 
                     <Grid
                         RowDefinitions="auto,*"
-                        ColumnDefinitions="*,auto,*">
+                        ColumnDefinitions="*,*">
 
                         <BoxView
                             Grid.Row="0"
                             Grid.ColumnSpan="3"
-                            Color="#C93919"
+                            Color="Grey"
                             HeightRequest="2"/>
 
                         <Button
@@ -99,16 +110,9 @@
                             Text="Ordenar por Nome"
                             Clicked="Btn_filter_Clicked"/>
 
-                        <BoxView 
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            HorizontalOptions="Center"
-                            Color="#C93919"
-                            WidthRequest="2"/>
-
                         <Button
                             Grid.Row="1"
-                            Grid.Column="2"
+                            Grid.Column="1"
                             x:Name="Btn_order"
                             Style="{StaticResource buttons}"
                             Margin="0"
@@ -143,68 +147,62 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border
-                            Margin="0,5"
-                            StrokeShape="RoundRectangle 15"
-                            StrokeThickness="2"
-                            Stroke="#0084B1">
+                        Margin="0,5"
+                        StrokeShape="RoundRectangle 10"
+                        StrokeThickness="2"
+                        Stroke="Grey">
 
                         <Grid
-                                RowDefinitions="*,*,*,*"
-                                ColumnDefinitions="5*,*,*"
-                                BackgroundColor="White"
-                                Padding="5">
+                            RowDefinitions="*,*,*,*,*"
+                            ColumnDefinitions="5*,*"
+                            BackgroundColor="White"
+                            Padding="5">
 
                             <Label
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Text="{Binding Nome}"
-                                    FontAttributes="Bold"
-                                    FontSize="20"
-                                    LineBreakMode="CharacterWrap"
-                                    Style="{StaticResource Lbl_Datas}"/>
-
-                            <VerticalStackLayout
-                                Grid.Row="2"
+                                Grid.Row="0"
                                 Grid.Column="0"
-                                Margin="0,5,0,0">
+                                Text="{Binding Nome}"
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                LineBreakMode="CharacterWrap"
+                                Style="{StaticResource Lbl_Datas}"/>
+
+                            <HorizontalStackLayout
+                                Grid.Row="2"
+                                Grid.Column="0">
 
                                 <Label
                                     Text="{Binding Nascimento, StringFormat='{0:dd/MM/yyyy}'}"
                                     FontAttributes="None"
-                                    FontSize="18"
+                                    FontSize="16"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                                <Label
+                                    Text="-"
+                                    FontAttributes="None"
+                                    FontSize="16"
                                     Style="{StaticResource Lbl_Datas}"/>
 
                                 <Label
                                     Text="{Binding Idade}"
-                                    FontSize="18"
+                                    FontSize="16"
                                     Style="{StaticResource Lbl_Datas}"/>
 
-                            </VerticalStackLayout>
-
-                            <ImageButton
-                                    x:Name="Btn_Edit"
-                                    Source="pencil.png"
-                                    Grid.Column="1"
-                                    Grid.RowSpan="4"
-                                    WidthRequest="25"
-                                    HeightRequest="25"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding Sus}"/>
+                            </HorizontalStackLayout>
 
                             <Label
-                                    Grid.Row="1"
-                                    Grid.Column="0"
-                                    Text="{Binding Sus, Converter={StaticResource SUSFormatConverter}}"
-                                    FontSize="18"
-                                    LineBreakMode="NoWrap"
-                                    Style="{StaticResource Lbl_Datas}"/>
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Text="{Binding Sus, Converter={StaticResource SUSFormatConverter}}"
+                                FontSize="18"
+                                LineBreakMode="NoWrap"
+                                Style="{StaticResource Lbl_Datas}"/>
 
                             <Label
                                 x:Name="Lbl_Obs"
                                 Grid.Row="3"
                                 Grid.Column="0"
-                                FontSize="18"
-                                Margin="10,5"
+                                FontSize="16"
                                 Opacity="0.7"
                                 FontAttributes="Italic"
                                 TextColor="#C93919"
@@ -212,16 +210,41 @@
                                 Style="{StaticResource Lbl_Datas}"
                                 Text="{Binding Observacao}"/>
 
-                            <ImageButton
-                                x:Name="Btn_Delete"
-                                Source="bin.png"
-                                Grid.Column="2"
-                                Grid.RowSpan="4"
-                                HeightRequest="25"
-                                WidthRequest="25"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                CommandParameter="{Binding Sus}"/>
+                            <Grid
+                                Grid.Row="4"
+                                Grid.ColumnSpan="2"
+                                ColumnDefinitions="*,*"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Center"
+                                ColumnSpacing="10"
+                                Margin="5,5,5,5">
+                                
+                                <Button
+                                    Grid.Column="0"
+                                    x:Name="Btn_Edit"
+                                    ImageSource="pencil.png"
+                                    MaximumHeightRequest="35"
+                                    Text="Editar"
+                                    TextColor="DarkOrange"
+                                    FontSize="14"
+                                    BackgroundColor="AliceBlue"
+                                    BorderColor="Grey"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding Sus}"/>
 
+                                <Button
+                                    Grid.Column="1"
+                                    x:Name="Btn_Delete"
+                                    ImageSource="bin.png"
+                                    MaximumHeightRequest="35"
+                                    Text="Excluir"
+                                    TextColor="#C93919"
+                                    FontSize="14"
+                                    BackgroundColor="AliceBlue"
+                                    BorderColor="#C93919"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding Sus}"/>
+                            </Grid>
                         </Grid>
                     </Border>
                 </DataTemplate>

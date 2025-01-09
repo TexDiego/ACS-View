@@ -12,12 +12,10 @@
 
     <ContentPage.Resources>
         <Style TargetType="Button">
-            <Setter Property="HeightRequest" Value="50"/>
-            <Setter Property="BorderColor" Value="#C93919"/>
-            <Setter Property="CornerRadius" Value="15"/>
-            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="HeightRequest" Value="45"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="TextColor" Value="White"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
@@ -38,9 +36,9 @@
 
             <Border
                 Margin="20,15,20,0"
-                StrokeShape="RoundRectangle 15"
+                StrokeShape="RoundRectangle 10"
                 StrokeThickness="2"
-                Stroke="#C93919"
+                Stroke="Grey"
                 Padding="5"
                 BackgroundColor="White">
 
@@ -75,9 +73,9 @@
                 <DataTemplate>
                     <Border
                         Margin="0,5"
-                        StrokeShape="RoundRectangle 15"
+                        StrokeShape="RoundRectangle 10"
                         StrokeThickness="2"
-                        Stroke="#C93919">
+                        Stroke="Grey">
 
                         <Grid
                             ColumnDefinitions="*,auto"
@@ -114,8 +112,8 @@
                                 Grid.Column="1"
                                 Source="bin.png"
                                 Margin="0,0,5,0"
-                                MaximumHeightRequest="35"
-                                MaximumWidthRequest="35"
+                                MaximumHeightRequest="30"
+                                MaximumWidthRequest="30"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                 CommandParameter="{Binding Id}"
                                 HorizontalOptions="End"

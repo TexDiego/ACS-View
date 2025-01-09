@@ -13,7 +13,7 @@
             <Setter Property="HorizontalOptions" Value="Center"/>
             <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="TextColor" Value="#C93919"/>
+            <Setter Property="TextColor" Value="Black"/>
         </Style>
         <Style TargetType="Entry">
             <Setter Property="FontSize" Value="20"/>
@@ -33,7 +33,7 @@
             Margin="20,50,20,150"/>
 
         <Border
-            Stroke="#C93919"
+            Stroke="LightGray"
             BackgroundColor="White"
             Padding="10"
             StrokeShape="RoundRectangle 30"
@@ -60,15 +60,13 @@
                     FontAttributes="Bold"
                     FontSize="20"
                     BackgroundColor="#0084B1"
-                    BorderColor="#C93919"
-                    BorderWidth="2"
                     CornerRadius="15"
                     Clicked="Btn_Login_Clicked"/>
 
                 <Button
                     Text="Esqueci minha senha"
                     BackgroundColor="Transparent"
-                    TextColor="#0084B1"
+                    TextColor="#C93919"
                     HorizontalOptions="End"
                     Margin="0,5,20,0"
                     Clicked="Button_Clicked"/>

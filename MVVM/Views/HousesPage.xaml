@@ -84,15 +84,19 @@
 
                                     <Button
                                         Text="Famílias"
-                                        TextColor="White"
+                                        TextColor="#0084B1"
                                         Grid.Column="0"
+                                        BorderColor="LightGrey"
+                                        BackgroundColor="#E6EBED"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
                                         CommandParameter="{Binding CasaId}" />
 
                                     <Button
                                         Text="Editar"
                                         Grid.Column="1"
-                                        TextColor="White"
+                                        TextColor="#0084B1"
+                                        BorderColor="LightGray"
+                                        BackgroundColor="AliceBlue"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
                                         CommandParameter="{Binding CasaId}" />
 
@@ -101,6 +105,7 @@
                                         Grid.Column="2"
                                         BackgroundColor="#C93919"
                                         TextColor="White"
+                                        BorderColor="LightGrey"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
                                         CommandParameter="{Binding CasaId}" />
 
@@ -116,8 +121,6 @@
                 Grid.Row="3"
                 Text="Voltar"
                 BackgroundColor="#0084B1"
-                BorderColor="#C93919"
-                BorderWidth="1"
                 TextColor="White"
                 FontSize="18"
                 CornerRadius="10"

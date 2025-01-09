@@ -72,7 +72,7 @@ public partial class Registers : ContentPage
             // Recarregar dados sempre que a página aparecer
             viewModel = new RegistersViewModel(_healthRecordService, _databaseService, _condition, string.Empty, _filter, _order);
             BindingContext = viewModel;
-            await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
+            await Task.Run(() => viewModel.UpdateDatasAsync(_condition, SB.Text, _filter, _order));
 
             Lbl_Title.Text = CapitalizeTitle(_condition);
         }
@@ -108,7 +108,7 @@ public partial class Registers : ContentPage
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                viewModel.UpdateDatas(_condition, e.NewTextValue, _filter, _order);
+                viewModel.UpdateDatasAsync(_condition, e.NewTextValue, _filter, _order);
             });
         }
         catch (TaskCanceledException)
@@ -156,7 +156,7 @@ public partial class Registers : ContentPage
         try
         {
             _addRegisterViewModel.IsLoading = true;
-            await Task.Run(() => viewModel.UpdateDatas(_condition, SB.Text, _filter, _order));
+            await Task.Run(() => viewModel.UpdateDatasAsync(_condition, SB.Text, _filter, _order));
         }
         catch (Exception ex)
         {

@@ -10,29 +10,29 @@
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="BorderWidth" Value="2"/>
-            <Setter Property="BorderColor" Value="#C93919"/>
             <Setter Property="TextColor" Value="White"/>
-            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="CornerRadius" Value="10"/>
         </Style>
         <Style x:Key="Border" TargetType="Border">
             <Setter Property="HeightRequest" Value="70"/>
-            <Setter Property="Stroke" Value="#C93919"/>
+            <Setter Property="Stroke" Value="LightGray"/>
             <Setter Property="StrokeThickness" Value="2"/>
-            <Setter Property="StrokeShape" Value="RoundRectangle 15"/>
+            <Setter Property="StrokeShape" Value="RoundRectangle 10"/>
             <Setter Property="Padding" Value="10"/>
             <Setter Property="BackgroundColor" Value="White"/>
         </Style>
         <Style x:Key="Label" TargetType="Label">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="Entry">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="PlaceholderColor" Value="#C93919"/>
         </Style>
     </ContentPage.Resources>
@@ -66,7 +66,7 @@
                             Grid.Column="1"
                             MaxLength="8"
                             Keyboard="Numeric"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"
                             MinimumWidthRequest="120"
                             TextChanged="Entry_CEP_TextChanged"/>
@@ -99,7 +99,7 @@
                         <Entry
                             x:Name="Logradouro"
                             Grid.Column="1"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -160,7 +160,7 @@
                         <Entry
                             x:Name="Bairro"
                             Grid.Column="1"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -180,7 +180,7 @@
                         <Entry
                             x:Name="Cidade"
                             Grid.Column="1"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -200,7 +200,7 @@
                         <Entry
                             x:Name="Estado"
                             Grid.Column="1"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"/>
 
                     </Grid>
@@ -220,7 +220,7 @@
                         <Entry
                             Grid.Column="1"
                             MaxLength="20"
-                            Placeholder="*Obrigatório"
+                            Placeholder="*"
                             FontAttributes="None"
                             Text="Brasil"/>
 

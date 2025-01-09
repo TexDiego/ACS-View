@@ -12,20 +12,19 @@
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BorderColor" Value="#C93919"/>
-            <Setter Property="BorderWidth" Value="2"/>
             <Setter Property="BackgroundColor" Value="#0084B1"/>
             <Setter Property="TextColor" Value="White"/>
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="20"/>
-            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Margin" Value="20,5,20,5"/>
             <Setter Property="MaximumHeightRequest" Value="60"/>
         </Style>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="Margin" Value="30,5"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="CheckBox">
@@ -40,7 +39,7 @@
         <Label
                 Grid.Row="0"
                 Text="Cadastrar"
-                Margin="30"
+                Margin="30,15"
                 FontSize="30"
                 FontAttributes="Bold"
                 TextColor="#0084B1"
@@ -52,8 +51,8 @@
 
                 <Border
                     Margin="20,0"
-                    Stroke="#C93919"
-                    StrokeShape="RoundRectangle 15"
+                    Stroke="LightGray"
+                    StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
                     <Grid ColumnDefinitions="auto,*">
@@ -69,7 +68,8 @@
                         <Entry
                             Grid.Column="1"
                             x:Name="Entry_Name"
-                            TextColor="#0084B1"
+                            TextColor="Black"
+                            Opacity="0.7"
                             VerticalOptions="Center"
                             FontSize="18"
                             Margin="0,0,20,0"
@@ -83,8 +83,8 @@
 
                 <Border
                     Margin="20,10"
-                    Stroke="#C93919"
-                    StrokeShape="RoundRectangle 15"
+                    Stroke="LightGray"
+                    StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
                     <Grid ColumnDefinitions="auto,*">
@@ -100,7 +100,8 @@
                         <Entry
                             x:Name="Entry_Sus"
                             Grid.Column="1"
-                            TextColor="#0084B1"
+                            TextColor="Black"
+                            Opacity="0.7"
                             VerticalOptions="Center"
                             FontSize="18"
                             Margin="0,0,20,0"
@@ -112,12 +113,10 @@
                     </Grid>
                 </Border>
 
-
-
                 <Border
                     Margin="20,0"
-                    Stroke="#C93919"
-                    StrokeShape="RoundRectangle 15"
+                    Stroke="LightGray"
+                    StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
                     <Grid ColumnDefinitions="auto,*">
@@ -133,7 +132,8 @@
                         <DatePicker
                             x:Name="Entry_Birth"
                             Grid.Column="1"
-                            TextColor="#0084B1"
+                            TextColor="Black"
+                            Opacity="0.7"
                             VerticalOptions="Center"
                             FontSize="18"
                             Margin="0,0,20,0"
@@ -146,8 +146,8 @@
 
                 <Border
                     Margin="20,10,20,0"
-                    Stroke="#C93919"
-                    StrokeShape="RoundRectangle 15"
+                    Stroke="LightGray"
+                    StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
                     <Grid RowDefinitions="auto,*">
@@ -162,7 +162,8 @@
                             Grid.Row="1"
                             Margin="20,0"
                             x:Name="Entry_Obs"
-                            TextColor="#0084B1"
+                            TextColor="Black"
+                            Opacity="0.7"
                             FontSize="18"
                             MaxLength="200"
                             AutoSize="TextChanges"

@@ -35,6 +35,27 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
+        public async Task<House> GetHouseBySusAsync(string susNumber)
+        {
+            try
+            {
+                var query = @"
+                            SELECT h.*
+                            FROM House h
+                            JOIN HealthRecord r ON h.CasaId = r.HouseId
+                            WHERE r.SusNumber = ?";
+
+                // Retorna o objeto House completo
+                var result = await _connection.FindWithQueryAsync<House>(query, susNumber);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar casa pelo SUS: {ex.Message}");
+                throw new Exception("Erro ao buscar informações da casa.");
+            }
+        }
+
         public async Task<int> SaveHouseAsync(House house)
         {
             try

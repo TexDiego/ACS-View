@@ -10,5 +10,6 @@
         public bool HasObs { get; set; }
         public int IdHouse { get; set; }
         public int IdFamily { get; set; }
+        public string? Endereco { get; set; }
     }
 }

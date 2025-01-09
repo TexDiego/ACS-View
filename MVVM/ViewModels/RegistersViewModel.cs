@@ -9,6 +9,7 @@ namespace ACS_View.MVVM.ViewModels
 {
     public partial class RegistersViewModel : BaseViewModel
     {
+        private HouseService _houseService;
         private readonly HealthRecordService _healthRecordService;
         private List<HealthRecord> _healthRecords = [];
         private readonly ObservableCollection<Pessoa> _person = [];
@@ -29,6 +30,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
             _healthRecord = [];
+            _houseService = new HouseService(databaseService);
 
             DeleteCommand = new Command<string>(async susNumber =>
             {
@@ -54,7 +56,7 @@ namespace ACS_View.MVVM.ViewModels
                         }
 
                         // Atualiza a lista visível na UI
-                        UpdateDatas(condition, search, filter, order);
+                        await UpdateDatasAsync(condition, search, filter, order);
                     }
                 }
                 catch (Exception ex)
@@ -82,7 +84,7 @@ namespace ACS_View.MVVM.ViewModels
             try
             {
                 _healthRecords = await _healthRecordService.GetAllRecordsAsync();
-                UpdateDatas(condition, search, filter, order);
+                await UpdateDatasAsync(condition, search, filter, order);
             }
             catch (Exception ex)
             {
@@ -90,35 +92,48 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        public void UpdateDatas(string condition, string search, string filter, string order)
+        public async Task UpdateDatasAsync(string condition, string search, string filter, string order)
         {
             try
             {
+                // Obter registros filtrados
                 var filteredRecords = FilterRecords(condition, search, filter, order);
 
-                _person.Clear();
+                var updatedList = new List<Pessoa>();
 
                 foreach (var record in filteredRecords)
                 {
-                    _person.Add(new Pessoa
+                    var endereco = await GetAddressAsync(record.SusNumber);
+
+                    updatedList.Add(new Pessoa
                     {
                         Nome = record.Name,
                         Sus = record.SusNumber,
                         Observacao = record.Observacao,
                         HasObs = record.HasObs,
                         Nascimento = record.BirthDate,
-                        Idade = CalcularIdadeCompleta(record.BirthDate)
+                        Idade = CalcularIdadeCompleta(record.BirthDate),
+                        Endereco = endereco,
                     });
-                    Console.WriteLine($"IDHouse de {record.Name}: {record.HouseId}");
                 }
 
-                OnPropertyChanged(nameof(Person));
+                // Atualizar coleção principal na thread da UI
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _person.Clear();
+
+                    foreach (var pessoa in updatedList)
+                        _person.Add(pessoa);
+
+                    OnPropertyChanged(nameof(Person));
+                });
             }
             catch (Exception ex)
             {
-                Application.Current.MainPage.DisplayAlert("Erro", ex.Message, "Voltar");
+                await Application.Current.MainPage.DisplayAlert("Erro", ex.Message, "Voltar");
             }
         }
+
 
         public static string CalcularIdadeCompleta(DateTime dataNascimento)
         {
@@ -156,6 +171,31 @@ namespace ACS_View.MVVM.ViewModels
 
             return $"{anos} anos";
         }
+
+        private async Task<string> GetAddressAsync(string sus)
+        {
+            try
+            {
+                var house = await _houseService.GetHouseBySusAsync(sus);
+
+                if (house == null)
+                    return "Sem endereço.";
+
+                // Tratamento para campos possivelmente nulos
+                string rua = house.Rua ?? "";
+                string numeroRua = house.NumeroCasa ?? "";
+                string complemento = string.IsNullOrWhiteSpace(house.Complemento) ? "" : $"- {house.Complemento}";
+
+                // Construir o endereço completo
+                return $"{rua}, {numeroRua} {complemento}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao obter endereço: {ex.Message}");
+                return "Erro ao buscar endereço.";
+            }
+        }
+
 
         private List<HealthRecord> FilterRecords(string condition, string search, string filter, string order)
         {

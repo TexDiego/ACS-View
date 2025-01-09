@@ -191,7 +191,7 @@ public partial class OverallView : ContentPage
 
         if (option == "2")
         {
-            await Navigation.PushAsync(new HousesPage(_dbService, _houseService));
+            await Navigation.PushAsync(new AddHouse(_dbService));
         }
 
         if (option == "3")

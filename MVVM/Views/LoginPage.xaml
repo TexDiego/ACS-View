@@ -36,7 +36,7 @@
             Stroke="LightGray"
             BackgroundColor="White"
             Padding="10"
-            StrokeShape="RoundRectangle 30"
+            StrokeShape="RoundRectangle 20"
             StrokeThickness="2">
 
             <VerticalStackLayout>
@@ -60,7 +60,7 @@
                     FontAttributes="Bold"
                     FontSize="20"
                     BackgroundColor="#0084B1"
-                    CornerRadius="15"
+                    CornerRadius="10"
                     Clicked="Btn_Login_Clicked"/>
 
                 <Button

@@ -9,12 +9,13 @@ namespace ACS_View.MVVM.ViewModels
 {
     public partial class RegistersViewModel : BaseViewModel
     {
-        private HouseService _houseService;
+        private readonly HouseService _houseService;
         private readonly HealthRecordService _healthRecordService;
-        private List<HealthRecord> _healthRecords = [];
-        private readonly ObservableCollection<Pessoa> _person = [];
-        public ObservableCollection<Pessoa> Person => _person;
-        public ObservableCollection<HealthRecord> _healthRecord { get; private set; }
+        private readonly DatabaseService databaseService;
+
+        private readonly ObservableCollection<HealthRecord> _healthRecords = new();
+        public ObservableCollection<HealthRecord> HealthRecords => _healthRecords;
+
         public ICommand DeleteCommand { get; }
         public ICommand EditCommand { get; }
 
@@ -29,62 +30,35 @@ namespace ACS_View.MVVM.ViewModels
             string order)
         {
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
-            _healthRecord = [];
+            this.databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _houseService = new HouseService(databaseService);
 
-            DeleteCommand = new Command<string>(async susNumber =>
-            {
-                try
-                {
-                    bool result = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Confirmar", "Tem certeza de que deseja excluir o cadastro?\n\nSUS: " + susNumber, true, "Excluir", true, "Cancelar")));
-                    if (result) return;
+            DeleteCommand = new Command<string>(async susNumber => await DeleteRecordAsync(susNumber));
+            EditCommand = new Command<string>(async susNumber => await EditRecordAsync(susNumber));
 
-                    var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
-                    if (record != null)
-                    {
-                        // Exclusão do banco de dados
-                        await _healthRecordService.DeleteRecordAsync(record.SusNumber);
-
-                        // Remover da lista interna (sem vínculo com a UI)
-                        _healthRecords.Remove(record);
-
-                        // Remover da ObservableCollection que está vinculada à UI
-                        var personToRemove = _person.FirstOrDefault(p => p.Sus == susNumber);
-                        if (personToRemove != null)
-                        {
-                            _person.Remove(personToRemove);
-                        }
-
-                        // Atualiza a lista visível na UI
-                        await UpdateDatasAsync(condition, search, filter, order);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível deletar o registro.\n\n{ex.Message}", true, "Voltar", false, ""));
-                }
-            });
-
-            EditCommand = new Command<string>(async (susNumber) =>
-            {
-                var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
-
-                if (record != null)
-                {
-                    // Navegar para a página de edição e passar os dados do registro
-                    await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record, databaseService, record.HouseId, record.FamilyId));
-                }
-            });
-
-            Task.Run(async () => await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order)).Wait();
+            Task.Run(async () => await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order));
         }
 
-        private async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string search, string filter, string order)
+        public async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string search, string filter, string order)
         {
             try
             {
-                _healthRecords = await _healthRecordService.GetAllRecordsAsync();
-                await UpdateDatasAsync(condition, search, filter, order);
+                var records = await _healthRecordService.GetAllRecordsAsync();
+                var filteredRecords = FilterRecords(records, condition, search, filter, order);
+
+                foreach (var record in filteredRecords)
+                {
+                    record.Endereco = await GetAddressAsync(record.SusNumber);
+                }
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _healthRecords.Clear();
+                    foreach (var record in filteredRecords)
+                    {
+                        _healthRecords.Add(record);
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -92,84 +66,83 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        public async Task UpdateDatasAsync(string condition, string search, string filter, string order)
+        private async Task DeleteRecordAsync(string susNumber)
         {
             try
             {
-                // Obter registros filtrados
-                var filteredRecords = FilterRecords(condition, search, filter, order);
+                bool result = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp(
+                    "Confirmar",
+                    $"Tem certeza de que deseja excluir o cadastro?\n\nSUS: {susNumber}",
+                    true, "Excluir", true, "Cancelar")));
 
-                var updatedList = new List<Pessoa>();
+                if (result) return;
 
-                foreach (var record in filteredRecords)
+                var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
+                if (record != null)
                 {
-                    var endereco = await GetAddressAsync(record.SusNumber);
-
-                    updatedList.Add(new Pessoa
-                    {
-                        Nome = record.Name,
-                        Sus = record.SusNumber,
-                        Observacao = record.Observacao,
-                        HasObs = record.HasObs,
-                        Nascimento = record.BirthDate,
-                        Idade = CalcularIdadeCompleta(record.BirthDate),
-                        Endereco = endereco,
-                    });
+                    await _healthRecordService.DeleteRecordAsync(record.SusNumber);
+                    _healthRecords.Remove(record);
                 }
-
-                // Atualizar coleção principal na thread da UI
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _person.Clear();
-
-                    foreach (var pessoa in updatedList)
-                        _person.Add(pessoa);
-
-                    OnPropertyChanged(nameof(Person));
-                });
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", ex.Message, "Voltar");
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp(
+                    "Erro",
+                    $"Não foi possível deletar o registro.\n\n{ex.Message}",
+                    true, "Voltar", false, ""));
             }
         }
 
-
-        public static string CalcularIdadeCompleta(DateTime dataNascimento)
+        private async Task EditRecordAsync(string susNumber)
         {
-            DateTime hoje = DateTime.Today;
+            var record = _healthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
 
-            int anos = hoje.Year - dataNascimento.Year;
-            int meses = hoje.Month - dataNascimento.Month;
-            int dias = hoje.Day - dataNascimento.Day;
-
-            // Ajustar meses e dias, se necessário
-            if (dias < 0)
+            if (record != null)
             {
-                meses--;
-                dias += DateTime.DaysInMonth(hoje.AddMonths(-1).Year, hoje.AddMonths(-1).Month);
+                await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record, databaseService, record.HouseId, record.FamilyId));
+            }
+        }
+
+        private List<HealthRecord> FilterRecords(IEnumerable<HealthRecord> records, string condition, string search, string filter, string order)
+        {
+            var filteredRecords = records.AsEnumerable();
+
+            // Aplicar condição
+            if (!string.IsNullOrEmpty(condition))
+            {
+                filteredRecords = condition switch
+                {
+                    "GESTANTE" => filteredRecords.Where(r => r.IsPregnant),
+                    "DB" => filteredRecords.Where(r => r.HasDiabetes),
+                    "HAS" => filteredRecords.Where(r => r.HasHypertension),
+                    _ => filteredRecords
+                };
             }
 
-            if (meses < 0)
+            // Aplicar busca
+            if (!string.IsNullOrEmpty(search))
             {
-                anos--;
-                meses += 12;
+                string normalizedSearch = search.Trim().ToLowerInvariant();
+                filteredRecords = filteredRecords.Where(r =>
+                    (r.Name?.ToLowerInvariant().Contains(normalizedSearch) ?? false) ||
+                    (r.SusNumber?.Contains(normalizedSearch) ?? false));
             }
 
-            // Casos especiais
-            if (anos == 0 && meses == 0 && dias == 0)
-                return "Recém-nascido";
+            // Ordenar resultados
+            filteredRecords = filter switch
+            {
+                "Nome" => order == "Crescente"
+                    ? filteredRecords.OrderBy(r => r.Name)
+                    : filteredRecords.OrderByDescending(r => r.Name),
 
-            if (anos == 0 && meses == 0)
-                return dias == 1 ? "1 dia" : $"{dias} dias";
+                "Idade" => order == "Crescente"
+                    ? filteredRecords.OrderByDescending(r => r.BirthDate)
+                    : filteredRecords.OrderBy(r => r.BirthDate),
 
-            if (anos == 0)
-                return meses == 1 ? "1 mês" : $"{meses} meses";
+                _ => filteredRecords
+            };
 
-            if (anos == 1)
-                return meses == 0 ? "1 ano" : meses == 1 ? "1 ano e 1 mês" : $"1 ano e {meses} meses";
-
-            return $"{anos} anos";
+            return filteredRecords.ToList();
         }
 
         private async Task<string> GetAddressAsync(string sus)
@@ -177,80 +150,18 @@ namespace ACS_View.MVVM.ViewModels
             try
             {
                 var house = await _houseService.GetHouseBySusAsync(sus);
+                if (house == null) return "Sem endereço.";
 
-                if (house == null)
-                    return "Sem endereço.";
-
-                // Tratamento para campos possivelmente nulos
                 string rua = house.Rua ?? "";
                 string numeroRua = house.NumeroCasa ?? "";
                 string complemento = string.IsNullOrWhiteSpace(house.Complemento) ? "" : $"- {house.Complemento}";
 
-                // Construir o endereço completo
                 return $"{rua}, {numeroRua} {complemento}";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao obter endereço: {ex.Message}");
                 return "Erro ao buscar endereço.";
-            }
-        }
-
-
-        private List<HealthRecord> FilterRecords(string condition, string search, string filter, string order)
-        {
-            try
-            {
-                // Aplicar filtro inicial baseado em condição
-                var filteredRecords = condition switch
-                {
-                    "GESTANTE" => _healthRecords.Where(r => r.IsPregnant),
-                    "DB" => _healthRecords.Where(r => r.HasDiabetes),
-                    "HAS" => _healthRecords.Where(r => r.HasHypertension),
-                    "HASDB" => _healthRecords.Where(r => r.IsDiabetesAndHypertension),
-                    "TB" => _healthRecords.Where(r => r.HasTuberculosis),
-                    "HAN" => _healthRecords.Where(r => r.HasLeprosy),
-                    "ACAMADO" => _healthRecords.Where(r => r.IsBedridden),
-                    "DOMICILIADO" => _healthRecords.Where(r => r.IsHomebound),
-                    "MENOR" => _healthRecords.Where(r => r.IsBaby),
-                    "MENTAL" => _healthRecords.Where(r => r.HasMentalIllness),
-                    "DEFICIENTE" => _healthRecords.Where(r => r.HasDisabilities),
-                    "FUMANTE" => _healthRecords.Where(r => r.IsSmoker),
-                    "CANCER" => _healthRecords.Where(r => r.HasCancer),
-                    "IDOSO" => _healthRecords.Where(r => r.IsOld),
-                    _ => _healthRecords,
-                };
-
-                // Normalizar e aplicar o termo de pesquisa
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    string normalizedSearch = search.Trim().ToLowerInvariant();
-                    filteredRecords = filteredRecords.Where(r =>
-                        (r.Name?.ToLowerInvariant().Contains(normalizedSearch) ?? false) ||
-                        (r.SusNumber?.Contains(normalizedSearch) ?? false));
-                }
-
-                // Aplicar ordenação
-                var sortedRecords = filter switch
-                {
-                    "Nome" => order == "Crescente"
-                        ? filteredRecords.OrderBy(r => r.Name).ToList()
-                        : filteredRecords.OrderByDescending(r => r.Name).ToList(),
-
-                    "Idade" => order == "Decrescente"
-                        ? filteredRecords.OrderBy(r => r.BirthDate).ToList()
-                        : filteredRecords.OrderByDescending(r => r.BirthDate).ToList(),
-
-                    _ => filteredRecords.ToList()
-                };
-
-                return sortedRecords;
-            }
-            catch (Exception ex)
-            {
-                // Log para identificar possíveis problemas
-                Console.WriteLine($"Erro no filtro: {ex.Message}");
-                return new List<HealthRecord>();
             }
         }
     }

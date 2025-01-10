@@ -115,6 +115,17 @@ namespace ACS_View.MVVM.ViewModels
                     "GESTANTE" => filteredRecords.Where(r => r.IsPregnant),
                     "DB" => filteredRecords.Where(r => r.HasDiabetes),
                     "HAS" => filteredRecords.Where(r => r.HasHypertension),
+                    "HASDB" => filteredRecords.Where(r => r.IsDiabetesAndHypertension),
+                    "HAN" => filteredRecords.Where(r => r.HasLeprosy),
+                    "TB" => filteredRecords.Where(r => r.HasTuberculosis),
+                    "ACAMADO" => filteredRecords.Where(r => r.IsBedridden),
+                    "DOMICILIADO" => filteredRecords.Where(r => r.IsHomebound),
+                    "MENOR" => filteredRecords.Where(r => r.IsBaby),
+                    "MENTAL" => filteredRecords.Where(r => r.HasMentalIllness),
+                    "FUMANTE" => filteredRecords.Where(r => r.IsSmoker),
+                    "DEFICIENTE" => filteredRecords.Where(r => r.HasDisabilities),
+                    "CANCER" => filteredRecords.Where(r => r.HasCancer),
+                    "IDOSO" => filteredRecords.Where(r => r.IsOld),
                     _ => filteredRecords
                 };
             }

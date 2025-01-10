@@ -37,6 +37,7 @@
                 <ImageButton
                     Grid.Column="1"
                     Source="addHouse.png"
+                    BackgroundColor="AliceBlue"
                     HeightRequest="30"
                     WidthRequest="30"
                     Margin="20,0"
@@ -86,7 +87,8 @@
                                         Text="Famílias"
                                         TextColor="#0084B1"
                                         Grid.Column="0"
-                                        BorderColor="LightGrey"
+                                        FontAttributes="Bold"
+                                        BorderColor="#0084B1"
                                         BackgroundColor="#E6EBED"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
                                         CommandParameter="{Binding CasaId}" />
@@ -94,8 +96,9 @@
                                     <Button
                                         Text="Editar"
                                         Grid.Column="1"
-                                        TextColor="#0084B1"
-                                        BorderColor="LightGray"
+                                        FontAttributes="Bold"
+                                        TextColor="DarkOrange"
+                                        BorderColor="DarkOrange"
                                         BackgroundColor="AliceBlue"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
                                         CommandParameter="{Binding CasaId}" />
@@ -103,9 +106,10 @@
                                     <Button
                                         Text="Excluir"
                                         Grid.Column="2"
-                                        BackgroundColor="#C93919"
-                                        TextColor="White"
-                                        BorderColor="LightGrey"
+                                        BackgroundColor="White"
+                                        FontAttributes="Bold"
+                                        TextColor="#C93919"
+                                        BorderColor="#C93919"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
                                         CommandParameter="{Binding CasaId}" />
 

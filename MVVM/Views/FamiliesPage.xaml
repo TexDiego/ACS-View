@@ -13,8 +13,8 @@
 
         <VerticalStackLayout Grid.Row="0" VerticalOptions="Start">
             <Label TextColor="#0084B1"
-                   Text="Família"
-                   Margin="20,15"
+                   Text="Famílias"
+                   Margin="20,10,20,0"
                    FontSize="30"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
@@ -29,14 +29,15 @@
                     <DataTemplate>
                         <Border 
                             StrokeThickness="2"
-                            Stroke="#0084B1"
-                            StrokeShape="RoundRectangle 15"
+                            Stroke="LightGray"
+                            StrokeShape="RoundRectangle 10"
                             Margin="20,10,20,0"
                             Padding="10"
                             BackgroundColor="White">
 
                             <Grid
                                 ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
                                 RowDefinitions="auto,*,40">
                                 
                                 <CollectionView
@@ -49,8 +50,9 @@
 
                                             <Label
                                                 Text="{Binding Name}"
-                                                TextColor="#0084B1"
-                                                FontSize="18"
+                                                TextColor="Black"
+                                                Opacity="0.7"
+                                                FontSize="16"
                                                 Margin="0,5"
                                                 FontAttributes="Bold"
                                                 LineBreakMode="WordWrap"/>
@@ -65,25 +67,33 @@
                                     Margin="0,5"
                                     HorizontalOptions="Fill"
                                     HeightRequest="2"
-                                    Color="#0084B1"/>
+                                    Color="LightGray"/>
 
-                                <ImageButton
+                                <Button
                                     Grid.Column="0"
                                     Grid.Row="2"
                                     VerticalOptions="Center" 
-                                    Source="pencil.png" 
-                                    HeightRequest="25" 
-                                    WidthRequest="25" 
+                                    ImageSource="pencil.png"
+                                    BackgroundColor="AliceBlue"
+                                    BorderColor="#0084B1"
+                                    FontSize="14"
+                                    FontAttributes="Bold"
+                                    TextColor="DarkOrange"
+                                    Text="Editar"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
                                     
-                                <ImageButton 
+                                <Button 
                                     Grid.Column="1"
                                     Grid.Row="2"
                                     VerticalOptions="Center" 
-                                    Source="bin.png" 
-                                    HeightRequest="25" 
-                                    WidthRequest="25" 
+                                    ImageSource="bin.png"
+                                    Text="Excluir"
+                                    TextColor="#C93919"
+                                    BorderColor="#C93919"
+                                    FontAttributes="Bold"
+                                    FontSize="14"
+                                    BackgroundColor="White"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
                                     
@@ -105,9 +115,7 @@
                 FontAttributes="Bold" 
                 MaximumHeightRequest="60" 
                 BackgroundColor="#0084B1" 
-                BorderColor="#C93919" 
-                BorderWidth="2" 
-                CornerRadius="15" 
+                CornerRadius="10" 
                 HeightRequest="40" 
                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}" 
                 CommandParameter="{Binding IdFamily}"/>
@@ -121,9 +129,7 @@
                 FontAttributes="Bold" 
                 MaximumHeightRequest="60" 
                 BackgroundColor="#0084B1" 
-                BorderColor="#C93919" 
-                BorderWidth="2" 
-                CornerRadius="15" 
+                CornerRadius="10" 
                 HeightRequest="40" 
                 Clicked="Btn_Voltar_Clicked"/>
         </VerticalStackLayout>

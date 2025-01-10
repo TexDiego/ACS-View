@@ -13,31 +13,31 @@
     <ContentPage.Resources>
         <Style x:Key="Button" TargetType="Button">
             <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="16"/>
             <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="BorderWidth" Value="2"/>
-            <Setter Property="BorderColor" Value="#C93919"/>
             <Setter Property="TextColor" Value="White"/>
-            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="CornerRadius" Value="10"/>
         </Style>
         <Style x:Key="Border" TargetType="Border">
-            <Setter Property="Stroke" Value="#C93919"/>
+            <Setter Property="Stroke" Value="LightGray"/>
             <Setter Property="StrokeThickness" Value="2"/>
-            <Setter Property="StrokeShape" Value="RoundRectangle 15"/>
+            <Setter Property="StrokeShape" Value="RoundRectangle 10"/>
             <Setter Property="Padding" Value="10"/>
             <Setter Property="BackgroundColor" Value="White"/>
         </Style>
         <Style x:Key="Label" TargetType="Label">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="Entry">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="HorizontalOptions" Value="Fill"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
         </Style>
     </ContentPage.Resources>
 
@@ -94,7 +94,8 @@
 
                                     <Border
                                         HorizontalOptions="Fill"
-                                        BackgroundColor="#E6EBED"
+                                        BackgroundColor="AliceBlue"
+                                        Stroke="LightGray"
                                         StrokeShape="RoundRectangle 10"
                                         Margin="0,5,0,0">
                                         
@@ -106,7 +107,8 @@
 
                                             <Label
                                                 Grid.Column="0"
-                                                TextColor="#0084B1"
+                                                TextColor="Black"
+                                                Opacity="0.7"
                                                 FontAttributes="Bold"
                                                 FontSize="18"
                                                 HorizontalOptions="Start"
@@ -117,8 +119,8 @@
                                             <ImageButton
                                                 Grid.Column="1"
                                                 Source="add.png"
-                                                HeightRequest="35"
-                                                WidthRequest="35"
+                                                HeightRequest="30"
+                                                WidthRequest="30"
                                                 VerticalOptions="Center"
                                                 HorizontalOptions="End"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddPersonCommand}"
@@ -153,8 +155,8 @@
 
                         <Border
                             Margin="20,5"
-                            StrokeShape="RoundRectangle 15"
-                            Stroke="#0084B1"
+                            StrokeShape="RoundRectangle 10"
+                            Stroke="LightGray"
                             StrokeThickness="2"
                             Padding="15"
                             BackgroundColor="White">
@@ -165,7 +167,8 @@
                                 <Label
                                     Grid.Column="0"
                                     HorizontalOptions="Start"
-                                    TextColor="#0084B1"
+                                    TextColor="Black"
+                                    Opacity="0.7"
                                     VerticalOptions="Center"
                                     FontAttributes="Bold"
                                     FontSize="18"
@@ -175,8 +178,8 @@
                                 <ImageButton
                                     Source="removeperson.png"
                                     Grid.Column="1"
-                                    HeightRequest="35"
-                                    WidthRequest="35"
+                                    HeightRequest="30"
+                                    WidthRequest="30"
                                     VerticalOptions="Center"
                                     HorizontalOptions="End"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"

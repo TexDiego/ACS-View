@@ -17,7 +17,7 @@
             <Setter Property="TextColor" Value="White"/>
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="20"/>
-            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Margin" Value="20,10,20,0"/>
             <Setter Property="MaximumHeightRequest" Value="60"/>
         </Style>
@@ -51,85 +51,79 @@
                 VerticalTextAlignment="Center"
                 HorizontalTextAlignment="Center"/>
 
-            <Border
-                Margin="10,15"
-                Stroke="Grey"
-                StrokeThickness="2"
-                StrokeShape="RoundRectangle 10"
-                Padding="0"
-                BackgroundColor="White">
+            <Grid ColumnDefinitions="*">
 
-                <VerticalStackLayout>
+                <SearchBar
+                    Grid.Column="0"
+                    x:Name="SB"
+                    Placeholder="Buscar..."
+                    TextColor="#0084B1"
+                    Margin="0,0,50,0"
+                    FontSize="20"
+                    MaxLength="30"
+                    IsSpellCheckEnabled="True"
+                    BackgroundColor="Transparent"
+                    TextChanged="SB_TextChanged"/>
 
-                    <Grid ColumnDefinitions="auto">
+                <StackLayout Grid.Column="0" Margin="50,0,50,0" VerticalOptions="End">
+                    
+                    <BoxView
+                        HeightRequest="1"
+                        Color="Gray"/>
+                    
+                </StackLayout>                
 
-                        <SearchBar
-                            Grid.Column="0"
-                            x:Name="SB"
-                            Placeholder="Pesquisar"
-                            TextColor="#0084B1"
-                            FontSize="20"
-                            MaxLength="30"
-                            IsSpellCheckEnabled="True"
-                            BackgroundColor="White"
-                            TextChanged="SB_TextChanged"/>
+                <Image
+                    Grid.Column="0"
+                    HorizontalOptions="Start"
+                    Source="loupe.png"
+                    HeightRequest="21"
+                    WidthRequest="21"
+                    Margin="21,0,0,0"/>
+            </Grid>
 
-                        <Image
-                            Grid.Column="0"
-                            HorizontalOptions="Start"
-                            Source="loupe.png"
-                            HeightRequest="21"
-                            WidthRequest="21"
-                            Margin="21,0,0,0"/>
-                    </Grid>
+            <Grid
+                RowDefinitions="auto,*"
+                ColumnDefinitions="*,*"
+                Margin="10,0">
 
-                    <Grid
-                        RowDefinitions="auto,*"
-                        ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Grid.Row="1"
+                    x:Name="Btn_filter"
+                    Style="{StaticResource buttons}"
+                    Margin="0,10,5,5"
+                    Padding="5"
+                    BackgroundColor="White"
+                    TextColor="#0084B1"
+                    FontAttributes="Bold"
+                    BorderColor="Gray"
+                    BorderWidth="1"
+                    CornerRadius="10"
+                    FontSize="15"
+                    FontAutoScalingEnabled="True"
+                    Text="Ordenar por Nome"
+                    Clicked="Btn_filter_Clicked"/>
 
-                        <BoxView
-                            Grid.Row="0"
-                            Grid.ColumnSpan="3"
-                            Color="Grey"
-                            HeightRequest="2"/>
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    x:Name="Btn_order"
+                    Style="{StaticResource buttons}"
+                    Margin="5,10,0,5"
+                    FontAttributes="Bold"
+                    BackgroundColor="White"
+                    Padding="5"
+                    BorderColor="Gray"
+                    TextColor="#0084B1"
+                    BorderWidth="1"
+                    CornerRadius="10"
+                    FontSize="15"
+                    FontAutoScalingEnabled="True"
+                    Text="Ordem Crescente"
+                    Clicked="Btn_order_Clicked"/>
 
-                        <Button
-                            Grid.Column="0"
-                            Grid.Row="1"
-                            x:Name="Btn_filter"
-                            Style="{StaticResource buttons}"
-                            Margin="0"
-                            Padding="5"
-                            FontAttributes="None"
-                            BorderWidth="0"
-                            CornerRadius="0"
-                            MaximumHeightRequest="40"
-                            FontSize="15"
-                            FontAutoScalingEnabled="True"
-                            Text="Ordenar por Nome"
-                            Clicked="Btn_filter_Clicked"/>
-
-                        <Button
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            x:Name="Btn_order"
-                            Style="{StaticResource buttons}"
-                            Margin="0"
-                            FontAttributes="None"
-                            Padding="5"
-                            BorderWidth="0"
-                            CornerRadius="0"
-                            MaximumHeightRequest="40"
-                            FontSize="15"
-                            FontAutoScalingEnabled="True"
-                            Text="Ordem Crescente"
-                            Clicked="Btn_order_Clicked"/>
-
-                    </Grid>
-
-                </VerticalStackLayout>
-
-            </Border>
+            </Grid>
 
         </VerticalStackLayout>
 

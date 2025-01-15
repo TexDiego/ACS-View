@@ -32,7 +32,7 @@
                 Margin="30,10"
                 FontSize="30"
                 FontAttributes="Bold"
-                TextColor="#0084B1"
+                TextColor="Black"
                 HorizontalOptions="Center"/>
 
             <Border

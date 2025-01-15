@@ -11,12 +11,40 @@
     </ContentPage.BindingContext>
 
     <ContentPage.Content>
-        <Grid RowDefinitions="auto,*,auto,auto" RowSpacing="10" Margin="10">
+        <Grid RowDefinitions="auto,*" RowSpacing="10" Margin="10">
 
-            <Grid ColumnDefinitions="*,auto" Grid.Row="0">
+            <Grid
+                RowDefinitions="auto, *"
+                ColumnDefinitions="*,auto"
+                Grid.Row="0"
+                HorizontalOptions="Center"
+                RowSpacing="10">
                 
+                <!-- Botão de voltar -->
+                <ImageButton
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Source="arrowleft.png"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    HorizontalOptions="Start"
+                    Margin="10,0,0,0"
+                    Clicked="Btn_Voltar_Clicked"/>
+
+                <!-- Título da página -->
+                <Label
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    Text="Residências"
+                    HorizontalOptions="Center"
+                    FontSize="25"
+                    VerticalOptions="Center"
+                    TextColor="Black"
+                    FontAttributes="Bold"/>
+
                 <!-- Barra de pesquisa -->
                 <Image
+                    Grid.Row="1"
                     Grid.Column="0"
                     Source="loupe.png"
                     HeightRequest="19"
@@ -25,19 +53,31 @@
                     Margin="21,0,0,0"/>
 
                 <SearchBar
+                    Grid.Row="1"
                     Grid.Column="0"
                     Placeholder="Buscar..."
                     PlaceholderColor="Black"                       
                     Text="{Binding SearchText, Mode=TwoWay}"
+                    FontSize="16"
+                    CancelButtonColor="#0084B1"
                     TextColor="Black"
                     BackgroundColor="Transparent"
                     TextChanged="SearchBar_TextChanged" />
-                
+
+                <BoxView
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    HeightRequest="1"
+                    Color="Black"
+                    Opacity="0.7"
+                    VerticalOptions="End"
+                    Margin="50,0,60,0"/>
+
                 <!-- Botão de adicionar residência -->
                 <ImageButton
+                    Grid.Row="1"
                     Grid.Column="1"
                     Source="addHouse.png"
-                    BackgroundColor="AliceBlue"
                     HeightRequest="30"
                     WidthRequest="30"
                     Margin="20,0"
@@ -119,16 +159,6 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-            <!-- Botão de voltar -->
-            <Button
-                Grid.Row="3"
-                Text="Voltar"
-                BackgroundColor="#0084B1"
-                TextColor="White"
-                FontSize="18"
-                CornerRadius="10"
-                Clicked="Btn_Voltar_Clicked"/>
         </Grid>
     </ContentPage.Content>
 </ContentPage>

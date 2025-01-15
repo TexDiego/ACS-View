@@ -11,6 +11,7 @@ public partial class Registers : ContentPage
     private RegistersViewModel viewModel;
     private readonly HealthRecordService _healthRecordService;
     private readonly AddRegisterViewModel _addRegisterViewModel;
+    private readonly HouseService houseService;
     private string _condition;
     private string _filter;
     private string _order;
@@ -28,6 +29,7 @@ public partial class Registers : ContentPage
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
             _addRegisterViewModel = addRegisterViewModel ?? throw new ArgumentNullException(nameof(addRegisterViewModel));
+            houseService = new HouseService(databaseService);
             _condition = condition;
         }
         catch (Exception ex)
@@ -165,6 +167,18 @@ public partial class Registers : ContentPage
         finally
         {
             _addRegisterViewModel.IsLoading = false;
+        }
+    }
+
+    private async void ImageButton_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Navigation.PushAsync(new HousesPage(_databaseService, houseService));
+        }
+        catch (Exception ex)
+        {
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 }

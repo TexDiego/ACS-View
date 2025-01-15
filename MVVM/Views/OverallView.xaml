@@ -35,8 +35,10 @@
         </Style>
 
         <Style x:Key="buttons2" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="BackgroundColor" Value="AliceBlue"/>
+            <Setter Property="BorderColor" Value="LightGray"/>
+            <Setter Property="BorderWidth" Value="2"/>
+            <Setter Property="TextColor" Value="Black"/>
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="CornerRadius" Value="10"/>
@@ -54,8 +56,8 @@
             Text="Visão Geral"
             Margin="20,15"
             FontAttributes="Bold"
-            TextColor="#0084B1"
-            FontSize="30"
+            TextColor="Black"
+            FontSize="25"
             HorizontalOptions="Center"/>
 
         <ScrollView Grid.Row="1">

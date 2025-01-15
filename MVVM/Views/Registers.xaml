@@ -39,33 +39,44 @@
             Grid.Row="0"
             VerticalOptions="Start">
 
-            <Label
-                x:Name="Lbl_Title"
-                TextColor="#0084B1"
-                Text="Cadastros"
-                Margin="30,15"
-                FontSize="30"
-                FontAttributes="Bold" 
-                HorizontalOptions="Center"
-                LineBreakMode="WordWrap"
-                VerticalTextAlignment="Center"
-                HorizontalTextAlignment="Center"/>
+            <Grid Margin="20,15,20,10">
 
-            <Grid ColumnDefinitions="*">
+                <ImageButton
+                    Source="arrowleft.png"
+                    HeightRequest="30"
+                    WidthRequest="30"
+                    HorizontalOptions="Start"
+                    Clicked="Btn_RegistersGoBack_Clicked"/>
+
+                <Label
+                    x:Name="Lbl_Title"
+                    TextColor="Black"
+                    Text="Cadastros"
+                    Margin="70,0,70,0"
+                    FontSize="26"
+                    FontAttributes="Bold" 
+                    HorizontalOptions="Center"
+                    LineBreakMode="WordWrap"
+                    VerticalTextAlignment="Center"
+                    HorizontalTextAlignment="Center"/>
+
+            </Grid>
+
+            <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="15">
 
                 <SearchBar
                     Grid.Column="0"
                     x:Name="SB"
                     Placeholder="Buscar..."
-                    TextColor="#0084B1"
-                    Margin="0,0,50,0"
-                    FontSize="20"
+                    TextColor="Black"
+                    FontSize="16"
+                    CancelButtonColor="#0084B1"
                     MaxLength="30"
                     IsSpellCheckEnabled="True"
                     BackgroundColor="Transparent"
                     TextChanged="SB_TextChanged"/>
 
-                <StackLayout Grid.Column="0" Margin="50,0,50,0" VerticalOptions="End">
+                <StackLayout Grid.ColumnSpan="2" Margin="50,0,50,0" VerticalOptions="End">
                     
                     <BoxView
                         HeightRequest="1"
@@ -77,15 +88,31 @@
                     Grid.Column="0"
                     HorizontalOptions="Start"
                     Source="loupe.png"
-                    HeightRequest="21"
-                    WidthRequest="21"
+                    HeightRequest="19"
+                    WidthRequest="19"
                     Margin="21,0,0,0"/>
+
+                <ImageButton
+                    Grid.Column="1"
+                    Source="addperson.png"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    Clicked="Btn_AddRegister_Clicked"/>
+
+                <ImageButton
+                    Grid.Column="2"
+                    Source="house.png"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    Margin="0,0,15,0"
+                    Clicked="ImageButton_Clicked"/>
+
             </Grid>
 
             <Grid
                 RowDefinitions="auto,*"
                 ColumnDefinitions="*,*"
-                Margin="10,0">
+                Margin="10,0,10,5">
 
                 <Button
                     Grid.Column="0"
@@ -141,8 +168,8 @@
                 <DataTemplate>
                     <Border
                         StrokeShape="RoundRectangle 10"
-                        StrokeThickness="2"
-                        Margin="0,10,0,0"
+                        StrokeThickness="1"
+                        Margin="0,0,0,10"
                         Stroke="Grey">
 
                         <Grid
@@ -212,7 +239,7 @@
                                 VerticalOptions="Center"
                                 ColumnSpacing="10"
                                 Margin="5,5,5,5">
-                                
+
                                 <Button
                                     Grid.Column="0"
                                     x:Name="Btn_Edit"
@@ -245,21 +272,5 @@
             </CollectionView.ItemTemplate>
 
         </CollectionView>
-
-        <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20">
-
-            <Button
-                x:Name="Btn_AddRegister"
-                Style="{StaticResource buttons}"
-                Text="Adicionar Cadastro"
-                Clicked="Btn_AddRegister_Clicked"/>
-
-            <Button
-                x:Name="Btn_RegistersGoBack"
-                Style="{StaticResource buttons}"
-                Text="Voltar"
-                Clicked="Btn_RegistersGoBack_Clicked"/>
-
-        </VerticalStackLayout>
     </Grid>
 </ContentPage>

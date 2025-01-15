@@ -20,7 +20,8 @@
             <Setter Property="HorizontalOptions" Value="Center"/>
             <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="MinimumWidthRequest" Value="250"/>
-            <Setter Property="TextColor" Value="#0084B1"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="HorizontalTextAlignment" Value="Center"/>
             <Setter Property="VerticalTextAlignment" Value="Center"/>
         </Style>
@@ -39,38 +40,62 @@
             StrokeShape="RoundRectangle 20"
             StrokeThickness="2">
 
-            <VerticalStackLayout>
+            <Grid
+                RowDefinitions="*,*,*,*,*,*"
+                HorizontalOptions="Fill">
 
                 <Label 
-                    Text="LOGIN"/>
+                    Grid.Row="0"
+                    Text="LOGIN"/>                
 
-                <Entry/>
+                <Entry Grid.Row="1"/>
+
+                <BoxView
+                    Grid.Row="1"
+                    HeightRequest="1"
+                    Color="Black"
+                    Margin="20,0,20,8"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="End"/>
 
                 <Label 
+                    Grid.Row="2"
                     Text="SENHA"/>
 
                 <Entry
+                    Grid.Row="3"
                     IsPassword="True"/>
 
+                <BoxView
+                    Grid.Row="3"
+                    HeightRequest="1"
+                    Color="Black"
+                    Margin="20,0,20,8"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="End"/>
+
                 <Button
+                    Grid.Row="4"
                     x:Name="Btn_Login"
                     Text="Entrar"
                     Margin="20,20,20,0"
-                    TextColor="White"
+                    TextColor="Black"
                     FontAttributes="Bold"
                     FontSize="20"
-                    BackgroundColor="#0084B1"
+                    BackgroundColor="AliceBlue"
+                    BorderColor="LightGray"
                     CornerRadius="10"
                     Clicked="Btn_Login_Clicked"/>
 
                 <Button
+                    Grid.Row="5"
                     Text="Esqueci minha senha"
                     BackgroundColor="Transparent"
                     TextColor="#C93919"
                     HorizontalOptions="End"
-                    Margin="0,5,20,0"
+                    Margin="0,5,10,0"
                     Clicked="Button_Clicked"/>
-            </VerticalStackLayout>
+            </Grid>
         </Border>
 
     </VerticalStackLayout>

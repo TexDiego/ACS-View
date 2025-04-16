@@ -29,7 +29,7 @@
         </Style>
 
         <ResourceDictionary>
-            <local:SUSFormatConverter x:Key="SUSFormatConverter" />
+            <local:SUSFormatConverter x:Key="SUSFormatConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -174,19 +174,33 @@
 
                         <Grid
                             RowDefinitions="*,*,*,*,*,*"
+                            ColumnDefinitions="*,auto"
                             BackgroundColor="White"
                             Padding="5">
 
+                            <!-- name -->
                             <Label
                                 Grid.Row="0"
+                                Grid.ColumnSpan="2"
                                 Text="{Binding Name}"
                                 FontAttributes="Bold"
                                 FontSize="18"
                                 LineBreakMode="CharacterWrap"
                                 Style="{StaticResource Lbl_Datas}"/>
 
+                            <!-- sus number -->
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Text="{Binding SusNumber, Converter={StaticResource SUSFormatConverter}}"
+                                FontSize="18"
+                                LineBreakMode="NoWrap"
+                                Style="{StaticResource Lbl_Datas}"/>
+
+                            <!-- birth date and age -->
                             <HorizontalStackLayout
-                                Grid.Row="2">
+                                Grid.Row="2"
+                                Grid.Column="0">
 
                                 <Label
                                     Text="{Binding BirthDate, StringFormat='{0:dd/MM/yyyy}'}"
@@ -206,17 +220,12 @@
                                     Style="{StaticResource Lbl_Datas}"/>
 
                             </HorizontalStackLayout>
-
-                            <Label
-                                Grid.Row="1"
-                                Text="{Binding SusNumber, Converter={StaticResource SUSFormatConverter}}"
-                                FontSize="18"
-                                LineBreakMode="NoWrap"
-                                Style="{StaticResource Lbl_Datas}"/>
-
+                            
+                            <!-- observations -->
                             <Label
                                 x:Name="Lbl_Obs"
                                 Grid.Row="3"
+                                Grid.Column="0"
                                 FontSize="16"
                                 Opacity="0.7"
                                 FontAttributes="Italic"
@@ -225,17 +234,60 @@
                                 Style="{StaticResource Lbl_Datas}"
                                 Text="{Binding Observacao}"/>
 
+                            <!-- address -->
                             <Label
                                 Grid.Row="4"
+                                Grid.Column="0"
                                 Text="{Binding Endereco}"
                                 LineBreakMode="WordWrap"
                                 FontSize="16"
                                 Style="{StaticResource Lbl_Datas}"/>
 
+                            <!-- background button -->
+                            <Button
+                                x:Name="InfoPopup"
+                                Grid.Row="0"
+                                Grid.RowSpan="6"
+                                Grid.ColumnSpan="2"
+                                BackgroundColor="Transparent"
+                                BorderColor="Transparent"
+                                Text=""
+                                Padding="0"
+                                Opacity="0.01"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                CommandParameter="{Binding SusNumber}"/>
+                            
+                            <!-- vaccine button -->
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Grid.Row="1"
+                                Grid.RowSpan="4"
+                                Margin="5,0,15,0"
+                                VerticalOptions="Center"
+                                IsVisible="{Binding IsChild}">
+
+                                <ImageButton
+                                    x:Name="Btn_Vaccines"
+                                    BackgroundColor="Transparent"
+                                    Source="syringe"
+                                    HeightRequest="30"
+                                    WidthRequest="30"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                                    CommandParameter="{Binding SusNumber}"/>
+
+                                <Label
+                                    Text="Vacinas"
+                                    TextColor="Black"
+                                    FontSize="14"/>
+
+                            </VerticalStackLayout>
+
+                            <!-- edit and delete -->
                             <Grid
                                 Grid.Row="5"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
                                 ColumnDefinitions="*,*"
-                                HorizontalOptions="Fill"
                                 VerticalOptions="Center"
                                 ColumnSpacing="10"
                                 Margin="5,5,5,5">
@@ -266,6 +318,7 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                     CommandParameter="{Binding SusNumber}"/>
                             </Grid>
+                            
                         </Grid>
                     </Border>
                 </DataTemplate>

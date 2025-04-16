@@ -111,7 +111,6 @@ namespace ACS_View.MVVM.ViewModels
             LimparCampos();
         }
 
-
         private void LimparCampos()
         {
             Nome = string.Empty;

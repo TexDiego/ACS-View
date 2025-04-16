@@ -31,7 +31,10 @@
         Margin="20">
 
         <Image
-            Margin="20,50,20,150"/>
+            Source="form.png"
+            HeightRequest="150"
+            WidthRequest="150"
+            Margin="20,20,20,50"/>
 
         <Border
             Stroke="LightGray"
@@ -85,18 +88,31 @@
                     BackgroundColor="AliceBlue"
                     BorderColor="LightGray"
                     CornerRadius="10"
-                    Clicked="Btn_Login_Clicked"/>
-
-                <Button
-                    Grid.Row="5"
-                    Text="Esqueci minha senha"
-                    BackgroundColor="Transparent"
-                    TextColor="#C93919"
-                    HorizontalOptions="End"
-                    Margin="0,5,10,0"
-                    Clicked="Button_Clicked"/>
+                    Clicked="Btn_Login_Clicked"/>                
             </Grid>
         </Border>
 
+        <Grid VerticalOptions="End">
+
+            <Button
+                x:Name="RegisterUser"
+                Text="Cadastre-se"
+                BackgroundColor="Transparent"
+                FontSize="16"
+                TextColor="Blue"
+                HorizontalOptions="Start"
+                CornerRadius="100"
+                Clicked="RegisterUser_Clicked"/>
+
+            <Button
+                Text="Esqueci minha senha"
+                BackgroundColor="Transparent"
+                FontSize="16"
+                TextColor="#C93919"
+                HorizontalOptions="End"
+                CornerRadius="100"
+                Clicked="Button_Clicked"/>
+            
+        </Grid>
     </VerticalStackLayout>
 </ContentPage>

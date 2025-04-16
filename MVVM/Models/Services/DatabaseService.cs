@@ -30,7 +30,7 @@ namespace ACS_View.MVVM.Models.Services
             Console.WriteLine("Database initialization started...");
             try
             {
-                await _database.CreateTablesAsync<HealthRecord, Note, House, Family>();
+                await _database.CreateTablesAsync<HealthRecord, Note, House, Family, User>();
 
                 Console.WriteLine("Database initialization completed successfully!");
             }
@@ -58,6 +58,16 @@ namespace ACS_View.MVVM.Models.Services
                 Console.WriteLine("Erro: ", ex.Message);
                 throw;
             }
+        }
+
+        public Task<User> GetUserByUsernameAsync(string username)
+        {
+            return _database.Table<User>().FirstOrDefaultAsync(x => x.Username == username);
+        }
+
+        public Task<int> UpdateUserAsync(User user)
+        {
+            return _database.UpdateAsync(user);
         }
     }
 }

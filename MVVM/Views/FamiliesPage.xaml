@@ -12,10 +12,11 @@
     <Grid RowDefinitions="auto,*,auto">
 
         <VerticalStackLayout Grid.Row="0" VerticalOptions="Start">
-            <Label TextColor="#0084B1"
-                   Text="Famílias"
+            <Label TextColor="Black"
+                   Text="{Binding House}"
+                   Opacity="0.7"
                    Margin="20,10,20,0"
-                   FontSize="30"
+                   FontSize="20"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
                    LineBreakMode="WordWrap"
@@ -48,14 +49,30 @@
                                     <CollectionView.ItemTemplate>
                                         <DataTemplate>
 
-                                            <Label
-                                                Text="{Binding Name}"
-                                                TextColor="Black"
-                                                Opacity="0.7"
-                                                FontSize="16"
-                                                Margin="0,5"
-                                                FontAttributes="Bold"
-                                                LineBreakMode="WordWrap"/>
+                                            <Grid>
+
+                                                <Label
+                                                    Text="{Binding Name}"
+                                                    TextColor="Black"
+                                                    Opacity="0.7"
+                                                    FontSize="16"
+                                                    Margin="0,5"
+                                                    FontAttributes="Bold"
+                                                    LineBreakMode="WordWrap"/>
+
+                                                <Button
+                                                    x:Name="InfoPopup"
+                                                    Grid.Row="0"
+                                                    Grid.RowSpan="6"
+                                                    BackgroundColor="Transparent"
+                                                    BorderColor="Transparent"
+                                                    Text=""
+                                                    Padding="0"
+                                                    Opacity="0.01"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                                    CommandParameter="{Binding SusNumber}"/>
+
+                                            </Grid>
 
                                         </DataTemplate>
                                     </CollectionView.ItemTemplate>
@@ -104,35 +121,44 @@
             </CollectionView>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" VerticalOptions="End" Margin="0,20,0,0">
+        <Grid
+            RowDefinitions="*,*"
+            Grid.Row="2"
+            VerticalOptions="End"
+            Margin="0,20,0,0"
+            BackgroundColor="Transparent">
             
-            <Button 
+            <ImageButton
+                Grid.Row="0"
+                Source="plus"
+                HeightRequest="50"
+                WidthRequest="50"
+                Padding="10"
                 x:Name="Btn_AddFamily" 
-                Text="Adicionar família" 
-                Margin="20,0,20,5" 
-                FontSize="18" 
-                TextColor="White" 
-                FontAttributes="Bold" 
+                Margin="20,0,20,25" 
                 MaximumHeightRequest="60" 
-                BackgroundColor="#0084B1" 
-                CornerRadius="10" 
-                HeightRequest="40" 
+                BackgroundColor="AliceBlue"
+                BorderColor="Grey"
+                CornerRadius="100"
+                HorizontalOptions="End"
                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}" 
                 CommandParameter="{Binding IdFamily}"/>
             
             <Button 
+                Grid.Row="1"
                 x:Name="Btn_Voltar" 
                 Text="Voltar" 
                 Margin="20,5,20,20" 
                 FontSize="18" 
-                TextColor="White" 
+                TextColor="#C93919" 
                 FontAttributes="Bold" 
                 MaximumHeightRequest="60" 
-                BackgroundColor="#0084B1" 
+                BackgroundColor="AliceBlue"
+                BorderColor="#C93919"                
                 CornerRadius="10" 
                 HeightRequest="40" 
                 Clicked="Btn_Voltar_Clicked"/>
-        </VerticalStackLayout>
+        </Grid>
 
     </Grid>
 

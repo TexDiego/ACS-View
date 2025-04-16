@@ -1,0 +1,963 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.MVVM.Views.VaccinesPage"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             NavigationPage.HasNavigationBar="False"
+             Background="#E6EBED">
+
+    <ContentPage.BindingContext>
+        <vm:VaccinesPageViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        
+        <Style x:Key="vacinasp" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+        </Style>
+        
+        <Style x:Key="title" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+        </Style>
+        
+    </ContentPage.Resources>
+
+    <Grid
+        RowDefinitions="auto,*,auto"
+        Margin="0,15">
+        
+        <Grid
+            Grid.Row="0"
+            Margin="15,0,15,15"
+            ColumnDefinitions="*,*,*">
+
+            <Label
+                Style="{StaticResource title}"
+                Grid.Column="0"
+                Text="Idade"/>
+
+            <Label
+                Style="{StaticResource title}"
+                Grid.Column="1"
+                Text="Vacina"/>
+
+            <Label
+                Style="{StaticResource title}"
+                Grid.Column="2"
+                Text="Dose"/>
+
+        </Grid>
+
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="0,0,0,15">
+
+            <Grid
+                RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+
+                <!-- ao nascer -->
+                <Border
+                    IsVisible="{Binding HealthRecord.ShowRN}"
+                    Grid.Row="0"
+                    Margin="15,0,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="2"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="Ao nascer"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                        Style="{StaticResource vacinasp}"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Text="BCG"
+                        Margin="0,5,0,0"/>
+
+                        <Label
+                        Style="{StaticResource vacinasp}"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="Hepatite B"
+                        Margin="0,0,0,5"/>
+
+                        <Label
+                        Style="{StaticResource vacinasp}"
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Text="Única"
+                        Margin="0,5,0,0"/>
+
+                        <Label
+                        Style="{StaticResource vacinasp}"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Text="Única"
+                        Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 2 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show2Meses}"
+                    Grid.Row="1"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="2 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Penta"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="VIP"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Pneumo 10"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Text="VRH"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 3 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show3Meses}"
+                    Grid.Row="2"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="3 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Meningo C"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 4 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show4Meses}"
+                    Grid.Row="3"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="4 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Penta"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="VIP"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Pneumo 10"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Text="VRH"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 5 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show5Meses}"
+                    Grid.Row="4"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="5 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Meningo C"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 6 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show6Meses}"
+                    Grid.Row="5"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="6 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Penta"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="VIP"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Covid 19"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="3ª dose"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="3ª dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 7 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show7Meses}"
+                    Grid.Row="6"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="7 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Covid 19"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="2ª dose"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 9 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show9Meses}"
+                    Grid.Row="7"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="9 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Febre amarela"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 12 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show1Ano}"
+                    Grid.Row="8"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="12 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Pneumo 10"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="Meningo C"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Tríplice viral"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="Reforço"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Reforço"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="1ª dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 15 meses -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show15Meses}"
+                    Grid.Row="9"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="15 meses"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="DTP"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="VIP"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Hepatite A"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Text="Tetraviral"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="1º reforço"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Reforço"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 4 anos -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show4Anos}"
+                    Grid.Row="10"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="4"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="4 anos"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="DTP"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="Febre amarela"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="Varicela"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="2ª reforço"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Reforço"
+                            Margin="0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 5 anos -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show5Anos}"
+                    Grid.Row="11"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*,*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="2"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="5 anos"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="Febre amarela"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Text="Pneumo 23"
+                            Margin="0,0,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0,5,0,0"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Duas doses"
+                            Margin="0,0,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 7 anos -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show7Anos}"
+                    Grid.Row="12"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="7 anos"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="DT"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Três doses"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+                <!-- 9 anos -->
+                <Border
+                    IsVisible="{Binding HealthRecord.Show9Anos}"
+                    Grid.Row="13"
+                    Margin="15,15,15,0"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+
+                    <Grid
+                        RowDefinitions="*"
+                        ColumnDefinitions="*,*,*"
+                        BackgroundColor="White">
+
+                        <Border
+                            Grid.Column="0"
+                            Grid.RowSpan="1"
+                            BackgroundColor="#01AD4D"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Label
+                                Text="9 anos"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                TextColor="White"
+                                FontSize="16"
+                                FontAttributes="Bold"/>
+
+                        </Border>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Text="HPV"
+                            Margin="0,5,0,5"/>
+
+                        <Label
+                            Style="{StaticResource vacinasp}"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Text="Uma dose"
+                            Margin="0,5,0,5"/>
+
+                    </Grid>
+                </Border>
+
+            </Grid>
+
+        </ScrollView>
+
+        <Button
+            x:Name="Btn_GoBack"
+            Grid.Row="2"
+            BackgroundColor="AliceBlue"
+            Margin="15,0"
+            BorderColor="#C93919"
+            CornerRadius="15"
+            Text="Voltar"
+            TextColor="#C93919"
+            FontSize="16"
+            FontAttributes="Bold"
+            Clicked="Btn_GoBack_Clicked"/>
+
+    </Grid>
+
+</ContentPage>

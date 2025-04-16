@@ -77,6 +77,11 @@ public partial class OverallView : ContentPage
         }
     }
 
+    private void Btn_NoResidence_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIHAS, "NOHOME");
+    }
+
     private void Btn_HAS_Clicked(object sender, EventArgs e)
     {
         ViewRegisterAsync(AIHAS, "HAS");

@@ -183,6 +183,17 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
+        private int _NoResidence;
+        public int NoResidence
+        {
+            get => _NoResidence;
+            set
+            {
+                _NoResidence = value;
+                OnPropertyChanged();
+            }
+        }
+
         private bool _isLoading;
         public bool IsLoading
         {
@@ -221,6 +232,8 @@ namespace ACS_View.MVVM.ViewModels
                 TotalCancer = await _healthRecordService.GetConditionCountAsync(r => r.HasCancer);
                 TotalOld = await _healthRecordService.GetElder();
                 Total = await _healthRecordService.GetTotalCountAsync();
+                NoResidence = await _healthRecordService.GetConditionCountAsync(r => r.HouseId == 0);
+
             }
             catch
             {

@@ -10,83 +10,85 @@
     <Border
         StrokeShape="RoundRectangle 15"
         BackgroundColor="White"
-        Stroke="#C93919"
+        Stroke="Grey"
         StrokeThickness="2"
-        MaximumWidthRequest="300"
-        Padding="5,5,5,0">
+        MaximumWidthRequest="300">
 
-        <VerticalStackLayout MaximumWidthRequest="300" MinimumWidthRequest="250">
+        <VerticalStackLayout
+            MaximumWidthRequest="300"
+            MinimumWidthRequest="250"
+            Margin="15">
 
             <Label 
                 x:Name="Lbl_title"
                 Text="Menu"
                 FontAttributes="Bold"
-                TextColor="#0084B1"
-                FontSize="24"
-                Margin="15,15,15,5"/>
+                TextColor="Black"
+                Opacity="0.7"
+                FontSize="24"/>
 
             <BoxView
-                Color="#0084B1"
+                Color="Grey"
                 HeightRequest="2"
-                Margin="15,0"/>
+                Margin="0,0,0,15"/>
 
             <Grid
                 RowDefinitions="*,*,*,*,*"
-                HorizontalOptions="Center"
+                HorizontalOptions="Fill"
                 RowSpacing="5">
 
                 <Button
                     Grid.Row="0"
                     x:Name="Btn_AddRegister"
                     CornerRadius="10"
-                    Margin="15,15,15,0"
                     Text="Adicionar cadastro"
                     FontSize="18"
-                    TextColor="White"
-                    BorderWidth="0"
-                    BackgroundColor="#0084B1"
+                    TextColor="#0084B1"
+                    BorderWidth="1"
+                    BorderColor="#0084B1"
+                    BackgroundColor="AliceBlue"
                     Clicked="Btn_AddRegister_Clicked"/>
 
                 <Button
                     Grid.Row="1"
                     x:Name="Btn_AddHouses"
-                    Margin="15,5,15,0"
-                    TextColor="White"
+                    TextColor="#0084B1"
                     Text="Adicionar residência"
                     FontSize="18"
-                    BorderWidth="0"
+                    BorderWidth="1"
+                    BorderColor="#0084B1"
                     CornerRadius="10"
-                    BackgroundColor="#0084B1"
+                    BackgroundColor="AliceBlue"
                     Clicked="Btn_AddHouses_Clicked"/>
 
                 <Button
                     Grid.Row="2"
                     x:Name="Btn_Notes"
-                    Margin="15,5,15,5"
-                    TextColor="White"
+                    TextColor="#0084B1"
                     Text="Anotações"
                     FontSize="18"
-                    BorderWidth="0"
+                    BorderWidth="1"
+                    BorderColor="#0084B1"
                     CornerRadius="10"
-                    BackgroundColor="#0084B1"
+                    BackgroundColor="AliceBlue"
                     Clicked="Btn_Notes_Clicked"/>
 
                 <Button
                     Grid.Row="3"
+                    Margin="0,25,0,25"
                     x:Name="Btn_Cancel"
-                    Margin="15,25,15,5"
-                    TextColor="White"
+                    TextColor="Grey"
                     Text="Voltar"
                     FontSize="18"
-                    BorderWidth="0"
+                    BorderWidth="1"
+                    BorderColor="Grey"
                     CornerRadius="10"
-                    BackgroundColor="#0084B1"
+                    BackgroundColor="AliceBlue"
                     Clicked="Btn_Cancel_Clicked"/>
 
                 <Button
                     Grid.Row="4"
                     x:Name="Btn_Exit"
-                    Margin="15,25,15,15"
                     TextColor="White"
                     Text="Desconectar-se"
                     FontSize="18"

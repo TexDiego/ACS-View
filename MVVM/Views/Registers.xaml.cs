@@ -16,6 +16,7 @@ public partial class Registers : ContentPage
     private string _filter;
     private string _order;
 
+
     public Registers(
         string condition,
         DatabaseService databaseService,
@@ -56,19 +57,20 @@ public partial class Registers : ContentPage
             "DEFICIENTE" => "Desabilitados",
             "IDOSO" => "Idosos",
             "CANCER" => "Câncer",
+            "NOHOME" => "Sem residência",
             _ => "Cadastros"
         };
     }
 
     protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-
-        _order = "Crescente";
-        _filter = "Nome";
-
+    {       
         try
         {
+            base.OnAppearing();
+
+            _order = "Crescente";
+            _filter = "Nome";
+
             _addRegisterViewModel.IsLoading = true;
 
             // Recarregar dados sempre que a página aparecer
@@ -125,32 +127,44 @@ public partial class Registers : ContentPage
 
     private async void Btn_filter_Clicked(object sender, EventArgs e)
     {
-        //var selectedOption = await DisplayActionSheet("Ordenar conteúdo por:", "Voltar", null, "Nome", "Idade");
+        try
+        {
+            var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar por:", "Nome", "Idade", "Voltar", 1));
 
-        var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar por:", "Nome", "Idade", "Voltar", 1));
+            if (selectedOption == null || Convert.ToString(selectedOption) == Btn_filter.Text.Substring(12))
+                return;
 
-        if (selectedOption == null || Convert.ToString(selectedOption) == Btn_filter.Text.Substring(12))
-            return;
+            _filter = Convert.ToString(selectedOption) ?? string.Empty;
 
-        _filter = Convert.ToString(selectedOption) ?? string.Empty;
+            Btn_filter.Text = $"Ordenar por {_filter}";
 
-        Btn_filter.Text = $"Ordenar por {_filter}";
-
-        await RefreshCollectionAsync();
+            await RefreshCollectionAsync();
+        }
+        catch (Exception ex)
+        {
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+        }
     }
 
     private async void Btn_order_Clicked(object sender, EventArgs e)
     {
-        var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar em:", "Crescente", "Decrescente", "Voltar", 2));
+        try
+        {
+            var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar em:", "Crescente", "Decrescente", "Voltar", 2));
 
-        if (selectedOption == null || Convert.ToString(selectedOption) == Btn_order.Text.Substring(6))
-            return;
+            if (selectedOption == null || Convert.ToString(selectedOption) == Btn_order.Text.Substring(6))
+                return;
 
-        _order = Convert.ToString(selectedOption) ?? string.Empty;
+            _order = Convert.ToString(selectedOption) ?? string.Empty;
 
-        Btn_order.Text = $"Ordem {_order}";
+            Btn_order.Text = $"Ordem {_order}";
 
-        await RefreshCollectionAsync();
+            await RefreshCollectionAsync();
+        }
+        catch (Exception ex)
+        {
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+        }
     }
 
     private async Task RefreshCollectionAsync()

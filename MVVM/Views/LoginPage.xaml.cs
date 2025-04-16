@@ -1,4 +1,6 @@
+using ACS_View.MVVM.Models.Services;
 using CommunityToolkit.Maui.Views;
+using System.Reflection.Metadata;
 
 namespace ACS_View.MVVM.Views;
 
@@ -21,11 +23,23 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    private async void RegisterUser_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Navigation.PushAsync(new RegistrationPage());
+        }
+        catch (Exception ex)
+        {
+            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+        }
+    }
+
     private async void Button_Clicked(object sender, EventArgs e)
     {
         try
         {
-
+            await Navigation.PushAsync(new ForgotPassword());
         }
         catch (Exception ex)
         {

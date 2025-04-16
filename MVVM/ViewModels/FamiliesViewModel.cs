@@ -4,6 +4,7 @@ using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
@@ -13,9 +14,23 @@ namespace ACS_View.MVVM.ViewModels
         private readonly DatabaseService _databaseService;
 
         public ObservableCollection<Familia> Families { get; } = new ObservableCollection<Familia>();
+        private HouseService _houseService;
+        private string _house;
+        public string House
+        {
+            get => _house;
+            set
+            {
+                _house = value;
+                OnPropertyChanged(nameof(House));
+            }
+        }
+
         public IRelayCommand AddFamilyCommand { get; }
         public IRelayCommand<int> DeleteFamilyCommand { get; }
         public IRelayCommand<int> EditFamilyCommand { get; }
+        public ICommand PersonInfo { get; }
+
 
         public int _idHouse;
 
@@ -25,10 +40,12 @@ namespace ACS_View.MVVM.ViewModels
             _idHouse = idHouse;
             _databaseService = new DatabaseService();
             _healthRecordService = new HealthRecordService(_databaseService);
+            _houseService = new HouseService(_databaseService);
 
             AddFamilyCommand = new RelayCommand(AddFamily);
             DeleteFamilyCommand = new RelayCommand<int>(DeleteFamily);
             EditFamilyCommand = new RelayCommand<int>(EditFamily);
+            PersonInfo = new Command<string>(async susNumber => await PersonData(susNumber));
 
             LoadFamilies();
         }
@@ -37,6 +54,15 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
+                var house = await _houseService.GetHousesById(_idHouse);
+                string rua = house.Rua ?? "Famílias";
+                string numero = house.NumeroCasa ?? "";
+                string complemento = house.Complemento ?? "";
+
+                House = complemento == "" ? $"{rua}\n Nº {numero}" : $"{rua}\n Nº {numero} - {complemento}";
+
+                Console.WriteLine(House);
+
                 var familiesFromDb = await _healthRecordService.GetRecordsByHouseID(_idHouse);
                 var familiesGrouped = familiesFromDb
                     .Where(p => p.FamilyId > 0)
@@ -48,6 +74,7 @@ namespace ACS_View.MVVM.ViewModels
                     }).ToList();
 
                 Families.Clear();
+
                 foreach (var family in familiesGrouped)
                 {
                     Families.Add(family);
@@ -132,6 +159,25 @@ namespace ACS_View.MVVM.ViewModels
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível editar a família.\n\n{ex.Message}", "OK");
+            }
+        }
+
+        private async Task PersonData(string susNumber)
+        {
+            try
+            {
+                var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+
+                if (record != null)
+                {
+                    var popup = new PersonsInfo(record, _databaseService);
+                    await popup.LoadAddressAsync();
+                    await Application.Current.MainPage.ShowPopupAsync(popup);
+                }
+            }
+            catch
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Erro ao carregar os dados da pessoa.", true, "Fechar", false, ""));
             }
         }
     }

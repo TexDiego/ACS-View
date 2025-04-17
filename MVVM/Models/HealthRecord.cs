@@ -2,14 +2,14 @@
 
 namespace ACS_View.MVVM.Models
 {
-    public class HealthRecord()
+    public class HealthRecord
     {
         [PrimaryKey]
         public string SusNumber { get; set; }
         public int FamilyId { get; set; }
         public int HouseId { get; set; }
         public string Name { get; set; }
-        public string MotherName { get; set; }
+        public string? MotherName { get; set; }
         public DateTime BirthDate { get; set; }
         public bool IsPregnant { get; set; }
         public bool HasDiabetes { get; set; }
@@ -31,43 +31,42 @@ namespace ACS_View.MVVM.Models
         public bool HasCancer { get; set; }
         public bool HasDisabilities { get; set; }
         public string? Observacao { get; set; }
-        public bool HasObs { get; set; }
-
         public bool BolsaFamilia { get; set; }
 
         // Vacinas
-        public bool BCG { get; set; }
-        public bool HepatitisBAoNascer { get; set; }
-        public bool Penta1 { get; set; }
-        public bool VIP1 { get; set; }
-        public bool Pneumo10_1 { get; set; }
-        public bool VRH1 { get; set; }
-        public bool MeningoC1 { get; set; }
-        public bool Penta2 { get; set; }
-        public bool VIP2 { get; set; }
-        public bool Pneumo10_2 { get; set; }
-        public bool VRH2 { get; set; }
-        public bool MeningoC2 { get; set; }
-        public bool Penta3 { get; set; }
-        public bool VIP3 { get; set; }
-        public bool Covid1 { get; set; }
-        public bool Covid2 { get; set; }
-        public bool FebreAmarela1 { get; set; }
-        public bool Pneumo10_3 { get; set; }
-        public bool MeningoC3 { get; set; }
-        public bool TripliceViral { get; set; }
-        public bool DTP1 { get; set; }
-        public bool VIP4 { get; set; }
-        public bool HepatiteA { get; set; }
-        public bool TetraViral { get; set; }
-        public bool DTP2 { get; set; }
-        public bool FebreAmarela2 { get; set; }
-        public bool Varicela { get; set; }
-        public bool FebreAmarela3 { get; set; }
-        public bool Pneumo23 { get; set; }
-        public bool DT { get; set; }
-        public bool HPV { get; set; }
 
+        public bool BCG { get; set; } = false;
+        public bool HepatitisBAoNascer { get; set; } = false;
+        public bool Penta1 { get; set; } = false;
+        public bool VIP1 { get; set; } = false;
+        public bool Pneumo10_1 { get; set; } = false;
+        public bool VRH1 { get; set; } = false;
+        public bool MeningoC1 { get; set; } = false;
+        public bool Penta2 { get; set; } = false;
+        public bool VIP2 { get; set; } = false;
+        public bool Pneumo10_2 { get; set; } = false;
+        public bool VRH2 { get; set; } = false;
+        public bool MeningoC2 { get; set; } = false;
+        public bool Penta3 { get; set; } = false;
+        public bool VIP3 { get; set; } = false;
+        public bool Covid1 { get; set; } = false;
+        public bool Covid2 { get; set; } = false;
+        public bool FebreAmarela1 { get; set; } = false;
+        public bool Pneumo10_3 { get; set; } = false;
+        public bool MeningoC3 { get; set; } = false;
+        public bool TripliceViral { get; set; } = false;
+        public bool DTP1 { get; set; } = false;
+        public bool VIP4 { get; set; } = false;
+        public bool HepatiteA { get; set; } = false;
+        public bool TetraViral { get; set; } = false;
+        public bool DTP2 { get; set; } = false;
+        public bool FebreAmarela2 { get; set; } = false;
+        public bool Varicela { get; set; } = false;
+        public bool FebreAmarela3 { get; set; } = false;
+        public bool Pneumo23 { get; set; } = false;
+        public bool DT { get; set; } = false;
+        public bool HPV { get; set; } = false;
+        
         // Propriedades de exibição de vacinas
         public bool ShowRN => GetMonth(BirthDate) >= 0;
         public bool Show2Meses => GetMonth(BirthDate) >= 2;
@@ -86,6 +85,9 @@ namespace ACS_View.MVVM.Models
 
 
         // Propriedades derivadas
+        [Ignore]
+        public bool HasObs => !string.IsNullOrEmpty(Observacao);
+
         [Ignore]
         public string Idade => CalcularIdadeCompleta(BirthDate);
 
@@ -109,7 +111,7 @@ namespace ACS_View.MVVM.Models
             IsPregnant && HasDiabetes && HasHypertension && HasTuberculosis && HasLeprosy &&
             HasHIV && HasHeartDesease && HasKidneyDesease && HasLungsDesease && HasLiverDesease &&
             IsBedridden && IsHomebound && HasMentalIllness && IsNeurodivergent &&
-            IsSmoker && IsAlcoholic && IsDrugAddicted && HasCancer && HasDisabilities;
+            IsSmoker && IsAlcoholic && IsDrugAddicted && HasCancer && HasDisabilities && BolsaFamilia;
 
         // Métodos para idade
         private static string CalcularIdadeCompleta(DateTime dataNascimento)

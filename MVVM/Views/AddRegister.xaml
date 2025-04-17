@@ -33,7 +33,6 @@
         </Style>
     </ContentPage.Resources>
 
-
     <Grid RowDefinitions="auto,*,auto">
 
         <Label

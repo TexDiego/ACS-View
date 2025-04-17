@@ -34,20 +34,20 @@ namespace ACS_View.MVVM.ViewModels
                 if (record.HasLeprosy)
                     Icons.Add(new HealthIcon { IconSource = "leprosy.png", Description = "Hanseníase" });
 
-                if (record.IsBedridden)
+                if (record.IsHomebound)
                     Icons.Add(new HealthIcon { IconSource = "disability.png", Description = "Acamado" });
 
                 if (record.HasCancer)
                     Icons.Add(new HealthIcon { IconSource = "cancer.png", Description = "Câncer" });
 
                 if (record.HasMentalIllness)
-                    Icons.Add(new HealthIcon { IconSource = "mentalhealth.png", Description = "Doença Mental" });
+                    Icons.Add(new HealthIcon { IconSource = "mentalhealth.png", Description = "Psiquiátrico" });
 
                 if (record.IsSmoker)
                     Icons.Add(new HealthIcon { IconSource = "cigarrete.png", Description = "Tabagista" });
 
                 if (record.IsAlcoholic)
-                    Icons.Add(new HealthIcon { IconSource = "drunk.png", Description = "Alcoólatra" });
+                    Icons.Add(new HealthIcon { IconSource = "drunk.png", Description = "Álcool" });
 
                 if (record.IsOld)
                     Icons.Add(new HealthIcon { IconSource = "oldman.png", Description = "Idoso" });
@@ -74,7 +74,7 @@ namespace ACS_View.MVVM.ViewModels
                     Icons.Add(new HealthIcon { IconSource = "pills.png", Description = "Dependência Química" });
 
                 if (record.HasHIV)
-                    Icons.Add(new HealthIcon { IconSource = "virus.png", Description = "HIV" });
+                    Icons.Add(new HealthIcon { IconSource = "virus.png", Description = "Imunodeficiencia" });
             }
             catch (Exception ex)
             {

@@ -13,8 +13,8 @@ public partial class Registers : ContentPage
     private readonly AddRegisterViewModel _addRegisterViewModel;
     private readonly HouseService houseService;
     private string _condition;
-    private string _filter;
-    private string _order;
+    private string _filter = "Nome";
+    private string _order = "Crescente";
 
 
     public Registers(
@@ -77,9 +77,6 @@ public partial class Registers : ContentPage
         {
             base.OnAppearing();
 
-            _order = "Crescente";
-            _filter = "Nome";
-
             _addRegisterViewModel.IsLoading = true;
 
             // Recarregar dados sempre que a página aparecer
@@ -106,6 +103,9 @@ public partial class Registers : ContentPage
 
     private async void Btn_AddRegister_Clicked(object sender, EventArgs e)
     {
+        if (_databaseService == null)
+            Console.WriteLine("database nula ao entrar no construtor de addregister");
+
         await Navigation.PushAsync(new AddRegister(_databaseService));
     }
 

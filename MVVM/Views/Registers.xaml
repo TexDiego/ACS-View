@@ -40,7 +40,8 @@
             Grid.Row="0"
             VerticalOptions="Start">
 
-            <Grid Margin="20,15,20,10">
+            <Grid
+                Margin="20,15,10,10">
 
                 <ImageButton
                     Source="arrowleft.png"
@@ -53,7 +54,6 @@
                     x:Name="Lbl_Title"
                     TextColor="Black"
                     Text="Cadastros"
-                    Margin="70,0,70,0"
                     FontSize="26"
                     FontAttributes="Bold" 
                     HorizontalOptions="Center"
@@ -95,6 +95,7 @@
 
                 <ImageButton
                     Grid.Column="1"
+                    ToolTipProperties.Text="Adicionar"
                     Source="addperson.png"
                     WidthRequest="30"
                     HeightRequest="30"
@@ -102,6 +103,7 @@
 
                 <ImageButton
                     Grid.Column="2"
+                    ToolTipProperties.Text="Residências"
                     Source="house.png"
                     WidthRequest="30"
                     HeightRequest="30"

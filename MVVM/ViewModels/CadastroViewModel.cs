@@ -9,6 +9,7 @@ namespace ACS_View.MVVM.ViewModels
         private readonly HealthRecordService _healthRecordService;
 
         public string Name { get; set; }
+        public string? MotherName { get; set; }
         public string SusNumber { get; set; }
         public DateTime BirthDate { get; set; }
         public bool IsPregnant { get; set; }
@@ -24,6 +25,16 @@ namespace ACS_View.MVVM.ViewModels
         public bool IsDisabled { get; set; }
         public bool HasCancer { get; set; }
         public bool IsOld { get; set; }
+        public bool IsNeurodivergent { get; set; }
+        public bool IsDrugAddicted { get; set; }
+        public bool IsAlcoholic { get; set; }
+        public bool HasHIV { get; set; }
+        public bool HasHeartDisease { get; set; }
+        public bool HasKidneyDisease { get; set; }
+        public bool HasLiverDisease { get; set; }
+        public bool HasLungsDisease { get; set; }
+        public bool BolsaFamilia { get; set; }
+        public string? Observacao { get; set; }
 
         public ICommand SaveCommand { get; }
 
@@ -49,6 +60,7 @@ namespace ACS_View.MVVM.ViewModels
             {
                 SusNumber = SusNumber,
                 Name = Name,
+                MotherName = MotherName,
                 BirthDate = BirthDate,
                 IsPregnant = IsPregnant,
                 HasDiabetes = HasDiabetes,
@@ -58,9 +70,19 @@ namespace ACS_View.MVVM.ViewModels
                 IsBedridden = IsBedridden,
                 IsHomebound = IsHomebound,
                 HasMentalIllness = HasMentalIllness,
+                IsNeurodivergent = IsNeurodivergent,
+                IsDrugAddicted = IsDrugAddicted,
+                HasHIV = HasHIV,
+                HasHeartDesease = HasHeartDisease,
+                HasKidneyDesease = HasKidneyDisease,
+                HasLiverDesease = HasLiverDisease,
+                HasLungsDesease = HasLungsDisease,
+                BolsaFamilia = BolsaFamilia,
                 IsSmoker = IsSmoker,
+                IsAlcoholic = IsAlcoholic,
                 HasDisabilities = IsDisabled,
-                HasCancer = HasCancer
+                HasCancer = HasCancer,
+                Observacao = Observacao
             };
 
             if (existingRecord != null)
@@ -80,6 +102,7 @@ namespace ACS_View.MVVM.ViewModels
         private void ClearFields()
         {
             Name = string.Empty;
+            MotherName = string.Empty;
             SusNumber = string.Empty;
             BirthDate = DateTime.Now;
             IsPregnant = false;
@@ -89,12 +112,22 @@ namespace ACS_View.MVVM.ViewModels
             HasLeprosy = false;
             IsBedridden = false;
             IsHomebound = false;
+            IsNeurodivergent = false;
+            IsDrugAddicted = false;
+            HasHIV = false;
+            HasHeartDisease = false;
+            HasKidneyDisease = false;
+            HasLiverDisease = false;
+            HasLungsDisease = false;
+            BolsaFamilia = false;
+            IsAlcoholic = false;
             IsUnderTwoYears = false;
             HasMentalIllness = false;
             IsDisabled = false;
             IsSmoker = false;
             HasCancer = false;
             IsOld = false;
+            Observacao = string.Empty;
 
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(SusNumber));
@@ -106,12 +139,22 @@ namespace ACS_View.MVVM.ViewModels
             OnPropertyChanged(nameof(HasLeprosy));
             OnPropertyChanged(nameof(IsBedridden));
             OnPropertyChanged(nameof(IsHomebound));
+            OnPropertyChanged(nameof(IsNeurodivergent));
+            OnPropertyChanged(nameof(IsDrugAddicted));
+            OnPropertyChanged(nameof(HasHIV));
+            OnPropertyChanged(nameof(HasHeartDisease));
+            OnPropertyChanged(nameof(HasKidneyDisease));
+            OnPropertyChanged(nameof(HasLiverDisease));
+            OnPropertyChanged(nameof(HasLungsDisease));
+            OnPropertyChanged(nameof(BolsaFamilia));
+            OnPropertyChanged(nameof(IsAlcoholic));
             OnPropertyChanged(nameof(IsUnderTwoYears));
             OnPropertyChanged(nameof(HasMentalIllness));
             OnPropertyChanged(nameof(IsDisabled));
             OnPropertyChanged(nameof(IsSmoker));
             OnPropertyChanged(nameof(HasCancer));
             OnPropertyChanged(nameof(IsOld));
+            OnPropertyChanged(nameof(Observacao));
         }
     }
 }

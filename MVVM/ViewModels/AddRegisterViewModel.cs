@@ -10,8 +10,9 @@ namespace ACS_View.MVVM.ViewModels
     {
         private readonly HealthRecordService _healthRecordService;
 
+        #region propriedades
         public string Nome { get; set; }
-        public string MotherName { get; set; }
+        public string? MotherName { get; set; }
         public string NumeroSUS { get; set; }
         public DateTime Nascimento { get; set; }
         public int Idade { get; set; }
@@ -22,7 +23,6 @@ namespace ACS_View.MVVM.ViewModels
         public bool Tuberculose { get; set; }
         public bool Acamado { get; set; }
         public bool Domiciliado { get; set; }
-        public bool MenorDe2Anos { get; set; }
         public bool Mental { get; set; }
         public bool Fumante { get; set; }
         public bool Alcoolatra { get; set; }
@@ -48,6 +48,7 @@ namespace ACS_View.MVVM.ViewModels
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
         }
+        #endregion
 
         // Comando para salvar o cadastro
         public ICommand SalvarCommand { get; }
@@ -66,7 +67,7 @@ namespace ACS_View.MVVM.ViewModels
                 await Application.Current.MainPage.DisplayAlert("Erro", "Nome e Número do SUS são obrigatórios.", "OK");
                 return;
             }
-
+            Console.WriteLine("Criando instancia de healthrecord");
             var novoCadastro = new HealthRecord
             {
                 Name = Nome,
@@ -94,11 +95,11 @@ namespace ACS_View.MVVM.ViewModels
                 IsAlcoholic = Alcoolatra,
                 HasCancer = Cancer,
                 Observacao = Observacao,
-                HasObs = HasObs,
                 HouseId = HouseId,
                 FamilyId = FamilyId
             };
 
+            Console.WriteLine("tentando salvar...");
             try
             {
                 var registroExistente = await _healthRecordService.GetRecordBySusAsync(NumeroSUS);
@@ -119,7 +120,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.StackTrace, true, "Voltar", false, ""));
             }
 
             if (Application.Current.MainPage.BindingContext is OverallViewModel overallViewModel)

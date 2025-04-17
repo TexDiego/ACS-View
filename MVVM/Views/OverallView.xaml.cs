@@ -132,6 +132,11 @@ public partial class OverallView : ContentPage
         ViewRegisterAsync(AIFUMANTE, "FUMANTE");
     }
 
+    private void Btn_Alcoolatra_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIALCOOLATRA, "ALCOOLATRA");
+    }
+
     private void Btn_Deficiente_Clicked(object sender, EventArgs e)
     {
         ViewRegisterAsync(AIDEFICIENTE, "DEFICIENTE");
@@ -150,6 +155,46 @@ public partial class OverallView : ContentPage
     private void Btn_Old_Clicked(object sender, EventArgs e)
     {
         ViewRegisterAsync(AIOLD, "IDOSO");
+    }
+
+    private void Btn_Bolsa_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIBOLSA, "BOLSA");
+    }
+
+    private void Btn_Cardiaco_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIBOLSA, "CORACAO");
+    }
+
+    private void Btn_Kidney_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIKIDNEY, "RIM");
+    }
+
+    private void Btn_Liver_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AILIVER, "FIGADO");
+    }
+
+    private void Btn_Lungs_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AILUNGS, "PULMAO");
+    }
+
+    private void Btn_Neurodivergents_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AINEURODIVERGENTS, "NEURO");
+    }
+
+    private void Btn_Addicted_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIDEPENDENTES, "DROGAS");
+    }
+
+    private void Btn_Hiv_Clicked(object sender, EventArgs e)
+    {
+        ViewRegisterAsync(AIHIV, "HIV");
     }
 
     #endregion

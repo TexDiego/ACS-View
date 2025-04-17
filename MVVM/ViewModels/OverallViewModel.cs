@@ -7,6 +7,7 @@ namespace ACS_View.MVVM.ViewModels
         private readonly HealthRecordService _healthRecordService;
         private readonly HouseService _houseService;
 
+        #region Properties
         private int _totalGestantes;
         public int TotalGestantes
         {
@@ -128,6 +129,17 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
+        private int _TotalAlcoolatra;
+        public int TotalAlcoolatra
+        {
+            get => _TotalAlcoolatra;
+            set
+            {
+                _TotalAlcoolatra = value;
+                OnPropertyChanged();
+            }
+        }
+
         private int _TotalDeficiente;
         public int TotalDeficiente
         {
@@ -135,6 +147,94 @@ namespace ACS_View.MVVM.ViewModels
             set
             {
                 _TotalDeficiente = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalHeartDesease;
+        public int TotalHeartDesease
+        {
+            get => _TotalHeartDesease;
+            set
+            {
+                _TotalHeartDesease = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalKidneyDesease;
+        public int TotalKidneyDesease
+        {
+            get => _TotalKidneyDesease;
+            set
+            {
+                _TotalKidneyDesease = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalLungDesease;
+        public int TotalLungDesease
+        {
+            get => _TotalLungDesease;
+            set
+            {
+                _TotalLungDesease = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalLiverDesease;
+        public int TotalLiverDesease
+        {
+            get => _TotalLiverDesease;
+            set
+            {
+                _TotalLiverDesease = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalBolsaFamilia;
+        public int TotalBolsaFamilia
+        {
+            get => _TotalBolsaFamilia;
+            set
+            {
+                _TotalBolsaFamilia = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalNeurodivergents;
+        public int TotalNeurodivergents
+        {
+            get => _TotalNeurodivergents;
+            set
+            {
+                _TotalNeurodivergents = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalDrugsAddicted;
+        public int TotalDrugsAddicted
+        {
+            get => _TotalDrugsAddicted;
+            set
+            {
+                _TotalDrugsAddicted = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _TotalHIV;
+        public int TotalHIV
+        {
+            get => _TotalHIV;
+            set
+            {
+                _TotalHIV = value;
                 OnPropertyChanged();
             }
         }
@@ -200,6 +300,7 @@ namespace ACS_View.MVVM.ViewModels
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
         }
+        #endregion
 
         public OverallViewModel() { }
 
@@ -229,6 +330,15 @@ namespace ACS_View.MVVM.ViewModels
                 TotalMental = await _healthRecordService.GetConditionCountAsync(r => r.HasMentalIllness);
                 TotalDeficiente = await _healthRecordService.GetConditionCountAsync(r => r.HasDisabilities);
                 TotalFumante = await _healthRecordService.GetConditionCountAsync(r => r.IsSmoker);
+                TotalAlcoolatra = await _healthRecordService.GetConditionCountAsync(r => r.IsAlcoholic);
+                TotalBolsaFamilia = await _healthRecordService.GetConditionCountAsync(r => r.BolsaFamilia);
+                TotalHeartDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasHeartDesease);
+                TotalKidneyDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasKidneyDesease);
+                TotalLungDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasLungsDesease);
+                TotalLiverDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasLiverDesease);
+                TotalNeurodivergents = await _healthRecordService.GetConditionCountAsync(r => r.IsNeurodivergent);
+                TotalDrugsAddicted = await _healthRecordService.GetConditionCountAsync(r => r.IsDrugAddicted);
+                TotalHIV = await _healthRecordService.GetConditionCountAsync(r => r.HasHIV);
                 TotalCancer = await _healthRecordService.GetConditionCountAsync(r => r.HasCancer);
                 TotalOld = await _healthRecordService.GetElder();
                 Total = await _healthRecordService.GetTotalCountAsync();

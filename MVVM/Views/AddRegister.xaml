@@ -208,8 +208,8 @@
 
                 <Grid
                     Margin="0,20,30,0"
-                    ColumnDefinitions="2*,*"
-                    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*"
+                    ColumnDefinitions="*,auto"
+                    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
                     RowSpacing="5">
 
                     <Label
@@ -324,25 +324,133 @@
                         Grid.Row="9"
                         Grid.Column="0"
                         Style="{StaticResource labels}"
-                        Text="Deficiência"/>
+                        Text="Álcool"/>
 
                     <CheckBox
                         Grid.Row="9"
                         Grid.Column="1"
-                        x:Name="CB_Disability"
-                        IsChecked="{Binding Deficiente}"/>
+                        x:Name="CB_Alcoholic"
+                        IsChecked="{Binding Alcoolatra}"/>
 
                     <Label
                         Grid.Row="10"
                         Grid.Column="0"
                         Style="{StaticResource labels}"
-                        Text="Câncer"/>
+                        Text="Deficiência"/>
 
                     <CheckBox
                         Grid.Row="10"
                         Grid.Column="1"
+                        x:Name="CB_Disability"
+                        IsChecked="{Binding Deficiente}"/>
+
+                    <Label
+                        Grid.Row="11"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Câncer"/>
+
+                    <CheckBox
+                        Grid.Row="11"
+                        Grid.Column="1"
                         x:Name="CB_Cancer"
                         IsChecked="{Binding Cancer}"/>
+
+                    <Label
+                        Grid.Row="12"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Bolsa Família"/>
+
+                    <CheckBox
+                        Grid.Row="12"
+                        Grid.Column="1"
+                        x:Name="CB_Bolsa"
+                        IsChecked="{Binding BolsaFamilia}"/>
+
+                    <Label
+                        Grid.Row="13"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Cardíaco"/>
+
+                    <CheckBox
+                        Grid.Row="13"
+                        Grid.Column="1"
+                        x:Name="CB_Heart"
+                        IsChecked="{Binding HeartDisease}"/>
+
+                    <Label
+                        Grid.Row="14"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Pulmonar"/>
+
+                    <CheckBox
+                        Grid.Row="14"
+                        Grid.Column="1"
+                        x:Name="CB_Lungs"
+                        IsChecked="{Binding LungsDisease}"/>
+
+                    <Label
+                        Grid.Row="15"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Renal"/>
+
+                    <CheckBox
+                        Grid.Row="15"
+                        Grid.Column="1"
+                        x:Name="CB_Kidney"
+                        IsChecked="{Binding KidneyDisease}"/>
+
+                    <Label
+                        Grid.Row="16"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Hepatopata"/>
+
+                    <CheckBox
+                        Grid.Row="16"
+                        Grid.Column="1"
+                        x:Name="CB_Liver"
+                        IsChecked="{Binding LiverDisease}"/>
+
+                    <Label
+                        Grid.Row="17"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Neurodivergente"/>
+
+                    <CheckBox
+                        Grid.Row="17"
+                        Grid.Column="1"
+                        x:Name="CB_Neuro"
+                        IsChecked="{Binding Neurodivergent}"/>
+
+                    <Label
+                        Grid.Row="18"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Dependente químico"/>
+
+                    <CheckBox
+                        Grid.Row="18"
+                        Grid.Column="1"
+                        x:Name="CB_Addicted"
+                        IsChecked="{Binding Addicted}"/>
+
+                    <Label
+                        Grid.Row="19"
+                        Grid.Column="0"
+                        Style="{StaticResource labels}"
+                        Text="Imunodeficiente"/>
+
+                    <CheckBox
+                        Grid.Row="19"
+                        Grid.Column="1"
+                        x:Name="CB_HIV"
+                        IsChecked="{Binding HIV}"/>
 
                 </Grid>
 

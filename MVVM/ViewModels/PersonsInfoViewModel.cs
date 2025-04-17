@@ -46,8 +46,35 @@ namespace ACS_View.MVVM.ViewModels
                 if (record.IsSmoker)
                     Icons.Add(new HealthIcon { IconSource = "cigarrete.png", Description = "Tabagista" });
 
+                if (record.IsAlcoholic)
+                    Icons.Add(new HealthIcon { IconSource = "drunk.png", Description = "Alcoólatra" });
+
                 if (record.IsOld)
                     Icons.Add(new HealthIcon { IconSource = "oldman.png", Description = "Idoso" });
+
+                if (record.IsNeurodivergent)
+                    Icons.Add(new HealthIcon { IconSource = "neurodivergence.png", Description = "Neurodivergente" });
+
+                if (record.BolsaFamilia)
+                    Icons.Add(new HealthIcon { IconSource = "bolsafamilia.png", Description = "Bolsa Família" });
+
+                if (record.HasHeartDesease)
+                    Icons.Add(new HealthIcon { IconSource = "heart.png", Description = "Doença Cardíaca" });
+
+                if (record.HasKidneyDesease)
+                    Icons.Add(new HealthIcon { IconSource = "kidney.png", Description = "Doença Renal" });
+
+                if (record.HasLiverDesease)
+                    Icons.Add(new HealthIcon { IconSource = "liver.png", Description = "Doença Hepática" });
+
+                if (record.HasLungsDesease)
+                    Icons.Add(new HealthIcon { IconSource = "lungs.png", Description = "Doença Pulmonar" });
+
+                if (record.IsDrugAddicted)
+                    Icons.Add(new HealthIcon { IconSource = "pills.png", Description = "Dependência Química" });
+
+                if (record.HasHIV)
+                    Icons.Add(new HealthIcon { IconSource = "virus.png", Description = "HIV" });
             }
             catch (Exception ex)
             {

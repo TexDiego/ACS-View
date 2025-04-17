@@ -63,7 +63,7 @@
         <ScrollView Grid.Row="1">
 
             <Grid
-                RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
+                RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
                 Margin="20,15,20,20"
                 Padding="5"
                 RowSpacing="10">
@@ -586,9 +586,46 @@
                     Grid.Row="13"
                     Clicked="Btn_Fumante_Clicked"/>
 
-                <!-- deficientes -->
+                <!-- alcoolatras -->
                 <Border
                     Grid.Row="14"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Álcoolatras: "/>
+
+                        <Label
+                            x:Name="Lbl_Alcoolatra"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalAlcoolatra}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIALCOOLATRA"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="14"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Alcoolatra"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="14"
+                    Clicked="Btn_Alcoolatra_Clicked"/>
+
+                <!-- deficientes -->
+                <Border
+                    Grid.Row="15"
                     Style="{StaticResource borders}">
 
                     <HorizontalStackLayout>
@@ -614,18 +651,18 @@
                     MaximumWidthRequest="40"
                     IsVisible="False"
                     Color="#C93919"
-                    Grid.Row="14"
+                    Grid.Row="15"
                     IsRunning="{Binding IsLoading}"/>
 
                 <Button
                     x:Name="Btn_Deficiente"
                     Style="{StaticResource buttons}"
-                    Grid.Row="14"
+                    Grid.Row="15"
                     Clicked="Btn_Deficiente_Clicked"/>
 
                 <!-- cancer -->
                 <Border
-                    Grid.Row="15"
+                    Grid.Row="16"
                     Style="{StaticResource borders}">
 
                     <HorizontalStackLayout>
@@ -651,18 +688,18 @@
                     MaximumWidthRequest="40"
                     IsVisible="False"
                     Color="#C93919"
-                    Grid.Row="15"
+                    Grid.Row="16"
                     IsRunning="{Binding IsLoading}"/>
 
                 <Button
                     x:Name="Btn_Cancer"
                     Style="{StaticResource buttons}"
-                    Grid.Row="15"
+                    Grid.Row="16"
                     Clicked="Btn_Cancer_Clicked"/>
 
                 <!-- idosos -->
                 <Border
-                    Grid.Row="16"
+                    Grid.Row="17"
                     Style="{StaticResource borders}">
 
                     <HorizontalStackLayout>
@@ -688,14 +725,310 @@
                     MaximumWidthRequest="40"
                     IsVisible="False"
                     Color="#C93919"
-                    Grid.Row="16"
+                    Grid.Row="17"
                     IsRunning="{Binding IsLoading}"/>
 
                 <Button
                     x:Name="Btn_Old"
                     Style="{StaticResource buttons}"
-                    Grid.Row="16"
+                    Grid.Row="17"
                     Clicked="Btn_Old_Clicked"/>
+
+                <!-- Bolsa família -->
+                <Border
+                    Grid.Row="18"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Bolsa Família: "/>
+
+                        <Label
+                            x:Name="Lbl_Bolsa"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalBolsaFamilia}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIBOLSA"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="18"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Bolsa"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="18"
+                    Clicked="Btn_Bolsa_Clicked"/>
+
+                <!-- Cardiacos -->
+                <Border
+                    Grid.Row="19"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Cardíacos: "/>
+
+                        <Label
+                            x:Name="Lbl_Cardiacos"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalHeartDesease}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AICARDIACO"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="19"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Cardiaco"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="19"
+                    Clicked="Btn_Cardiaco_Clicked"/>
+
+                <!-- Renais -->
+                <Border
+                    Grid.Row="20"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Renais: "/>
+
+                        <Label
+                            x:Name="Lbl_Renais"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalKidneyDesease}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIKIDNEY"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="20"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Kidney"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="20"
+                    Clicked="Btn_Kidney_Clicked"/>
+
+                <!-- Hepatopatas -->
+                <Border
+                    Grid.Row="21"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Hepatopatas: "/>
+
+                        <Label
+                            x:Name="Lbl_Hepatopatas"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalLiverDesease}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AILIVER"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="21"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Liver"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="21"
+                    Clicked="Btn_Liver_Clicked"/>
+
+                <!-- Pulmonares -->
+                <Border
+                    Grid.Row="22"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Pulmonares: "/>
+
+                        <Label
+                            x:Name="Lbl_Pulmonares"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalLungDesease}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AILUNGS"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="22"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Lungs"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="22"
+                    Clicked="Btn_Lungs_Clicked"/>
+
+                <!-- Neurodivergentes -->
+                <Border
+                    Grid.Row="23"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Neurodivergentes: "/>
+
+                        <Label
+                            x:Name="Lbl_Neurodivergentes"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalNeurodivergents}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AINEURODIVERGENTS"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="23"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Neurodivergents"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="23"
+                    Clicked="Btn_Neurodivergents_Clicked"/>
+
+                <!-- Dependentes químicos -->
+                <Border
+                    Grid.Row="24"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Dependentes químicos: "/>
+
+                        <Label
+                            x:Name="Lbl_Dependentes"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalDrugsAddicted}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIDEPENDENTES"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="24"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Addicted"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="24"
+                    Clicked="Btn_Addicted_Clicked"/>
+
+                <!-- Imunodeficientes -->
+                <Border
+                    Grid.Row="25"
+                    Style="{StaticResource borders}">
+
+                    <HorizontalStackLayout>
+
+                        <Label
+                            Style="{StaticResource infos}"
+                            Text="Imunodeficientes: "/>
+
+                        <Label
+                            x:Name="Lbl_Hiv"
+                            Style="{StaticResource infos}"
+                            Text="{Binding TotalHIV}"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+                <ActivityIndicator
+                    x:Name="AIHIV"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    MaximumHeightRequest="40"
+                    MaximumWidthRequest="40"
+                    IsVisible="False"
+                    Color="#C93919"
+                    Grid.Row="25"
+                    IsRunning="{Binding IsLoading}"/>
+
+                <Button
+                    x:Name="Btn_Hiv"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="25"
+                    Clicked="Btn_Hiv_Clicked"/>
 
             </Grid>
             

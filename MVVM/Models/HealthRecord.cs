@@ -16,14 +16,24 @@ namespace ACS_View.MVVM.Models
         public bool HasHypertension { get; set; }
         public bool HasTuberculosis { get; set; }
         public bool HasLeprosy { get; set; }
+        public bool HasHIV { get; set; }
+        public bool HasHeartDesease { get; set; }
+        public bool HasKidneyDesease { get; set; }
+        public bool HasLungsDesease { get; set; }
+        public bool HasLiverDesease { get; set; }
         public bool IsBedridden { get; set; }
         public bool IsHomebound { get; set; }
         public bool HasMentalIllness { get; set; }
+        public bool IsNeurodivergent { get; set; }
         public bool IsSmoker { get; set; }
+        public bool IsAlcoholic { get; set; }
+        public bool IsDrugAddicted { get; set; }
         public bool HasCancer { get; set; }
         public bool HasDisabilities { get; set; }
         public string? Observacao { get; set; }
         public bool HasObs { get; set; }
+
+        public bool BolsaFamilia { get; set; }
 
         // Vacinas
         public bool BCG { get; set; }
@@ -93,6 +103,13 @@ namespace ACS_View.MVVM.Models
 
         [Ignore]
         public string Endereco { get; set; } = "Sem endereço";
+
+        [Ignore]
+        public bool HasNothing =>
+            IsPregnant && HasDiabetes && HasHypertension && HasTuberculosis && HasLeprosy &&
+            HasHIV && HasHeartDesease && HasKidneyDesease && HasLungsDesease && HasLiverDesease &&
+            IsBedridden && IsHomebound && HasMentalIllness && IsNeurodivergent &&
+            IsSmoker && IsAlcoholic && IsDrugAddicted && HasCancer && HasDisabilities;
 
         // Métodos para idade
         private static string CalcularIdadeCompleta(DateTime dataNascimento)

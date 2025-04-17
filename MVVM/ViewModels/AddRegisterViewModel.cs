@@ -25,7 +25,16 @@ namespace ACS_View.MVVM.ViewModels
         public bool MenorDe2Anos { get; set; }
         public bool Mental { get; set; }
         public bool Fumante { get; set; }
+        public bool Alcoolatra { get; set; }
         public bool Deficiente { get; set; }
+        public bool BolsaFamilia { get; set; }
+        public bool HeartDisease { get; set; }
+        public bool KidneyDisease { get; set; }
+        public bool LiverDisease { get; set; }
+        public bool LungsDisease { get; set; }
+        public bool Neurodivergent { get; set; }
+        public bool Addicted { get; set; }
+        public bool HIV { get; set; }
         public bool Cancer { get; set; }
         public string? Observacao { get; set; }
         public bool HasObs { get; set; }
@@ -73,7 +82,16 @@ namespace ACS_View.MVVM.ViewModels
                 IsBedridden = Domiciliado,
                 HasMentalIllness = Mental,
                 HasDisabilities = Deficiente,
+                IsNeurodivergent = Neurodivergent,
+                IsDrugAddicted = Addicted,
+                HasHIV = HIV,
+                HasHeartDesease = HeartDisease,
+                HasKidneyDesease = KidneyDisease,
+                HasLiverDesease = LiverDisease,
+                HasLungsDesease = LungsDisease,
+                BolsaFamilia = BolsaFamilia,
                 IsSmoker = Fumante,
+                IsAlcoholic = Alcoolatra,
                 HasCancer = Cancer,
                 Observacao = Observacao,
                 HasObs = HasObs,
@@ -129,6 +147,15 @@ namespace ACS_View.MVVM.ViewModels
             Tuberculose = false;
             Mental = false;
             Fumante = false;
+            Alcoolatra = false;
+            BolsaFamilia = false;
+            HeartDisease = false;
+            KidneyDisease = false;
+            LiverDisease = false;
+            LungsDisease = false;
+            Neurodivergent = false;
+            Addicted = false;
+            HIV = false;
             Deficiente = false;
             Cancer = false;
             Observacao = string.Empty;
@@ -150,6 +177,15 @@ namespace ACS_View.MVVM.ViewModels
             OnPropertyChanged(nameof(Tuberculose));
             OnPropertyChanged(nameof(Mental));
             OnPropertyChanged(nameof(Fumante));
+            OnPropertyChanged(nameof(BolsaFamilia));
+            OnPropertyChanged(nameof(HeartDisease));
+            OnPropertyChanged(nameof(KidneyDisease));
+            OnPropertyChanged(nameof(LiverDisease));
+            OnPropertyChanged(nameof(LungsDisease));
+            OnPropertyChanged(nameof(Neurodivergent));
+            OnPropertyChanged(nameof(Addicted));
+            OnPropertyChanged(nameof(HIV));
+            OnPropertyChanged(nameof(Alcoolatra));
             OnPropertyChanged(nameof(Observacao));
             OnPropertyChanged(nameof(Deficiente));
             OnPropertyChanged(nameof(HasObs));

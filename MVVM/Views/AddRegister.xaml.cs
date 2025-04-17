@@ -56,6 +56,7 @@ public partial class AddRegister : ContentPage
         CB_TB.IsChecked = healthRecord.HasTuberculosis;
         CB_Disability.IsChecked = healthRecord.HasDisabilities;
         CB_Smoker.IsChecked = healthRecord.IsSmoker;
+        CB_Alcoholic.IsChecked = healthRecord.IsAlcoholic;
         CB_Cancer.IsChecked = healthRecord.HasCancer;
         HouseId = houseId;
         FamilyId = familyId;
@@ -120,6 +121,7 @@ public partial class AddRegister : ContentPage
             _addRegisterViewModel.Hipertensao = CB_HAS.IsChecked;
             _addRegisterViewModel.Deficiente = CB_Disability.IsChecked;
             _addRegisterViewModel.Fumante = CB_Smoker.IsChecked;
+            _addRegisterViewModel.Alcoolatra = CB_Alcoholic.IsChecked;
             _addRegisterViewModel.Cancer = CB_Cancer.IsChecked;
             _addRegisterViewModel.HasObs = !string.IsNullOrEmpty(Entry_Obs.Text);
             _addRegisterViewModel.HouseId = HouseId ?? 0;

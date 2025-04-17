@@ -42,6 +42,7 @@ public partial class AddRegister : ContentPage
         BindingContext = _addRegisterViewModel;
 
         Entry_Name.Text = healthRecord.Name;
+        Entry_MotherName.Text = healthRecord.MotherName;
         Entry_Sus.Text = healthRecord.SusNumber;
         Entry_Birth.Date = healthRecord.BirthDate;
         Entry_Obs.Text = healthRecord.Observacao;
@@ -106,6 +107,7 @@ public partial class AddRegister : ContentPage
 
             // Atribuindo valores aos campos da ViewModel
             _addRegisterViewModel.Nome = Entry_Name.Text.ToUpper();
+            _addRegisterViewModel.MotherName = Entry_MotherName.Text.ToUpper();
             _addRegisterViewModel.NumeroSUS = Entry_Sus.Text;
             _addRegisterViewModel.Nascimento = Entry_Birth.Date;
             _addRegisterViewModel.Observacao = string.IsNullOrEmpty(Entry_Obs.Text) ? null : Entry_Obs.Text;
@@ -141,7 +143,7 @@ public partial class AddRegister : ContentPage
 
     private bool isTextChanging = false; // Flag para evitar loops no evento TextChanged
 
-    private async void Entry_Name_TextChanged(object sender, TextChangedEventArgs e)
+    private async void Entry_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (isTextChanging) return;
 

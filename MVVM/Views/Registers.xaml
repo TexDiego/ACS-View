@@ -23,6 +23,7 @@
         </Style>
         <Style x:Key="Lbl_Datas" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Start"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="Margin" Value="5,0,0,0"/>
             <Setter Property="TextColor" Value="Black"/>
             <Setter Property="Opacity" Value="0.7"/>
@@ -173,7 +174,7 @@
                         Stroke="Grey">
 
                         <Grid
-                            RowDefinitions="*,*,*,*,*,*"
+                            RowDefinitions="*,*"
                             ColumnDefinitions="*,auto"
                             BackgroundColor="White"
                             Padding="5">
@@ -181,73 +182,18 @@
                             <!-- name -->
                             <Label
                                 Grid.Row="0"
-                                Grid.ColumnSpan="2"
+                                Grid.Column="0"
                                 Text="{Binding Name}"
                                 FontAttributes="Bold"
                                 FontSize="18"
                                 LineBreakMode="CharacterWrap"
                                 Style="{StaticResource Lbl_Datas}"/>
 
-                            <!-- sus number -->
-                            <Label
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Text="{Binding SusNumber, Converter={StaticResource SUSFormatConverter}}"
-                                FontSize="18"
-                                LineBreakMode="NoWrap"
-                                Style="{StaticResource Lbl_Datas}"/>
-
-                            <!-- birth date and age -->
-                            <HorizontalStackLayout
-                                Grid.Row="2"
-                                Grid.Column="0">
-
-                                <Label
-                                    Text="{Binding BirthDate, StringFormat='{0:dd/MM/yyyy}'}"
-                                    FontAttributes="None"
-                                    FontSize="16"
-                                    Style="{StaticResource Lbl_Datas}"/>
-
-                                <Label
-                                    Text="-"
-                                    FontAttributes="None"
-                                    FontSize="16"
-                                    Style="{StaticResource Lbl_Datas}"/>
-
-                                <Label
-                                    Text="{Binding Idade}"
-                                    FontSize="16"
-                                    Style="{StaticResource Lbl_Datas}"/>
-
-                            </HorizontalStackLayout>
-                            
-                            <!-- observations -->
-                            <Label
-                                x:Name="Lbl_Obs"
-                                Grid.Row="3"
-                                Grid.Column="0"
-                                FontSize="16"
-                                Opacity="0.7"
-                                FontAttributes="Italic"
-                                TextColor="#C93919"
-                                IsVisible="{Binding HasObs}"
-                                Style="{StaticResource Lbl_Datas}"
-                                Text="{Binding Observacao}"/>
-
-                            <!-- address -->
-                            <Label
-                                Grid.Row="4"
-                                Grid.Column="0"
-                                Text="{Binding Endereco}"
-                                LineBreakMode="WordWrap"
-                                FontSize="16"
-                                Style="{StaticResource Lbl_Datas}"/>
-
                             <!-- background button -->
                             <Button
                                 x:Name="InfoPopup"
                                 Grid.Row="0"
-                                Grid.RowSpan="6"
+                                Grid.RowSpan="2"
                                 Grid.ColumnSpan="2"
                                 BackgroundColor="Transparent"
                                 BorderColor="Transparent"
@@ -260,11 +206,9 @@
                             <!-- vaccine button -->
                             <VerticalStackLayout
                                 Grid.Column="1"
-                                Grid.Row="1"
-                                Grid.RowSpan="4"
-                                Margin="5,0,15,0"
-                                VerticalOptions="Center"
-                                IsVisible="{Binding IsChild}">
+                                Grid.Row="0"
+                                Margin="5,5,10,5"
+                                VerticalOptions="Center">
 
                                 <ImageButton
                                     x:Name="Btn_Vaccines"
@@ -284,7 +228,7 @@
 
                             <!-- edit and delete -->
                             <Grid
-                                Grid.Row="5"
+                                Grid.Row="1"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
                                 ColumnDefinitions="*,*"

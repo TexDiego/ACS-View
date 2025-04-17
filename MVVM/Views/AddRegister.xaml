@@ -58,6 +58,7 @@
                     <Grid ColumnDefinitions="auto,*">
 
                         <Label
+                            Grid.Row="0"
                             Grid.Column="0"
                             Style="{StaticResource labels}"
                             Margin="20,10,10,10"
@@ -66,6 +67,7 @@
                             Text="Nome:"/>
 
                         <Entry
+                            Grid.Row="0"
                             Grid.Column="1"
                             x:Name="Entry_Name"
                             TextColor="Black"
@@ -75,7 +77,7 @@
                             Margin="0,0,20,0"
                             MaxLength="70"
                             Keyboard="Text"
-                            TextChanged="Entry_Name_TextChanged"
+                            TextChanged="Entry_TextChanged"
                             Text="{Binding Nome}"/>
 
                     </Grid>
@@ -83,6 +85,36 @@
 
                 <Border
                     Margin="20,10"
+                    Stroke="LightGray"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="Mãe:"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            x:Name="Entry_MotherName"
+                            TextColor="Black"
+                            Opacity="0.7"
+                            VerticalOptions="Center"
+                            FontSize="18"
+                            Margin="0,0,20,0"
+                            MaxLength="70"
+                            Keyboard="Text"
+                            TextChanged="Entry_TextChanged"
+                            Text="{Binding MotherName}"/>
+                    </Grid>
+                </Border>
+
+                <Border
+                    Margin="20,0,20,10"
                     Stroke="LightGray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
@@ -170,8 +202,6 @@
                             Text="{Binding Observacao}"/>
 
                     </Grid>
-
-
 
                 </Border>
 
@@ -328,7 +358,6 @@
                     Style="{StaticResource buttons}"
                     Text="Salvar"
                     Clicked="Button_Clicked"/>
-
             <Grid>
 
                 <Button

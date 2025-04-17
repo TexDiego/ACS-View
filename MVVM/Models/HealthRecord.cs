@@ -9,6 +9,7 @@ namespace ACS_View.MVVM.Models
         public int FamilyId { get; set; }
         public int HouseId { get; set; }
         public string Name { get; set; }
+        public string MotherName { get; set; }
         public DateTime BirthDate { get; set; }
         public bool IsPregnant { get; set; }
         public bool HasDiabetes { get; set; }

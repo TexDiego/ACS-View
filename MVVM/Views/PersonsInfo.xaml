@@ -3,10 +3,15 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
     xmlns:local="clr-namespace:ACS_View.MVVM.Models"
     x:Class="ACS_View.MVVM.Views.PersonsInfo"
     Color="Transparent"
     CanBeDismissedByTappingOutsideOfPopup="true">
+
+    <tk:Popup.BindingContext>
+        <vm:PersonsInfoViewModel/>
+    </tk:Popup.BindingContext>
 
     <tk:Popup.Resources>
         <ResourceDictionary>
@@ -30,12 +35,20 @@
                 HorizontalOptions="Start"
                 TextColor="Black"
                 FontAttributes="Bold"
-                FontSize="20"/>
+                FontSize="20"
+                Margin="0,0,0,5"/>
 
-            <BoxView
-                HeightRequest="1"
-                Color="Black"
-                Margin="0,0,0,15"/>
+            <HorizontalStackLayout>
+                <Label
+                    Text="Mãe: "
+                    TextColor="Black"
+                    FontSize="16"/>
+
+                <Label
+                    Text="{Binding PersonInfo.MotherName}"
+                    TextColor="Black"
+                    FontSize="16"/>
+            </HorizontalStackLayout>
 
             <Label
                 Text="{Binding PersonInfo.SusNumber, Converter={StaticResource SUSFormatConverter}}"
@@ -63,6 +76,7 @@
             </HorizontalStackLayout>
 
             <Label
+                Margin="0,10,0,0"
                 x:Name="Lbl_endereco"
                 TextColor="Black"
                 FontSize="16"/>
@@ -72,6 +86,55 @@
                 TextColor="Black"
                 FontSize="16"
                 FontAttributes="Italic"/>
+
+            <BoxView
+                HeightRequest="1"
+                Margin="0,15,0,10"
+                Color="Black"/>
+            
+            <!-- icons -->
+
+            <CollectionView
+                ItemsSource="{Binding Icons}"
+                ItemsLayout="VerticalGrid, 5"
+                HorizontalOptions="Center"
+                Margin="10, 0">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout
+                            Padding="4"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+
+                            <Border
+                                Padding="5"
+                                StrokeShape="RoundRectangle 10"
+                                Stroke="Black"
+                                BackgroundColor="AliceBlue">
+                                
+                                <Image
+                                    Source="{Binding IconSource}"
+                                    ToolTipProperties.Text="{Binding Description}"
+                                    WidthRequest="32"
+                                    HeightRequest="32"
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="Center"/>
+                                
+                            </Border>
+
+                            <!-- Opcional: Descrição abaixo do ícone -->
+                            <!--
+                            <Label
+                                Text="{Binding Description}"
+                                FontSize="10"
+                                HorizontalOptions="Center"
+                                TextColor="Gray"/>
+                            -->
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
         </VerticalStackLayout>
 

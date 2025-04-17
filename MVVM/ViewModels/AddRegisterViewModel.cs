@@ -11,6 +11,7 @@ namespace ACS_View.MVVM.ViewModels
         private readonly HealthRecordService _healthRecordService;
 
         public string Nome { get; set; }
+        public string MotherName { get; set; }
         public string NumeroSUS { get; set; }
         public DateTime Nascimento { get; set; }
         public int Idade { get; set; }
@@ -60,6 +61,7 @@ namespace ACS_View.MVVM.ViewModels
             var novoCadastro = new HealthRecord
             {
                 Name = Nome,
+                MotherName = MotherName,
                 SusNumber = NumeroSUS,
                 BirthDate = Nascimento,
                 IsPregnant = Gestante,
@@ -114,6 +116,7 @@ namespace ACS_View.MVVM.ViewModels
         private void LimparCampos()
         {
             Nome = string.Empty;
+            MotherName = string.Empty;
             NumeroSUS = string.Empty;
             Nascimento = DateTime.Today;
             Idade = 0;
@@ -134,6 +137,7 @@ namespace ACS_View.MVVM.ViewModels
             HouseId = 0;
 
             OnPropertyChanged(nameof(Nome));
+            OnPropertyChanged(nameof(MotherName));
             OnPropertyChanged(nameof(NumeroSUS));
             OnPropertyChanged(nameof(Nascimento));
             OnPropertyChanged(nameof(Idade));

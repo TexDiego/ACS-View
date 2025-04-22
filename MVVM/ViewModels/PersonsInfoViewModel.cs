@@ -12,6 +12,7 @@ namespace ACS_View.MVVM.ViewModels
         public PersonsInfoViewModel(HealthRecord record)
         {
             PersonInfo = record;
+            Console.WriteLine(record.HasNothing);
             SetHealthIcons(record);
         }
 

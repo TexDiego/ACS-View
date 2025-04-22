@@ -2,6 +2,7 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
@@ -9,6 +10,7 @@ namespace ACS_View.MVVM.ViewModels
     public class AddRegisterViewModel : BaseViewModel
     {
         private readonly HealthRecordService _healthRecordService;
+        private readonly VaccineService _vaccineService;
 
         #region propriedades
         public string Nome { get; set; }
@@ -54,82 +56,162 @@ namespace ACS_View.MVVM.ViewModels
         public ICommand SalvarCommand { get; }
 
         public AddRegisterViewModel() { }
-        public AddRegisterViewModel(HealthRecordService healthRecordService) : base()
+        public AddRegisterViewModel(HealthRecordService healthRecordService, VaccineService vaccineService) : base()
         {
             _healthRecordService = healthRecordService;
-            SalvarCommand = new Command(SalvarCadastro);
+            _vaccineService = vaccineService;
+            SalvarCommand = new Command(async () => await SalvarCadastro());
         }
 
-        private async void SalvarCadastro()
+        private async Task SalvarCadastro()
         {
             if (string.IsNullOrWhiteSpace(Nome) || string.IsNullOrWhiteSpace(NumeroSUS))
             {
                 await Application.Current.MainPage.DisplayAlert("Erro", "Nome e Número do SUS são obrigatórios.", "OK");
                 return;
             }
-            Console.WriteLine("Criando instancia de healthrecord");
-            var novoCadastro = new HealthRecord
-            {
-                Name = Nome,
-                MotherName = MotherName,
-                SusNumber = NumeroSUS,
-                BirthDate = Nascimento,
-                IsPregnant = Gestante,
-                HasDiabetes = Diabetes,
-                HasHypertension = Hipertensao,
-                HasLeprosy = Hanseniase,
-                HasTuberculosis = Tuberculose,
-                IsHomebound = Acamado,
-                IsBedridden = Domiciliado,
-                HasMentalIllness = Mental,
-                HasDisabilities = Deficiente,
-                IsNeurodivergent = Neurodivergent,
-                IsDrugAddicted = Addicted,
-                HasHIV = HIV,
-                HasHeartDesease = HeartDisease,
-                HasKidneyDesease = KidneyDisease,
-                HasLiverDesease = LiverDisease,
-                HasLungsDesease = LungsDisease,
-                BolsaFamilia = BolsaFamilia,
-                IsSmoker = Fumante,
-                IsAlcoholic = Alcoolatra,
-                HasCancer = Cancer,
-                Observacao = Observacao,
-                HouseId = HouseId,
-                FamilyId = FamilyId
-            };
 
-            Console.WriteLine("tentando salvar...");
-            try
-            {
-                var registroExistente = await _healthRecordService.GetRecordBySusAsync(NumeroSUS);
+            var registroExistente = await _healthRecordService.GetRecordBySusAsync(NumeroSUS);
 
-                if (registroExistente != null)
-                {
-                    // Atualiza o cadastro existente
-                    novoCadastro.SusNumber = registroExistente.SusNumber; // Certifique-se de atualizar o mesmo ID.
-                    await _healthRecordService.AtualizarCadastroAsync(novoCadastro);
-                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro atualizado com sucesso.", false, "", true, "Voltar"));
-                }
-                else
-                {
-                    // Adiciona novo cadastro
-                    await _healthRecordService.AdicionarCadastroAsync(novoCadastro);
-                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro adicionado com sucesso.", false, "", true, "OK"));
-                }
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.StackTrace, true, "Voltar", false, ""));
-            }
+            if (registroExistente != null)
+                await AtualizarCadastro(registroExistente);
+            else
+                await NovoCadastro();
 
             if (Application.Current.MainPage.BindingContext is OverallViewModel overallViewModel)
             {
                 overallViewModel.AtualizarContagens();
             }
 
-            // Limpa os campos após o salvamento
             LimparCampos();
+        }
+
+        private async Task NovoCadastro()
+        {
+            try
+            {
+                var novoCadastro = new HealthRecord
+                {
+                    Name = Nome,
+                    MotherName = MotherName,
+                    SusNumber = NumeroSUS,
+                    BirthDate = Nascimento,
+                    IsPregnant = Gestante,
+                    HasDiabetes = Diabetes,
+                    HasHypertension = Hipertensao,
+                    HasLeprosy = Hanseniase,
+                    HasTuberculosis = Tuberculose,
+                    IsHomebound = Acamado,
+                    IsBedridden = Domiciliado,
+                    HasMentalIllness = Mental,
+                    HasDisabilities = Deficiente,
+                    IsNeurodivergent = Neurodivergent,
+                    IsDrugAddicted = Addicted,
+                    HasHIV = HIV,
+                    HasHeartDesease = HeartDisease,
+                    HasKidneyDesease = KidneyDisease,
+                    HasLiverDesease = LiverDisease,
+                    HasLungsDesease = LungsDisease,
+                    BolsaFamilia = BolsaFamilia,
+                    IsSmoker = Fumante,
+                    IsAlcoholic = Alcoolatra,
+                    HasCancer = Cancer,
+                    Observacao = Observacao,
+                    HouseId = HouseId,
+                    FamilyId = FamilyId
+                };
+
+                var novaVacina = new Vaccines
+                {
+                    SusNumber = NumeroSUS,
+                    BirthDate = Nascimento,
+                    BCG_Infantil = false,
+                    HepatitisBAoNascer_Infantil = false,
+                    Penta1_Infantil = false,
+                    VIP1_Infantil = false,
+                    Pneumo10_1_Infantil = false,
+                    VRH1_Infantil = false,
+                    MeningoC1_Infantil = false,
+                    Penta2_Infantil = false,
+                    VIP2_Infantil = false,
+                    Pneumo10_2_Infantil = false,
+                    VRH2_Infantil = false,
+                    MeningoC2_Infantil = false,
+                    Penta3_Infantil = false,
+                    VIP3_Infantil = false,
+                    Covid1_Infantil = false,
+                    Covid2_Infantil = false,
+                    FebreAmarela1_Infantil = false,
+                    Pneumo10_3_Infantil = false,
+                    MeningoC3_Infantil = false,
+                    TripliceViral_Infantil = false,
+                    DTP1_Infantil = false,
+                    VIP4_Infantil = false,
+                    HepatiteA_Infantil = false,
+                    TetraViral_Infantil = false,
+                    DTP2_Infantil = false,
+                    FebreAmarela2_Infantil = false,
+                    Varicela_Infantil = false,
+                    FebreAmarela3_Infantil = false,
+                    Pneumo23_Infantil = false,
+                    DT_Infantil = false,
+                    HPV_Infantil = false
+                };
+
+                await _healthRecordService.AdicionarCadastroAsync(novoCadastro);
+                await _vaccineService.AdicionarVacinasAsync(novaVacina);
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro adicionado com sucesso.", false, "", true, "OK"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
+        }
+
+        private async Task AtualizarCadastro(HealthRecord registroExistente)
+        {
+            try
+            {
+                var novoCadastro = new HealthRecord
+                {
+                    Name = Nome,
+                    MotherName = MotherName,
+                    SusNumber = registroExistente.SusNumber,
+                    BirthDate = Nascimento,
+                    IsPregnant = Gestante,
+                    HasDiabetes = Diabetes,
+                    HasHypertension = Hipertensao,
+                    HasLeprosy = Hanseniase,
+                    HasTuberculosis = Tuberculose,
+                    IsHomebound = Acamado,
+                    IsBedridden = Domiciliado,
+                    HasMentalIllness = Mental,
+                    HasDisabilities = Deficiente,
+                    IsNeurodivergent = Neurodivergent,
+                    IsDrugAddicted = Addicted,
+                    HasHIV = HIV,
+                    HasHeartDesease = HeartDisease,
+                    HasKidneyDesease = KidneyDisease,
+                    HasLiverDesease = LiverDisease,
+                    HasLungsDesease = LungsDisease,
+                    BolsaFamilia = BolsaFamilia,
+                    IsSmoker = Fumante,
+                    IsAlcoholic = Alcoolatra,
+                    HasCancer = Cancer,
+                    Observacao = Observacao,
+                    HouseId = HouseId,
+                    FamilyId = FamilyId
+                };
+
+                await _healthRecordService.AtualizarCadastroAsync(novoCadastro);
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro atualizado com sucesso.", false, "", true, "Voltar"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
         }
 
         private void LimparCampos()

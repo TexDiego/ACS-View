@@ -9,6 +9,7 @@ public partial class OverallView : ContentPage
     private readonly DatabaseService _dbService;
     private readonly OverallViewModel _overallViewModel;
     private readonly HealthRecordService _healthRecordService;
+    private readonly VaccineService _vaccineService;
     private readonly AddRegisterViewModel _addRegisterViewModel;
     private readonly AddHouseViewModel _addHouseViewModel;
     private readonly HouseService _houseService;
@@ -22,9 +23,11 @@ public partial class OverallView : ContentPage
         _dbService = new DatabaseService();
         _noteService = new NoteService(_dbService);
         _healthRecordService = new HealthRecordService(_dbService);
+        _vaccineService = new VaccineService(_dbService);
+
         _houseService = new HouseService(_dbService);
         _overallViewModel = new OverallViewModel(_healthRecordService, _houseService);
-        _addRegisterViewModel = new AddRegisterViewModel(_healthRecordService);
+        _addRegisterViewModel = new AddRegisterViewModel(_healthRecordService, _vaccineService);
         _addHouseViewModel = new AddHouseViewModel(_houseService);
         _notesPageViewModel = new NotesPageViewModel(_noteService);
     }
@@ -205,7 +208,7 @@ public partial class OverallView : ContentPage
         {
             activityIndicator.IsVisible = true;
             _overallViewModel.IsLoading = true; // Ativa o indicador de carregamento
-            await Navigation.PushAsync(new Registers(page, _dbService, _healthRecordService, _addRegisterViewModel));
+            await Navigation.PushAsync(new Registers(page, _dbService, _healthRecordService, _vaccineService, _addRegisterViewModel));
         }
         catch (Exception ex)
         {

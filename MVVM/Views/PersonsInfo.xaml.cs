@@ -12,7 +12,6 @@ public partial class PersonsInfo : Popup
     private readonly PersonsInfoViewModel _personsInfoViewModel;
     private readonly string susNumber;
 
-    public ICommand ShowPersonInfo { get; }
 
     public PersonsInfo(HealthRecord record, DatabaseService databaseService)
     {

@@ -1,58 +1,117 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    internal class VaccinesPageViewModel
+    public class VaccinesPageViewModel : INotifyPropertyChanged
     {
-        #region Vacinas
-        public bool BCG { get; set; }
-        public bool HepatitisBAoNascer { get; set; }
-        public bool Penta1 { get; set; }
-        public bool VIP1 { get; set; }
-        public bool Pneumo10_1 { get; set; }
-        public bool VRH1 { get; set; }
-        public bool MeningoC1 { get; set; }
-        public bool Penta2 { get; set; }
-        public bool VIP2 { get; set; }
-        public bool Pneumo10_2 { get; set; }
-        public bool VRH2 { get; set; }
-        public bool MeningoC2 { get; set; }
-        public bool Penta3 { get; set; }
-        public bool VIP3 { get; set; }
-        public bool Covid1 { get; set; }
-        public bool Covid2 { get; set; }
-        public bool FebreAmarela1 { get; set; }
-        public bool Pneumo10_3 { get; set; }
-        public bool MeningoC3 { get; set; }
-        public bool TripliceViral { get; set; }
-        public bool DTP1 { get; set; }
-        public bool VIP4 { get; set; }
-        public bool HepatiteA { get; set; }
-        public bool TetraViral { get; set; }
-        public bool DTP2 { get; set; }
-        public bool FebreAmarela2 { get; set; }
-        public bool Varicela { get; set; }
-        public bool FebreAmarela3 { get; set; }
-        public bool Pneumo23 { get; set; }
-        public bool DT { get; set; }
-        public bool HPV { get; set; }
-        #endregion
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private HealthRecordService _healthRecordService;
-        public HealthRecord HealthRecord { get; set ; }
+        private VaccineService _vaccineService;
+        public HealthRecord HealthRecord { get; set; }
+        public Vaccines Vaccines { get; set; }
+
+        // Cores por faixa etária
+        public Color SituacaoRN => Vaccines?.SituacaoVacinal(
+            Vaccines.BCG_Infantil,
+            Vaccines.HepatitisBAoNascer_Infantil
+        ) ?? Colors.Red;
+
+        public Color Situacao2Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.Penta1_Infantil,
+            Vaccines.VIP1_Infantil,
+            Vaccines.Pneumo10_1_Infantil,
+            Vaccines.VRH1_Infantil,
+            Vaccines.MeningoC1_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao3Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.MeningoC2_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao4Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.Penta2_Infantil,
+            Vaccines.VIP2_Infantil,
+            Vaccines.Pneumo10_2_Infantil,
+            Vaccines.VRH2_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao5Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.MeningoC2_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao6Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.Penta3_Infantil,
+            Vaccines.VIP3_Infantil,
+            Vaccines.Covid1_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao7Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.Covid2_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao9Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.FebreAmarela1_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao12Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.Pneumo10_3_Infantil,
+            Vaccines.MeningoC3_Infantil,
+            Vaccines.TripliceViral_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao15Meses => Vaccines?.SituacaoVacinal(
+            Vaccines.DTP1_Infantil,
+            Vaccines.VIP4_Infantil,
+            Vaccines.HepatiteA_Infantil,
+            Vaccines.TetraViral_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao4Anos => Vaccines?.SituacaoVacinal(
+            Vaccines.DTP2_Infantil,
+            Vaccines.FebreAmarela2_Infantil,
+            Vaccines.Varicela_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao5Anos => Vaccines?.SituacaoVacinal(
+            Vaccines.FebreAmarela3_Infantil,
+            Vaccines.Pneumo23_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao7Anos => Vaccines?.SituacaoVacinal(
+            Vaccines.DT_Infantil
+        ) ?? Colors.Grey;
+
+        public Color Situacao9Anos => Vaccines?.SituacaoVacinal(
+            Vaccines.HPV_Infantil
+        ) ?? Colors.Grey;
 
         public VaccinesPageViewModel() { }
-        public VaccinesPageViewModel(HealthRecordService healthRecordService, string sus)
+
+        public VaccinesPageViewModel(HealthRecordService healthRecordService, VaccineService vaccineService, string sus)
         {
             _healthRecordService = healthRecordService;
-            HealthRecord = GetRecordBySusAsync(sus).Result;
+            _vaccineService = vaccineService;
+            LoadDataAsync(sus);
         }
 
-        private Task<HealthRecord> GetRecordBySusAsync(string sus)
+        private async void LoadDataAsync(string sus)
         {
-            return _healthRecordService.GetRecordBySusAsync(sus);
+            HealthRecord = await _healthRecordService.GetRecordBySusAsync(sus);
+            OnPropertyChanged(nameof(HealthRecord));
+            OnPropertyChanged(nameof(SituacaoRN));
+            OnPropertyChanged(nameof(Situacao2Meses));
+            OnPropertyChanged(nameof(Situacao3Meses));
+            OnPropertyChanged(nameof(Situacao4Meses));
+            OnPropertyChanged(nameof(Situacao5Meses));
+        }
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

@@ -30,7 +30,10 @@ namespace ACS_View.MVVM.Models.Services
             Console.WriteLine("Database initialization started...");
             try
             {
-                await _database.CreateTablesAsync<HealthRecord, Note, House, Family, User>();
+                // Fix: Split the CreateTablesAsync call into multiple calls with two type arguments each.  
+                await _database.CreateTablesAsync<HealthRecord, Vaccines>();
+                await _database.CreateTablesAsync<Note, House>();
+                await _database.CreateTablesAsync<Family, User>();
 
                 Console.WriteLine("Database initialization completed successfully!");
             }

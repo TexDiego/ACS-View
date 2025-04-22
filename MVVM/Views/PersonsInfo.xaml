@@ -129,7 +129,7 @@
                                 StrokeShape="RoundRectangle 10"
                                 Stroke="Black"
                                 BackgroundColor="AliceBlue">
-                                
+
                                 <Image
                                     Source="{Binding IconSource}"
                                     ToolTipProperties.Text="{Binding Description}"
@@ -137,17 +137,8 @@
                                     HeightRequest="32"
                                     VerticalOptions="Center"
                                     HorizontalOptions="Center"/>
-                                
-                            </Border>
 
-                            <!-- Opcional: Descrição abaixo do ícone -->
-                            <!--
-                            <Label
-                                Text="{Binding Description}"
-                                FontSize="10"
-                                HorizontalOptions="Center"
-                                TextColor="Gray"/>
-                            -->
+                            </Border>
                         </StackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

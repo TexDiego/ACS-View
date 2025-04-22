@@ -9,28 +9,40 @@ public partial class VaccinesPage : ContentPage
 {
     VaccinesPageViewModel viewModel;
     private readonly DatabaseService _databaseService;
-    private readonly HealthRecord _healthRecord;
+    private HealthRecord _healthRecord;
+    private readonly Vaccines _vaccines;
+    private readonly VaccineService _vaccineService;
+    private readonly HealthRecordService _healthRecordService;
 
-    public VaccinesPage(HealthRecord healthRecord, DatabaseService databaseService)
+    private string susNumber;
+
+    public VaccinesPage(Vaccines vaccines, VaccineService vaccineService, DatabaseService databaseService)
 	{
 		InitializeComponent();
         
-        _healthRecord = healthRecord ?? throw new ArgumentNullException(nameof(healthRecord));
+        _vaccines = vaccines ?? throw new ArgumentNullException(nameof(vaccines));
+        _vaccineService = vaccineService ?? throw new ArgumentNullException(nameof(vaccineService));
         _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+        _healthRecordService = new HealthRecordService(_databaseService);
     }
 
-    protected override void OnAppearing()
+    protected async override void OnAppearing()
     {
         base.OnAppearing();
 
         try
         {
-            viewModel = new VaccinesPageViewModel(new HealthRecordService(_databaseService), _healthRecord.SusNumber);
+            _healthRecord = await _healthRecordService.GetRecordBySusAsync(_vaccines.SusNumber);
+            susNumber = _healthRecord.SusNumber;
+
+            viewModel = new VaccinesPageViewModel(_healthRecordService, _vaccineService, susNumber);
             BindingContext = viewModel;
         }
         catch (Exception ex)
         {
             Application.Current.MainPage.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            Console.WriteLine(ex.StackTrace);
+            Console.WriteLine(ex.InnerException);
         }
     }
 

@@ -8,6 +8,7 @@ public partial class Registers : ContentPage
 {
     private CancellationTokenSource _throttleCts;
     private readonly DatabaseService _databaseService;
+    private readonly VaccineService _vaccineService;
     private RegistersViewModel viewModel;
     private readonly HealthRecordService _healthRecordService;
     private readonly AddRegisterViewModel _addRegisterViewModel;
@@ -21,6 +22,7 @@ public partial class Registers : ContentPage
         string condition,
         DatabaseService databaseService,
         HealthRecordService healthRecordService,
+        VaccineService vaccineService,
         AddRegisterViewModel addRegisterViewModel)
     {
         InitializeComponent();
@@ -29,6 +31,7 @@ public partial class Registers : ContentPage
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
+            _vaccineService = vaccineService ?? throw new ArgumentNullException(nameof(vaccineService));
             _addRegisterViewModel = addRegisterViewModel ?? throw new ArgumentNullException(nameof(addRegisterViewModel));
             houseService = new HouseService(databaseService);
             _condition = condition;
@@ -80,7 +83,7 @@ public partial class Registers : ContentPage
             _addRegisterViewModel.IsLoading = true;
 
             // Recarregar dados sempre que a página aparecer
-            viewModel = new RegistersViewModel(_healthRecordService, _databaseService, _condition, string.Empty, _filter, _order);
+            viewModel = new RegistersViewModel(_healthRecordService, _vaccineService, _databaseService, _condition, string.Empty, _filter, _order);
             BindingContext = viewModel;
             await Task.Run(() => viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, SB.Text, _filter, _order));
 

@@ -20,7 +20,8 @@ public partial class AddRegister : ContentPage
         // Inicializando as dependências e a ViewModel apenas uma vez
         _databaseService = databaseService;
         var healthRecordService = new HealthRecordService(databaseService);
-        _addRegisterViewModel = new AddRegisterViewModel(healthRecordService);
+        var vaccineService = new VaccineService(databaseService);
+        _addRegisterViewModel = new AddRegisterViewModel(healthRecordService, vaccineService);
 
         // Definindo a ViewModel como BindingContext
         BindingContext = _addRegisterViewModel;
@@ -36,7 +37,8 @@ public partial class AddRegister : ContentPage
         // Inicializando as dependências e a ViewModel apenas uma vez
         _databaseService = databaseService;
         var healthRecordService = new HealthRecordService(databaseService);
-        _addRegisterViewModel = new AddRegisterViewModel(healthRecordService);
+        var vaccineService = new VaccineService(databaseService);
+        _addRegisterViewModel = new AddRegisterViewModel(healthRecordService, vaccineService);
 
         // Definindo a ViewModel como BindingContext
         BindingContext = _addRegisterViewModel;

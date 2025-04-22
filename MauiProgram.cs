@@ -26,6 +26,7 @@ namespace ACS_View
 
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<HealthRecordService>();
+            builder.Services.AddSingleton<VaccineService>();
             builder.Services.AddSingleton<NoteService>();
             builder.Services.AddSingleton<HouseService>();
             builder.Services.AddSingleton<FamilyService>();

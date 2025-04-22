@@ -11,7 +11,9 @@ namespace ACS_View.MVVM.ViewModels
     {
         private readonly HouseService _houseService;
         private readonly HealthRecordService _healthRecordService;
+        private readonly VaccineService _vaccineService;
         private readonly DatabaseService databaseService;
+        private Vaccines _vaccines = new();
 
         private readonly ObservableCollection<HealthRecord> _healthRecords = [];
         public ObservableCollection<HealthRecord> HealthRecords => _healthRecords;
@@ -25,6 +27,7 @@ namespace ACS_View.MVVM.ViewModels
 
         public RegistersViewModel(
             HealthRecordService healthRecordService,
+            VaccineService vaccineService,
             DatabaseService databaseService,
             string condition,
             string search,
@@ -34,6 +37,7 @@ namespace ACS_View.MVVM.ViewModels
             try
             {
                 _healthRecordService = healthRecordService ?? throw new ArgumentNullException(nameof(healthRecordService));
+                _vaccineService = vaccineService ?? throw new ArgumentNullException(nameof(vaccineService));
                 this.databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
                 _houseService = new HouseService(databaseService);
 
@@ -235,16 +239,43 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                HealthRecord record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+                _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
 
-                if (record != null)
+
+                if (_vaccines == null)
                 {
-                    await Application.Current.MainPage.Navigation.PushAsync(new VaccinesPage(record, databaseService));
+                    await AddVaccineMissing(susNumber);
+                    Console.WriteLine("Adicionando página de vacinas ao cadastro antigo.");
+
+                    _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
                 }
+
+                Console.WriteLine($"Página adicionada, SUS: {_vaccines.SusNumber}");
+                await Application.Current.MainPage.Navigation.PushAsync(new VaccinesPage(_vaccines, _vaccineService, databaseService));
             }
-            catch
+            catch (Exception ex)
             {
                 await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Erro ao carregar os dados da pessoa.", true, "Fechar", false, ""));
+                Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        private async Task AddVaccineMissing(string susNumber)
+        {
+            try
+            {
+                var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+
+                var vaccine = new Vaccines
+                {
+                    SusNumber = susNumber,
+                    BirthDate = record.BirthDate
+                };
+                await _vaccineService.AdicionarVacinasAsync(vaccine);
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Fechar", false, ""));
             }
         }
     }

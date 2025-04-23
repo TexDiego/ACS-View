@@ -2,7 +2,6 @@
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
@@ -125,6 +124,7 @@ namespace ACS_View.MVVM.ViewModels
                 {
                     SusNumber = NumeroSUS,
                     BirthDate = Nascimento,
+                    IsPregnant = Gestante,
                     BCG_Infantil = false,
                     HepatitisBAoNascer_Infantil = false,
                     Penta1_Infantil = false,
@@ -203,14 +203,50 @@ namespace ACS_View.MVVM.ViewModels
                     HouseId = HouseId,
                     FamilyId = FamilyId
                 };
+                var _vaccines = await _vaccineService.GetVaccinesBySusAsync(registroExistente.SusNumber);
+
+                if (_vaccines == null)
+                {
+                    await AddVaccineMissing(novoCadastro.SusNumber);
+                    Console.WriteLine("Adicionando página de vacinas ao cadastro antigo.");
+
+                    _vaccines = await _vaccineService.GetVaccinesBySusAsync(novoCadastro.SusNumber);
+                }
+                else
+                {
+                    _vaccines.BirthDate = novoCadastro.BirthDate;
+                    _vaccines.IsPregnant = novoCadastro.IsPregnant;
+                }
 
                 await _healthRecordService.AtualizarCadastroAsync(novoCadastro);
+                await _vaccineService.AtualizarVacinasAsync(_vaccines);
                 await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", "Cadastro atualizado com sucesso.", false, "", true, "Voltar"));
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
                 await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
+        }
+
+        private async Task AddVaccineMissing(string susNumber)
+        {
+            try
+            {
+                var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+
+                var vaccine = new Vaccines
+                {
+                    SusNumber = susNumber,
+                    BirthDate = record.BirthDate,
+                    IsPregnant = record.IsPregnant
+                };
+
+                await _vaccineService.AdicionarVacinasAsync(vaccine);
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Fechar", false, ""));
             }
         }
 

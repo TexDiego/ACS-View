@@ -13,7 +13,7 @@ namespace ACS_View.MVVM.ViewModels
         private readonly HealthRecordService _healthRecordService;
         private readonly VaccineService _vaccineService;
         private readonly DatabaseService databaseService;
-        private Vaccines _vaccines = new();
+        private Vaccines _vaccines;
 
         private readonly ObservableCollection<HealthRecord> _healthRecords = [];
         public ObservableCollection<HealthRecord> HealthRecords => _healthRecords;
@@ -250,7 +250,7 @@ namespace ACS_View.MVVM.ViewModels
                     _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
                 }
 
-                Console.WriteLine($"Página adicionada, SUS: {_vaccines.SusNumber}");
+                Console.WriteLine($"Página adicionada, SUS: {_vaccines.SusNumber}, DN: {_vaccines.BirthDate}");
                 await Application.Current.MainPage.Navigation.PushAsync(new VaccinesPage(_vaccines, _vaccineService, databaseService));
             }
             catch (Exception ex)
@@ -271,6 +271,7 @@ namespace ACS_View.MVVM.ViewModels
                     SusNumber = susNumber,
                     BirthDate = record.BirthDate
                 };
+
                 await _vaccineService.AdicionarVacinasAsync(vaccine);
             }
             catch (Exception ex)

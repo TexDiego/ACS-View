@@ -61,7 +61,7 @@ namespace ACS_View.MVVM.Models
         public bool HasNothing =>
             IsPregnant || HasDiabetes || HasHypertension || HasTuberculosis || HasLeprosy ||
             HasHIV || HasHeartDesease || HasKidneyDesease || HasLungsDesease || HasLiverDesease ||
-            IsBedridden || IsHomebound || HasMentalIllness || IsNeurodivergent ||
+            IsBedridden || IsHomebound || HasMentalIllness || IsNeurodivergent || IsOld ||
             IsSmoker || IsAlcoholic || IsDrugAddicted || HasCancer || HasDisabilities || BolsaFamilia;
 
         // Métodos para idade

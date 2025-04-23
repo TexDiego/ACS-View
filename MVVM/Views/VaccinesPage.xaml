@@ -17,24 +17,37 @@
             <Setter Property="TextColor" Value="Black"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="LineBreakMode" Value="WordWrap"/>
         </Style>
         
         <Style x:Key="title" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="TextColor" Value="Black"/>
             <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="LineBreakMode" Value="WordWrap"/>
         </Style>
         
     </ContentPage.Resources>
 
     <Grid
-        RowDefinitions="auto,*,auto"
+        RowDefinitions="auto, auto,*,auto"
         Margin="0,15">
-        
-        <Grid
+
+        <Label
             Grid.Row="0"
-            Margin="15,0,15,15"
+            Text="{Binding HealthRecord.Name}"
+            FontSize="20"
+            TextColor="Black"
+            LineBreakMode="WordWrap"
+            FontAttributes="Bold"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"/>
+
+        <Grid
+            Grid.Row="1"
+            Margin="15"
             ColumnDefinitions="*,*,*">
 
             <Label
@@ -54,31 +67,35 @@
 
         </Grid>
 
-        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="0,0,0,15">
+        <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Never" Margin="0,0,0,15">
+            
+            <VerticalStackLayout>
 
-            <Grid
-                RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+                <!-- Vacinas infantis -->
+                <Grid
+                    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*"
+                    IsVisible="{Binding Vaccines.IsChild}">
 
-                <!-- ao nascer -->
-                <Border
-                    IsVisible="{Binding Vaccines.ShowRN}"
-                    Grid.Row="0"
-                    Margin="15,0,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                    <!-- ao nascer -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowRN}"
+                        Grid.Row="0"
+                        Margin="15,0,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="2"
                             BackgroundColor="{Binding SituacaoRN}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="Ao nascer"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -86,59 +103,59 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="BCG"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="Hepatite B"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="Única"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Única"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 2 meses -->
-                <Border
+                    <!-- 2 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show2Meses}"
                     Grid.Row="1"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao2Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="2 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -146,87 +163,87 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Penta"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="VIP"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Pneumo 10"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="1"
                             Text="VRH"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 3 meses -->
-                <Border
+                    <!-- 3 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show3Meses}"
                     Grid.Row="2"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao3Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="3 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -234,45 +251,45 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Meningo C"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0,5,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 4 meses -->
-                <Border
+                    <!-- 4 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show4Meses}"
                     Grid.Row="3"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao4Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="4 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -280,87 +297,87 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Penta"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="VIP"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Pneumo 10"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="1"
                             Text="VRH"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 5 meses -->
-                <Border
+                    <!-- 5 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show5Meses}"
                     Grid.Row="4"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao5Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="5 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -368,45 +385,45 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Meningo C"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0,5,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 6 meses -->
-                <Border
+                    <!-- 6 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show6Meses}"
                     Grid.Row="5"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao6Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="6 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -414,73 +431,73 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Penta"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="VIP"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Covid 19"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="3ª dose"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="3ª dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 7 meses -->
-                <Border
+                    <!-- 7 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show7Meses}"
                     Grid.Row="6"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao7Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="7 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -488,45 +505,45 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Covid 19"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="2ª dose"
                             Margin="0,5,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 9 meses -->
-                <Border
+                    <!-- 9 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show9Meses}"
                     Grid.Row="7"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao9Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="9 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -534,45 +551,45 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Febre amarela"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0,5,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 12 meses -->
-                <Border
+                    <!-- 12 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show1Ano}"
                     Grid.Row="8"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao12Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="12 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -580,73 +597,73 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Pneumo 10"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="Meningo C"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Tríplice viral"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="Reforço"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Reforço"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="1ª dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 15 meses -->
-                <Border
+                    <!-- 15 meses -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show15Meses}"
                     Grid.Row="9"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao15Meses}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="15 meses"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -654,87 +671,87 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="DTP"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="VIP"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Hepatite A"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="1"
                             Text="Tetraviral"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="1º reforço"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Reforço"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="3"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 4 anos -->
-                <Border
+                    <!-- 4 anos -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show4Anos}"
                     Grid.Row="10"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
                             BackgroundColor="{Binding Situacao4Anos}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="4 anos"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -742,73 +759,73 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="DTP"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="Febre amarela"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="1"
                             Text="Varicela"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="2ª reforço"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Reforço"
                             Margin="0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="2"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 5 anos -->
-                <Border
+                    <!-- 5 anos -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show5Anos}"
                     Grid.Row="11"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*,*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="2"
                             BackgroundColor="{Binding Situacao5Anos}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="5 anos"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -816,59 +833,59 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Febre amarela"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="1"
                             Text="Pneumo 23"
                             Margin="0,0,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0,5,0,0"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Duas doses"
                             Margin="0,0,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 7 anos -->
-                <Border
+                    <!-- 7 anos -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show7Anos}"
                     Grid.Row="12"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao7Anos}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="7 anos"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -876,45 +893,45 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="DT"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Três doses"
                             Margin="0,5,0,5"/>
 
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- 9 anos -->
-                <Border
+                    <!-- 9 anos -->
+                    <Border
                     IsVisible="{Binding Vaccines.Show9Anos}"
                     Grid.Row="13"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20">
 
-                    <Grid
+                        <Grid
                         RowDefinitions="*"
                         ColumnDefinitions="*,*,*"
                         BackgroundColor="White">
 
-                        <Border
+                            <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
                             BackgroundColor="{Binding Situacao9Anos}"
                             StrokeShape="RoundRectangle 20">
 
-                            <Label
+                                <Label
                                 Text="9 anos"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center"
@@ -922,32 +939,959 @@
                                 FontSize="16"
                                 FontAttributes="Bold"/>
 
-                        </Border>
+                            </Border>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="HPV"
                             Margin="0,5,0,5"/>
 
-                        <Label
+                            <Label
                             Style="{StaticResource vacinasp}"
                             Grid.Row="1"
                             Grid.Column="2"
                             Text="Uma dose"
                             Margin="0,5,0,5"/>
 
+                        </Grid>
+                    </Border>
+
+                </Grid>
+                
+                <!-- Vacinas adolescentes -->
+                <Grid
+                    RowDefinitions="*,*,*,*,*,*"
+                    IsVisible="{Binding Vaccines.IsYoung}">
+
+                    <!-- Hepatite B -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowHB}"
+                        Grid.Row="0"
+                        Margin="15,0,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Qualquer"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Hepatite B"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Única"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dT -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowDT}"
+                        Grid.Row="1"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoDTAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Qualquer"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="dT"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Febre amarela -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowFebreAmarela}"
+                        Grid.Row="2"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding SituacaoFAAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Qualquer"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Triplice viral -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowTripliceViral}"
+                        Grid.Row="3"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoTripliceViralAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Qualquer"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Tríplice viral"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,0"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- HPV -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowHPV}"
+                        Grid.Row="4"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding SituacaoHPVAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="11-14 anos"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="HPV"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Dose única"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- ACWY -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowACWY}"
+                        Grid.Row="5"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoACWYAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="11-14 anos"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="ACWY"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Uma dose"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>                    
+
+                </Grid>
+
+                <!-- Vacinas adultos -->
+                <Grid
+                    RowDefinitions="*,*,*,*,*,*,*"
+                    IsVisible="{Binding Vaccines.IsAdult}">
+
+                    <!-- Hepatite B -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowHBAdulto}"
+                        Grid.Row="0"
+                        Margin="15,0,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoHepatiteBAdulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Adulto"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Hepatite B"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dT -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowdTAdulto}"
+                        Grid.Row="1"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoDTAdulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Adulto"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="dT"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Febre amarela -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowFebreAmarelaAdulto}"
+                        Grid.Row="2"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding SituacaoFebreAmarelaAdulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="Adulto"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- HPV -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowHPVAdulto}"
+                        Grid.Row="3"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoHPVAdulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="9-45 anos"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="HPV"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Triplice viral 1 -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowTripliceViral1Adulto}"
+                        Grid.Row="4"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoTripliceViral1Adulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="20-29 anos"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Tríplice viral"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Uma dose"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Triplice viral 2 -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowTripliceViral2Adulto}"
+                        Grid.Row="5"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoTripliceViral2Adulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="30-59 anos"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Tríplice viral"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Uma dose"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+                    
+                    <!-- dTpa -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowdTpaAdulto}"
+                        Grid.Row="6"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaodTpaAdulto}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="18 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="dTpa"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Uma dose"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>   
+
+                </Grid>
+
+                <!-- Vacinas idosos -->
+                <Grid
+                    RowDefinitions="*,*,*,*"
+                    IsVisible="{Binding Vaccines.IsElderly}">
+
+                    <!-- Hepatite B -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowHBIdoso}"
+                        Grid.Row="0"
+                        Margin="15,0,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Hepatite B"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dT -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowdTIdoso}"
+                        Grid.Row="1"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaodTIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="dT"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Febre amarela -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowFebreAmarelaIdoso}"
+                        Grid.Row="2"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaoFebreAmarelaIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dTpa -->
+                    <Border
+                        IsVisible="{Binding Vaccines.ShowdTpaIdoso}"
+                        Grid.Row="3"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding SituacaodTpaIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Tríplice viral"
+                                Margin="0,5,0,5"/>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,0"/>
+
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+                <!-- Vacinas gestantes -->
+                <Grid
+                    Margin="0,30,0,0"
+                    RowDefinitions="auto,auto"
+                    IsVisible="{Binding Vaccines.IsPregnant}">
+
+                    <Grid
+                        Grid.Row="0"
+                        Margin="15"
+                        ColumnDefinitions="*,*,*">
+
+                        <Label
+                            Style="{StaticResource title}"
+                            Grid.Column="0"
+                            Text="Gestação"/>
+
+                        <Label
+                            Style="{StaticResource title}"
+                            Grid.Column="1"
+                            Text="Vacina"/>
+
+                        <Label
+                            Style="{StaticResource title}"
+                            Grid.Column="2"
+                            Text="Dose"/>
+
                     </Grid>
-                </Border>
 
-            </Grid>
+                    <Grid
+                        Grid.Row="1"
+                        RowDefinitions="*,*,*">
 
+                        <!-- Hepatite B -->
+                        <Border
+                            IsVisible="{Binding Vaccines.ShowHBGestante}"
+                            Grid.Row="0"
+                            Margin="15,0,15,0"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Grid
+                                RowDefinitions="*"
+                                ColumnDefinitions="*,*,*"
+                                BackgroundColor="White">
+
+                                <Border
+                                    Grid.Column="0"
+                                    BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                    StrokeShape="RoundRectangle 20">
+
+                                    <Label
+                                        Text="Qualquer"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center"
+                                        TextColor="White"
+                                        FontSize="16"
+                                        FontAttributes="Bold"/>
+
+                                </Border>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Column="1"
+                                    Text="Hepatite B"
+                                    Margin="0,5,0,5"/>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Column="2"
+                                    Text="Completar"
+                                    Margin="0,5,0,5"/>
+
+                            </Grid>
+                        </Border>
+
+                        <!-- dT -->
+                        <Border
+                            IsVisible="{Binding Vaccines.ShowdTGestante}"
+                            Grid.Row="1"
+                            Margin="15,15,15,0"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Grid
+                                RowDefinitions="*"
+                                ColumnDefinitions="*,*,*"
+                                BackgroundColor="White">
+
+                                <Border
+                                    Grid.Column="0"
+                                    BackgroundColor="{Binding SituacaodTGestante}"
+                                    StrokeShape="RoundRectangle 20">
+
+                                    <Label
+                                        Text="Qualquer"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center"
+                                        TextColor="White"
+                                        FontSize="16"
+                                        FontAttributes="Bold"/>
+
+                                </Border>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Column="1"
+                                    Text="dT"
+                                    Margin="0,5,0,5"/>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Text="Completar"
+                                    Margin="0,5,0,5"/>
+
+                            </Grid>
+                        </Border>
+
+                        <!-- dTpa -->
+                        <Border
+                            IsVisible="{Binding Vaccines.ShowdTpaGestante}"
+                            Grid.Row="2"
+                            Margin="15,15,15,0"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20">
+
+                            <Grid
+                                ColumnDefinitions="*,*,*"
+                                BackgroundColor="White">
+
+                                <Border
+                                    Grid.Column="0"
+                                    BackgroundColor="{Binding SituacaodTpaGestante}"
+                                    StrokeShape="RoundRectangle 20">
+
+                                    <Label
+                                        Text="20ª semana"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center"
+                                        TextColor="White"
+                                        FontSize="16"
+                                        FontAttributes="Bold"/>
+
+                                </Border>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Column="1"
+                                    Text="dTpa"
+                                    Margin="0,5,0,5"/>
+
+                                <Label
+                                    Style="{StaticResource vacinasp}"
+                                    Grid.Column="2"
+                                    Text="Completar"
+                                    Margin="0,5,0,0"/>
+
+                            </Grid>
+                        </Border>
+
+                    </Grid>
+
+                </Grid>
+                
+            </VerticalStackLayout>
+            
         </ScrollView>
 
         <Button
             x:Name="Btn_GoBack"
-            Grid.Row="2"
+            Grid.Row="3"
             BackgroundColor="AliceBlue"
             Margin="15,0"
             BorderColor="#C93919"

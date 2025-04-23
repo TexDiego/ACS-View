@@ -14,22 +14,23 @@ namespace ACS_View.MVVM.ViewModels
         public HealthRecord HealthRecord { get; set; }
         public Vaccines Vaccines { get; set; }
 
-        // Cores por faixa etária
+        #region Cores por situação vacinal
+
+        #region crianças
         public Color SituacaoRN => Vaccines?.SituacaoVacinal(
             Vaccines.BCG_Infantil,
             Vaccines.HepatitisBAoNascer_Infantil
-        ) ?? Colors.Red;
+        ) ?? Colors.Grey;
 
         public Color Situacao2Meses => Vaccines?.SituacaoVacinal(
             Vaccines.Penta1_Infantil,
             Vaccines.VIP1_Infantil,
             Vaccines.Pneumo10_1_Infantil,
-            Vaccines.VRH1_Infantil,
-            Vaccines.MeningoC1_Infantil
+            Vaccines.VRH1_Infantil
         ) ?? Colors.Grey;
 
         public Color Situacao3Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.MeningoC2_Infantil
+            Vaccines.MeningoC1_Infantil
         ) ?? Colors.Grey;
 
         public Color Situacao4Meses => Vaccines?.SituacaoVacinal(
@@ -89,24 +90,134 @@ namespace ACS_View.MVVM.ViewModels
             Vaccines.HPV_Infantil
         ) ?? Colors.Grey;
 
+        #endregion
+
+        #region adolescentes
+        public Color SituacaoHBAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.HepatiteB_Adolescente
+        ) ?? Colors.Grey;
+
+        public Color SituacaoDTAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.DT_Adolescente
+        ) ?? Colors.Grey;
+
+        public Color SituacaoFAAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.FebreAmarela_Adolescente
+        ) ?? Colors.Grey;
+
+        public Color SituacaoTripliceViralAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.TripliceViral_Adolescente
+        ) ?? Colors.Grey;
+
+        public Color SituacaoHPVAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.HPV_Adolescente
+        ) ?? Colors.Grey;
+
+        public Color SituacaoACWYAdolescente => Vaccines?.SituacaoVacinal(
+            Vaccines.ACWY_Adolescente
+        ) ?? Colors.Grey;
+
+        #endregion
+
+        #region adultos
+
+        public Color SituacaoHepatiteBAdulto => Vaccines?.SituacaoVacinal(
+            Vaccines.HepatiteB_Adulto
+        ) ?? Colors.Grey;
+
+        public Color SituacaoDTAdulto => Vaccines?.SituacaoVacinal(
+            Vaccines.dT_Adulto
+        ) ?? Colors.Grey;
+
+        public Color SituacaoFebreAmarelaAdulto => Vaccines?.SituacaoVacinal(
+            Vaccines.FebreAmarela_Adulto
+        ) ?? Colors.Grey;
+
+        public Color SituacaoHPVAdulto => Vaccines?.SituacaoVacinal(
+            Vaccines.HPV_Adulto
+        ) ?? Colors.Grey;
+
+        public Color SituacaoTripliceViral1Adulto => Vaccines?.SituacaoVacinal(
+            Vaccines.TripliceViral1_Adulto
+            ) ?? Colors.Grey;
+
+        public Color SituacaoTripliceViral2Adulto => Vaccines?.SituacaoVacinal(
+            Vaccines.TripliceViral2_Adulto
+            ) ?? Colors.Grey;
+
+        public Color SituacaodTpaAdulto => Vaccines?.SituacaoVacinal(
+            Vaccines.dTpa_Adulto
+        ) ?? Colors.Grey;
+
+        #endregion
+
+        #region idosos
+
+        public Color SituacaoHepatiteBIdoso => Vaccines?.SituacaoVacinal(
+            Vaccines.HepatiteB_Idoso
+        ) ?? Colors.Grey;
+
+        public Color SituacaodTIdoso => Vaccines?.SituacaoVacinal(
+            Vaccines.dT_Idoso
+        ) ?? Colors.Grey;
+
+        public Color SituacaoFebreAmarelaIdoso => Vaccines?.SituacaoVacinal(
+            Vaccines.FebreAmarela_Idoso
+        ) ?? Colors.Grey;
+
+        public Color SituacaodTpaIdoso => Vaccines?.SituacaoVacinal(
+            Vaccines.dTpa_Idoso
+        ) ?? Colors.Grey;
+
+        #endregion
+
+        #region gestantes
+
+        public Color SituacaoHBGestante => Vaccines?.SituacaoVacinal(
+            Vaccines.HepatiteB_Gestante
+        ) ?? Colors.Grey;
+
+        public Color SituacaodTGestante => Vaccines?.SituacaoVacinal(
+            Vaccines.dT_Gestante
+        ) ?? Colors.Grey;
+
+        public Color SituacaodTpaGestante => Vaccines?.SituacaoVacinal(
+            Vaccines.dTpa_Gestante
+        ) ?? Colors.Grey;
+
+        #endregion
+
+        #endregion
+
         public VaccinesPageViewModel() { }
 
         public VaccinesPageViewModel(HealthRecordService healthRecordService, VaccineService vaccineService, string sus)
         {
             _healthRecordService = healthRecordService;
             _vaccineService = vaccineService;
+            Vaccines = _vaccineService.GetVaccinesBySusAsync(sus).Result;
             LoadDataAsync(sus);
         }
 
         private async void LoadDataAsync(string sus)
         {
             HealthRecord = await _healthRecordService.GetRecordBySusAsync(sus);
+
             OnPropertyChanged(nameof(HealthRecord));
             OnPropertyChanged(nameof(SituacaoRN));
             OnPropertyChanged(nameof(Situacao2Meses));
             OnPropertyChanged(nameof(Situacao3Meses));
             OnPropertyChanged(nameof(Situacao4Meses));
             OnPropertyChanged(nameof(Situacao5Meses));
+            OnPropertyChanged(nameof(Situacao6Meses));
+            OnPropertyChanged(nameof(Situacao7Meses));
+            OnPropertyChanged(nameof(Situacao9Meses));
+            OnPropertyChanged(nameof(Situacao12Meses));
+            OnPropertyChanged(nameof(Situacao15Meses));
+            OnPropertyChanged(nameof(Situacao4Anos));
+            OnPropertyChanged(nameof(Situacao5Anos));
+            OnPropertyChanged(nameof(Situacao7Anos));
+            OnPropertyChanged(nameof(Situacao9Anos));
         }
 
         protected void OnPropertyChanged(string name)

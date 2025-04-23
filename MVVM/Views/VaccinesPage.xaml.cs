@@ -37,6 +37,9 @@ public partial class VaccinesPage : ContentPage
 
             viewModel = new VaccinesPageViewModel(_healthRecordService, _vaccineService, susNumber);
             BindingContext = viewModel;
+
+            Console.WriteLine(_vaccines.GetMonth(_vaccines.BirthDate));
+            Console.WriteLine(_vaccines.IsChild);
         }
         catch (Exception ex)
         {

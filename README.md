@@ -12,7 +12,6 @@
 - Registro prático de anotações
 - Interface intuitiva e adaptada para uso em campo
 - Armazenamento local de dados (sem necessidade de internet)
-- Suporte multiplataforma (Android, Windows, etc.)
 
 ---
 

@@ -8,6 +8,8 @@
 
 - Visualização rápida de pacientes cadastrados
 - Acompanhamento de dados importantes como condições de saúde e informações demográficas
+- Acompanhamento de situação vacinal
+- Registro prático de anotações
 - Interface intuitiva e adaptada para uso em campo
 - Armazenamento local de dados (sem necessidade de internet)
 - Suporte multiplataforma (Android, Windows, etc.)

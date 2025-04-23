@@ -10,6 +10,7 @@
 - Acompanhamento de dados importantes como condições de saúde e informações demográficas
 - Acompanhamento de situação vacinal
 - Registro prático de anotações
+- Consulta automática de endereço via CEP com integração à API pública [ViaCEP](https://viacep.com.br)
 - Interface intuitiva e adaptada para uso em campo
 - Armazenamento local de dados (sem necessidade de internet)
 
@@ -21,3 +22,5 @@
 - C#
 - MVVM (Model-View-ViewModel)
 - SQLite (persistência local)
+- Consumo de API REST com `HttpClient`
+- Manipulação de JSON com `System.Text.Json`

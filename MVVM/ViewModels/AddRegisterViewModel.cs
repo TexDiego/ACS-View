@@ -155,7 +155,27 @@ namespace ACS_View.MVVM.ViewModels
                     FebreAmarela3_Infantil = false,
                     Pneumo23_Infantil = false,
                     DT_Infantil = false,
-                    HPV_Infantil = false
+                    HPV_Infantil = false,
+                    HepatiteB_Adolescente = false,
+                    DT_Adolescente = false,
+                    FebreAmarela_Adolescente = false,
+                    TripliceViral_Adolescente = false,
+                    HPV_Adolescente = false,
+                    ACWY_Adolescente = false,
+                    HepatiteB_Adulto = false,
+                    dT_Adulto = false,
+                    FebreAmarela_Adulto = false,
+                    HPV_Adulto = false,
+                    TripliceViral1_Adulto = false,
+                    TripliceViral2_Adulto = false,
+                    dTpa_Adulto = false,
+                    HepatiteB_Idoso = false,
+                    dT_Idoso = false,
+                    FebreAmarela_Idoso = false,
+                    dTpa_Idoso = false,
+                    HepatiteB_Gestante = false,
+                    dT_Gestante = false,
+                    dTpa_Gestante = false
                 };
 
                 await _healthRecordService.AdicionarCadastroAsync(novoCadastro);

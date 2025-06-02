@@ -46,7 +46,7 @@ namespace ACS_View.MVVM.Models
         public bool IsOld => GetAge(BirthDate) >= 60;
 
         [Ignore]
-        public bool IsBaby => GetAge(BirthDate) < 2;
+        public bool IsBaby => GetAge(BirthDate) < 6;
 
         [Ignore]
         public bool IsChild => GetAge(BirthDate) <= 10;
@@ -62,7 +62,7 @@ namespace ACS_View.MVVM.Models
             IsPregnant || HasDiabetes || HasHypertension || HasTuberculosis || HasLeprosy ||
             HasHIV || HasHeartDesease || HasKidneyDesease || HasLungsDesease || HasLiverDesease ||
             IsBedridden || IsHomebound || HasMentalIllness || IsNeurodivergent || IsOld ||
-            IsSmoker || IsAlcoholic || IsDrugAddicted || HasCancer || HasDisabilities || BolsaFamilia;
+            IsSmoker || IsAlcoholic || IsDrugAddicted || HasCancer || BolsaFamilia;
 
         // Métodos para idade
         private static string CalcularIdadeCompleta(DateTime dataNascimento)

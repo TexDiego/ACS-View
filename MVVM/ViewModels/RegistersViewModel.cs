@@ -15,6 +15,8 @@ namespace ACS_View.MVVM.ViewModels
         private readonly DatabaseService databaseService;
         private Vaccines _vaccines;
 
+        public string ScrollToSusNumber { get; set; }
+
         private readonly ObservableCollection<HealthRecord> _healthRecords = [];
         public ObservableCollection<HealthRecord> HealthRecords => _healthRecords;
 
@@ -45,8 +47,6 @@ namespace ACS_View.MVVM.ViewModels
                 EditCommand = new Command<string>(async susNumber => await EditRecordAsync(susNumber));
                 PersonInfo = new Command<string>(async susNumber => await PersonData(susNumber));
                 Vaccines = new Command<string>(async susNumber => await VaccinesPage(susNumber));
-
-                Task.Run(async () => await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order));
             }
             catch (Exception ex)
             {
@@ -61,10 +61,14 @@ namespace ACS_View.MVVM.ViewModels
                 var records = await _healthRecordService.GetAllRecordsAsync();
                 var filteredRecords = FilterRecords(records, condition, search, filter, order);
 
-                foreach (var record in filteredRecords)
+                var addressTasks = filteredRecords.Select(async record =>
                 {
                     record.Endereco = await GetAddressAsync(record.SusNumber);
-                }
+                    return record;
+                });
+
+                var recordsWithAddress = await Task.WhenAll(addressTasks);
+
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
@@ -79,6 +83,11 @@ namespace ACS_View.MVVM.ViewModels
             {
                 Console.WriteLine($"Erro ao carregar registros: {ex.Message}");
             }
+        }
+
+        public async Task InitAsync(string condition, string search, string filter, string order)
+        {
+            await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order);
         }
 
         private async Task DeleteRecordAsync(string susNumber)
@@ -116,6 +125,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (record != null)
                 {
+                    ScrollToSusNumber = record.SusNumber;
                     await Application.Current.MainPage.Navigation.PushAsync(new AddRegister(record, databaseService, record.HouseId, record.FamilyId));
                 }
             }
@@ -241,7 +251,6 @@ namespace ACS_View.MVVM.ViewModels
             {
                 _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
 
-
                 if (_vaccines == null)
                 {
                     await AddVaccineMissing(susNumber);
@@ -250,7 +259,7 @@ namespace ACS_View.MVVM.ViewModels
                     _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
                 }
 
-                Console.WriteLine($"Página adicionada, SUS: {_vaccines.SusNumber}, DN: {_vaccines.BirthDate}");
+                ScrollToSusNumber = _vaccines.SusNumber;
                 await Application.Current.MainPage.Navigation.PushAsync(new VaccinesPage(_vaccines, _vaccineService, databaseService));
             }
             catch (Exception ex)

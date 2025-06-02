@@ -475,7 +475,7 @@
                     Grid.Row="10"
                     Clicked="Btn_Domiciliados_Clicked"/>
 
-                <!-- menores de 2 anos -->
+                <!-- menores de 6 anos -->
                 <Border
                     Grid.Row="11"
                     Style="{StaticResource borders}">
@@ -484,12 +484,12 @@
 
                         <Label
                         Style="{StaticResource infos}"
-                        Text="Menores de 2 anos: "/>
+                        Text="Menores de 6 anos: "/>
 
                         <Label
-                        x:Name="Lbl_Menor2Anos"
+                        x:Name="Lbl_Menor6Anos"
                         Style="{StaticResource infos}"
-                        Text="{Binding TotalMenores2Anos}"/>
+                        Text="{Binding TotalMenores6Anos}"/>
 
                     </HorizontalStackLayout>
 
@@ -507,10 +507,10 @@
                     IsRunning="{Binding IsLoading}"/>
 
                 <Button
-                    x:Name="Btn_Menor2Anos"
+                    x:Name="Btn_Menor6Anos"
                     Style="{StaticResource buttons}"
                     Grid.Row="11"
-                    Clicked="Btn_Menor2Anos_Clicked"/>
+                    Clicked="Btn_Menor6Anos_Clicked"/>
 
                 <!-- psiquiatricos -->
                 <Border

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+    x:Class="ACS_View.MVVM.Views.VaccinesInfo"
+    Color="Transparent"
+    CanBeDismissedByTappingOutsideOfPopup="True">
+
+    <Border
+        BackgroundColor="White"
+        Stroke="Grey"
+        StrokeShape="RoundRectangle 15"
+        StrokeThickness="2"
+        Margin="15">
+
+        <VerticalStackLayout x:Name="PopupContent" Padding="15">
+
+            <Label
+                FontSize="24"
+                TextColor="Black"
+                FontAttributes="Bold"
+                Text="{Binding VaccineName}"/>
+
+            <BoxView
+                Color="Grey"
+                HeightRequest="2"/>
+
+            <Label
+                Text="Doenças evitadas:"
+                Margin="0,5,0,5"
+                FontSize="20"
+                FontAttributes="Bold"
+                TextColor="Black"/>
+
+            <Label
+                x:Name="DiseasesAvoided"
+                FontSize="20"
+                TextColor="Black"
+                Margin="0,0,0,5"
+                FontAttributes="Italic"
+                Text="{Binding DiseaseDescription}"/>
+
+            <BoxView
+                Color="Grey"
+                HeightRequest="2"/>
+
+            <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
+                
+                <CheckBox
+                    x:Name="VaccineChecked"
+                    VerticalOptions="Center"
+                    Color="Grey"
+                    CheckedChanged="VaccineChecked_CheckedChanged"/>
+
+                <Label
+                    VerticalOptions="Center"
+                    Text="Vacina aplicada"
+                    TextColor="Black"/>
+                
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+
+    </Border>
+
+</tk:Popup>

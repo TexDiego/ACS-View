@@ -5,6 +5,7 @@ namespace ACS_View.MVVM.Views;
 public partial class DisplaySheetPopUp : Popup
 {
     int _choice;
+
     public DisplaySheetPopUp(string title, string item1, string item2, string cancel, int choice)
     {
         InitializeComponent();

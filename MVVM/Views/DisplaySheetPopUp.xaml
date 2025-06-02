@@ -10,7 +10,7 @@
     <Border
         StrokeShape="RoundRectangle 15"
         BackgroundColor="White"
-        Stroke="#C93919"
+        Stroke="Grey"
         StrokeThickness="2"
         Padding="5,5,5,0">
 
@@ -19,22 +19,23 @@
             <Label 
                 x:Name="Lbl_title"
                 FontAttributes="Bold"
-                TextColor="#0084B1"
+                TextColor="Black"
                 FontSize="24"
                 Margin="15,15,60,5"/>
 
             <BoxView
-                Color="#0084B1"
+                Color="Grey"
                 HeightRequest="2"
                 Margin="15,0"/>
 
             <Button
                 x:Name="Btn_item1"
                 FontAttributes="None"
-                TextColor="White"
-                BackgroundColor="#0084B1"
+                TextColor="Black"
+                BackgroundColor="AliceBlue"
                 CornerRadius="10"
-                BorderWidth="0"
+                BorderWidth="1"
+                BorderColor="Grey"
                 FontSize="18"
                 Margin="15,20,15,5"
                 Clicked="Btn_item1_Clicked"/>
@@ -42,10 +43,11 @@
             <Button
                 x:Name="Btn_item2"
                 FontAttributes="None"
-                TextColor="White"
+                TextColor="Black"
                 CornerRadius="10"
-                BorderWidth="0"
-                BackgroundColor="#0084B1"
+                BorderWidth="1"
+                BorderColor="Gray"
+                BackgroundColor="AliceBlue"
                 FontSize="18"
                 Margin="15,5,15,30"
                 Clicked="Btn_item2_Clicked"/>

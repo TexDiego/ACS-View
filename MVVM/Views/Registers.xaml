@@ -63,7 +63,7 @@
 
             </Grid>
 
-            <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="15">
+            <Grid ColumnDefinitions="*,auto,auto,auto" ColumnSpacing="15">
 
                 <SearchBar
                     Grid.Column="0"
@@ -95,6 +95,14 @@
 
                 <ImageButton
                     Grid.Column="1"
+                    ToolTipProperties.Text="Filtrar"
+                    Source="filter.png"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    Clicked="Filter_Clicked"/>
+
+                <ImageButton
+                    Grid.Column="2"
                     ToolTipProperties.Text="Adicionar"
                     Source="addperson.png"
                     WidthRequest="30"
@@ -102,7 +110,7 @@
                     Clicked="Btn_AddRegister_Clicked"/>
 
                 <ImageButton
-                    Grid.Column="2"
+                    Grid.Column="3"
                     ToolTipProperties.Text="Residências"
                     Source="house.png"
                     WidthRequest="30"

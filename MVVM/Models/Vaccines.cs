@@ -190,7 +190,7 @@ namespace ACS_View.MVVM.Models
         #endregion
 
         [Ignore]
-        public bool IsChild => GetMonth(BirthDate) <= 120;
+        public bool IsChild => GetMonth(BirthDate) <= 720;
         [Ignore]
         public bool IsYoung => GetMonth(BirthDate) > 120 && GetMonth(BirthDate) <= 180;
         [Ignore]
@@ -222,5 +222,224 @@ namespace ACS_View.MVVM.Models
             return Math.Max(months, 0); // Evita valor negativo
         }
 
+        // Métodos para obter e alterar o status da vacina
+        public void ChangeVaccineStatus(string vaccineName)
+        {
+            switch (vaccineName)
+            {
+                case "BCG_Infantil":
+                    BCG_Infantil = !BCG_Infantil;
+                    break;
+                case "HB":
+                    HepatitisBAoNascer_Infantil = !HepatitisBAoNascer_Infantil;
+                    break;
+                case "HB2":
+                    HepatiteB_Adolescente = !HepatiteB_Adolescente;
+                    break;
+                case "Penta1":
+                    Penta1_Infantil = !Penta1_Infantil;
+                    break;
+                case "VIP1":
+                    VIP1_Infantil = !VIP1_Infantil;
+                    break;
+                case "Pneumo10-1":
+                    Pneumo10_1_Infantil = !Pneumo10_1_Infantil;
+                    break;
+                case "VRH1":
+                    VRH1_Infantil = !VRH1_Infantil;
+                    break;
+                case "MeningoC1":
+                    MeningoC1_Infantil = !MeningoC1_Infantil;
+                    break;
+                case "Penta2":
+                    Penta2_Infantil = !Penta2_Infantil;
+                    break;
+                case "VIP2":
+                    VIP2_Infantil = !VIP2_Infantil;
+                    break;
+                case "Pneumo10-2":
+                    Pneumo10_2_Infantil = !Pneumo10_2_Infantil;
+                    break;
+                case "VRH2":
+                    VRH2_Infantil = !VRH2_Infantil;
+                    break;
+                case "MeningoC2":
+                    MeningoC2_Infantil = !MeningoC2_Infantil;
+                    break;
+                case "Penta3":
+                    Penta3_Infantil = !Penta3_Infantil;
+                    break;
+                case "VIP3":
+                    VIP3_Infantil = !VIP3_Infantil;
+                    break;
+                case "Covid1":
+                    Covid1_Infantil = !Covid1_Infantil;
+                    break;
+                case "Covid2":
+                    Covid2_Infantil = !Covid2_Infantil;
+                    break;
+                case "FA1":
+                    FebreAmarela1_Infantil = !FebreAmarela1_Infantil;
+                    break;
+                case "Pneumo10-3":
+                    Pneumo10_3_Infantil = !Pneumo10_3_Infantil;
+                    break;
+                case "MeningoC3":
+                    MeningoC3_Infantil = !MeningoC3_Infantil;
+                    break;
+                case "TripliceViral1":
+                    TripliceViral_Infantil = !TripliceViral_Infantil;
+                    break;
+                case "DTP1":
+                    DTP1_Infantil = !DTP1_Infantil;
+                    break;
+                case "VIP4":
+                    VIP4_Infantil = !VIP4_Infantil;
+                    break;
+                case "HA":
+                    HepatiteA_Infantil = !HepatiteA_Infantil;
+                    break;
+                case "TetraViral":
+                    TetraViral_Infantil = !TetraViral_Infantil;
+                    break;
+                case "DTP2":
+                    DTP2_Infantil = !DTP2_Infantil;
+                    break;
+                case "FA2":
+                    FebreAmarela2_Infantil = !FebreAmarela2_Infantil;
+                    break;
+                case "Varicela":
+                    Varicela_Infantil = !Varicela_Infantil;
+                    break;
+                case "FA3":
+                    FebreAmarela3_Infantil = !FebreAmarela3_Infantil;
+                    break;
+                case "Pneumo23":
+                    Pneumo23_Infantil = !Pneumo23_Infantil;
+                    break;
+                case "DT":
+                    DT_Infantil = !DT_Infantil;
+                    break;
+                case "DT2":
+                    DT_Adolescente = !DT_Adolescente;
+                    break;
+                case "HPV":
+                    HPV_Infantil = !HPV_Infantil;
+                    break;
+                case "FA4":
+                    FebreAmarela_Adolescente = !FebreAmarela_Adolescente;
+                    break;
+                case "TripliceViral2":
+                    TripliceViral_Adolescente = !TripliceViral_Adolescente;
+                    break;
+                case "HPV2":
+                    HPV_Adolescente = !HPV_Adolescente;
+                    break;
+                case "ACWY":
+                    ACWY_Adolescente = !ACWY_Adolescente;
+                    break;
+                case "HB3":
+                    HepatiteB_Adulto = !HepatiteB_Adulto;
+                    break;
+                case "DT3":
+                    dT_Adulto = !dT_Adulto;
+                    break;
+                case "FA5":
+                    FebreAmarela_Adulto = !FebreAmarela_Adulto;
+                    break;
+                case "HPV3":
+                    HPV_Adulto = !HPV_Adulto;
+                    break;
+                case "TripliceViral3":
+                    TripliceViral1_Adulto = !TripliceViral1_Adulto;
+                    break;
+                case "TripliceViral4":
+                    TripliceViral2_Adulto = !TripliceViral2_Adulto;
+                    break;
+                case "DTPA":
+                    dTpa_Adulto = !dTpa_Adulto;
+                    break;
+                case "HB4":
+                    HepatiteB_Idoso = !HepatiteB_Idoso;
+                    break;
+                case "DT4":
+                    dT_Idoso = !dT_Idoso;
+                    break;
+                case "FA6":
+                    FebreAmarela_Idoso = !FebreAmarela_Idoso;
+                    break;
+                case "DTPA2":
+                    dTpa_Idoso = !dTpa_Idoso;
+                    break;
+                case "HB5":
+                    HepatiteB_Gestante = !HepatiteB_Gestante;
+                    break;
+                case "DT5":
+                    dT_Gestante = !dT_Gestante;
+                    break;
+                case "DTPA3":
+                    dTpa_Gestante = !dTpa_Gestante;
+                    break;
+            }
+        }
+
+        public bool GetVaccineStatus(string vaccineName)
+        {
+            return vaccineName switch
+            {
+                "BCG_Infantil" => BCG_Infantil,
+                "HB" => HepatitisBAoNascer_Infantil,
+                "HB2" => HepatiteB_Adolescente,
+                "Penta1" => Penta1_Infantil,
+                "VIP1" => VIP1_Infantil,
+                "Pneumo10-1" => Pneumo10_1_Infantil,
+                "VRH1" => VRH1_Infantil,
+                "MeningoC1" => MeningoC1_Infantil,
+                "Penta2" => Penta2_Infantil,
+                "VIP2" => VIP2_Infantil,
+                "Pneumo10-2" => Pneumo10_2_Infantil,
+                "VRH2" => VRH2_Infantil,
+                "MeningoC2" => MeningoC2_Infantil,
+                "Penta3" => Penta3_Infantil,
+                "VIP3" => VIP3_Infantil,
+                "Covid1" => Covid1_Infantil,
+                "Covid2" => Covid2_Infantil,
+                "FA1" => FebreAmarela1_Infantil,
+                "Pneumo10-3" => Pneumo10_3_Infantil,
+                "MeningoC3" => MeningoC3_Infantil,
+                "TripliceViral1" => TripliceViral_Infantil,
+                "DTP1" => DTP1_Infantil,
+                "VIP4" => VIP4_Infantil,
+                "HA" => HepatiteA_Infantil,
+                "TetraViral" => TetraViral_Infantil,
+                "DTP2" => DTP2_Infantil,
+                "FA2" => FebreAmarela2_Infantil,
+                "Varicela" => Varicela_Infantil,
+                "FA3" => FebreAmarela3_Infantil,
+                "Pneumo23" => Pneumo23_Infantil,
+                "DT" => DT_Infantil,
+                "DT2" => DT_Adolescente,
+                "HPV" => HPV_Infantil,
+                "FA4" => FebreAmarela_Adolescente,
+                "TripliceViral2" => TripliceViral_Adolescente,
+                "HPV2" => HPV_Adolescente,
+                "ACWY" => ACWY_Adolescente,
+                "HB3" => HepatiteB_Adulto,
+                "DT3" => dT_Adulto,
+                "FA5" => FebreAmarela_Adulto,
+                "HPV3" => HPV_Adulto,
+                "TripliceViral3" => TripliceViral1_Adulto,
+                "TripliceViral4" => TripliceViral2_Adulto,
+                "DTPA" => dTpa_Adulto,
+                "HB4" => HepatiteB_Idoso,
+                "DT4" => dT_Idoso,
+                "FA6" => FebreAmarela_Idoso,
+                "DTPA2" => dTpa_Idoso,
+                "HB5" => HepatiteB_Gestante,
+                "DT5" => dT_Gestante,
+                "DTPA3" => dTpa_Gestante,
+                _ => false
+            };
+        }
     }
 }

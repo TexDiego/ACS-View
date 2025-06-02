@@ -85,9 +85,9 @@
                         StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*,*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*,*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
                             Grid.Column="0"
@@ -96,28 +96,44 @@
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="Ao nascer"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="Ao nascer"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="BCG"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="BCG"
+                                Margin="0,5,0,0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="BCG_Infantil"/>
+                                </Label.GestureRecognizers>
+                                
+                            </Label>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="Hepatite B"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="Hepatite B"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HB"/>
+                                    
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -138,22 +154,22 @@
 
                     <!-- 2 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show2Meses}"
-                    Grid.Row="1"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show2Meses}"
+                        Grid.Row="1"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*,*,*,*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*,*,*,*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao2Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="4"
+                                BackgroundColor="{Binding Situacao2Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
                                 Text="2 meses"
@@ -165,33 +181,69 @@
 
                             </Border>
 
+                            <!-- PENTA -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Penta"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Penta"
+                                Margin="0,5,0,0">
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="VIP"
-                            Margin="0"/>
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Penta1"/>
+                                </Label.GestureRecognizers>
+                                
+                            </Label>
 
+                            <!-- VIP -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Pneumo 10"
-                            Margin="0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="VIP"
+                                Margin="0">
 
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VIP1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+                            
+                            <!-- Pneumo10 -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            Text="VRH"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Pneumo 10"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Pneumo10-1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- VRH -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                Text="VRH"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VRH1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -226,106 +278,151 @@
 
                     <!-- 3 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show3Meses}"
-                    Grid.Row="2"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show3Meses}"
+                        Grid.Row="2"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao3Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding Situacao3Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="3 meses"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="3 meses"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
+                            <!-- Meningo C -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Meningo C"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Meningo C"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="MeningoC1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Text="1ª dose"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="1ª dose"
+                                Margin="0,5,0,5"/>
 
                         </Grid>
                     </Border>
 
                     <!-- 4 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show4Meses}"
-                    Grid.Row="3"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show4Meses}"
+                        Grid.Row="3"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*,*,*,*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*,*,*,*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao4Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="4"
+                                BackgroundColor="{Binding Situacao4Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="4 meses"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="4 meses"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
+                            <!-- Penta -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Penta"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Penta"
+                                Margin="0,5,0,0">
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="VIP"
-                            Margin="0"/>
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Penta2"/>
+                                </Label.GestureRecognizers>
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Pneumo 10"
-                            Margin="0"/>
+                            </Label>
 
+                            <!-- VIP -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            Text="VRH"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="VIP"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VIP2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Pneumo10 -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Pneumo 10"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Pneumo10-2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- VRH -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                Text="VRH"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VRH2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -360,166 +457,210 @@
 
                     <!-- 5 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show5Meses}"
-                    Grid.Row="4"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show5Meses}"
+                        Grid.Row="4"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao5Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding Situacao5Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="5 meses"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="5 meses"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Meningo C"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Meningo C"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="MeningoC2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Text="2ª dose"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="2ª dose"
+                                Margin="0,5,0,5"/>
 
                         </Grid>
                     </Border>
 
                     <!-- 6 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show6Meses}"
-                    Grid.Row="5"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show6Meses}"
+                        Grid.Row="5"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*,*,*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*,*,*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao6Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="4"
+                                BackgroundColor="{Binding Situacao6Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="6 meses"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="6 meses"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
+                            <!-- Penta -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Penta"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Penta"
+                                Margin="0,5,0,0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Penta3"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- VIP -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="VIP"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VIP3"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Covid -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Covid 19"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Covid1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="VIP"
-                            Margin="0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="3ª dose"
+                                Margin="0,5,0,0"/>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Covid 19"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="3ª dose"
+                                Margin="0"/>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="2"
-                            Text="3ª dose"
-                            Margin="0,5,0,0"/>
-
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Text="3ª dose"
-                            Margin="0"/>
-
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="2"
-                            Text="1ª dose"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                Text="1ª dose"
+                                Margin="0,0,0,5"/>
 
                         </Grid>
                     </Border>
 
                     <!-- 7 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show7Meses}"
-                    Grid.Row="6"
-                    Margin="15,15,15,0"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20">
+                        IsVisible="{Binding Vaccines.Show7Meses}"
+                        Grid.Row="6"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
 
                         <Grid
-                        RowDefinitions="*"
-                        ColumnDefinitions="*,*,*"
-                        BackgroundColor="White">
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao7Meses}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="1"
+                                BackgroundColor="{Binding Situacao7Meses}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
-                                Text="7 meses"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="White"
-                                FontSize="16"
-                                FontAttributes="Bold"/>
+                                    Text="7 meses"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
 
                             </Border>
 
+                            <!-- Covid -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Covid 19"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Covid 19"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Covid2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Text="2ª dose"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="2ª dose"
+                                Margin="0,5,0,5"/>
 
                         </Grid>
                     </Border>
@@ -553,12 +694,21 @@
 
                             </Border>
 
+                            <!-- Febre amarela -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Febre amarela"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -599,26 +749,53 @@
 
                             </Border>
 
+                            <!-- Pneumo10 -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Pneumo 10"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Pneumo 10"
+                                Margin="0,5,0,0">
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="Meningo C"
-                            Margin="0"/>
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Pneumo10-3"/>
+                                </Label.GestureRecognizers>
 
+                            </Label>
+
+                            <!-- Meningo C -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Tríplice viral"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="Meningo C"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="MeningoC3"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Triplice viral -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Tríplice viral"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="TripliceViral1"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -673,33 +850,69 @@
 
                             </Border>
 
+                            <!-- DTP -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="DTP"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="DTP"
+                                Margin="0,5,0,0">
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="VIP"
-                            Margin="0"/>
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DTP1"/>
+                                </Label.GestureRecognizers>
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Hepatite A"
-                            Margin="0"/>
+                            </Label>
 
+                            <!-- VIP -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            Text="Tetraviral"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="VIP"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="VIP4"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Hepatite A -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Hepatite A"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HA"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+                            
+                            <!-- Tetraviral -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                Text="Tetraviral"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="TetraViral"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -761,26 +974,53 @@
 
                             </Border>
 
+                            <!-- DTP -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="DTP"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="DTP"
+                                Margin="0,5,0,0">
 
-                            <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="Febre amarela"
-                            Margin="0"/>
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DTP2"/>
+                                </Label.GestureRecognizers>
 
+                            </Label>
+
+                            <!-- Febre amarela -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Text="Varicela"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA2"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Varicela -->
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Text="Varicela"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Varicela"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -835,19 +1075,37 @@
 
                             </Border>
 
+                            <!-- Febre amarela -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="Febre amarela"
-                            Margin="0,5,0,0"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,0">
 
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA3"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
+
+                            <!-- Pneumo 23 -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Text="Pneumo 23"
-                            Margin="0,0,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="Pneumo 23"
+                                Margin="0,0,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="Pneumo23"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -895,12 +1153,21 @@
 
                             </Border>
 
+                            <!-- DT -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="DT"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="DT"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DT"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -941,12 +1208,21 @@
 
                             </Border>
 
+                            <!-- HPV -->
                             <Label
-                            Style="{StaticResource vacinasp}"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Text="HPV"
-                            Margin="0,5,0,5"/>
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="HPV"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HPV"/>
+                                </Label.GestureRecognizers>
+
+                            </Label>
 
                             <Label
                             Style="{StaticResource vacinasp}"
@@ -993,11 +1269,20 @@
 
                             </Border>
 
+                            <!-- Hepatite B -->
                             <Label
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="Hepatite B"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HB2"/>
+                                </Label.GestureRecognizers>
+                                
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1040,7 +1325,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="dT"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DT2"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1086,7 +1378,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="Febre amarela"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1130,7 +1429,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="Tríplice viral"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="TripliceViral2"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1175,7 +1481,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="HPV"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HPV2"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1217,7 +1530,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="ACWY"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="ACWY"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1268,7 +1588,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="Hepatite B"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HB3"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1311,7 +1638,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="dT"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DT3"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1357,7 +1691,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="Febre amarela"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA5"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1401,7 +1742,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="HPV"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HPV3"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1443,7 +1791,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="Tríplice viral"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="TripliceViral3"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1485,7 +1840,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="Tríplice viral"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="TripliceViral4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1527,7 +1889,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="dTpa"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DTPA"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1560,7 +1929,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                BackgroundColor="{Binding SituacaoHepatiteBIdoso}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1577,7 +1946,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="Hepatite B"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HB4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1620,7 +1996,14 @@
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
                                 Text="dT"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DT4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1664,7 +2047,14 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Text="Febre amarela"
-                                Margin="0,5,0,5"/>
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA6"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1706,8 +2096,15 @@
                             <Label
                                 Style="{StaticResource vacinasp}"
                                 Grid.Column="1"
-                                Text="Tríplice viral"
-                                Margin="0,5,0,5"/>
+                                Text="DTPA"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DTPA2"/>
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <Label
                                 Style="{StaticResource vacinasp}"
@@ -1767,7 +2164,7 @@
 
                                 <Border
                                     Grid.Column="0"
-                                    BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                    BackgroundColor="{Binding SituacaoHBGestante}"
                                     StrokeShape="RoundRectangle 20">
 
                                     <Label
@@ -1784,7 +2181,14 @@
                                     Style="{StaticResource vacinasp}"
                                     Grid.Column="1"
                                     Text="Hepatite B"
-                                    Margin="0,5,0,5"/>
+                                    Margin="0,5,0,5">
+
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                            CommandParameter="HB5"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
 
                                 <Label
                                     Style="{StaticResource vacinasp}"
@@ -1827,7 +2231,14 @@
                                     Style="{StaticResource vacinasp}"
                                     Grid.Column="1"
                                     Text="dT"
-                                    Margin="0,5,0,5"/>
+                                    Margin="0,5,0,5">
+
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                            CommandParameter="DT5"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
 
                                 <Label
                                     Style="{StaticResource vacinasp}"
@@ -1870,7 +2281,14 @@
                                     Style="{StaticResource vacinasp}"
                                     Grid.Column="1"
                                     Text="dTpa"
-                                    Margin="0,5,0,5"/>
+                                    Margin="0,5,0,5">
+
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                            CommandParameter="DTPA3"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
 
                                 <Label
                                     Style="{StaticResource vacinasp}"

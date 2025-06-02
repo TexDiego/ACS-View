@@ -91,7 +91,7 @@ namespace ACS_View.MVVM.Models.Services
                     age--;
                 }
 
-                return age < 2;
+                return age < 6;
             });
         }
 

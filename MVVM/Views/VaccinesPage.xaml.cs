@@ -8,27 +8,29 @@ namespace ACS_View.MVVM.Views;
 public partial class VaccinesPage : ContentPage
 {
     VaccinesPageViewModel viewModel;
-    private readonly DatabaseService _databaseService;
     private HealthRecord _healthRecord;
     private readonly Vaccines _vaccines;
     private readonly VaccineService _vaccineService;
     private readonly HealthRecordService _healthRecordService;
 
     private string susNumber;
+    private bool _isInitialized = false;
+
 
     public VaccinesPage(Vaccines vaccines, VaccineService vaccineService, DatabaseService databaseService)
 	{
-		InitializeComponent();
-        
-        _vaccines = vaccines ?? throw new ArgumentNullException(nameof(vaccines));
-        _vaccineService = vaccineService ?? throw new ArgumentNullException(nameof(vaccineService));
-        _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
-        _healthRecordService = new HealthRecordService(_databaseService);
+        InitializeComponent();
+
+        _healthRecordService = new HealthRecordService(databaseService);
+        _vaccines = vaccines;
+        _vaccineService = vaccineService;
     }
 
-    protected async override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+        if (_isInitialized) return;
 
         try
         {
@@ -36,18 +38,20 @@ public partial class VaccinesPage : ContentPage
             susNumber = _healthRecord.SusNumber;
 
             viewModel = new VaccinesPageViewModel(_healthRecordService, _vaccineService, susNumber);
-            BindingContext = viewModel;
+            await viewModel.InitializeAsync();
 
-            Console.WriteLine(_vaccines.GetMonth(_vaccines.BirthDate));
-            Console.WriteLine(_vaccines.IsChild);
+            BindingContext = viewModel;
+            _isInitialized = true;
         }
         catch (Exception ex)
         {
-            Application.Current.MainPage.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-            Console.WriteLine(ex.StackTrace);
-            Console.WriteLine(ex.InnerException);
+            await Application.Current.MainPage.ShowPopupAsync(
+                new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, "")
+            );
+            Console.WriteLine(ex);
         }
     }
+
 
     private async void Btn_GoBack_Clicked(object sender, EventArgs e)
     {

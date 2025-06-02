@@ -41,15 +41,20 @@
 
             <!-- Nome da mãe -->
             <HorizontalStackLayout>
+                
                 <Label
+                    x:Name="LabelMother"
                     Text="Mãe: "
                     TextColor="Black"
                     FontSize="16"/>
 
                 <Label
+                    x:Name="MothersName"
                     Text="{Binding PersonInfo.MotherName}"
                     TextColor="Black"
-                    FontSize="16"/>
+                    FontSize="16"
+                    LineBreakMode="WordWrap"/>
+                
             </HorizontalStackLayout>
 
             <!-- Sus -->

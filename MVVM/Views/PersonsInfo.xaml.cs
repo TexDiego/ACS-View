@@ -2,7 +2,6 @@ using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
-using System.Windows.Input;
 
 namespace ACS_View.MVVM.Views;
 
@@ -23,6 +22,7 @@ public partial class PersonsInfo : Popup
 
         int width = (int)Application.Current.MainPage.Width;
         PopupContent.WidthRequest = width - 30;
+        MothersName.MaximumWidthRequest = width - LabelMother.Width - 80;
 
         BindingContext = _personsInfoViewModel;
     }

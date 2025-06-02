@@ -1,7 +1,9 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Services;
-using System.Collections.ObjectModel;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Maui.Views;
 using System.ComponentModel;
+using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
@@ -13,6 +15,9 @@ namespace ACS_View.MVVM.ViewModels
         private VaccineService _vaccineService;
         public HealthRecord HealthRecord { get; set; }
         public Vaccines Vaccines { get; set; }
+        private readonly string _susNumber;
+
+        public ICommand OpenVaccineInfo { get; set; }
 
         #region Cores por situação vacinal
 
@@ -195,15 +200,73 @@ namespace ACS_View.MVVM.ViewModels
         {
             _healthRecordService = healthRecordService;
             _vaccineService = vaccineService;
-            Vaccines = _vaccineService.GetVaccinesBySusAsync(sus).Result;
-            LoadDataAsync(sus);
+            _susNumber = sus;
+            OpenVaccineInfo = new Command<string>(async (vaccine) => await OpenVaccineInfoCommand(vaccine));
         }
 
-        private async void LoadDataAsync(string sus)
+        public async Task InitializeAsync()
         {
-            HealthRecord = await _healthRecordService.GetRecordBySusAsync(sus);
-
+            Vaccines = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
+            HealthRecord = await _healthRecordService.GetRecordBySusAsync(_susNumber);
+            NotifyAllSituacaoProperties();
             OnPropertyChanged(nameof(HealthRecord));
+        }
+
+        private bool GetVaccineStatus(string vaccine)
+        {
+            Console.WriteLine("Vacina: " + vaccine + ", status: " + Vaccines?.GetVaccineStatus(vaccine));
+            return Vaccines?.GetVaccineStatus(vaccine) ?? false;
+        }
+
+        private async Task OpenVaccineInfoCommand(string vaccine)
+        {
+            try
+            {
+                bool vaccineChecked = GetVaccineStatus(vaccine);
+                Console.WriteLine($"Vacina: {vaccine}, Status: {vaccineChecked}");
+
+                var popup = new VaccinesInfo(vaccine, vaccineChecked);
+                var status = await Application.Current.MainPage.ShowPopupAsync(popup);
+
+                if (status is bool vaccineStatus && vaccineStatus != vaccineChecked)
+                {
+                    await UpdateVaccine(vaccine);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(
+                    new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
+        }
+
+        private async Task UpdateVaccine(string vaccine)
+        {
+            try
+            {
+                var vaccineProperty = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
+
+                vaccineProperty?.ChangeVaccineStatus(vaccine);
+
+                await _vaccineService.AtualizarVacinasAsync(vaccineProperty);
+                 
+                Vaccines = vaccineProperty;
+                OnPropertyChanged(nameof(Vaccines));
+                NotifyAllSituacaoProperties();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
+        }
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        private void NotifyAllSituacaoProperties()
+        {
             OnPropertyChanged(nameof(SituacaoRN));
             OnPropertyChanged(nameof(Situacao2Meses));
             OnPropertyChanged(nameof(Situacao3Meses));
@@ -218,11 +281,26 @@ namespace ACS_View.MVVM.ViewModels
             OnPropertyChanged(nameof(Situacao5Anos));
             OnPropertyChanged(nameof(Situacao7Anos));
             OnPropertyChanged(nameof(Situacao9Anos));
-        }
-
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            OnPropertyChanged(nameof(SituacaoHBAdolescente));
+            OnPropertyChanged(nameof(SituacaoDTAdolescente));
+            OnPropertyChanged(nameof(SituacaoFAAdolescente));
+            OnPropertyChanged(nameof(SituacaoTripliceViralAdolescente));
+            OnPropertyChanged(nameof(SituacaoHPVAdolescente));
+            OnPropertyChanged(nameof(SituacaoACWYAdolescente));
+            OnPropertyChanged(nameof(SituacaoHepatiteBAdulto));
+            OnPropertyChanged(nameof(SituacaoDTAdulto));
+            OnPropertyChanged(nameof(SituacaoFebreAmarelaAdulto));
+            OnPropertyChanged(nameof(SituacaoHPVAdulto));
+            OnPropertyChanged(nameof(SituacaoTripliceViral1Adulto));
+            OnPropertyChanged(nameof(SituacaoTripliceViral2Adulto));
+            OnPropertyChanged(nameof(SituacaodTpaAdulto));
+            OnPropertyChanged(nameof(SituacaoHepatiteBIdoso));
+            OnPropertyChanged(nameof(SituacaodTIdoso));
+            OnPropertyChanged(nameof(SituacaoFebreAmarelaIdoso));
+            OnPropertyChanged(nameof(SituacaodTpaIdoso));
+            OnPropertyChanged(nameof(SituacaoHBGestante));
+            OnPropertyChanged(nameof(SituacaodTGestante));
+            OnPropertyChanged(nameof(SituacaodTpaGestante));
         }
     }
 }

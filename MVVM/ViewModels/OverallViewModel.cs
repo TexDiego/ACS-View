@@ -96,13 +96,13 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private int _totalMenores2Anos;
-        public int TotalMenores2Anos
+        private int _totalMenores6Anos;
+        public int TotalMenores6Anos
         {
-            get => _totalMenores2Anos;
+            get => _totalMenores6Anos;
             set
             {
-                _totalMenores2Anos = value;
+                _totalMenores6Anos = value;
                 OnPropertyChanged();
             }
         }
@@ -326,7 +326,7 @@ namespace ACS_View.MVVM.ViewModels
                 TotalHanseniase = await _healthRecordService.GetConditionCountAsync(r => r.HasLeprosy);
                 TotalAcamados = await _healthRecordService.GetConditionCountAsync(r => r.IsBedridden);
                 TotalDomiciliados = await _healthRecordService.GetConditionCountAsync(r => r.IsHomebound);
-                TotalMenores2Anos = await _healthRecordService.GetYoungers();
+                TotalMenores6Anos = await _healthRecordService.GetYoungers();
                 TotalMental = await _healthRecordService.GetConditionCountAsync(r => r.HasMentalIllness);
                 TotalDeficiente = await _healthRecordService.GetConditionCountAsync(r => r.HasDisabilities);
                 TotalFumante = await _healthRecordService.GetConditionCountAsync(r => r.IsSmoker);

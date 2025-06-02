@@ -9,14 +9,13 @@ public partial class Registers : ContentPage
     private CancellationTokenSource _throttleCts;
     private readonly DatabaseService _databaseService;
     private readonly VaccineService _vaccineService;
-    private RegistersViewModel viewModel;
+    private readonly RegistersViewModel viewModel;
     private readonly HealthRecordService _healthRecordService;
     private readonly AddRegisterViewModel _addRegisterViewModel;
     private readonly HouseService houseService;
     private string _condition;
     private string _filter = "Nome";
     private string _order = "Crescente";
-
 
     public Registers(
         string condition,
@@ -35,10 +34,13 @@ public partial class Registers : ContentPage
             _addRegisterViewModel = addRegisterViewModel ?? throw new ArgumentNullException(nameof(addRegisterViewModel));
             houseService = new HouseService(databaseService);
             _condition = condition;
+
+            viewModel = new RegistersViewModel(_healthRecordService, _vaccineService, _databaseService, _condition, string.Empty, _filter, _order);
+            BindingContext = viewModel;
         }
         catch (Exception ex)
         {
-            this.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            ShowErrorPopup(ex.Message);
         }
     }
 
@@ -52,9 +54,9 @@ public partial class Registers : ContentPage
             "HASDB" => "Hipertensos Diabéticos",
             "HAN" => "Hanseníases",
             "TB" => "Tuberculosos",
-            "ACAMADO" => "Domiciliados",
-            "DOMICILIADO" => "Acamados",
-            "MENOR" => "Menores de 2 anos",
+            "ACAMADO" => "Acamados",
+            "DOMICILIADO" => "Domiciliados",
+            "MENOR" => "Menores de 6 anos",
             "MENTAL" => "Condições Mentais",
             "BOLSA" => "Beneficiários de Bolsa Família",
             "CORACAO" => "Cardíacos",
@@ -75,23 +77,31 @@ public partial class Registers : ContentPage
     }
 
     protected override async void OnAppearing()
-    {       
+    {
         try
         {
             base.OnAppearing();
 
             _addRegisterViewModel.IsLoading = true;
 
-            // Recarregar dados sempre que a página aparecer
-            viewModel = new RegistersViewModel(_healthRecordService, _vaccineService, _databaseService, _condition, string.Empty, _filter, _order);
-            BindingContext = viewModel;
-            await Task.Run(() => viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, SB.Text, _filter, _order));
+            await viewModel.InitAsync(_condition, SB.Text, _filter, _order);
+
+            if (!string.IsNullOrEmpty(viewModel.ScrollToSusNumber))
+            {
+                var item = viewModel.HealthRecords.FirstOrDefault(r => r.SusNumber == viewModel.ScrollToSusNumber);
+                if (item != null)
+                {
+                    await Task.Delay(100); // Garante que o layout foi renderizado
+                    collectionView.ScrollTo(item, position: ScrollToPosition.Center, animate: true);
+                    viewModel.ScrollToSusNumber = null;
+                }
+            }
 
             Lbl_Title.Text = CapitalizeTitle(_condition);
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
         finally
         {
@@ -106,10 +116,14 @@ public partial class Registers : ContentPage
 
     private async void Btn_AddRegister_Clicked(object sender, EventArgs e)
     {
-        if (_databaseService == null)
-            Console.WriteLine("database nula ao entrar no construtor de addregister");
-
-        await Navigation.PushAsync(new AddRegister(_databaseService));
+        try
+        {
+            await Navigation.PushAsync(new AddRegister(_databaseService));
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorPopupAsync(ex.Message);
+        }
     }
 
     private async void SB_TextChanged(object sender, TextChangedEventArgs e)
@@ -122,18 +136,15 @@ public partial class Registers : ContentPage
             await Task.Delay(300, _throttleCts.Token);
             _throttleCts.Token.ThrowIfCancellationRequested();
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, e.NewTextValue, _filter, _order);
-            });
+            await viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, e.NewTextValue, _filter, _order);
         }
         catch (TaskCanceledException)
         {
-            // Ignore exception, tarefa foi cancelada
+            // Tarefa cancelada, ignorar
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
     }
 
@@ -142,19 +153,19 @@ public partial class Registers : ContentPage
         try
         {
             var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar por:", "Nome", "Idade", "Voltar", 1));
+            var current = Btn_filter.Text.Replace("Ordenar por ", "");
 
-            if (selectedOption == null || Convert.ToString(selectedOption) == Btn_filter.Text.Substring(12))
+            if (selectedOption == null || Convert.ToString(selectedOption) == current)
                 return;
 
             _filter = Convert.ToString(selectedOption) ?? string.Empty;
-
             Btn_filter.Text = $"Ordenar por {_filter}";
 
             await RefreshCollectionAsync();
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
     }
 
@@ -163,19 +174,19 @@ public partial class Registers : ContentPage
         try
         {
             var selectedOption = await this.ShowPopupAsync(new DisplaySheetPopUp("Ordenar em:", "Crescente", "Decrescente", "Voltar", 2));
+            var current = Btn_order.Text.Replace("Ordem ", "");
 
-            if (selectedOption == null || Convert.ToString(selectedOption) == Btn_order.Text.Substring(6))
+            if (selectedOption == null || Convert.ToString(selectedOption) == current)
                 return;
 
             _order = Convert.ToString(selectedOption) ?? string.Empty;
-
             Btn_order.Text = $"Ordem {_order}";
 
             await RefreshCollectionAsync();
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
     }
 
@@ -184,11 +195,11 @@ public partial class Registers : ContentPage
         try
         {
             _addRegisterViewModel.IsLoading = true;
-            await Task.Run(() => viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, SB.Text, _filter, _order));
+            await viewModel.LoadHealthRecordsAndUpdateDatasAsync(_condition, SB.Text, _filter, _order);
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
         finally
         {
@@ -204,7 +215,22 @@ public partial class Registers : ContentPage
         }
         catch (Exception ex)
         {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await ShowErrorPopupAsync(ex.Message);
         }
+    }
+
+    private void ShowErrorPopup(string message)
+    {
+        this.ShowPopup(new DisplayPopUp("Erro", message, true, "Voltar", false, ""));
+    }
+
+    private async Task ShowErrorPopupAsync(string message)
+    {
+        await this.ShowPopupAsync(new DisplayPopUp("Erro", message, true, "Voltar", false, ""));
+    }
+
+    private void Filter_Clicked(object sender, EventArgs e)
+    {
+
     }
 }

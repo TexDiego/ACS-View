@@ -120,7 +120,7 @@ public partial class OverallView : ContentPage
         ViewRegisterAsync(AIACA, "ACAMADO");
     }
 
-    private void Btn_Menor2Anos_Clicked(object sender, EventArgs e)
+    private void Btn_Menor6Anos_Clicked(object sender, EventArgs e)
     {
         ViewRegisterAsync(AIMENOR, "MENOR");
     }

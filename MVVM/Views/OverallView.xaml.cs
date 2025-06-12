@@ -254,6 +254,11 @@ public partial class OverallView : ContentPage
 
         if (option == "4")
         {
+            await Navigation.PushAsync(new AllVisits());
+        }
+
+        if (option == "5")
+        {
             var answer = await this.ShowPopupAsync(new DisplayPopUp("Sair", "Deseja desconectar-se?", true, "Sair", true, "Cancelar"));
 
             if (!Convert.ToBoolean(answer))

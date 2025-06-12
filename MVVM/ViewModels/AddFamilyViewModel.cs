@@ -70,8 +70,6 @@ namespace ACS_View.MVVM.ViewModels
 
         private async void SalvarFamilia()
         {
-            Console.WriteLine("SalvarFamilia acessado\n\n");
-
             if (IdHouse <= 0)
             {
                 await Application.Current.MainPage.ShowPopupAsync(
@@ -81,8 +79,6 @@ namespace ACS_View.MVVM.ViewModels
 
             try
             {
-                Console.WriteLine($"Id pessoa: {IdPessoa}\nIdHouse: {IdHouse}");
-
                 var num = _pessoas.Count;
                 var pessoas = _pessoas.ToList();
 
@@ -104,7 +100,6 @@ namespace ACS_View.MVVM.ViewModels
                         {
                             pessoaAtualizar.HouseId = IdHouse;
                             pessoaAtualizar.FamilyId = IdPessoa;
-                            Console.WriteLine($"Atualizando Pessoa: SUS={pessoaAtualizar.SusNumber}, FamilyID={pessoaAtualizar.FamilyId}, HouseID={pessoaAtualizar.HouseId}");
                             await _healthRecordService.UpdateRecordAsync(pessoaAtualizar);
                         }
                     }

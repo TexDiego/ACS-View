@@ -8,6 +8,7 @@ public partial class FamiliesPage : ContentPage
     private FamiliesViewModel _viewModel;
     private DatabaseService _databaseService = new();
     private FamilyService FamilyService;
+
     public FamiliesPage(FamiliesViewModel viewModel)
 	{
         InitializeComponent();
@@ -20,11 +21,8 @@ public partial class FamiliesPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        Console.WriteLine("OnAppearing chamado");
         _viewModel.LoadFamilies();
-        Console.WriteLine($"IDHouse: {_viewModel._idHouse}");
     }
-
 
     private async void Btn_Voltar_Clicked(object sender, EventArgs e)
     {

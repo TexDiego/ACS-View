@@ -33,7 +33,7 @@
                 Margin="0,0,0,15"/>
 
             <Grid
-                RowDefinitions="*,*,*,*,*"
+                RowDefinitions="*,*,*,*,*,*"
                 HorizontalOptions="Fill"
                 RowSpacing="5">
 
@@ -75,6 +75,18 @@
 
                 <Button
                     Grid.Row="3"
+                    x:Name="Btn_Visits"
+                    TextColor="#0084B1"
+                    Text="Visitas"
+                    FontSize="18"
+                    BorderWidth="1"
+                    BorderColor="#0084B1"
+                    CornerRadius="10"
+                    BackgroundColor="AliceBlue"
+                    Clicked="Btn_Visits_Clicked"/>
+
+                <Button
+                    Grid.Row="4"
                     Margin="0,25,0,25"
                     x:Name="Btn_Cancel"
                     TextColor="Grey"
@@ -87,7 +99,7 @@
                     Clicked="Btn_Cancel_Clicked"/>
 
                 <Button
-                    Grid.Row="4"
+                    Grid.Row="5"
                     x:Name="Btn_Exit"
                     TextColor="White"
                     Text="Desconectar-se"

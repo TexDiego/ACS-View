@@ -37,12 +37,11 @@
                             BackgroundColor="White">
 
                             <Grid
-                                ColumnDefinitions="*,*"
-                                ColumnSpacing="10"
-                                RowDefinitions="auto,*,40">
+                                ColumnDefinitions="*,*,*"
+                                RowDefinitions="auto,*,35">
                                 
                                 <CollectionView
-                                    Grid.ColumnSpan="2"
+                                    Grid.ColumnSpan="3"
                                     Grid.Row="0"
                                     ItemsSource="{Binding PessoasFamilia}">
                                     
@@ -80,7 +79,7 @@
 
                                 <BoxView
                                     Grid.Row="1"
-                                    Grid.ColumnSpan="2"
+                                    Grid.ColumnSpan="3"
                                     Margin="0,5"
                                     HorizontalOptions="Fill"
                                     HeightRequest="2"
@@ -89,28 +88,46 @@
                                 <Button
                                     Grid.Column="0"
                                     Grid.Row="2"
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="Start"
+                                    Padding="10,8"
+                                    Text="Visitar"
+                                    TextColor="Black"
+                                    FontSize="14"
+                                    FontAttributes="Bold"
+                                    ImageSource="writing.png"
+                                    BackgroundColor="AliceBlue"
+                                    BorderColor="DarkOrange"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VisitFamilyCommand}" 
+                                    CommandParameter="{Binding IdFamily}"/>
+
+                                <Button
+                                    Grid.Column="1"
+                                    Grid.Row="2"
                                     VerticalOptions="Center" 
                                     ImageSource="pencil.png"
                                     BackgroundColor="AliceBlue"
                                     BorderColor="#0084B1"
-                                    FontSize="14"
+                                    Padding="10,8"
+                                    Text="Editar"
                                     FontAttributes="Bold"
                                     TextColor="DarkOrange"
-                                    Text="Editar"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
                                     
                                 <Button 
-                                    Grid.Column="1"
+                                    Grid.Column="2"
                                     Grid.Row="2"
-                                    VerticalOptions="Center" 
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="End"
                                     ImageSource="bin.png"
-                                    Text="Excluir"
-                                    TextColor="#C93919"
                                     BorderColor="#C93919"
+                                    Text="Excluir"
+                                    Padding="10,8"
                                     FontAttributes="Bold"
                                     FontSize="14"
-                                    BackgroundColor="White"
+                                    TextColor="DarkRed"
+                                    BackgroundColor="AliceBlue"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
                                     

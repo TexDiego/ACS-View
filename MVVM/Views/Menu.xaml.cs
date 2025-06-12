@@ -24,13 +24,18 @@ public partial class Menu : Popup
         this.Close("3");
     }
 
-    private void Btn_Exit_Clicked(object sender, EventArgs e)
+    private void Btn_Visits_Clicked(object sender, EventArgs e)
     {
         this.Close("4");
+    }
+
+    private void Btn_Exit_Clicked(object sender, EventArgs e)
+    {
+        this.Close("5");
     }
 
     private void Btn_Cancel_Clicked(object sender, EventArgs e)
     {
         this.Close();
-    }
+    }    
 }

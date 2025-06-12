@@ -12,6 +12,7 @@ namespace ACS_View.MVVM.ViewModels
     {
         private readonly HealthRecordService _healthRecordService;
         private readonly DatabaseService _databaseService;
+        private readonly VisitsService _visitsService;
 
         public ObservableCollection<Familia> Families { get; } = new ObservableCollection<Familia>();
         private HouseService _houseService;
@@ -29,6 +30,7 @@ namespace ACS_View.MVVM.ViewModels
         public IRelayCommand AddFamilyCommand { get; }
         public IRelayCommand<int> DeleteFamilyCommand { get; }
         public IRelayCommand<int> EditFamilyCommand { get; }
+        public IRelayCommand<int> VisitFamilyCommand { get; }
         public ICommand PersonInfo { get; }
 
 
@@ -41,11 +43,13 @@ namespace ACS_View.MVVM.ViewModels
             _databaseService = new DatabaseService();
             _healthRecordService = new HealthRecordService(_databaseService);
             _houseService = new HouseService(_databaseService);
+            _visitsService = new VisitsService(_databaseService);
 
             AddFamilyCommand = new RelayCommand(AddFamily);
             DeleteFamilyCommand = new RelayCommand<int>(DeleteFamily);
             EditFamilyCommand = new RelayCommand<int>(EditFamily);
             PersonInfo = new Command<string>(async susNumber => await PersonData(susNumber));
+            VisitFamilyCommand = new RelayCommand<int>(VisitFamily);
 
             LoadFamilies();
         }
@@ -159,6 +163,36 @@ namespace ACS_View.MVVM.ViewModels
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível editar a família.\n\n{ex.Message}", "OK");
+            }
+        }
+
+        public async void VisitFamily(int idFamily)
+        {
+            try
+            {
+                var familyToVisit = Families.FirstOrDefault(f => f.IdFamily == idFamily);
+
+                if (familyToVisit == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Aviso", "Família não encontrada.", "OK");
+                    return;
+                }
+
+                var visit = await Application.Current.MainPage.ShowPopupAsync(new VisitPage(_idHouse, idFamily));
+
+                if (visit is Visits)
+                {
+                    await _visitsService.RegisterVisitAsync((Visits)visit);
+                    await Application.Current.MainPage.DisplayAlert("Sucesso", "Visita realizada", "OK");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Aviso", "Visita não registrada.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível visitar a família.\n\n{ex.Message}", "OK");
             }
         }
 

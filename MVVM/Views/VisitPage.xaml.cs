@@ -27,11 +27,24 @@ public partial class VisitPage : Popup
         _houseID = HouseID;
         _familyID = FamilyID;
 
-        Console.WriteLine($"Página de visitas acessado: HouseID: {_houseID}; FamilyID: {_familyID}");
+        layoutGrid.WidthRequest = Application.Current.MainPage.Width - 50;
     }
 
     private async void AddVisitButton_Clicked(object sender, EventArgs e)
     {
+        // Busca o RadioButton selecionado
+        var radioSelecionado = Descricao.Children
+            .OfType<RadioButton>()
+            .FirstOrDefault(rb => rb.IsChecked);
+
+        // Verifica se algum foi selecionado
+        if (radioSelecionado == null)
+        {
+            await Application.Current.MainPage.DisplayAlert("Erro", "Selecione uma descrição para a visita.", "OK");
+            return;
+        }
+
+        string descricaoSelecionada = radioSelecionado.Content?.ToString();
         string address = await GetAddress();
 
         var visit = new Visits
@@ -39,7 +52,7 @@ public partial class VisitPage : Popup
             HouseId = _houseID,
             FamilyId = _familyID,
             Date = DateTime.Now,
-            Description = Observations?.Text ?? string.Empty,
+            Description = descricaoSelecionada,
             Address = address
         };
 
@@ -69,4 +82,28 @@ public partial class VisitPage : Popup
             return "Erro ao obter endereço.";
         }
     }
+
+    private void RadioButton_CheckedChanged(object sender, CheckedChangedEventArgs e)
+    {
+        if (sender is not RadioButton selectedRadio || !selectedRadio.IsChecked)
+            return;
+
+        foreach (var child in Descricao.Children)
+        {
+            if (child is RadioButton rb)
+            {
+                rb.TextColor = rb == selectedRadio
+                    ? GetCorPorDescricao(rb.Content?.ToString()?.Trim())
+                    : Colors.Black;
+            }
+        }
+    }
+
+    private Color GetCorPorDescricao(string descricao) => descricao switch
+    {
+        "Realizada" => Colors.Green,
+        "Ausente" => Colors.Orange,
+        "Recusada" => Colors.Red,
+        _ => Colors.Black
+    };
 }

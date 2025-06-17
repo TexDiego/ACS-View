@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:Class="ACS_View.MVVM.Views.AllVisits"
              NavigationPage.HasNavigationBar="False"
-             BackgroundColor="White">
+             BackgroundColor="AliceBlue">
 
     <Grid RowDefinitions="*,auto">
 
@@ -34,7 +34,8 @@
                             Padding="10"
                             Margin="5"
                             StrokeShape="RoundRectangle 10"
-                            Stroke="Grey">
+                            Stroke="Grey"
+                            BackgroundColor="White">
 
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
@@ -109,15 +110,16 @@
                 <CarouselView.ItemTemplate>
                     <DataTemplate>
                         <Border
-                        Padding="10"
-                        Margin="10"
-                        StrokeShape="RoundRectangle 10"
-                        Stroke="Grey">
+                            Padding="10"
+                            Margin="10"
+                            StrokeShape="RoundRectangle 10"
+                            Stroke="Grey"
+                            BackgroundColor="White">
 
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                CommandParameter="{Binding CasaId}" />
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
+                                    CommandParameter="{Binding CasaId}" />
                             </Border.GestureRecognizers>
 
                             <VerticalStackLayout>

@@ -15,7 +15,7 @@ namespace ACS_View.MVVM.Models
 
         public override string ToString()
         {
-            return $"Visita: {Id}\nID Casa: {HouseId}\nID Família: {FamilyId}\nData: {Date.ToShortDateString()}\nObservações: {Description}";
+            return $"Visita: {Id}\nID Casa: {HouseId}\nID Família: {FamilyId}\nData: {Date.ToShortDateString()}\nDescrição: {Description}";
         }
     }
 }

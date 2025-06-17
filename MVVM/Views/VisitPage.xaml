@@ -8,50 +8,74 @@
     Color="Transparent">
 
     <Border
-        Margin="10"
-        StrokeThickness="2"
-        Stroke="Grey"
-        StrokeShape="RoundRectangle 15">
-        
-        <Grid
-            RowDefinitions="*,auto,*"
-            RowSpacing="10"
-            Padding="10"
-            BackgroundColor="White">
+    Margin="10"
+    StrokeThickness="2"
+    Stroke="Grey"
+    StrokeShape="RoundRectangle 15">
 
-            <Label
-                Grid.Row="0"
-                Text="Realizar visita"
-                VerticalOptions="End" 
-                HorizontalOptions="Center"
-                FontSize="26"
-                FontAttributes="Bold"
-                TextColor="Black"/>
+    <Grid
+        x:Name="layoutGrid"
+        RowDefinitions="*,*,auto,*"
+        RowSpacing="10"
+        Padding="10"
+        BackgroundColor="White">
 
-            <Editor
-                x:Name="Observations"
-                Grid.Row="1"
+        <Label
+            Grid.Row="0"
+            Text="Realizar visita"
+            VerticalOptions="End" 
+            HorizontalOptions="Center"
+            FontSize="26"
+            FontAttributes="Bold"
+            TextColor="Black"/>
+
+        <Label
+            Grid.Row="1"
+            Text="Descrição:"
+            FontSize="20"
+            TextColor="Black"/>
+
+        <VerticalStackLayout x:Name="Descricao" Grid.Row="2">
+
+            <RadioButton
+                GroupName="DescricaoVisita"
+                Content="Realizada"
+                FontSize="16"              
+                VerticalOptions="Center"
+                BackgroundColor="Transparent"
+                CheckedChanged="RadioButton_CheckedChanged"/>
+
+            <RadioButton
+                GroupName="DescricaoVisita"
+                Content="Ausente"
                 FontSize="16"
-                MaxLength="50"
-                TextColor="Black"
-                FontAutoScalingEnabled="True"
-                Placeholder="Observações"
-                PlaceholderColor="Grey"
-                HorizontalOptions="Fill"/>
+                VerticalOptions="Center"
+                BackgroundColor="Transparent"
+                CheckedChanged="RadioButton_CheckedChanged"/>
 
-            <Button
-                x:Name="AddVisitButton"
-                Grid.Row="2"
-                Text="Adicionar visita"
-                VerticalOptions="End"
-                HorizontalOptions="Fill"
-                FontSize="14"
-                TextColor="Black"
-                BackgroundColor="AliceBlue"
-                BorderColor="DarkOrange"
-                BorderWidth="1"
-                CornerRadius="10"
-                Clicked="AddVisitButton_Clicked"/>
+            <RadioButton
+                GroupName="DescricaoVisita"
+                Content="Recusada"
+                FontSize="16"
+                VerticalOptions="Center"
+                BackgroundColor="Transparent"
+                CheckedChanged="RadioButton_CheckedChanged"/>
+
+        </VerticalStackLayout>
+
+        <Button
+            x:Name="AddVisitButton"
+            Grid.Row="3"
+            Text="Adicionar visita"
+            VerticalOptions="End"
+            HorizontalOptions="Fill"
+            FontSize="14"
+            TextColor="Black"
+            BackgroundColor="AliceBlue"
+            BorderColor="DarkOrange"
+            BorderWidth="1"
+            CornerRadius="10"
+            Clicked="AddVisitButton_Clicked"/>
 
         </Grid>
     </Border>

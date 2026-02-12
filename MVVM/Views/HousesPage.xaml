@@ -2,13 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.MVVM.Views.HousesPage"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:HousesPageViewModel />
-    </ContentPage.BindingContext>
 
     <ContentPage.Content>
         <Grid RowDefinitions="auto,*" RowSpacing="10" Margin="10">
@@ -29,7 +27,7 @@
                     HeightRequest="30"
                     HorizontalOptions="Start"
                     Margin="10,0,0,0"
-                    Clicked="Btn_Voltar_Clicked"/>
+                    Command="{Binding GoBack}"/>
 
                 <!-- Título da página -->
                 <Label
@@ -54,15 +52,16 @@
 
                 <SearchBar
                     Grid.Row="1"
-                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
                     Placeholder="Buscar..."
                     PlaceholderColor="Black"                       
                     Text="{Binding SearchText, Mode=TwoWay}"
                     FontSize="16"
                     CancelButtonColor="#0084B1"
                     TextColor="Black"
-                    BackgroundColor="Transparent"
-                    TextChanged="SearchBar_TextChanged" />
+                    BackgroundColor="White"
+                    TextChanged="SearchBar_TextChanged"
+                    Margin="-10,0"/>
 
                 <BoxView
                     Grid.Row="1"
@@ -71,90 +70,87 @@
                     Color="Black"
                     Opacity="0.7"
                     VerticalOptions="End"
-                    Margin="50,0,60,0"/>
+                    Margin="-10,0"/>
 
                 <!-- Botão de adicionar residência -->
                 <ImageButton
-                    Grid.Row="1"
+                    Grid.Row="0"
                     Grid.Column="1"
                     Source="addHouse.png"
                     HeightRequest="30"
                     WidthRequest="30"
-                    Margin="20,0"
+                    Margin="0,0,10,0"
                     Command="{Binding NewHouseCommand}"/>
                 
             </Grid>
 
             <!-- Lista de residências -->
-            <CollectionView ItemsSource="{Binding Houses}"
-                            SelectionMode="None"
-                            Grid.Row="1">
+            <CollectionView
+                ItemsSource="{Binding Houses}"
+                SelectionMode="None"
+                Grid.Row="1">
+                
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border
+                            x:DataType="model:House"
                             Stroke="LightGray"
                             BackgroundColor="White"
                             StrokeShape="RoundRectangle 8"
-                            Padding="10"
-                            Margin="0,5">
+                            Margin="0,0,0,10">
 
-                            <VerticalStackLayout>
+                            <SwipeView>
 
-                                <!-- Rua -->
-                                <Label Text="{Binding Rua}"
-                                       FontSize="18"
-                                       Opacity="0.7"
-                                       TextColor="Black"
-                                       FontAttributes="Bold" />
-
-                                <!-- Número e Complemento -->
-                                <HorizontalStackLayout Margin="0,0,0,10">
-
-                                    <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
-
-                                    <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,20,0"/>
-
-                                    <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
-
-                                </HorizontalStackLayout>
-
-                                <!-- Botões de ação -->
-                                <Grid 
-                                    ColumnDefinitions="*,auto,auto"
-                                    ColumnSpacing="10">
-
-                                    <Button
-                                        Text="Famílias"
-                                        TextColor="#0084B1"
-                                        Grid.Column="0"
-                                        FontAttributes="Bold"
-                                        BorderColor="#0084B1"
-                                        BackgroundColor="#E6EBED"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
-                                        CommandParameter="{Binding CasaId}" />
-
-                                    <Button
-                                        Text="Editar"
-                                        Grid.Column="1"
-                                        FontAttributes="Bold"
-                                        TextColor="DarkOrange"
-                                        BorderColor="DarkOrange"
-                                        BackgroundColor="AliceBlue"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
-                                        CommandParameter="{Binding CasaId}" />
-
-                                    <Button
+                                <SwipeView.LeftItems>
+                                    <SwipeItem
+                                        IconImageSource="bin.png"
                                         Text="Excluir"
-                                        Grid.Column="2"
-                                        BackgroundColor="White"
-                                        FontAttributes="Bold"
-                                        TextColor="#C93919"
-                                        BorderColor="#C93919"
+                                        BackgroundColor="IndianRed"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
-                                        CommandParameter="{Binding CasaId}" />
+                                        CommandParameter="{Binding CasaId}"/>
+                                </SwipeView.LeftItems>
 
-                                </Grid>
-                            </VerticalStackLayout>
+                                <SwipeView.RightItems>
+                                    <SwipeItem
+                                        IconImageSource="pencil.png"
+                                        Text="Editar"
+                                        BackgroundColor="DarkOrange"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
+                                        CommandParameter="{Binding CasaId}"/>
+                                </SwipeView.RightItems>
+                                
+                                <VerticalStackLayout
+                                    Padding="10"
+                                    BackgroundColor="White">
+
+                                    <VerticalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
+                                            CommandParameter="{Binding CasaId}"/>
+                                    </VerticalStackLayout.GestureRecognizers>
+
+                                    <!-- Rua -->
+                                    <Label
+                                        Text="{Binding Rua}"
+                                        FontSize="18"
+                                        Opacity="0.7"
+                                        TextColor="Black"
+                                        FontAttributes="Bold" />
+
+                                    <!-- Número e Complemento -->
+                                    <HorizontalStackLayout
+                                        Margin="0,0,0,10">
+
+                                        <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
+
+                                        <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,5,0"/>
+
+                                        <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
+
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                
+                            </SwipeView>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

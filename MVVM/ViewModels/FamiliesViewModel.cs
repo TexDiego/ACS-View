@@ -1,7 +1,9 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -10,46 +12,30 @@ namespace ACS_View.MVVM.ViewModels
 {
     public partial class FamiliesViewModel : BaseViewModel
     {
-        private readonly HealthRecordService _healthRecordService;
-        private readonly DatabaseService _databaseService;
-        private readonly VisitsService _visitsService;
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
 
-        public ObservableCollection<Familia> Families { get; } = new ObservableCollection<Familia>();
-        private HouseService _houseService;
-        private string _house;
-        public string House
-        {
-            get => _house;
-            set
-            {
-                _house = value;
-                OnPropertyChanged(nameof(House));
-            }
-        }
+        private readonly VisitsService _visitsService = new();
 
-        public IRelayCommand AddFamilyCommand { get; }
-        public IRelayCommand<int> DeleteFamilyCommand { get; }
-        public IRelayCommand<int> EditFamilyCommand { get; }
-        public IRelayCommand<int> VisitFamilyCommand { get; }
-        public ICommand PersonInfo { get; }
+        [ObservableProperty] private ObservableCollection<Familia> families = [];
+
+        [ObservableProperty] private string house = "";
+
+        public IRelayCommand AddFamilyCommand => new RelayCommand(AddFamily);
+        public IRelayCommand<int> DeleteFamilyCommand => new RelayCommand<int>(DeleteFamily);
+        public IRelayCommand<int> EditFamilyCommand => new RelayCommand<int>(EditFamily);
+        public IRelayCommand<int> VisitFamilyCommand => new RelayCommand<int>(VisitFamily);
+        public ICommand PersonInfo => new Command<string>(async susNumber => await PersonData(susNumber));
+        public ICommand GoBack => new Command(async _ => await Application.Current.MainPage.Navigation.PopAsync());
 
 
-        public int _idHouse;
+        private readonly int _idHouse = 0;
 
         public FamiliesViewModel() { }
+
         public FamiliesViewModel(int idHouse)
         {
             _idHouse = idHouse;
-            _databaseService = new DatabaseService();
-            _healthRecordService = new HealthRecordService(_databaseService);
-            _houseService = new HouseService(_databaseService);
-            _visitsService = new VisitsService(_databaseService);
-
-            AddFamilyCommand = new RelayCommand(AddFamily);
-            DeleteFamilyCommand = new RelayCommand<int>(DeleteFamily);
-            EditFamilyCommand = new RelayCommand<int>(EditFamily);
-            PersonInfo = new Command<string>(async susNumber => await PersonData(susNumber));
-            VisitFamilyCommand = new RelayCommand<int>(VisitFamily);
 
             LoadFamilies();
         }
@@ -58,7 +44,14 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                var house = await _houseService.GetHousesById(_idHouse);
+                var house = await _houseService.GetHouseByIdAsync(_idHouse);
+
+                if (house == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Erro", "Casa não encontrada.", "OK");
+                    return;
+                }
+
                 string rua = house.Rua ?? "Famílias";
                 string numero = house.NumeroCasa ?? "";
                 string complemento = house.Complemento ?? "";
@@ -67,7 +60,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 Console.WriteLine(House);
 
-                var familiesFromDb = await _healthRecordService.GetRecordsByHouseID(_idHouse);
+                var familiesFromDb = await _healthRecordService.GetRecordsByHouseIdAsync(_idHouse);
                 var familiesGrouped = familiesFromDb
                     .Where(p => p.FamilyId > 0)
                     .GroupBy(p => p.FamilyId)
@@ -96,7 +89,7 @@ namespace ACS_View.MVVM.ViewModels
             {
                 var newFamily = new Familia
                 {
-                    PessoasFamilia = new ObservableCollection<HealthRecord>() // Cria uma nova lista de pessoas
+                    PessoasFamilia = [] // Cria uma nova lista de pessoas
                 };
 
                 Families.Add(newFamily); // Adiciona a nova família à coleção
@@ -113,8 +106,6 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                Console.WriteLine("DeleteFamily acessado.");
-
                 var confirm = await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp(
                     "Confirmar Exclusão",
                     $"Tem certeza de que deseja excluir a família?",
@@ -133,7 +124,7 @@ namespace ACS_View.MVVM.ViewModels
                     await _healthRecordService.UpdateRecordAsync(person);
                 }
 
-                OnPropertyChanged(nameof(Families)); // Notifica a CollectionView
+                OnPropertyChanged(nameof(Families));
                 LoadFamilies();
             }
             catch (Exception ex)
@@ -157,7 +148,6 @@ namespace ACS_View.MVVM.ViewModels
                     return;
                 }
 
-                // Navegar para a página de edição
                 await Application.Current.MainPage.Navigation.PushAsync(new AddFamilyPage(_idHouse, true, idFamily));
             }
             catch (Exception ex)
@@ -204,7 +194,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (record != null)
                 {
-                    var popup = new PersonsInfo(record, _databaseService);
+                    var popup = new PersonsInfo(record);
                     await popup.LoadAddressAsync();
                     await Application.Current.MainPage.ShowPopupAsync(popup);
                 }

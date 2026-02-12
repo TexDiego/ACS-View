@@ -1,20 +1,20 @@
 ﻿using ACS_View.MVVM.Models;
-using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public class VaccinesPageViewModel : INotifyPropertyChanged
+    public partial class VaccinesPageViewModel : BaseViewModel
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private HealthRecordService _healthRecordService;
-        private VaccineService _vaccineService;
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly IVaccineService _vaccineService = App.ServiceProvider.GetRequiredService<IVaccineService>();
         public HealthRecord HealthRecord { get; set; }
-        public Vaccines Vaccines { get; set; }
+
+        [ObservableProperty] private Vaccines vaccines;
+
         private readonly string _susNumber;
 
         public ICommand OpenVaccineInfo { get; set; }
@@ -196,10 +196,8 @@ namespace ACS_View.MVVM.ViewModels
 
         public VaccinesPageViewModel() { }
 
-        public VaccinesPageViewModel(HealthRecordService healthRecordService, VaccineService vaccineService, string sus)
+        public VaccinesPageViewModel(string sus)
         {
-            _healthRecordService = healthRecordService;
-            _vaccineService = vaccineService;
             _susNumber = sus;
             OpenVaccineInfo = new Command<string>(async (vaccine) => await OpenVaccineInfoCommand(vaccine));
         }
@@ -208,29 +206,27 @@ namespace ACS_View.MVVM.ViewModels
         {
             Vaccines = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
             HealthRecord = await _healthRecordService.GetRecordBySusAsync(_susNumber);
-            NotifyAllSituacaoProperties();
-            OnPropertyChanged(nameof(HealthRecord));
         }
 
-        private bool GetVaccineStatus(string vaccine)
+        private bool GetVaccineStatus(string Vaccine)
         {
-            Console.WriteLine("Vacina: " + vaccine + ", status: " + Vaccines?.GetVaccineStatus(vaccine));
-            return Vaccines?.GetVaccineStatus(vaccine) ?? false;
+            Console.WriteLine("Vacina: " + Vaccine + ", status: " + Vaccines?.GetVaccineStatus(Vaccine));
+            return Vaccines?.GetVaccineStatus(Vaccine) ?? false;
         }
 
-        private async Task OpenVaccineInfoCommand(string vaccine)
+        private async Task OpenVaccineInfoCommand(string Vaccine)
         {
             try
             {
-                bool vaccineChecked = GetVaccineStatus(vaccine);
-                Console.WriteLine($"Vacina: {vaccine}, Status: {vaccineChecked}");
+                bool vaccineChecked = GetVaccineStatus(Vaccine);
+                Console.WriteLine($"Vacina: {Vaccine}, Status: {vaccineChecked}");
 
-                var popup = new VaccinesInfo(vaccine, vaccineChecked);
+                var popup = new VaccinesInfo(Vaccine, vaccineChecked);
                 var status = await Application.Current.MainPage.ShowPopupAsync(popup);
 
                 if (status is bool vaccineStatus && vaccineStatus != vaccineChecked)
                 {
-                    await UpdateVaccine(vaccine);
+                    await UpdateVaccine(Vaccine);
                 }
             }
             catch (Exception ex)
@@ -240,67 +236,22 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task UpdateVaccine(string vaccine)
+        private async Task UpdateVaccine(string Vaccine)
         {
             try
             {
                 var vaccineProperty = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
 
-                vaccineProperty?.ChangeVaccineStatus(vaccine);
+                vaccineProperty?.ChangeVaccineStatus(Vaccine);
 
                 await _vaccineService.AtualizarVacinasAsync(vaccineProperty);
                  
                 Vaccines = vaccineProperty;
-                OnPropertyChanged(nameof(Vaccines));
-                NotifyAllSituacaoProperties();
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
-        }
-
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        private void NotifyAllSituacaoProperties()
-        {
-            OnPropertyChanged(nameof(SituacaoRN));
-            OnPropertyChanged(nameof(Situacao2Meses));
-            OnPropertyChanged(nameof(Situacao3Meses));
-            OnPropertyChanged(nameof(Situacao4Meses));
-            OnPropertyChanged(nameof(Situacao5Meses));
-            OnPropertyChanged(nameof(Situacao6Meses));
-            OnPropertyChanged(nameof(Situacao7Meses));
-            OnPropertyChanged(nameof(Situacao9Meses));
-            OnPropertyChanged(nameof(Situacao12Meses));
-            OnPropertyChanged(nameof(Situacao15Meses));
-            OnPropertyChanged(nameof(Situacao4Anos));
-            OnPropertyChanged(nameof(Situacao5Anos));
-            OnPropertyChanged(nameof(Situacao7Anos));
-            OnPropertyChanged(nameof(Situacao9Anos));
-            OnPropertyChanged(nameof(SituacaoHBAdolescente));
-            OnPropertyChanged(nameof(SituacaoDTAdolescente));
-            OnPropertyChanged(nameof(SituacaoFAAdolescente));
-            OnPropertyChanged(nameof(SituacaoTripliceViralAdolescente));
-            OnPropertyChanged(nameof(SituacaoHPVAdolescente));
-            OnPropertyChanged(nameof(SituacaoACWYAdolescente));
-            OnPropertyChanged(nameof(SituacaoHepatiteBAdulto));
-            OnPropertyChanged(nameof(SituacaoDTAdulto));
-            OnPropertyChanged(nameof(SituacaoFebreAmarelaAdulto));
-            OnPropertyChanged(nameof(SituacaoHPVAdulto));
-            OnPropertyChanged(nameof(SituacaoTripliceViral1Adulto));
-            OnPropertyChanged(nameof(SituacaoTripliceViral2Adulto));
-            OnPropertyChanged(nameof(SituacaodTpaAdulto));
-            OnPropertyChanged(nameof(SituacaoHepatiteBIdoso));
-            OnPropertyChanged(nameof(SituacaodTIdoso));
-            OnPropertyChanged(nameof(SituacaoFebreAmarelaIdoso));
-            OnPropertyChanged(nameof(SituacaodTpaIdoso));
-            OnPropertyChanged(nameof(SituacaoHBGestante));
-            OnPropertyChanged(nameof(SituacaodTGestante));
-            OnPropertyChanged(nameof(SituacaodTpaGestante));
         }
     }
 }

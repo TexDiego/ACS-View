@@ -208,7 +208,7 @@ namespace ACS_View.MVVM.Models
         }
 
         // Método para calcular a idade em meses
-        public int GetMonth(DateTime birthDate)
+        public static int GetMonth(DateTime birthDate)
         {
             var today = DateTime.Today;
 

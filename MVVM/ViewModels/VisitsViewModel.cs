@@ -6,17 +6,15 @@ namespace ACS_View.MVVM.ViewModels
 {
     public class VisitsViewModel
     {
-        private readonly DatabaseService _databaseService;
-        private VisitsService _visitsService;
+        private readonly VisitsService _visitsService;
 
-        public List<Visits> VisitsList { get; set; } = new List<Visits>();
+        public List<Visits> VisitsList { get; set; } = [];
 
         public ICommand RegisterVisitCommand { get; set; }
 
-        public VisitsViewModel(DatabaseService databaseService)
+        public VisitsViewModel()
         {
-            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService), "O serviço de banco de dados não pode ser nulo.");
-            _visitsService = new VisitsService(_databaseService);
+            _visitsService = new VisitsService();
 
             RegisterVisitCommand = new Command<Visits>(RegisterVisit);
         }

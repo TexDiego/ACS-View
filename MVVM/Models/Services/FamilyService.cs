@@ -1,22 +1,23 @@
-﻿using SQLite;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
+using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class FamilyService
+    public class FamilyService : IFamilyService
     {
+        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
         private readonly SQLiteAsyncConnection _connection;
 
-        public FamilyService(DatabaseService databaseService)
+        public FamilyService()
         {
-            _connection = databaseService?.GetConnection()
-                          ?? throw new ArgumentNullException(nameof(databaseService));
+            _connection = _databaseService.Connection;
         }
 
         public async Task<List<Family>> GetAllFamiliesAsync()
         {
             try
             {
-                // Consulta SQL direta para obter todas as famílias, ordenadas por IdFamilia
                 return await _connection.QueryAsync<Family>("SELECT * FROM Family ORDER BY IdFamilia");
             }
             catch (Exception ex)
@@ -33,7 +34,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Consulta SQL direta para buscar uma família pelo ID
                 var result = await _connection.QueryAsync<Family>("SELECT * FROM Family WHERE IdFamilia = ?", id);
                 return result.FirstOrDefault();
             }
@@ -51,7 +51,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Consulta SQL direta para buscar os registros de saúde associados a uma família específica
                 return await _connection.QueryAsync<HealthRecord>(
                     "SELECT * FROM HealthRecord WHERE HouseId = ? AND FamilyId = ?",
                     houseId, familyId
@@ -71,7 +70,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Inserção direta no banco de dados
                 return await _connection.ExecuteAsync(
                     "INSERT INTO Family (IdFamilia, IdPessoa) VALUES (?, ?)",
                     family.IdFamilia, family.IdPessoa
@@ -91,7 +89,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Exclusão direta de uma família pelo ID
                 return await _connection.ExecuteAsync("DELETE FROM Family WHERE IdFamilia = ?", id);
             }
             catch (Exception ex)
@@ -108,7 +105,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Atualização direta no banco de dados
                 await _connection.ExecuteAsync(
                     "UPDATE Family SET IdPessoa = ? WHERE IdFamilia = ?",
                     family.IdPessoa, family.IdFamilia
@@ -128,7 +124,6 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                // Consulta SQL para obter o maior IdFamilia associado a um HouseId específico
                 var result = await _connection.ExecuteScalarAsync<int?>(
                     "SELECT MAX(FamilyId) FROM HealthRecord WHERE HouseId = ?", houseId
                 );

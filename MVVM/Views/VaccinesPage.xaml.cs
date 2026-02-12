@@ -1,4 +1,5 @@
 using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
@@ -7,23 +8,21 @@ namespace ACS_View.MVVM.Views;
 
 public partial class VaccinesPage : ContentPage
 {
-    VaccinesPageViewModel viewModel;
+    VaccinesPageViewModel viewModel = new();
     private HealthRecord _healthRecord;
     private readonly Vaccines _vaccines;
-    private readonly VaccineService _vaccineService;
-    private readonly HealthRecordService _healthRecordService;
+    private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
 
     private string susNumber;
     private bool _isInitialized = false;
 
 
-    public VaccinesPage(Vaccines vaccines, VaccineService vaccineService, DatabaseService databaseService)
+    public VaccinesPage(Vaccines vaccines)
 	{
         InitializeComponent();
 
-        _healthRecordService = new HealthRecordService(databaseService);
+        _healthRecordService = new HealthRecordService();
         _vaccines = vaccines;
-        _vaccineService = vaccineService;
     }
 
     protected override async void OnAppearing()
@@ -37,7 +36,7 @@ public partial class VaccinesPage : ContentPage
             _healthRecord = await _healthRecordService.GetRecordBySusAsync(_vaccines.SusNumber);
             susNumber = _healthRecord.SusNumber;
 
-            viewModel = new VaccinesPageViewModel(_healthRecordService, _vaccineService, susNumber);
+            viewModel = new VaccinesPageViewModel(susNumber);
             await viewModel.InitializeAsync();
 
             BindingContext = viewModel;

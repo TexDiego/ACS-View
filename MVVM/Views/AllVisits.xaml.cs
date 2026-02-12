@@ -1,19 +1,17 @@
-using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.ViewModels;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class AllVisits : ContentPage
 {
-    private readonly DatabaseService _databaseService;
     private readonly AllVisitsViewModel _viewModel;
 
     public AllVisits()
 	{
 		InitializeComponent();
 
-        _databaseService = new DatabaseService();
-        _viewModel = new AllVisitsViewModel(_databaseService);
+        _viewModel = new AllVisitsViewModel();
 
         BindingContext = _viewModel;
     }

@@ -1,4 +1,5 @@
 using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
@@ -7,9 +8,8 @@ namespace ACS_View.MVVM.Views;
 
 public partial class VisitPage : Popup
 {
-    private readonly DatabaseService _databaseService;
-    private VisitsViewModel _viewModel;
-    private HouseService _houseService;
+    private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
+    private readonly VisitsViewModel _viewModel;
 
     private readonly int _houseID;
     private readonly int _familyID;
@@ -18,9 +18,7 @@ public partial class VisitPage : Popup
     {
         InitializeComponent();
 
-        _databaseService = new DatabaseService();
-        _viewModel = new VisitsViewModel(_databaseService);
-        _houseService = new HouseService(_databaseService);
+        _viewModel = new VisitsViewModel();
 
         BindingContext = _viewModel;
 
@@ -30,7 +28,7 @@ public partial class VisitPage : Popup
         layoutGrid.WidthRequest = Application.Current.MainPage.Width - 50;
     }
 
-    private async void AddVisitButton_Clicked(object sender, EventArgs e)
+    private async Task AddVisitButton_Clicked(object sender, EventArgs e)
     {
         // Busca o RadioButton selecionado
         var radioSelecionado = Descricao.Children
@@ -63,7 +61,7 @@ public partial class VisitPage : Popup
     {
         try
         {
-            var house = await _houseService.GetHousesById(_houseID);
+            var house = await _houseService.GetHouseByIdAsync(_houseID);
 
             if (house != null)
             {
@@ -99,7 +97,7 @@ public partial class VisitPage : Popup
         }
     }
 
-    private Color GetCorPorDescricao(string descricao) => descricao switch
+    private static Color GetCorPorDescricao(string descricao) => descricao switch
     {
         "Realizada" => Colors.Green,
         "Ausente" => Colors.Orange,

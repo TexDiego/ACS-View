@@ -1,54 +1,33 @@
 ﻿using ACS_View.MVVM.Models;
-using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class HousesPageViewModel : BaseViewModel
+    internal partial class HousesPageViewModel : BaseViewModel
     {
-        private readonly HouseService _houseService;
-        private readonly HealthRecordService _healthRecordService;
+        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
 
-        private CancellationTokenSource _throttleCts;
+        private CancellationTokenSource _throttleCts = new();
 
-        private string _searchText;
-        public string SearchText
+        [ObservableProperty] private string searchText = string.Empty;
+        [ObservableProperty] private ObservableCollection<House> houses = [];
+
+        public ICommand DeleteCommand => new Command<int>(async id => await DeleteHouseAsync(id));
+        public ICommand EditCommand => new Command<int>(async id => await EditHouseAsync(id));
+        public ICommand FamilyCommand => new Command<int>(async id => await OpenFamilyPageAsync(id));
+        public ICommand LoadHousesCommand => new Command<string>(async _ => await LoadHousesAsync(SearchText));
+        public ICommand NewHouseCommand => new Command(async _ => await CreateHouseAsync());
+        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
+
+        public HousesPageViewModel()
         {
-            get => _searchText;
-            set
-            {
-                _searchText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        // Coleção diretamente vinculada à UI
-        public ObservableCollection<House> Houses { get; } = new ObservableCollection<House>();
-
-        public ICommand DeleteCommand { get; }
-        public ICommand EditCommand { get; }
-        public ICommand FamilyCommand { get; }
-        public ICommand LoadHousesCommand { get; }
-        public ICommand NewHouseCommand { get; }
-
-        public HousesPageViewModel() { }
-
-        public HousesPageViewModel(DatabaseService databaseService, HouseService houseService)
-        {
-            _houseService = houseService ?? throw new ArgumentNullException(nameof(houseService));
-            _healthRecordService = new HealthRecordService(databaseService);
-
-            DeleteCommand = new Command<int>(async id => await DeleteHouseAsync(id));
-            EditCommand = new Command<int>(async id => await EditHouseAsync(id, databaseService));
-            FamilyCommand = new Command<int>(async id => await OpenFamilyPageAsync(id, databaseService));
-            LoadHousesCommand = new Command<string>(async _ => await LoadHousesAsync(SearchText));
-            NewHouseCommand = new Command(async _ => await CreateHouseAsync(databaseService));
-
-            // Carregamento inicial de dados
-            Task.Run(() => LoadHousesAsync(string.Empty));
+            MainThread.BeginInvokeOnMainThread(async () => await LoadHousesAsync(string.Empty));
         }
 
         private async Task LoadHousesAsync(string search)
@@ -76,7 +55,7 @@ namespace ACS_View.MVVM.ViewModels
                 else
                 {
                     // Dividir o texto de pesquisa em palavras
-                    var searchParts = search.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    var searchParts = search.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
                     // Verificar se o último item é um número
                     var possibleNumber = searchParts.LastOrDefault();
@@ -85,14 +64,14 @@ namespace ACS_View.MVVM.ViewModels
                     string streetSearch = string.Join(" ", searchParts.Take(searchParts.Length - (isNumber ? 1 : 0))).ToLowerInvariant();
 
                     // Filtrar por rua e, se houver, também pelo número
-                    filteredHouses = houses.Where(h =>
+                    filteredHouses = [.. houses.Where(h =>
                     {
                         bool matchesStreet = string.IsNullOrEmpty(streetSearch) || (h.Rua?.ToLowerInvariant().Contains(streetSearch) ?? false);
                         bool matchesNumber = !isNumber || (h.NumeroCasa != null && h.NumeroCasa == possibleNumber);
 
                         // Retorna as casas que atendem aos critérios de rua e número
                         return matchesStreet && matchesNumber;
-                    }).ToList();
+                    })];
                 }
 
                 // Aplicar ordenação por Rua, Número e Complemento
@@ -138,7 +117,7 @@ namespace ACS_View.MVVM.ViewModels
                 if (confirm) return;
 
                 // Obter registros associados à residência
-                var people = await _healthRecordService.GetRecordsByHouseID(id);
+                var people = await _healthRecordService.GetRecordsByHouseIdAsync(id);
 
                 foreach (var person in people)
                 {
@@ -158,14 +137,15 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task EditHouseAsync(int id, DatabaseService databaseService)
+        private async Task EditHouseAsync(int id)
         {
             try
             {
-                var house = await _houseService.GetHousesById(id);
+                var house = await _houseService.GetHouseByIdAsync(id);
+
                 if (house != null)
                 {
-                    await Application.Current.MainPage.Navigation.PushAsync(new AddHouse(house, databaseService, id));
+                    await Application.Current.MainPage.Navigation.PushAsync(new AddHouse(house));
                 }
             }
             catch (Exception ex)
@@ -174,11 +154,11 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task CreateHouseAsync(DatabaseService databaseService)
+        private static async Task CreateHouseAsync()
         {
             try
             {
-                await Application.Current.MainPage.Navigation.PushAsync(new AddHouse(databaseService));
+                await Application.Current.MainPage.Navigation.PushAsync(new AddHouse());
             }
             catch (Exception ex)
             {
@@ -186,12 +166,11 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task OpenFamilyPageAsync(int id, DatabaseService databaseService)
+        private static async Task OpenFamilyPageAsync(int id)
         {
             try
             {
-                var familyViewModel = new FamiliesViewModel(id);
-                await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(familyViewModel));
+                await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(id));
             }
             catch (Exception ex)
             {

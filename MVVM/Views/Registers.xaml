@@ -3,13 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              xmlns:local="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.MVVM.Views.Registers"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:RegistersViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
@@ -48,7 +45,7 @@
                     HeightRequest="30"
                     WidthRequest="30"
                     HorizontalOptions="Start"
-                    Clicked="Btn_RegistersGoBack_Clicked"/>
+                    Command="{Binding GoBack}"/>
 
                 <Label
                     x:Name="Lbl_Title"
@@ -98,8 +95,7 @@
                     ToolTipProperties.Text="Filtrar"
                     Source="filter.png"
                     WidthRequest="30"
-                    HeightRequest="30"
-                    Clicked="Filter_Clicked"/>
+                    HeightRequest="30"/>
 
                 <ImageButton
                     Grid.Column="2"
@@ -107,7 +103,7 @@
                     Source="addperson.png"
                     WidthRequest="30"
                     HeightRequest="30"
-                    Clicked="Btn_AddRegister_Clicked"/>
+                    Command="{Binding AddPerson}"/>
 
                 <ImageButton
                     Grid.Column="3"
@@ -116,7 +112,7 @@
                     WidthRequest="30"
                     HeightRequest="30"
                     Margin="0,0,15,0"
-                    Clicked="ImageButton_Clicked"/>
+                    Command="{Binding Houses}"/>
 
             </Grid>
 
@@ -178,102 +174,76 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border
+                        x:DataType="local:HealthRecord"
                         StrokeShape="RoundRectangle 10"
                         StrokeThickness="1"
                         Margin="0,0,0,10"
                         Stroke="Grey">
 
-                        <Grid
-                            RowDefinitions="*,*"
-                            ColumnDefinitions="*,auto"
-                            BackgroundColor="White"
-                            Padding="5">
+                        <SwipeView>
 
-                            <!-- name -->
-                            <Label
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Text="{Binding Name}"
-                                FontAttributes="Bold"
-                                FontSize="18"
-                                LineBreakMode="CharacterWrap"
-                                Style="{StaticResource Lbl_Datas}"/>
-
-                            <!-- background button -->
-                            <Button
-                                x:Name="InfoPopup"
-                                Grid.Row="0"
-                                Grid.RowSpan="2"
-                                Grid.ColumnSpan="2"
-                                BackgroundColor="Transparent"
-                                BorderColor="Transparent"
-                                Text=""
-                                Padding="0"
-                                Opacity="0.01"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                CommandParameter="{Binding SusNumber}"/>
-                            
-                            <!-- vaccine button -->
-                            <VerticalStackLayout
-                                Grid.Column="1"
-                                Grid.Row="0"
-                                Margin="5,5,10,5"
-                                VerticalOptions="Center">
-
-                                <ImageButton
-                                    x:Name="Btn_Vaccines"
-                                    BackgroundColor="Transparent"
-                                    Source="syringe"
-                                    HeightRequest="30"
-                                    WidthRequest="30"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
-                                    CommandParameter="{Binding SusNumber}"/>
-
-                                <Label
-                                    Text="Vacinas"
-                                    TextColor="Black"
-                                    FontSize="14"/>
-
-                            </VerticalStackLayout>
-
-                            <!-- edit and delete -->
-                            <Grid
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                ColumnDefinitions="*,*"
-                                VerticalOptions="Center"
-                                ColumnSpacing="10"
-                                Margin="5,5,5,5">
-
-                                <Button
-                                    Grid.Column="0"
-                                    x:Name="Btn_Edit"
-                                    ImageSource="pencil.png"
-                                    MaximumHeightRequest="35"
-                                    Text="Editar"
-                                    TextColor="DarkOrange"
-                                    FontSize="14"
-                                    BackgroundColor="AliceBlue"
-                                    BorderColor="Grey"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding SusNumber}"/>
-
-                                <Button
-                                    Grid.Column="1"
-                                    x:Name="Btn_Delete"
-                                    ImageSource="bin.png"
-                                    MaximumHeightRequest="35"
+                            <SwipeView.LeftItems>
+                                <SwipeItem
+                                    IconImageSource="bin.png"
                                     Text="Excluir"
-                                    TextColor="#C93919"
-                                    FontSize="14"
-                                    BackgroundColor="AliceBlue"
-                                    BorderColor="#C93919"
+                                    BackgroundColor="IndianRed"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                     CommandParameter="{Binding SusNumber}"/>
+                            </SwipeView.LeftItems>
+
+                            <SwipeView.RightItems>
+                                <SwipeItem
+                                    IconImageSource="pencil.png"
+                                    Text="Editar"
+                                    BackgroundColor="DarkOrange"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding SusNumber}"/>
+                            </SwipeView.RightItems>
+                            
+                            <Grid
+                                ColumnDefinitions="*,auto"
+                                BackgroundColor="White"
+                                Padding="5">
+
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                        CommandParameter="{Binding SusNumber}"/>
+                                </Grid.GestureRecognizers>
+
+                                <!-- name -->
+                                <Label
+                                    Grid.Column="0"
+                                    Text="{Binding Name}"
+                                    FontAttributes="Bold"
+                                    FontSize="18"
+                                    LineBreakMode="CharacterWrap"
+                                    Style="{StaticResource Lbl_Datas}"/>
+
+                                <!-- vaccine button -->
+                                <VerticalStackLayout
+                                    Grid.Column="1"
+                                    Margin="5,5,10,5"
+                                    VerticalOptions="Center">
+
+                                    <ImageButton
+                                        BackgroundColor="Transparent"
+                                        Source="syringe"
+                                        HeightRequest="30"
+                                        WidthRequest="30"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                                        CommandParameter="{Binding SusNumber}"/>
+
+                                    <Label
+                                        Text="Vacinas"
+                                        TextColor="Black"
+                                        FontSize="14"/>
+
+                                </VerticalStackLayout>
+
                             </Grid>
                             
-                        </Grid>
+                        </SwipeView>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

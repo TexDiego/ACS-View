@@ -2,13 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.MVVM.Views.AddRegister"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:AddRegisterViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
@@ -46,9 +44,11 @@
                 HorizontalOptions="Center"/>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout>
+            <VerticalStackLayout
+                BindingContext="{Binding Record}"
+                x:DataType="model:HealthRecord">
 
-                <Border
+                <Border                    
                     Margin="20,0"
                     Stroke="LightGray"
                     StrokeShape="RoundRectangle 10"
@@ -76,8 +76,7 @@
                             Margin="0,0,20,0"
                             MaxLength="70"
                             Keyboard="Text"
-                            TextChanged="Entry_TextChanged"
-                            Text="{Binding Nome}"/>
+                            Text="{Binding Name, Mode=TwoWay}"/>
 
                     </Grid>
                 </Border>
@@ -107,8 +106,7 @@
                             Margin="0,0,20,0"
                             MaxLength="70"
                             Keyboard="Text"
-                            TextChanged="Entry_TextChanged"
-                            Text="{Binding MotherName}"/>
+                            Text="{Binding MotherName, Mode=TwoWay}"/>
                     </Grid>
                 </Border>
 
@@ -138,8 +136,7 @@
                             Margin="0,0,20,0"
                             MaxLength="15"
                             Keyboard="Numeric"
-                            TextChanged="Entry_Sus_TextChanged"
-                            Text="{Binding NumeroSUS}"/>
+                            Text="{Binding SusNumber, Mode=TwoWay}"/>
 
                     </Grid>
                 </Border>
@@ -168,7 +165,7 @@
                             VerticalOptions="Center"
                             FontSize="18"
                             Margin="0,0,20,0"
-                            Date="{Binding Nascimento}">
+                            Date="{Binding BirthDate, Mode=TwoWay}">
 
                         </DatePicker>
 
@@ -198,7 +195,7 @@
                             FontSize="18"
                             MaxLength="200"
                             AutoSize="TextChanges"
-                            Text="{Binding Observacao}"/>
+                            Text="{Binding Observacao, Mode=TwoWay}"/>
 
                     </Grid>
 
@@ -221,7 +218,7 @@
                         Grid.Row="0"
                         Grid.Column="1"
                         x:Name="CB_Gestante"
-                        IsChecked="{Binding Gestante}"/>
+                        IsChecked="{Binding IsPregnant, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="1"
@@ -233,7 +230,7 @@
                         Grid.Row="1"
                         Grid.Column="1"
                         x:Name="CB_DB"
-                        IsChecked="{Binding Diabetes}"/>
+                        IsChecked="{Binding HasDiabetes, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="2"
@@ -245,7 +242,7 @@
                         Grid.Row="2"
                         Grid.Column="1"
                         x:Name="CB_HAS"
-                        IsChecked="{Binding Hipertensao}"/>
+                        IsChecked="{Binding HasHypertension, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="3"
@@ -257,7 +254,7 @@
                         Grid.Row="3"
                         Grid.Column="1"
                         x:Name="CB_TB"
-                        IsChecked="{Binding Tuberculose}"/>
+                        IsChecked="{Binding HasTuberculosis, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="4"
@@ -269,7 +266,7 @@
                         Grid.Row="4"
                         Grid.Column="1"
                         x:Name="CB_HAN"
-                        IsChecked="{Binding Hanseniase}"/>
+                        IsChecked="{Binding HasLeprosy, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="5"
@@ -281,7 +278,7 @@
                         Grid.Row="5"
                         Grid.Column="1"
                         x:Name="CB_Acamado"
-                        IsChecked="{Binding Acamado}"/>
+                        IsChecked="{Binding IsBedridden, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="6"
@@ -293,7 +290,7 @@
                         Grid.Row="6"
                         Grid.Column="1"
                         x:Name="CB_Domiciliado"
-                        IsChecked="{Binding Domiciliado}"/>
+                        IsChecked="{Binding IsHomebound, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="7"
@@ -305,7 +302,7 @@
                         Grid.Row="7"
                         Grid.Column="1"
                         x:Name="CB_Mental"
-                        IsChecked="{Binding Mental}"/>
+                        IsChecked="{Binding HasMentalIllness, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="8"
@@ -317,7 +314,7 @@
                         Grid.Row="8"
                         Grid.Column="1"
                         x:Name="CB_Smoker"
-                        IsChecked="{Binding Fumante}"/>
+                        IsChecked="{Binding IsSmoker, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="9"
@@ -329,7 +326,7 @@
                         Grid.Row="9"
                         Grid.Column="1"
                         x:Name="CB_Alcoholic"
-                        IsChecked="{Binding Alcoolatra}"/>
+                        IsChecked="{Binding IsAlcoholic, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="10"
@@ -341,7 +338,7 @@
                         Grid.Row="10"
                         Grid.Column="1"
                         x:Name="CB_Disability"
-                        IsChecked="{Binding Deficiente}"/>
+                        IsChecked="{Binding HasDisabilities, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="11"
@@ -353,7 +350,7 @@
                         Grid.Row="11"
                         Grid.Column="1"
                         x:Name="CB_Cancer"
-                        IsChecked="{Binding Cancer}"/>
+                        IsChecked="{Binding HasCancer, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="12"
@@ -365,7 +362,7 @@
                         Grid.Row="12"
                         Grid.Column="1"
                         x:Name="CB_Bolsa"
-                        IsChecked="{Binding BolsaFamilia}"/>
+                        IsChecked="{Binding BolsaFamilia, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="13"
@@ -377,7 +374,7 @@
                         Grid.Row="13"
                         Grid.Column="1"
                         x:Name="CB_Heart"
-                        IsChecked="{Binding HeartDisease}"/>
+                        IsChecked="{Binding HasHeartDesease, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="14"
@@ -389,7 +386,7 @@
                         Grid.Row="14"
                         Grid.Column="1"
                         x:Name="CB_Lungs"
-                        IsChecked="{Binding LungsDisease}"/>
+                        IsChecked="{Binding HasLungsDesease, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="15"
@@ -401,7 +398,7 @@
                         Grid.Row="15"
                         Grid.Column="1"
                         x:Name="CB_Kidney"
-                        IsChecked="{Binding KidneyDisease}"/>
+                        IsChecked="{Binding HasKidneyDesease, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="16"
@@ -413,7 +410,7 @@
                         Grid.Row="16"
                         Grid.Column="1"
                         x:Name="CB_Liver"
-                        IsChecked="{Binding LiverDisease}"/>
+                        IsChecked="{Binding HasLiverDesease, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="17"
@@ -425,7 +422,7 @@
                         Grid.Row="17"
                         Grid.Column="1"
                         x:Name="CB_Neuro"
-                        IsChecked="{Binding Neurodivergent}"/>
+                        IsChecked="{Binding IsNeurodivergent, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="18"
@@ -437,7 +434,7 @@
                         Grid.Row="18"
                         Grid.Column="1"
                         x:Name="CB_Addicted"
-                        IsChecked="{Binding Addicted}"/>
+                        IsChecked="{Binding IsDrugAddicted, Mode=TwoWay}"/>
 
                     <Label
                         Grid.Row="19"
@@ -449,7 +446,7 @@
                         Grid.Row="19"
                         Grid.Column="1"
                         x:Name="CB_HIV"
-                        IsChecked="{Binding HIV}"/>
+                        IsChecked="{Binding HasHIV, Mode=TwoWay}"/>
 
                 </Grid>
 
@@ -462,16 +459,16 @@
                 Margin="0,20">
 
             <Button
-                    Style="{StaticResource buttons}"
-                    Text="Salvar"
-                    Clicked="Button_Clicked"/>
+                Style="{StaticResource buttons}"
+                Text="Salvar"
+                Command="{Binding RegisterCommand}"/>
             <Grid>
 
                 <Button
                         x:Name="Btn_AddGoBack"
                         Style="{StaticResource buttons}"
                         Text="Voltar"
-                        Clicked="Btn_AddGoBack_Clicked"/>
+                        Command="{Binding GoBack}"/>
 
                 <ActivityIndicator
                         IsRunning="{Binding IsLoading}"

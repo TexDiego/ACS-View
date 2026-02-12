@@ -1,34 +1,38 @@
-﻿using ACS_View.MVVM.Views;
-using CommunityToolkit.Maui.Views;
+﻿using ACS_View.MVVM.Models.Interfaces;
 using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class DatabaseService
+    public class DatabaseService : IDatabaseService
     {
-        private readonly SQLiteAsyncConnection _database;
-        private readonly string _dataBasePath =
-            Path.Combine(Environment.GetFolderPath(
-                Environment.SpecialFolder.LocalApplicationData),
-                "health_app.db");
+        private SQLiteAsyncConnection _database;
+        private readonly string _databasePath;
 
         public DatabaseService()
         {
-            try
+            _databasePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "health_app.db");
+
+            MainThread.BeginInvokeOnMainThread(async () => await InitializeAsync());
+        }
+
+        public SQLiteAsyncConnection Connection
+        {
+            get
             {
-                _database = new SQLiteAsyncConnection(_dataBasePath);
-                Task.Run(async () => await InitializeDatabaseAsync()).Wait();
-            }
-            catch (Exception ex)
-            {
-                Application.Current.MainPage.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                if (_database == null)
+                    throw new InvalidOperationException("A conexão ainda não foi inicializada.");
+                return _database;
             }
         }
 
-        public async Task InitializeDatabaseAsync()
+        public async Task InitializeAsync()
         {
             try
-            {  
+            {
+                _database ??= new SQLiteAsyncConnection(_databasePath);
+
                 await _database.CreateTablesAsync<HealthRecord, Vaccines>();
                 await _database.CreateTablesAsync<Note, House>();
                 await _database.CreateTablesAsync<Family, User>();
@@ -36,38 +40,19 @@ namespace ACS_View.MVVM.Models.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during database initialization: {ex.Message}\n");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}\n");
-                throw new InvalidOperationException("Falha ao inicializar o banco de dados.", ex);
-            }
-        }
-
-        public SQLiteAsyncConnection GetConnection()
-        {
-            try
-            {
-                if (_database == null)
-                {
-                    Task.Run(async () => await InitializeDatabaseAsync());
-                    throw new InvalidOperationException("A conexão não foi inicializada. Certifique-se de chamar InitializeDatabaseAsync primeiro.");
-                }
-                return _database;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Erro: ", ex.Message);
+                Console.WriteLine($"Erro ao inicializar banco: {ex.Message}");
                 throw;
             }
         }
 
         public Task<User> GetUserByUsernameAsync(string username)
         {
-            return _database.Table<User>().FirstOrDefaultAsync(x => x.Username == username);
+            return Connection.Table<User>().FirstOrDefaultAsync(x => x.Username == username);
         }
 
         public Task<int> UpdateUserAsync(User user)
         {
-            return _database.UpdateAsync(user);
+            return Connection.UpdateAsync(user);
         }
     }
 }

@@ -74,8 +74,7 @@
             BackgroundColor="AliceBlue"
             BorderColor="DarkOrange"
             BorderWidth="1"
-            CornerRadius="10"
-            Clicked="AddVisitButton_Clicked"/>
+            CornerRadius="10"/>
 
         </Grid>
     </Border>

@@ -2,13 +2,10 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.MVVM.Views.OverallView"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:OverallViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
 
@@ -103,7 +100,8 @@
                     x:Name="Btn_Total"
                     Style="{StaticResource buttons}"
                     Grid.Row="0"
-                    Clicked="Btn_Total_Clicked"/>
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter=""/>
 
                 <!-- total de residencias -->
                 <Border
@@ -140,7 +138,8 @@
                     x:Name="Btn_Casas"
                     Style="{StaticResource buttons}"
                     Grid.Row="1"
-                    Clicked="Btn_Casas_Clicked"/>
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="HOUSES"/>
 
                 <!-- total sem residencia -->
                 <Border
@@ -177,7 +176,8 @@
                     x:Name="Btn_NoResidence"
                     Style="{StaticResource buttons}"
                     Grid.Row="2"
-                    Clicked="Btn_NoResidence_Clicked"/>
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="NOHOUSE"/>
 
                 <!-- gestantes -->
                 <Border 
@@ -214,7 +214,8 @@
                     x:Name="Btn_Gestantes"
                     Style="{StaticResource buttons}"
                     Grid.Row="3"
-                    Clicked="Btn_Gestantes_Clicked"/>
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="GESTANTE"/>
 
                 <!-- hipertensos -->
                 <Border 
@@ -250,8 +251,7 @@
                 <Button
                     x:Name="Btn_HAS"
                     Style="{StaticResource buttons}"
-                    Grid.Row="4"
-                    Clicked="Btn_HAS_Clicked"/>
+                    Grid.Row="4"/>
 
                 <!-- diabeticos -->
                 <Border 
@@ -287,8 +287,7 @@
                 <Button
                     x:Name="Btn_DB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="5"
-                    Clicked="Btn_DB_Clicked"/>
+                    Grid.Row="5"/>
 
                 <!-- hipertensos diabeticos -->
                 <Border 
@@ -324,8 +323,7 @@
                 <Button
                     x:Name="Btn_HASDB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="6"
-                    Clicked="Btn_HASDB_Clicked"/>
+                    Grid.Row="6"/>
 
                 <!-- hanseniase -->
                 <Border 
@@ -361,8 +359,7 @@
                 <Button
                     x:Name="Btn_HAN"
                     Style="{StaticResource buttons}"
-                    Grid.Row="7"
-                    Clicked="Btn_HAN_Clicked"/>
+                    Grid.Row="7"/>
 
                 <!-- tuberculose -->
                 <Border 
@@ -398,8 +395,7 @@
                 <Button
                     x:Name="Btn_TB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="8"
-                    Clicked="Btn_TB_Clicked"/>
+                    Grid.Row="8"/>
 
                 <!-- acamados -->
                 <Border 
@@ -435,8 +431,7 @@
                 <Button
                     x:Name="Btn_Acamados"
                     Style="{StaticResource buttons}"
-                    Grid.Row="9"
-                    Clicked="Btn_Acamados_Clicked"/>
+                    Grid.Row="9"/>
 
                 <!-- domiciliados -->
                 <Border 
@@ -472,8 +467,7 @@
                 <Button
                     x:Name="Btn_Domiciliados"
                     Style="{StaticResource buttons}"
-                    Grid.Row="10"
-                    Clicked="Btn_Domiciliados_Clicked"/>
+                    Grid.Row="10"/>
 
                 <!-- menores de 6 anos -->
                 <Border
@@ -509,8 +503,7 @@
                 <Button
                     x:Name="Btn_Menor6Anos"
                     Style="{StaticResource buttons}"
-                    Grid.Row="11"
-                    Clicked="Btn_Menor6Anos_Clicked"/>
+                    Grid.Row="11"/>
 
                 <!-- psiquiatricos -->
                 <Border
@@ -546,8 +539,7 @@
                 <Button
                         x:Name="Btn_Mental"
                         Style="{StaticResource buttons}"
-                        Grid.Row="12"
-                        Clicked="Btn_Mental_Clicked"/>
+                        Grid.Row="12"/>
 
                 <!-- fumantes -->
                 <Border
@@ -583,8 +575,7 @@
                 <Button
                     x:Name="Btn_Fumante"
                     Style="{StaticResource buttons}"
-                    Grid.Row="13"
-                    Clicked="Btn_Fumante_Clicked"/>
+                    Grid.Row="13"/>
 
                 <!-- alcoolatras -->
                 <Border
@@ -620,8 +611,7 @@
                 <Button
                     x:Name="Btn_Alcoolatra"
                     Style="{StaticResource buttons}"
-                    Grid.Row="14"
-                    Clicked="Btn_Alcoolatra_Clicked"/>
+                    Grid.Row="14"/>
 
                 <!-- deficientes -->
                 <Border
@@ -657,8 +647,7 @@
                 <Button
                     x:Name="Btn_Deficiente"
                     Style="{StaticResource buttons}"
-                    Grid.Row="15"
-                    Clicked="Btn_Deficiente_Clicked"/>
+                    Grid.Row="15"/>
 
                 <!-- cancer -->
                 <Border
@@ -694,8 +683,7 @@
                 <Button
                     x:Name="Btn_Cancer"
                     Style="{StaticResource buttons}"
-                    Grid.Row="16"
-                    Clicked="Btn_Cancer_Clicked"/>
+                    Grid.Row="16"/>
 
                 <!-- idosos -->
                 <Border
@@ -731,8 +719,7 @@
                 <Button
                     x:Name="Btn_Old"
                     Style="{StaticResource buttons}"
-                    Grid.Row="17"
-                    Clicked="Btn_Old_Clicked"/>
+                    Grid.Row="17"/>
 
                 <!-- Bolsa família -->
                 <Border
@@ -768,8 +755,7 @@
                 <Button
                     x:Name="Btn_Bolsa"
                     Style="{StaticResource buttons}"
-                    Grid.Row="18"
-                    Clicked="Btn_Bolsa_Clicked"/>
+                    Grid.Row="18"/>
 
                 <!-- Cardiacos -->
                 <Border
@@ -805,8 +791,7 @@
                 <Button
                     x:Name="Btn_Cardiaco"
                     Style="{StaticResource buttons}"
-                    Grid.Row="19"
-                    Clicked="Btn_Cardiaco_Clicked"/>
+                    Grid.Row="19"/>
 
                 <!-- Renais -->
                 <Border
@@ -842,8 +827,7 @@
                 <Button
                     x:Name="Btn_Kidney"
                     Style="{StaticResource buttons}"
-                    Grid.Row="20"
-                    Clicked="Btn_Kidney_Clicked"/>
+                    Grid.Row="20"/>
 
                 <!-- Hepatopatas -->
                 <Border
@@ -879,8 +863,7 @@
                 <Button
                     x:Name="Btn_Liver"
                     Style="{StaticResource buttons}"
-                    Grid.Row="21"
-                    Clicked="Btn_Liver_Clicked"/>
+                    Grid.Row="21"/>
 
                 <!-- Pulmonares -->
                 <Border
@@ -916,8 +899,7 @@
                 <Button
                     x:Name="Btn_Lungs"
                     Style="{StaticResource buttons}"
-                    Grid.Row="22"
-                    Clicked="Btn_Lungs_Clicked"/>
+                    Grid.Row="22"/>
 
                 <!-- Neurodivergentes -->
                 <Border
@@ -953,8 +935,7 @@
                 <Button
                     x:Name="Btn_Neurodivergents"
                     Style="{StaticResource buttons}"
-                    Grid.Row="23"
-                    Clicked="Btn_Neurodivergents_Clicked"/>
+                    Grid.Row="23"/>
 
                 <!-- Dependentes químicos -->
                 <Border
@@ -990,8 +971,7 @@
                 <Button
                     x:Name="Btn_Addicted"
                     Style="{StaticResource buttons}"
-                    Grid.Row="24"
-                    Clicked="Btn_Addicted_Clicked"/>
+                    Grid.Row="24"/>
 
                 <!-- Imunodeficientes -->
                 <Border
@@ -1027,8 +1007,7 @@
                 <Button
                     x:Name="Btn_Hiv"
                     Style="{StaticResource buttons}"
-                    Grid.Row="25"
-                    Clicked="Btn_Hiv_Clicked"/>
+                    Grid.Row="25"/>
 
             </Grid>
             

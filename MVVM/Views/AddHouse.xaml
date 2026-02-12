@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.MVVM.Views.AddHouse"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
@@ -48,9 +51,13 @@
             FontSize="30"
             HorizontalOptions="Center"/>
 
-        <ScrollView Grid.Row="1" Margin="20,0">
+        <ScrollView Grid.Row="1" Margin="20,0" VerticalScrollBarVisibility="Never">
 
-            <Grid RowDefinitions="*,*,*,*,*,*,*,*" RowSpacing="10">
+            <Grid
+                RowDefinitions="*,*,*,*,*,*,*,*"
+                RowSpacing="10"
+                BindingContext="{Binding HouseModel}"
+                x:DataType="model:House">
 
                 <Border Grid.Row="0" Style="{StaticResource Border}">
 
@@ -62,7 +69,7 @@
                             Text="CEP: "/>
 
                         <Entry
-                            x:Name="Entry_CEP"
+                            Text="{Binding CEP, Mode=TwoWay}"
                             Grid.Column="1"
                             MaxLength="8"
                             Keyboard="Numeric"
@@ -74,13 +81,12 @@
                         <ImageButton
                             Grid.Column="2"
                             Margin="30,0"
-                            x:Name="Btn_SearchCEP"
                             Source="loupe.png"
                             MaximumHeightRequest="30"
                             MaximumWidthRequest="30"
                             HorizontalOptions="End"
                             VerticalOptions="Center"
-                            Clicked="Btn_SearchCEP_Clicked"/>
+                            Command="{Binding BindingContext.SearchCEP, Source={x:RelativeSource AncestorType={x:Type ContentPage}}}"/>
 
                     </Grid>
 
@@ -97,7 +103,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Logradouro"
+                            Text="{Binding Rua, Mode=TwoWay}"
                             Grid.Column="1"
                             Placeholder="*"
                             FontAttributes="None"/>
@@ -117,7 +123,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Numero"
+                            Text="{Binding NumeroCasa, Mode=TwoWay}"
                             Grid.Column="1"
                             MaxLength="5"
                             FontAttributes="None"
@@ -138,7 +144,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Complemento"
+                            Text="{Binding Complemento, Mode=TwoWay}"
                             Grid.Column="1"
                             FontAttributes="None"
                             MaxLength="30"/>
@@ -158,7 +164,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Bairro"
+                            Text="{Binding Bairro, Mode=TwoWay}"
                             Grid.Column="1"
                             Placeholder="*"
                             FontAttributes="None"/>
@@ -178,7 +184,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Cidade"
+                            Text="{Binding Cidade, Mode=TwoWay}"
                             Grid.Column="1"
                             Placeholder="*"
                             FontAttributes="None"/>
@@ -198,7 +204,7 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
-                            x:Name="Estado"
+                            Text="{Binding Estado, Mode=TwoWay}"
                             Grid.Column="1"
                             Placeholder="*"
                             FontAttributes="None"/>
@@ -218,11 +224,11 @@
                             HorizontalOptions="Start"/>
 
                         <Entry
+                            Text="{Binding Pais, Mode=TwoWay}"
                             Grid.Column="1"
                             MaxLength="20"
                             Placeholder="*"
-                            FontAttributes="None"
-                            Text="Brasil"/>
+                            FontAttributes="None"/>
 
                     </Grid>
 
@@ -233,12 +239,11 @@
         </ScrollView>
 
         <ActivityIndicator
-            x:Name="AI"
             Grid.Row="1"
             BackgroundColor="Transparent"
             Color="#C93919"
-            IsRunning="False"
-            IsVisible="False"
+            IsRunning="{Binding IsRunning}"
+            IsVisible="{Binding IsRunning}"
             HeightRequest="60"
             WidthRequest="60"/>
 
@@ -249,13 +254,13 @@
                 x:Name="Btn_Salvar"
                 Text="Salvar"
                 Margin="0,0,0,10"
-                Clicked="Btn_Salvar_Clicked"/>
+                Command="{Binding SalvarCommand}"/>
 
             <Button
                 Style="{StaticResource Button}"
                 x:Name="Btn_Voltar"
                 Text="Voltar"
-                Clicked="Btn_Voltar_Clicked"/>
+                Command="{Binding GoBack}"/>
 
         </VerticalStackLayout>
 

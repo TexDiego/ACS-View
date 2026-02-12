@@ -1,24 +1,21 @@
-﻿using SQLite;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
 
 namespace ACS_View.MVVM.Models.Services
 {
     public class VisitsService
     {
-        private readonly SQLiteAsyncConnection _connection;
-
-        public VisitsService(DatabaseService databaseService)
-        {
-            _connection = databaseService?.GetConnection()
-                          ?? throw new ArgumentNullException(nameof(databaseService));
-        }
+        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         public async Task<List<Visits>> GetAllVisitsAsync()
         {
             try
             {
-                return await _connection.Table<Visits>()
-                                        .OrderBy(v => v.Date)
-                                        .ToListAsync() ?? new List<Visits>();
+                return await _databaseService
+                             .Connection
+                             .Table<Visits>()
+                             .OrderBy(v => v.Date)
+                             .ToListAsync() ?? new List<Visits>();
             }
             catch (Exception ex)
             {
@@ -34,7 +31,7 @@ namespace ACS_View.MVVM.Models.Services
 
             try
             {
-                await _connection.InsertAsync(visit);
+                await _databaseService.Connection.InsertAsync(visit);
             }
             catch (Exception ex)
             {
@@ -49,7 +46,7 @@ namespace ACS_View.MVVM.Models.Services
                 throw new ArgumentException("O ID da visita deve ser maior que zero.");
             try
             {
-                await _connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ?", id);
+                await _databaseService.Connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ?", id);
             }
             catch (Exception ex)
             {

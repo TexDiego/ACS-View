@@ -6,25 +6,13 @@ namespace ACS_View.MVVM.Views;
 public partial class AddFamilyPage : ContentPage
 {
     private readonly AddFamilyViewModel viewModel;
-    private CancellationTokenSource _throttleCts;
-    private int _idHouse;
-    private int? _idFamily;
+    private CancellationTokenSource _throttleCts = new();
 
     public AddFamilyPage(int idHouse, bool isEdit, int? idFamily = null)
     {
-		InitializeComponent();
+        viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
 
-        _idHouse = idHouse;
-        _idFamily = idFamily;
-
-        if (isEdit )
-        {
-            viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
-        }
-        else
-        {
-            viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
-        }
+        InitializeComponent();
 
         BindingContext = viewModel;
 	}

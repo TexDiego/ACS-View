@@ -1,12 +1,14 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Views;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public class CadastroViewModel : BaseViewModel
+    public partial class CadastroViewModel : BaseViewModel
     {
-        private readonly HealthRecordService _healthRecordService;
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
 
         public string Name { get; set; }
         public string? MotherName { get; set; }

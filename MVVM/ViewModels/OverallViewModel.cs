@@ -1,359 +1,103 @@
-﻿using ACS_View.MVVM.Models.Services;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
-namespace ACS_View.MVVM.ViewModels
+namespace ACS_View.MVVM.ViewModels;
+
+public partial class OverallViewModel : ObservableObject
 {
-    public partial class OverallViewModel : BaseViewModel
+    private readonly IHealthSummaryService _summaryService = App.ServiceProvider.GetRequiredService<IHealthSummaryService>();
+    private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+    public OverallViewModel()
     {
-        private readonly HealthRecordService _healthRecordService;
-        private readonly HouseService _houseService;
+        MainThread.BeginInvokeOnMainThread(async () => await _databaseService.InitializeAsync());
 
-        #region Properties
-        private int _totalGestantes;
-        public int TotalGestantes
+        LoadSummaryCommand = new AsyncRelayCommand(LoadSummaryAsync);
+        LoadSummaryCommand.Execute(null);
+
+        GoToPageAsync = new Command<string>(async (p) => await GoToPage(p));
+    }
+
+    public Command GoToPageAsync { get; }
+    public IAsyncRelayCommand LoadSummaryCommand { get; }
+
+    [ObservableProperty] private int totalGestantes;
+    [ObservableProperty] private int totalDiabeticos;
+    [ObservableProperty] private int totalHipertensos;
+    [ObservableProperty] private int totalDiabetesHipertensao;
+    [ObservableProperty] private int totalTuberculose;
+    [ObservableProperty] private int totalHanseniase;
+    [ObservableProperty] private int totalAcamados;
+    [ObservableProperty] private int totalDomiciliados;
+    [ObservableProperty] private int totalMenores6Anos;
+    [ObservableProperty] private int totalMental;
+    [ObservableProperty] private int totalFumante;
+    [ObservableProperty] private int totalAlcoolatra;
+    [ObservableProperty] private int totalDeficiente;
+    [ObservableProperty] private int totalHeartDesease;
+    [ObservableProperty] private int totalKidneyDesease;
+    [ObservableProperty] private int totalLungDesease;
+    [ObservableProperty] private int totalLiverDesease;
+    [ObservableProperty] private int totalBolsaFamilia;
+    [ObservableProperty] private int totalNeurodivergents;
+    [ObservableProperty] private int totalDrugsAddicted;
+    [ObservableProperty] private int totalHIV;
+    [ObservableProperty] private int totalCancer;
+    [ObservableProperty] private int totalOld;
+    [ObservableProperty] private int total;
+    [ObservableProperty] private int totalHouses;
+    [ObservableProperty] private int noResidence;
+    [ObservableProperty] private bool isLoading;
+
+    private async Task LoadSummaryAsync()
+    {
+        try
         {
-            get => _totalGestantes;
-            set
-            {
-                _totalGestantes = value;
-                OnPropertyChanged();
-            }
+            IsLoading = true;
+            var resumo = await _summaryService.GetHealthSummaryAsync();
+
+            TotalHouses = resumo.TotalHouses;
+            TotalGestantes = resumo.TotalGestantes;
+            TotalDiabeticos = resumo.TotalDiabeticos;
+            TotalHipertensos = resumo.TotalHipertensos;
+            TotalDiabetesHipertensao = resumo.TotalDiabetesHipertensao;
+            TotalTuberculose = resumo.TotalTuberculose;
+            TotalHanseniase = resumo.TotalHanseniase;
+            TotalAcamados = resumo.TotalAcamados;
+            TotalDomiciliados = resumo.TotalDomiciliados;
+            TotalMenores6Anos = resumo.TotalMenores6Anos;
+            TotalMental = resumo.TotalMental;
+            TotalFumante = resumo.TotalFumante;
+            TotalAlcoolatra = resumo.TotalAlcoolatra;
+            TotalDeficiente = resumo.TotalDeficiente;
+            TotalHeartDesease = resumo.TotalHeartDesease;
+            TotalKidneyDesease = resumo.TotalKidneyDesease;
+            TotalLungDesease = resumo.TotalLungDesease;
+            TotalLiverDesease = resumo.TotalLiverDesease;
+            TotalBolsaFamilia = resumo.TotalBolsaFamilia;
+            TotalNeurodivergents = resumo.TotalNeurodivergents;
+            TotalDrugsAddicted = resumo.TotalDrugsAddicted;
+            TotalHIV = resumo.TotalHIV;
+            TotalCancer = resumo.TotalCancer;
+            TotalOld = resumo.TotalOld;
+            Total = resumo.Total;
+            NoResidence = resumo.NoResidence;
         }
-
-        private int _totalDiabeticos;
-        public int TotalDiabeticos
+        catch
         {
-            get => _totalDiabeticos;
-            set
-            {
-                _totalDiabeticos = value;
-                OnPropertyChanged();
-            }
+            await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível carregar os dados", "Voltar");
         }
-
-        private int _totalHipertensos;
-        public int TotalHipertensos
+        finally
         {
-            get => _totalHipertensos;
-            set
-            {
-                _totalHipertensos = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalDiabetesHipertensao;
-        public int TotalDiabetesHipertensao
-        {
-            get => _totalDiabetesHipertensao;
-            set
-            {
-                _totalDiabetesHipertensao = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalTuberculose;
-        public int TotalTuberculose
-        {
-            get => _totalTuberculose;
-            set
-            {
-                _totalTuberculose = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalHanseniase;
-        public int TotalHanseniase
-        {
-            get => _totalHanseniase;
-            set
-            {
-                _totalHanseniase = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalAcamados;
-        public int TotalAcamados
-        {
-            get => _totalAcamados;
-            set
-            {
-                _totalAcamados = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalDomiciliados;
-        public int TotalDomiciliados
-        {
-            get => _totalDomiciliados;
-            set
-            {
-                _totalDomiciliados = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalMenores6Anos;
-        public int TotalMenores6Anos
-        {
-            get => _totalMenores6Anos;
-            set
-            {
-                _totalMenores6Anos = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalMental;
-        public int TotalMental
-        {
-            get => _TotalMental;
-            set
-            {
-                _TotalMental = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalFumante;
-        public int TotalFumante
-        {
-            get => _TotalFumante;
-            set
-            {
-                _TotalFumante = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalAlcoolatra;
-        public int TotalAlcoolatra
-        {
-            get => _TotalAlcoolatra;
-            set
-            {
-                _TotalAlcoolatra = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalDeficiente;
-        public int TotalDeficiente
-        {
-            get => _TotalDeficiente;
-            set
-            {
-                _TotalDeficiente = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalHeartDesease;
-        public int TotalHeartDesease
-        {
-            get => _TotalHeartDesease;
-            set
-            {
-                _TotalHeartDesease = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalKidneyDesease;
-        public int TotalKidneyDesease
-        {
-            get => _TotalKidneyDesease;
-            set
-            {
-                _TotalKidneyDesease = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalLungDesease;
-        public int TotalLungDesease
-        {
-            get => _TotalLungDesease;
-            set
-            {
-                _TotalLungDesease = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalLiverDesease;
-        public int TotalLiverDesease
-        {
-            get => _TotalLiverDesease;
-            set
-            {
-                _TotalLiverDesease = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalBolsaFamilia;
-        public int TotalBolsaFamilia
-        {
-            get => _TotalBolsaFamilia;
-            set
-            {
-                _TotalBolsaFamilia = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalNeurodivergents;
-        public int TotalNeurodivergents
-        {
-            get => _TotalNeurodivergents;
-            set
-            {
-                _TotalNeurodivergents = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalDrugsAddicted;
-        public int TotalDrugsAddicted
-        {
-            get => _TotalDrugsAddicted;
-            set
-            {
-                _TotalDrugsAddicted = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalHIV;
-        public int TotalHIV
-        {
-            get => _TotalHIV;
-            set
-            {
-                _TotalHIV = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalCancer;
-        public int TotalCancer
-        {
-            get => _TotalCancer;
-            set
-            {
-                _TotalCancer = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _TotalOld;
-        public int TotalOld
-        {
-            get => _TotalOld;
-            set
-            {
-                _TotalOld = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _totalHouses;
-        public int TotalHouses
-        {
-            get => _totalHouses;
-            set
-            {
-                _totalHouses = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _Total;
-        public int Total
-        {
-            get => _Total;
-            set
-            {
-                _Total = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private int _NoResidence;
-        public int NoResidence
-        {
-            get => _NoResidence;
-            set
-            {
-                _NoResidence = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-        #endregion
-
-        public OverallViewModel() { }
-
-        public OverallViewModel(HealthRecordService healthRecordService, HouseService houseService)
-        {
-            _healthRecordService = healthRecordService;
-            _houseService = houseService;
-            AtualizarContagens();
-        }
-
-        public async void AtualizarContagens()
-        {
-            try
-            {
-                IsLoading = true;
-
-                TotalHouses = await _houseService.GetTotalCountAsync();
-                TotalGestantes = await _healthRecordService.GetConditionCountAsync(r => r.IsPregnant);
-                TotalDiabeticos = await _healthRecordService.GetConditionCountAsync(r => r.HasDiabetes);
-                TotalHipertensos = await _healthRecordService.GetConditionCountAsync(r => r.HasHypertension);
-                TotalDiabetesHipertensao = await _healthRecordService.GetConditionCountAsync(r => r.HasDiabetes && r.HasHypertension);
-                TotalTuberculose = await _healthRecordService.GetConditionCountAsync(r => r.HasTuberculosis);
-                TotalHanseniase = await _healthRecordService.GetConditionCountAsync(r => r.HasLeprosy);
-                TotalAcamados = await _healthRecordService.GetConditionCountAsync(r => r.IsBedridden);
-                TotalDomiciliados = await _healthRecordService.GetConditionCountAsync(r => r.IsHomebound);
-                TotalMenores6Anos = await _healthRecordService.GetYoungers();
-                TotalMental = await _healthRecordService.GetConditionCountAsync(r => r.HasMentalIllness);
-                TotalDeficiente = await _healthRecordService.GetConditionCountAsync(r => r.HasDisabilities);
-                TotalFumante = await _healthRecordService.GetConditionCountAsync(r => r.IsSmoker);
-                TotalAlcoolatra = await _healthRecordService.GetConditionCountAsync(r => r.IsAlcoholic);
-                TotalBolsaFamilia = await _healthRecordService.GetConditionCountAsync(r => r.BolsaFamilia);
-                TotalHeartDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasHeartDesease);
-                TotalKidneyDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasKidneyDesease);
-                TotalLungDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasLungsDesease);
-                TotalLiverDesease = await _healthRecordService.GetConditionCountAsync(r => r.HasLiverDesease);
-                TotalNeurodivergents = await _healthRecordService.GetConditionCountAsync(r => r.IsNeurodivergent);
-                TotalDrugsAddicted = await _healthRecordService.GetConditionCountAsync(r => r.IsDrugAddicted);
-                TotalHIV = await _healthRecordService.GetConditionCountAsync(r => r.HasHIV);
-                TotalCancer = await _healthRecordService.GetConditionCountAsync(r => r.HasCancer);
-                TotalOld = await _healthRecordService.GetElder();
-                Total = await _healthRecordService.GetTotalCountAsync();
-                NoResidence = await _healthRecordService.GetConditionCountAsync(r => r.HouseId == 0);
-
-            }
-            catch
-            {
-                await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível carregar os dados", "Voltar");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            IsLoading = false;
         }
     }
 
+    private static async Task GoToPage(string condition)
+    {
+        ContentPage page = condition == "HOUSES" ? new HousesPage() : new Registers(condition);
+        await App.Current.MainPage.Navigation.PushAsync(page);
+    }
 }

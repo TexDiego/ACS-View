@@ -2,13 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:NotesPageViewModel"
              x:Class="ACS_View.MVVM.Views.NotesPage"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:NotesPageViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
         <Style TargetType="Button">
@@ -21,9 +19,7 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid
-        RowDefinitions="auto,*,auto"
-        ColumnDefinitions="*">
+    <Grid RowDefinitions="auto,*,auto">
 
         <VerticalStackLayout Grid.Row="0">
             
@@ -44,7 +40,8 @@
                 BackgroundColor="White">
 
                 <Editor
-                    x:Name="NotesContent"
+                    BindingContext="{Binding Note}"
+                    x:DataType="model:Note"
                     Text="{Binding Content, Mode=TwoWay}"
                     HorizontalTextAlignment="Start"
                     VerticalTextAlignment="Start"
@@ -57,10 +54,8 @@
             </Border>
 
             <Button
-                x:Name="Btn_SaveNote"
                 Text="Adicionar Anotação"
                 Margin="20,10,20,20"
-                Clicked="Btn_SaveNote_Clicked"
                 Command="{Binding SalvarNota}"/>
             
         </VerticalStackLayout>
@@ -74,55 +69,59 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border
+                        x:DataType="model:Note"
                         Margin="0,5"
                         StrokeShape="RoundRectangle 10"
                         StrokeThickness="2"
                         Stroke="LightGrey">
 
-                        <Grid
-                            ColumnDefinitions="*,auto"
-                            Padding="10"
-                            BackgroundColor="White">
+                        <SwipeView>
 
-                            <VerticalStackLayout Grid.Column="0">
+                            <SwipeView.LeftItems>
+                                <SwipeItems>
+                                    <SwipeItem
+                                        Text="Excluir"
+                                        IconImageSource="bin.png"
+                                        BackgroundColor="IndianRed"
+                                        Command="{Binding Source={x:Reference NotesCollectionView}, Path=BindingContext.DeleteCommand}"
+                                        CommandParameter="{Binding Id}"/>
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+                            
+                            <Grid
+                                ColumnDefinitions="*,auto"
+                                Padding="10"
+                                BackgroundColor="White">
 
-                                <Label
+                                <VerticalStackLayout Grid.Column="0">
+
+                                    <Label
                                     Text="{Binding Content}"
                                     FontAttributes="Bold"
                                     FontSize="20"
                                     TextColor="Black"
                                     Opacity="0.7"/>
 
-                                <HorizontalStackLayout Margin="0,10,0,0">
+                                    <HorizontalStackLayout Margin="0,10,0,0">
 
-                                    <Label
+                                        <Label
                                         Text="Criado em: "
                                         FontSize="14"
                                         VerticalTextAlignment="Center"
                                         TextColor="#C93919"/>
 
-                                    <Label
+                                        <Label
                                         Text="{Binding CreationDate, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
                                         FontSize="14"
                                         VerticalTextAlignment="Center"
                                         TextColor="Black"
                                         Opacity="0.7"/>
 
-                                </HorizontalStackLayout>
+                                    </HorizontalStackLayout>
 
-                            </VerticalStackLayout>
-
-                            <ImageButton
-                                Grid.Column="1"
-                                Source="bin.png"
-                                Margin="0,0,5,0"
-                                MaximumHeightRequest="30"
-                                MaximumWidthRequest="30"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                CommandParameter="{Binding Id}"
-                                HorizontalOptions="End"
-                                VerticalOptions="Center"/>
-                        </Grid>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </SwipeView>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
@@ -130,9 +129,9 @@
 
         <Button
             Margin="20"
-            x:Name="Btn_Back"
             Grid.Row="2"
             Text="Voltar"
-            Clicked="Btn_Back_Clicked"/>
+            Command="{Binding GoBack}"/>
+        
     </Grid>
 </ContentPage>

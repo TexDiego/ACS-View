@@ -1,4 +1,5 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Mvvm.Input;
@@ -8,30 +9,22 @@ namespace ACS_View.MVVM.ViewModels
 {
     public class AllVisitsViewModel : INotifyPropertyChanged
     {
-        private readonly DatabaseService _databaseService;
-        private readonly HouseService _houseService;
-        private readonly FamilyService _familyService;
-        private readonly HealthRecordService _healthRecordService;
-        private VisitsService _visitsService;
+        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly VisitsService _visitsService = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public List<Visits> VisitsList { get; set; } = new List<Visits>();
-        public List<House> HouseList { get; set; } = new List<House>();
+        public List<Visits> VisitsList { get; set; } = [];
+        public List<House> HouseList { get; set; } = [];
 
 
         public IRelayCommand DeleteVisit { get; }
         public IRelayCommand GoToHouseCommand { get; }
 
 
-        public AllVisitsViewModel(DatabaseService databaseService)
+        public AllVisitsViewModel()
         {
-            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService), "O serviço de banco de dados não pode ser nulo.");
-            _visitsService = new VisitsService(_databaseService);
-            _houseService = new HouseService(_databaseService);
-            _familyService = new FamilyService(_databaseService);
-            _healthRecordService = new HealthRecordService(_databaseService);
-
             DeleteVisit = new RelayCommand<int>(async id => await DeleteVisitCommand(id));
             GoToHouseCommand = new RelayCommand<int>(async id => await GoToHouse(id));
 
@@ -52,7 +45,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 var visit = VisitsList.FirstOrDefault(v => v.Id == id);
 
-                Console.WriteLine($"Visita: {visit.ToString()}");
+                Console.WriteLine($"Visita: {visit}");
 
                 if (visit != null)
                 {
@@ -92,13 +85,11 @@ namespace ACS_View.MVVM.ViewModels
 
             try
             {
-                var _familiesViewModel = new FamiliesViewModel(id);
-
-                var house = await _houseService.GetHousesById(id);
+                var house = await _houseService.GetHouseByIdAsync(id);
 
                 if (house != null)
                 {
-                    await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(_familiesViewModel));
+                    await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(house.CasaId));
                     OnPropertyChanged(nameof(HouseList));
                 }
                 else
@@ -148,7 +139,7 @@ namespace ACS_View.MVVM.ViewModels
                     .Where(h => houseIdsWithoutVisit.Contains(h.CasaId))
                     .ToList();
 
-                // ✅ Se não houver casas, adicionar uma "dummy house"
+                // Se não houver casas, adicionar uma "dummy house"
                 if (result.Count == 0)
                 {
                     result.Add(new House

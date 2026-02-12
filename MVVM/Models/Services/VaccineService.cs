@@ -1,15 +1,24 @@
-﻿using SQLite;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class VaccineService(DatabaseService dbService)
+    public class VaccineService : IVaccineService
     {
-        private readonly SQLiteAsyncConnection _database = dbService.GetConnection();
+        private readonly SQLiteAsyncConnection _database;
 
-        public Task<Vaccines> GetVaccinesBySusAsync(string sus) => _database.Table<Vaccines>().FirstOrDefaultAsync(r => r.SusNumber == sus);
+        public VaccineService(IDatabaseService dbService)
+        {
+            _database = dbService.Connection;
+        }
 
-        public async Task AdicionarVacinasAsync(Vaccines registro) => await _database.InsertAsync(registro);
+        public Task<Vaccines> GetVaccinesBySusAsync(string sus)
+            => _database.Table<Vaccines>().FirstOrDefaultAsync(r => r.SusNumber == sus);
 
-        public async Task AtualizarVacinasAsync(Vaccines registro) => await _database.UpdateAsync(registro);
+        public Task AdicionarVacinasAsync(Vaccines registro)
+            => _database.InsertAsync(registro);
+
+        public Task AtualizarVacinasAsync(Vaccines registro)
+            => _database.UpdateAsync(registro);
     }
 }

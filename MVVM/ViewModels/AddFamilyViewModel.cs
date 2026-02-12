@@ -1,297 +1,138 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
-using System.Linq.Expressions;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
     public partial class AddFamilyViewModel : BaseViewModel
     {
-        private readonly DatabaseService _databaseService;
-        private readonly FamilyService _familyService;
-        private readonly HealthRecordService _healthRecordService;
-        private CancellationTokenSource _debounceTimer;
+        private readonly IFamilyService _familyService = App.ServiceProvider.GetRequiredService<IFamilyService>();
+        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly IFamilyManager _familyManager = App.ServiceProvider.GetRequiredService<IFamilyManager>();
 
-
-        private List<HealthRecord> peopleToAdd = [];
-
-        private readonly ObservableCollection<Pessoa> _pessoasPesquisada = [];
-        public ObservableCollection<Pessoa> PessoasPesquisadas => _pessoasPesquisada;
-
-
-        private readonly ObservableCollection<Pessoa> _pessoas = [];
-        public ObservableCollection<Pessoa> Pessoas => _pessoas;
-        public ObservableCollection<HealthRecord> _healthRecord { get; private set; }
-
-
-        private readonly ObservableCollection<Familia> _familia = [];
-        public ObservableCollection<Familia> Familia => _familia;
-        public ObservableCollection<Family> _family { get; private set; }
-
-        public int IdHouse { get; set; }
-        public int IdPessoa { get; set; }
-        public bool IsEdit;
+        public ObservableCollection<Pessoa> Pessoas { get; } = [];
+        public ObservableCollection<Pessoa> PessoasPesquisadas { get; } = [];
 
         public ICommand SalvarCommand { get; }
         public ICommand AddPersonCommand { get; }
         public ICommand SearchCommand { get; }
         public ICommand DeleteCommand { get; }
 
-        public AddFamilyViewModel() { }
+        public int IdHouse { get; set; }
+        public int IdPessoa { get; set; }
+        public bool IsEdit { get; }
 
-        public AddFamilyViewModel(int id, bool isEdit, int? idFamily) : base()
+        private CancellationTokenSource _debounceTimer = new();
+
+        public AddFamilyViewModel(int idHouse, bool isEdit, int? idFamily)
         {
-            _databaseService = new();
-            _familyService = new FamilyService(_databaseService);
-            _healthRecordService = new HealthRecordService(_databaseService);
-            _healthRecord = [];
-
-            IdHouse = id;
+            IdHouse = idHouse;
             IsEdit = isEdit;
-
-            if (isEdit)
-            {
-                IdPessoa = idFamily.Value;
-            }
-
-            _family = [];
-            _familia = [];
+            IdPessoa = idFamily ?? 0;
 
             DeleteCommand = new Command<string>(DeletePerson);
-            SalvarCommand = new Command(SalvarFamilia);
-            SearchCommand = new Command<string>(Search);
-            AddPersonCommand = new Command<string>(AddPerson);
+            SalvarCommand = new Command(async () => await SalvarFamilia());
+            SearchCommand = new Command<string>(async s => await Search(s));
+            AddPersonCommand = new Command<string>(async s => await AddPerson(s));
 
             _ = LoadDataAsync();
         }
 
-        private async void SalvarFamilia()
+        private async Task SalvarFamilia()
         {
             if (IdHouse <= 0)
             {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", "IdHouse inválido. Por favor, selecione uma residência.", true, "Voltar", false, ""));
+                await MostrarErro("IdHouse inválido. Selecione uma residência.");
+                return;
+            }
+
+            if (Pessoas.Count == 0)
+            {
+                await MostrarErro("Família sem membros. Adicione pelo menos uma pessoa.");
                 return;
             }
 
             try
             {
-                var num = _pessoas.Count;
-                var pessoas = _pessoas.ToList();
+                int familyId = IsEdit ? IdPessoa : await _familyService.GetMaxIdAsync(IdHouse) + 1;
+                var susList = Pessoas.Select(p => p.Sus).ToList();
 
-                if (num == 0)
-                {
-                    await Application.Current.MainPage.ShowPopupAsync(
-                        new DisplayPopUp("Família sem membros", "Não é possível criar ou atualizar uma família sem membros.", true, "Voltar", false, ""));
-                    return;
-                }
+                await _familyManager.AddPeopleToFamily(susList, IdHouse, familyId);
 
-                if (IsEdit)
-                {
-                    // Editar a família existente - NÃO ALTERAR FamilyId
-                    foreach (var p in pessoas)
-                    {
-                        var pessoaAtualizar = await _healthRecordService.GetRecordBySusAsync(p.Sus);
-
-                        if (pessoaAtualizar != null)
-                        {
-                            pessoaAtualizar.HouseId = IdHouse;
-                            pessoaAtualizar.FamilyId = IdPessoa;
-                            await _healthRecordService.UpdateRecordAsync(pessoaAtualizar);
-                        }
-                    }
-
-                    await Application.Current.MainPage.ShowPopupAsync(
-                        new DisplayPopUp("Sucesso!", "Família atualizada.", true, "Voltar", false, ""));
-                }
-                else
-                {
-                    // Criar nova família
-                    var newFamilyId = await _familyService.GetMaxIdAsync(IdHouse) + 1; // Obtenha o próximo FamilyId
-                    Console.WriteLine($"Novo ID Familia: {newFamilyId}");
-
-                    foreach (var p in pessoas)
-                    {
-                        var pessoaAtualizar = await _healthRecordService.GetRecordBySusAsync(p.Sus);
-
-                        if (pessoaAtualizar != null)
-                        {
-                            pessoaAtualizar.FamilyId = newFamilyId; // Utiliza o novo FamilyId
-                            pessoaAtualizar.HouseId = IdHouse;
-
-                            Console.WriteLine($"Criando Pessoa: SUS={pessoaAtualizar.SusNumber}, FamilyID={pessoaAtualizar.FamilyId}, HouseID={pessoaAtualizar.HouseId}");
-                            await _healthRecordService.UpdateRecordAsync(pessoaAtualizar);
-                        }
-                    }
-
-                    await Application.Current.MainPage.ShowPopupAsync(
-                        new DisplayPopUp("Sucesso!", "Família adicionada à residência.", true, "Voltar", false, ""));
-                }
-
-                // Limpar campos e atualizar dados
-                LimparCampos();
-                await LoadDataAsync();
-
+                await MostrarSucesso(IsEdit ? "Família atualizada." : "Família criada.");
                 await Application.Current.MainPage.Navigation.PopAsync();
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-                Console.WriteLine($"Erro: {ex.Message}");
+                await MostrarErro($"Erro ao salvar família: {ex.Message}");
             }
         }
 
         private async void DeletePerson(string sus)
         {
-            try
+            var pessoa = Pessoas.FirstOrDefault(p => p.Sus == sus);
+            if (pessoa == null)
             {
-                var pessoa = _pessoas.FirstOrDefault(p => p.Sus == sus);
-                var p = await _healthRecordService.GetRecordBySusAsync(sus);
-
-                if (pessoa == null)
-                {
-                    await Application.Current.MainPage.ShowPopupAsync(
-                        new DisplayPopUp("Erro", "Pessoa não encontrada.", true, "Voltar", false, ""));
-                    return;
-                }
-
-                bool confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Confirmar", $"Tem certeza de que deseja remover {pessoa.Nome}?", true, "Remover", true, "Cancelar")));
-
-                if (!confirm)
-                {
-                    // Remover da lista _pessoas
-                    _pessoas.Remove(pessoa);
-
-                    // Atualizar a família e a pessoa no banco de dados
-                    p.FamilyId = 0;
-                    p.HouseId = 0;
-
-                    await _healthRecordService.UpdateRecordAsync(p);
-
-                    // Notificar a interface do usuário após a remoção
-                    OnPropertyChanged(nameof(Pessoas));
-                }
+                await MostrarErro("Pessoa não encontrada.");
+                return;
             }
-            catch (Exception ex)
+
+            bool confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(
+                new DisplayPopUp("Confirmar", $"Deseja remover {pessoa.Nome}?", true, "Remover", true, "Cancelar")));
+
+            if (!confirm) return;
+
+            Pessoas.Remove(pessoa);
+            await _familyManager.RemovePersonFromFamily(sus);
+        }
+
+        private async Task Search(string termo)
+        {
+            _debounceTimer?.Cancel();
+            _debounceTimer = new CancellationTokenSource();
+            await Task.Delay(300, _debounceTimer.Token);
+
+            PessoasPesquisadas.Clear();
+            if (string.IsNullOrWhiteSpace(termo)) return;
+
+            var resultados = await _healthRecordService.GetRecordByNameOrSusAsync(termo);
+            foreach (var p in resultados)
             {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", $"Não foi possível remover o membro da família.\n\n{ex.Message}", true, "Voltar", false, ""));
+                PessoasPesquisadas.Add(new Pessoa { Nome = p.Name, Sus = p.SusNumber });
             }
         }
 
-        private async void Search(string search)
+        private async Task AddPerson(string sus)
         {
-            try
+            var pessoa = await _healthRecordService.GetRecordBySusAsync(sus);
+            if (pessoa != null && !Pessoas.Any(p => p.Sus == sus))
             {
-                // Cancela o temporizador anterior
-                _debounceTimer?.Cancel();
-                _debounceTimer = new CancellationTokenSource();
-
-                // Aguarda 300ms antes de executar a busca
-                await Task.Delay(300, _debounceTimer.Token);
-
-                // Se a pesquisa estiver vazia, limpa os resultados
-                if (string.IsNullOrWhiteSpace(search))
-                {
-                    _pessoasPesquisada.Clear();
-                    return;
-                }
-
-                // Executa a busca
-                var pesquisa = await _healthRecordService.GetRecordByNameOrSus(search);
-                Console.WriteLine($"Registros encontrados: {pesquisa.Count}");
-
-                _pessoasPesquisada.Clear();
-
-                if (pesquisa != null)
-                {
-                    foreach (var pessoa in pesquisa)
-                    {
-                        _pessoasPesquisada.Add(new Pessoa
-                        {
-                            Nome = pessoa.Name,
-                            Sus = pessoa.SusNumber
-                        });
-
-                        Console.WriteLine($"Nome: {pessoa.Name}\nSUS: {pessoa.SusNumber}");
-                    }
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                // Ignora se o debounce foi cancelado
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-            }
-        }
-
-        private async void AddPerson(string sus)
-        {
-            try
-            {
-                var familyMember = await _healthRecordService.GetRecordBySusAsync(sus);
-
-                Console.WriteLine($"IdPessoa: {IdPessoa}\nIdHouse: {IdHouse}\nSUS: {sus}\n");
-
-                if (familyMember != null && !peopleToAdd.Contains(familyMember))
-                {
-                    _pessoas.Add(new Pessoa
-                    {
-                        Nome = familyMember.Name,
-                        Sus = familyMember.SusNumber
-                    });
-
-                    peopleToAdd.Add(familyMember);
-
-                    Console.WriteLine(familyMember.Name);
-                }
-
-                OnPropertyChanged(nameof(Pessoas));
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                Pessoas.Add(new Pessoa { Nome = pessoa.Name, Sus = pessoa.SusNumber });
             }
         }
 
         private async Task LoadDataAsync()
         {
-            try
+            if (IsEdit)
             {
-                if (IsEdit)
+                var registros = await _healthRecordService.GetRecordsByFamilyAndHouseAsync(IdPessoa, IdHouse);
+                Pessoas.Clear();
+                foreach (var r in registros)
                 {
-                    var familyPeople = await _healthRecordService.GetRecordsByFamilyAndHouseAsync(IdPessoa, IdHouse);
-                    _pessoas.Clear();
-
-                    foreach (var familyPerson in familyPeople)
-                    {
-                        _pessoas.Add(new Pessoa
-                        {
-                            Nome = familyPerson.Name,
-                            Sus = familyPerson.SusNumber
-                        });
-                    }
+                    Pessoas.Add(new Pessoa { Nome = r.Name, Sus = r.SusNumber });
                 }
             }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(
-                    new DisplayPopUp("Erro", $"Não foi possível carregar os dados.\n\n{ex.Message}", true, "Voltar", false, ""));
-            }
         }
 
-        private void LimparCampos()
+        private static async Task MostrarErro(string msg)
         {
-            IdHouse = 0;
+            await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", msg, true, "Voltar", false, ""));
         }
+
+        private static async Task MostrarSucesso(string msg) => await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", msg, true, "Voltar", false, ""));
     }
 }

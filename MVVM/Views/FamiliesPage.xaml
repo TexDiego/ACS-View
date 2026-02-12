@@ -5,61 +5,43 @@
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
 
-    <ContentPage.BindingContext>
-        <vm:FamiliesViewModel/>
-    </ContentPage.BindingContext>
+    <Grid>
 
-    <Grid RowDefinitions="auto,*,auto">
+        <CollectionView ItemsSource="{Binding Families}" VerticalScrollBarVisibility="Never">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border 
+                        StrokeThickness="2"
+                        Stroke="LightGray"
+                        StrokeShape="RoundRectangle 10"
+                        Margin="20,100,20,100"
+                        Padding="10"
+                        BackgroundColor="White">
 
-        <VerticalStackLayout Grid.Row="0" VerticalOptions="Start">
-            <Label TextColor="Black"
-                   Text="{Binding House}"
-                   Opacity="0.7"
-                   Margin="20,10,20,0"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   LineBreakMode="WordWrap"
-                   VerticalTextAlignment="Center"
-                   HorizontalTextAlignment="Center"/>
-        </VerticalStackLayout>
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            RowDefinitions="auto,*,35">
 
-        <ScrollView Grid.Row="1">
-            <CollectionView ItemsSource="{Binding Families}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border 
-                            StrokeThickness="2"
-                            Stroke="LightGray"
-                            StrokeShape="RoundRectangle 10"
-                            Margin="20,10,20,0"
-                            Padding="10"
-                            BackgroundColor="White">
-
-                            <Grid
-                                ColumnDefinitions="*,*,*"
-                                RowDefinitions="auto,*,35">
-                                
-                                <CollectionView
+                            <CollectionView
                                     Grid.ColumnSpan="3"
                                     Grid.Row="0"
                                     ItemsSource="{Binding PessoasFamilia}">
-                                    
-                                    <CollectionView.ItemTemplate>
-                                        <DataTemplate>
 
-                                            <Grid>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
 
-                                                <Label
-                                                    Text="{Binding Name}"
-                                                    TextColor="Black"
-                                                    Opacity="0.7"
-                                                    FontSize="16"
-                                                    Margin="0,5"
-                                                    FontAttributes="Bold"
-                                                    LineBreakMode="WordWrap"/>
+                                        <Grid>
 
-                                                <Button
+                                            <Label
+                                                Text="{Binding Name}"
+                                                TextColor="Black"
+                                                Opacity="0.7"
+                                                FontSize="16"
+                                                Margin="0,5"
+                                                FontAttributes="Bold"
+                                                LineBreakMode="WordWrap"/>
+
+                                            <Button
                                                     x:Name="InfoPopup"
                                                     Grid.Row="0"
                                                     Grid.RowSpan="6"
@@ -71,13 +53,13 @@
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
                                                     CommandParameter="{Binding SusNumber}"/>
 
-                                            </Grid>
+                                        </Grid>
 
-                                        </DataTemplate>
-                                    </CollectionView.ItemTemplate>
-                                </CollectionView>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
 
-                                <BoxView
+                            <BoxView
                                     Grid.Row="1"
                                     Grid.ColumnSpan="3"
                                     Margin="0,5"
@@ -85,7 +67,7 @@
                                     HeightRequest="2"
                                     Color="LightGray"/>
 
-                                <Button
+                            <Button
                                     Grid.Column="0"
                                     Grid.Row="2"
                                     VerticalOptions="Center"
@@ -101,7 +83,7 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VisitFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
 
-                                <Button
+                            <Button
                                     Grid.Column="1"
                                     Grid.Row="2"
                                     VerticalOptions="Center" 
@@ -114,8 +96,8 @@
                                     TextColor="DarkOrange"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
-                                    
-                                <Button 
+
+                            <Button 
                                     Grid.Column="2"
                                     Grid.Row="2"
                                     VerticalOptions="Center"
@@ -130,52 +112,89 @@
                                     BackgroundColor="AliceBlue"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
-                                    
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </ScrollView>
 
-        <Grid
-            RowDefinitions="*,*"
-            Grid.Row="2"
-            VerticalOptions="End"
-            Margin="0,20,0,0"
-            BackgroundColor="Transparent">
-            
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid VerticalOptions="Start">
+
+            <BoxView
+                VerticalOptions="Center"
+                HeightRequest="80"
+                BackgroundColor="White"
+                Opacity="0.8">
+
+                <BoxView.Shadow>
+                    <Shadow
+                        Radius="50"
+                        Brush="White"
+                        Offset="0.5,0"
+                        Opacity="1"/>
+                </BoxView.Shadow>
+
+            </BoxView>
+
+            <Label TextColor="Black"
+                   Text="{Binding House}"
+                   Opacity="0.7"
+                   Margin="60,10,60,0"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   LineBreakMode="WordWrap"
+                   VerticalTextAlignment="Center"
+                   HorizontalTextAlignment="Center"/>
+
             <ImageButton
-                Grid.Row="0"
                 Source="plus"
-                HeightRequest="50"
-                WidthRequest="50"
+                HeightRequest="40"
+                WidthRequest="40"
                 Padding="10"
-                x:Name="Btn_AddFamily" 
-                Margin="20,0,20,25" 
+                x:Name="Btn_AddFamily"
                 MaximumHeightRequest="60" 
                 BackgroundColor="AliceBlue"
                 BorderColor="Grey"
-                CornerRadius="100"
+                CornerRadius="80"
                 HorizontalOptions="End"
-                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}" 
-                CommandParameter="{Binding IdFamily}"/>
-            
-            <Button 
-                Grid.Row="1"
-                x:Name="Btn_Voltar" 
-                Text="Voltar" 
-                Margin="20,5,20,20" 
-                FontSize="18" 
-                TextColor="#C93919" 
-                FontAttributes="Bold" 
-                MaximumHeightRequest="60" 
-                BackgroundColor="AliceBlue"
-                BorderColor="#C93919"                
-                CornerRadius="10" 
-                HeightRequest="40" 
-                Clicked="Btn_Voltar_Clicked"/>
+                VerticalOptions="Center"
+                Margin="0,0,10,0"
+                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}"/>
+
         </Grid>
+
+        <BoxView
+            VerticalOptions="End"
+            HeightRequest="80"
+            BackgroundColor="White"
+            Opacity="0.8">
+
+            <BoxView.Shadow>
+                <Shadow
+                    Radius="50"
+                    Brush="White"
+                    Offset="0.5,0"
+                    Opacity="1"/>
+            </BoxView.Shadow>
+            
+        </BoxView>
+
+        <Button
+            x:Name="Btn_Voltar" 
+            Text="Voltar" 
+            Margin="20,5,20,20" 
+            FontSize="18" 
+            TextColor="#C93919" 
+            FontAttributes="Bold" 
+            MaximumHeightRequest="60" 
+            BackgroundColor="AliceBlue"
+            BorderColor="#C93919"                
+            CornerRadius="10" 
+            HeightRequest="40" 
+            VerticalOptions="End"
+            Command="{Binding GoBack}"/>
 
     </Grid>
 

@@ -1,60 +1,37 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
     public partial class AddHouseViewModel : BaseViewModel
     {
-        private readonly HouseService _houseService;
+        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
+        
+        [ObservableProperty] private House houseModel = new();
+        [ObservableProperty] private bool isLoading;
+        [ObservableProperty] private bool isRunning;
 
-        public bool IsEdit { get; set; }
-        public int HouseId { get; set; }
-        public string CEP { get; set; }
-        public string Rua { get; set; }
-        public string Numero { get; set; }
-        public string Bairro { get; set; }
-        public string Cidade { get; set; }
-        public string Complemento { get; set; }
-        public bool PossuiComplemento { get; set; }
-        public string Estado { get; set; }
-        public string Pais { get; set; } = "Brasil";
-
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        public ICommand SalvarCommand { get; }
-
-        public AddHouseViewModel() { }
-
-        public AddHouseViewModel(HouseService houseService) : base()
-        {
-            _houseService = houseService;
-            SalvarCommand = new Command(SalvarCasa);
-        }
+        public ICommand SalvarCommand => new Command(async () => await SalvarCasa());
+        public ICommand SearchCEP => new Command(async () => await SearchCEPAsync());
+        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
 
         private bool IsNullOrWhiteSpaceVerifier()
         {
-            List<string> items = new List<string>
-            {
-                CEP, Rua, Bairro, Cidade, Estado, Pais
-            };
-
-            foreach (string item in items)
-            {
-                if (string.IsNullOrWhiteSpace(item)) return true;
-            }
-
-            return false;
+            // Verifica se alguma propriedade obrigatória está nula ou em branco
+            return string.IsNullOrWhiteSpace(HouseModel.CEP)
+                || string.IsNullOrWhiteSpace(HouseModel.Rua)
+                || string.IsNullOrWhiteSpace(HouseModel.Bairro)
+                || string.IsNullOrWhiteSpace(HouseModel.Cidade)
+                || string.IsNullOrWhiteSpace(HouseModel.Estado)
+                || string.IsNullOrWhiteSpace(HouseModel.Pais);
         }
 
-        private async void SalvarCasa()
+        private async Task SalvarCasa()
         {
             if (IsNullOrWhiteSpaceVerifier())
             {
@@ -63,35 +40,16 @@ namespace ACS_View.MVVM.ViewModels
                 return;
             }
 
-            int IdAtual = await _houseService.GetMaxIdAsync();
-            Console.WriteLine(IdAtual + "\n\n");
-
-            var novoCadastro = new House
-            {
-                CasaId = IsEdit ? HouseId : IdAtual + 1,
-                CEP = CEP,
-                Rua = Rua,
-                Bairro = Bairro,
-                NumeroCasa = Numero,
-                Cidade = Cidade,
-                Estado = Estado,
-                Pais = Pais,
-                Complemento = Complemento,
-                PossuiComplemento = PossuiComplemento
-            };
-            Console.WriteLine("ID: " + novoCadastro.CasaId);
             try
             {
-                if (HouseId > 0)
+                if (HouseModel.CasaId > 0)
                 {
-                    // Verifica se o registro já existe no banco
-                    var registroExistente = await _houseService.GetHousesById(HouseId);
+                    var registroExistente = await _houseService.GetHouseByIdAsync(HouseModel.CasaId);
 
                     if (registroExistente != null)
                     {
-                        // Atualiza o registro existente
-                        novoCadastro.CasaId = registroExistente.CasaId;
-                        await _houseService.UpdateHouseAsync(novoCadastro);
+                        HouseModel.CasaId = registroExistente.CasaId;
+                        await _houseService.UpdateHouseAsync(HouseModel);
 
                         await Application.Current.MainPage.ShowPopupAsync(
                             new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));
@@ -104,8 +62,7 @@ namespace ACS_View.MVVM.ViewModels
                 }
                 else
                 {
-                    // Criação de um novo registro
-                    await _houseService.SaveHouseAsync(novoCadastro);
+                    await _houseService.SaveHouseAsync(HouseModel);
 
                     await Application.Current.MainPage.ShowPopupAsync(
                         new DisplayPopUp("Sucesso", "Nova residência criada com sucesso.", false, "", true, "OK"));
@@ -122,15 +79,60 @@ namespace ACS_View.MVVM.ViewModels
 
         private void LimparCampos()
         {
-            CEP = string.Empty;
-            HouseId = 0;
-            Rua = string.Empty;
-            Numero = string.Empty;
-            Complemento = string.Empty;
-            Cidade = string.Empty;
-            Bairro = string.Empty;
-            Estado = string.Empty;
-            Pais = string.Empty;
+            HouseModel.CEP = "";
+            HouseModel.Rua = "";
+            HouseModel.NumeroCasa = "";
+            HouseModel.Bairro = "";
+            HouseModel.Cidade = "";
+            HouseModel.Estado = "";
+            HouseModel.Pais = "";
+            HouseModel.Complemento = "";
+            HouseModel.PossuiComplemento = false;
+            HouseModel.CasaId = 0;
+        }
+
+        private async Task SearchCEPAsync()
+        {
+            string cep = HouseModel.CEP;
+
+            if (!ValidarCep(cep))
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Ops", "CEP inválido", false, "", true, "Voltar"));
+                return;
+            }
+
+            try
+            {
+                IsRunning = true;
+
+                var endereco = await CEPService.BuscarEnderecoPorCep(cep);
+
+                if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
+                {
+                    HouseModel = endereco;
+                    HouseModel.CEP = cep;
+
+                    IsRunning = false;
+                }
+                else
+                {
+                    IsRunning = false;
+                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Endereço não encontrado ou CEP inválido.", false, "", true, "OK"));
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível conectar ao serviço de CEP.\nVerifique sua conexão com a internet.\n\n {ex.Message}", false, "", true, "OK"));
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            }
+        }
+
+        private bool ValidarCep(string cep)
+        {
+            return !string.IsNullOrWhiteSpace(cep) && cep.Length == 8 && cep.All(char.IsDigit);
         }
     }
 }

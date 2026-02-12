@@ -6,10 +6,6 @@
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
 
-    <ContentPage.BindingContext>
-        <vm:AddFamilyViewModel/>
-    </ContentPage.BindingContext>
-
     <ContentPage.Resources>
         <Style x:Key="Button" TargetType="Button">
             <Setter Property="FontAttributes" Value="Bold"/>

@@ -1,9 +1,10 @@
-﻿using System.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public abstract class BaseViewModel : INotifyPropertyChanged
+    public abstract class BaseViewModel : ObservableObject
     {
         private bool _isBusy;
 
@@ -12,26 +13,6 @@ namespace ACS_View.MVVM.ViewModels
         {
             get => _isBusy;
             set => SetProperty(ref _isBusy, value);
-        }
-
-        // Evento de notificação de alteração de propriedade
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        // Método para atualizar propriedades de forma genérica
-        protected bool SetProperty<T>(ref T backingStore, T value, [CallerMemberName] string propertyName = "")
-        {
-            if (EqualityComparer<T>.Default.Equals(backingStore, value))
-                return false;
-
-            backingStore = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        // Notifica a interface de que uma propriedade foi alterada
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         // Método auxiliar para executar comandos assíncronos de forma segura

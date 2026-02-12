@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ACS_View.MVVM.Views.VaccinesPage"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:VaccinesPageViewModel"
+             x:Class="ACS_View.MVVM.Views.VaccinesPage"
              NavigationPage.HasNavigationBar="False"
              Background="#E6EBED">
-
-    <ContentPage.BindingContext>
-        <vm:VaccinesPageViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
         
@@ -69,16 +67,18 @@
 
         <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Never" Margin="0,0,0,15">
             
-            <VerticalStackLayout>
+            <VerticalStackLayout
+                BindingContext="{Binding Vaccines}"
+                x:DataType="model:Vaccines">
 
                 <!-- Vacinas infantis -->
                 <Grid
                     RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*"
-                    IsVisible="{Binding Vaccines.IsChild}">
+                    IsVisible="{Binding IsChild}">
 
                     <!-- ao nascer -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowRN}"
+                        IsVisible="{Binding ShowRN}"
                         Grid.Row="0"
                         Margin="15,0,15,0"
                         StrokeThickness="0"
@@ -90,10 +90,10 @@
                             BackgroundColor="White">
 
                             <Border
-                            Grid.Column="0"
-                            Grid.RowSpan="2"
-                            BackgroundColor="{Binding SituacaoRN}"
-                            StrokeShape="RoundRectangle 20">
+                                Grid.Column="0"
+                                Grid.RowSpan="2"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoRN}"
+                                StrokeShape="RoundRectangle 20">
 
                                 <Label
                                     Text="Ao nascer"
@@ -154,7 +154,7 @@
 
                     <!-- 2 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show2Meses}"
+                        IsVisible="{Binding Show2Meses}"
                         Grid.Row="1"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -168,7 +168,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="4"
-                                BackgroundColor="{Binding Situacao2Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao2Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -278,7 +278,7 @@
 
                     <!-- 3 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show3Meses}"
+                        IsVisible="{Binding Show3Meses}"
                         Grid.Row="2"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -292,7 +292,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding Situacao3Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao3Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -333,7 +333,7 @@
 
                     <!-- 4 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show4Meses}"
+                        IsVisible="{Binding Show4Meses}"
                         Grid.Row="3"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -347,7 +347,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="4"
-                                BackgroundColor="{Binding Situacao4Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao4Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -457,7 +457,7 @@
 
                     <!-- 5 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show5Meses}"
+                        IsVisible="{Binding Show5Meses}"
                         Grid.Row="4"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -471,7 +471,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding Situacao5Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao5Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -511,7 +511,7 @@
 
                     <!-- 6 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show6Meses}"
+                        IsVisible="{Binding Show6Meses}"
                         Grid.Row="5"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -525,7 +525,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="4"
-                                BackgroundColor="{Binding Situacao6Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao6Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -612,7 +612,7 @@
 
                     <!-- 7 meses -->
                     <Border
-                        IsVisible="{Binding Vaccines.Show7Meses}"
+                        IsVisible="{Binding Show7Meses}"
                         Grid.Row="6"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -626,7 +626,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding Situacao7Meses}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao7Meses}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -667,7 +667,7 @@
 
                     <!-- 9 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show9Meses}"
+                    IsVisible="{Binding Show9Meses}"
                     Grid.Row="7"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -681,7 +681,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao9Meses}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao9Meses}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -722,7 +722,7 @@
 
                     <!-- 12 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show1Ano}"
+                    IsVisible="{Binding Show1Ano}"
                     Grid.Row="8"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -736,7 +736,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao12Meses}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao12Meses}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -823,7 +823,7 @@
 
                     <!-- 15 meses -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show15Meses}"
+                    IsVisible="{Binding Show15Meses}"
                     Grid.Row="9"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -837,7 +837,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao15Meses}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao15Meses}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -947,7 +947,7 @@
 
                     <!-- 4 anos -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show4Anos}"
+                    IsVisible="{Binding Show4Anos}"
                     Grid.Row="10"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -961,7 +961,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="4"
-                            BackgroundColor="{Binding Situacao4Anos}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao4Anos}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1048,7 +1048,7 @@
 
                     <!-- 5 anos -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show5Anos}"
+                    IsVisible="{Binding Show5Anos}"
                     Grid.Row="11"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -1062,7 +1062,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="2"
-                            BackgroundColor="{Binding Situacao5Anos}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao5Anos}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1126,7 +1126,7 @@
 
                     <!-- 7 anos -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show7Anos}"
+                    IsVisible="{Binding Show7Anos}"
                     Grid.Row="12"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -1140,7 +1140,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao7Anos}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao7Anos}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1181,7 +1181,7 @@
 
                     <!-- 9 anos -->
                     <Border
-                    IsVisible="{Binding Vaccines.Show9Anos}"
+                    IsVisible="{Binding Show9Anos}"
                     Grid.Row="13"
                     Margin="15,15,15,0"
                     StrokeThickness="0"
@@ -1195,7 +1195,7 @@
                             <Border
                             Grid.Column="0"
                             Grid.RowSpan="1"
-                            BackgroundColor="{Binding Situacao9Anos}"
+                            BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Situacao9Anos}"
                             StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1239,11 +1239,11 @@
                 <!-- Vacinas adolescentes -->
                 <Grid
                     RowDefinitions="*,*,*,*,*,*"
-                    IsVisible="{Binding Vaccines.IsYoung}">
+                    IsVisible="{Binding IsYoung}">
 
                     <!-- Hepatite B -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowHB}"
+                        IsVisible="{Binding ShowHB}"
                         Grid.Row="0"
                         Margin="15,0,15,0"
                         StrokeThickness="0"
@@ -1256,7 +1256,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoHBAdolescente}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHBAdolescente}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1295,7 +1295,7 @@
 
                     <!-- dT -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowDT}"
+                        IsVisible="{Binding ShowDT}"
                         Grid.Row="1"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1308,7 +1308,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoDTAdolescente}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoDTAdolescente}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1346,7 +1346,7 @@
 
                     <!-- Febre amarela -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowFebreAmarela}"
+                        IsVisible="{Binding ShowFebreAmarela}"
                         Grid.Row="2"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1360,7 +1360,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding SituacaoFAAdolescente}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoFAAdolescente}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1399,7 +1399,7 @@
 
                     <!-- Triplice viral -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowTripliceViral}"
+                        IsVisible="{Binding ShowTripliceViral}"
                         Grid.Row="3"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1450,7 +1450,7 @@
 
                     <!-- HPV -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowHPV}"
+                        IsVisible="{Binding ShowHPV}"
                         Grid.Row="4"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1463,7 +1463,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding SituacaoHPVAdolescente}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHPVAdolescente}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1501,7 +1501,7 @@
 
                     <!-- ACWY -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowACWY}"
+                        IsVisible="{Binding ShowACWY}"
                         Grid.Row="5"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1513,7 +1513,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoACWYAdolescente}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoACWYAdolescente}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1554,11 +1554,11 @@
                 <!-- Vacinas adultos -->
                 <Grid
                     RowDefinitions="*,*,*,*,*,*,*"
-                    IsVisible="{Binding Vaccines.IsAdult}">
+                    IsVisible="{Binding IsAdult}">
 
                     <!-- Hepatite B -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowHBAdulto}"
+                        IsVisible="{Binding ShowHBAdulto}"
                         Grid.Row="0"
                         Margin="15,0,15,0"
                         StrokeThickness="0"
@@ -1571,7 +1571,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoHepatiteBAdulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHepatiteBAdulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1608,7 +1608,7 @@
 
                     <!-- dT -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowdTAdulto}"
+                        IsVisible="{Binding ShowdTAdulto}"
                         Grid.Row="1"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1621,7 +1621,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoDTAdulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoDTAdulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1659,7 +1659,7 @@
 
                     <!-- Febre amarela -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowFebreAmarelaAdulto}"
+                        IsVisible="{Binding ShowFebreAmarelaAdulto}"
                         Grid.Row="2"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1673,7 +1673,7 @@
                             <Border
                                 Grid.Column="0"
                                 Grid.RowSpan="1"
-                                BackgroundColor="{Binding SituacaoFebreAmarelaAdulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoFebreAmarelaAdulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1712,7 +1712,7 @@
 
                     <!-- HPV -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowHPVAdulto}"
+                        IsVisible="{Binding ShowHPVAdulto}"
                         Grid.Row="3"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1724,7 +1724,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoHPVAdulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHPVAdulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1762,7 +1762,7 @@
 
                     <!-- Triplice viral 1 -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowTripliceViral1Adulto}"
+                        IsVisible="{Binding ShowTripliceViral1Adulto}"
                         Grid.Row="4"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1774,7 +1774,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoTripliceViral1Adulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoTripliceViral1Adulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1811,7 +1811,7 @@
 
                     <!-- Triplice viral 2 -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowTripliceViral2Adulto}"
+                        IsVisible="{Binding ShowTripliceViral2Adulto}"
                         Grid.Row="5"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1823,7 +1823,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoTripliceViral2Adulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoTripliceViral2Adulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1860,7 +1860,7 @@
                     
                     <!-- dTpa -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowdTpaAdulto}"
+                        IsVisible="{Binding ShowdTpaAdulto}"
                         Grid.Row="6"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1872,7 +1872,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaodTpaAdulto}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTpaAdulto}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1912,11 +1912,11 @@
                 <!-- Vacinas idosos -->
                 <Grid
                     RowDefinitions="*,*,*,*"
-                    IsVisible="{Binding Vaccines.IsElderly}">
+                    IsVisible="{Binding IsElderly}">
 
                     <!-- Hepatite B -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowHBIdoso}"
+                        IsVisible="{Binding ShowHBIdoso}"
                         Grid.Row="0"
                         Margin="15,0,15,0"
                         StrokeThickness="0"
@@ -1929,7 +1929,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoHepatiteBIdoso}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHepatiteBIdoso}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -1966,7 +1966,7 @@
 
                     <!-- dT -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowdTIdoso}"
+                        IsVisible="{Binding ShowdTIdoso}"
                         Grid.Row="1"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -1979,7 +1979,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaodTIdoso}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTIdoso}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -2017,7 +2017,7 @@
 
                     <!-- Febre amarela -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowFebreAmarelaIdoso}"
+                        IsVisible="{Binding ShowFebreAmarelaIdoso}"
                         Grid.Row="2"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -2029,7 +2029,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaoFebreAmarelaIdoso}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoFebreAmarelaIdoso}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -2068,7 +2068,7 @@
 
                     <!-- dTpa -->
                     <Border
-                        IsVisible="{Binding Vaccines.ShowdTpaIdoso}"
+                        IsVisible="{Binding ShowdTpaIdoso}"
                         Grid.Row="3"
                         Margin="15,15,15,0"
                         StrokeThickness="0"
@@ -2080,7 +2080,7 @@
 
                             <Border
                                 Grid.Column="0"
-                                BackgroundColor="{Binding SituacaodTpaIdoso}"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTpaIdoso}"
                                 StrokeShape="RoundRectangle 20">
 
                                 <Label
@@ -2121,7 +2121,7 @@
                 <Grid
                     Margin="0,30,0,0"
                     RowDefinitions="auto,auto"
-                    IsVisible="{Binding Vaccines.IsPregnant}">
+                    IsVisible="{Binding IsPregnant}">
 
                     <Grid
                         Grid.Row="0"
@@ -2151,7 +2151,7 @@
 
                         <!-- Hepatite B -->
                         <Border
-                            IsVisible="{Binding Vaccines.ShowHBGestante}"
+                            IsVisible="{Binding ShowHBGestante}"
                             Grid.Row="0"
                             Margin="15,0,15,0"
                             StrokeThickness="0"
@@ -2164,7 +2164,7 @@
 
                                 <Border
                                     Grid.Column="0"
-                                    BackgroundColor="{Binding SituacaoHBGestante}"
+                                    BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHBGestante}"
                                     StrokeShape="RoundRectangle 20">
 
                                     <Label
@@ -2201,7 +2201,7 @@
 
                         <!-- dT -->
                         <Border
-                            IsVisible="{Binding Vaccines.ShowdTGestante}"
+                            IsVisible="{Binding ShowdTGestante}"
                             Grid.Row="1"
                             Margin="15,15,15,0"
                             StrokeThickness="0"
@@ -2214,7 +2214,7 @@
 
                                 <Border
                                     Grid.Column="0"
-                                    BackgroundColor="{Binding SituacaodTGestante}"
+                                    BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTGestante}"
                                     StrokeShape="RoundRectangle 20">
 
                                     <Label
@@ -2252,7 +2252,7 @@
 
                         <!-- dTpa -->
                         <Border
-                            IsVisible="{Binding Vaccines.ShowdTpaGestante}"
+                            IsVisible="{Binding ShowdTpaGestante}"
                             Grid.Row="2"
                             Margin="15,15,15,0"
                             StrokeThickness="0"
@@ -2264,7 +2264,7 @@
 
                                 <Border
                                     Grid.Column="0"
-                                    BackgroundColor="{Binding SituacaodTpaGestante}"
+                                    BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTpaGestante}"
                                     StrokeShape="RoundRectangle 20">
 
                                     <Label

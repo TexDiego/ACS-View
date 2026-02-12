@@ -1,16 +1,17 @@
-﻿using SQLite;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
+using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class NoteService
+    internal class NoteService : INoteService
     {
+        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
         private readonly SQLiteAsyncConnection _database;
 
-        public NoteService(DatabaseService dbService)
+        public NoteService()
         {
-            _database = dbService.GetConnection();
+            _database = _databaseService.Connection;
         }
 
         public async Task<List<Note>> GetAllNotesAsync()

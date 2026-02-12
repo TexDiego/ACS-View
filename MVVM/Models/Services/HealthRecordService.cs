@@ -1,42 +1,64 @@
-﻿using SQLite;
+﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
+using SQLite;
 using System.Linq.Expressions;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class HealthRecordService(DatabaseService dbService)
+    public class HealthRecordService : IHealthRecordService
     {
-        private readonly SQLiteAsyncConnection _database = dbService.GetConnection();
+        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+        private readonly SQLiteAsyncConnection _database;
 
-        public Task<List<HealthRecord>> GetAllRecordsAsync() => _database.Table<HealthRecord>().OrderBy(r => r.Name).ToListAsync();
-
-        public Task<HealthRecord> GetRecordBySusAsync(string sus) =>
-            _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == sus);
-
-        public Task<List<HealthRecord>> GetRecordByNameOrSus(string search) =>
-            _database.Table<HealthRecord>()
-            .Where(p => p.Name.ToLower().Contains(search.ToLower())
-                     || p.SusNumber.Contains(search))
-            .Take(10)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
-
-        public Task<int> SaveRecordAsync(HealthRecord record) => _database.InsertOrReplaceAsync(record);
-
-        public async Task AdicionarCadastroAsync(HealthRecord registro)
+        public HealthRecordService()
         {
-            await _database.InsertAsync(registro);
+            _database = _databaseService.Connection;
         }
 
-        public async Task AtualizarCadastroAsync(HealthRecord registro)
+        public async Task<List<HealthRecord>> GetAllRecordsAsync()
         {
-            await _database.UpdateAsync(registro);
+            return await _database.Table<HealthRecord>()
+                                  .OrderBy(r => r.Name)
+                                  .ToListAsync();
+        }
+
+        public async Task<HealthRecord?> GetRecordBySusAsync(string sus)
+        {
+            return await _database.Table<HealthRecord>()
+                                  .FirstOrDefaultAsync(r => r.SusNumber == sus);
+        }
+
+        public async Task<List<HealthRecord>> GetRecordByNameOrSusAsync(string search)
+        {
+            string lowerSearch = search.ToLower();
+            return await _database.Table<HealthRecord>()
+                                  .Where(p => p.Name.ToLower().Contains(lowerSearch)
+                                           || p.SusNumber.Contains(search))
+                                  .OrderBy(p => p.Name)
+                                  .Take(10)
+                                  .ToListAsync();
+        }
+
+        public Task<int> SaveRecordAsync(HealthRecord record)
+        {
+            return _database.InsertOrReplaceAsync(record);
+        }
+
+        public async Task AddRecordAsync(HealthRecord record)
+        {
+            await _database.InsertAsync(record);
+        }
+
+        public async Task UpdateRecordAsync(HealthRecord record)
+        {
+            await _database.UpdateAsync(record);
         }
 
         public async Task DeleteRecordAsync(string sus)
         {
             try
             {
-                var recordToDelete = await _database.Table<HealthRecord>().FirstOrDefaultAsync(r => r.SusNumber == sus);
+                var recordToDelete = await GetRecordBySusAsync(sus);
                 if (recordToDelete != null)
                 {
                     await _database.DeleteAsync(recordToDelete);
@@ -50,92 +72,65 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
-        public async Task<int> GetConditionCountAsync(Expression<Func<HealthRecord, bool>> condition)
+        public Task<int> GetConditionCountAsync(Expression<Func<HealthRecord, bool>> condition)
         {
-            return await _database.Table<HealthRecord>().CountAsync(condition);
+            return _database.Table<HealthRecord>().CountAsync(condition);
         }
 
-        public async Task<int> GetTotalCountAsync()
+        public Task<int> GetTotalCountAsync()
         {
-            return await _database.Table<HealthRecord>().CountAsync();
+            return _database.Table<HealthRecord>().CountAsync();
         }
 
-        public async Task<int> GetElder()
+        public async Task<int> GetElderCountAsync()
         {
             var records = await GetAllRecordsAsync();
-
-            return records.Count(r =>
-            {
-                var age = DateTime.Today.Year - r.BirthDate.Year;
-
-                // Se o mês atual for anterior ao mês de nascimento, ou se for o mesmo mês, mas o dia ainda não chegou, subtrai 1 do cálculo da idade.
-                if (DateTime.Today.Month < r.BirthDate.Month || (DateTime.Today.Month == r.BirthDate.Month && DateTime.Today.Day < r.BirthDate.Day))
-                {
-                    age--;
-                }
-
-                return age >= 60;
-            });
+            return records.Count(r => CalculateAge(r.BirthDate) >= 60);
         }
 
-        public async Task<int> GetYoungers()
+        public async Task<int> GetYoungerCountAsync()
         {
             var records = await GetAllRecordsAsync();
+            return records.Count(r => CalculateAge(r.BirthDate) < 6);
+        }
 
-            return records.Count(r =>
-            {
-                var age = DateTime.Today.Year - r.BirthDate.Year;
-
-                if (DateTime.Today.Month < r.BirthDate.Month || (DateTime.Today.Month == r.BirthDate.Month && DateTime.Today.Day < r.BirthDate.Day))
-                {
-                    age--;
-                }
-
-                return age < 6;
-            });
+        private int CalculateAge(DateTime birthDate)
+        {
+            var today = DateTime.Today;
+            int age = today.Year - birthDate.Year;
+            if (today.Month < birthDate.Month || (today.Month == birthDate.Month && today.Day < birthDate.Day))
+                age--;
+            return age;
         }
 
         public async Task<List<HealthRecord>> GetRecordsByFamilyAndHouseAsync(int idFamily, int idHouse)
         {
             return await _database.Table<HealthRecord>()
-                     .Where(record => record.FamilyId == idFamily && record.HouseId == idHouse)
-                     .ToListAsync() ?? [];
+                                  .Where(record => record.FamilyId == idFamily && record.HouseId == idHouse)
+                                  .ToListAsync();
         }
 
-        public async Task UpdateRecordAsync(HealthRecord record)
-        {
-            await _database.UpdateAsync(record);
-        }
-
-        public async Task<List<HealthRecord>> GetRecordsByHouseID(int idHouse)
+        public async Task<List<HealthRecord>> GetRecordsByHouseIdAsync(int idHouse)
         {
             try
             {
-                Console.WriteLine($"Consulta ao banco iniciada para HouseId: {idHouse}");
-
                 var records = await _database.Table<HealthRecord>()
-                    .Where(p => p.HouseId == idHouse)
-                    .OrderBy(p => p.Name)
-                    .ToListAsync();
+                                             .Where(p => p.HouseId == idHouse)
+                                             .OrderBy(p => p.Name)
+                                             .ToListAsync();
 
-                if (records == null || !records.Any())
-                {
+                if (!records.Any())
                     Console.WriteLine("Nenhum registro encontrado no banco para o HouseId especificado.");
-                }
                 else
-                {
                     foreach (var record in records)
-                    {
                         Console.WriteLine($"Registro encontrado: Nome={record.Name}, HouseId={record.HouseId}, FamilyId={record.FamilyId}");
-                    }
-                }
 
-                return records ?? [];
+                return records;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao buscar registros no banco: {ex.Message}");
-                return [];
+                return new List<HealthRecord>();
             }
         }
     }

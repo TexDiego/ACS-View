@@ -1,5 +1,3 @@
-using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
@@ -15,7 +13,7 @@ public partial class LoginPage : ContentPage
     {
         try
         {
-            await Navigation.PushAsync(new OverallView());
+            await Shell.Current.GoToAsync("//overview");
         }
         catch (Exception ex)
         {

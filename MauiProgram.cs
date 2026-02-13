@@ -34,6 +34,9 @@ namespace ACS_View
             // ViewModels - Transient
             builder.Services.AddTransient<AddRegister>();
             builder.Services.AddTransient<AddRegisterViewModel>();
+            builder.Services.AddTransient<RegistersViewModel>();
+            builder.Services.AddTransient<HousesPageViewModel>();
+            builder.Services.AddTransient<OverallViewModel>();
 
             return builder.Build();
         }
@@ -54,6 +57,8 @@ namespace ACS_View
             service.AddSingleton<IRegisterValidator, RegisterValidator>();
             service.AddSingleton<IRegisterFactory, RegisterFactory>();
             service.AddSingleton<INoteService, NoteService>();
+            service.AddSingleton<INavigationService, NavigationService>();
+            service.AddSingleton<IVisitsService, VisitsService>();
 
             return service;
         }

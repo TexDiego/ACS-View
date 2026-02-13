@@ -1,35 +1,32 @@
 using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class Registers : ContentPage
 {
-    private CancellationTokenSource _throttleCts;
+    private readonly INavigationService navigationService = App.ServiceProvider.GetRequiredService<INavigationService>();
+
+    private CancellationTokenSource _throttleCts = new();
 
     private readonly AddRegisterViewModel _addRegisterViewModel = new();
     private readonly RegistersViewModel viewModel = new();
 
-    private string _condition;
+    private string _condition = "";
     private string _filter = "Nome";
     private string _order = "Crescente";
 
-    public Registers(string condition)
+    public Registers()
     {
         InitializeComponent();
-
-        _condition = condition;
-        _throttleCts = new CancellationTokenSource();
-
         BindingContext = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _condition = navigationService.GetCondition();
         await LoadDataOnAppearAsync();
     }
 
@@ -80,71 +77,6 @@ public partial class Registers : ContentPage
             await viewModel.InitAsync(_condition, e.NewTextValue, _filter, _order);
         }
         catch (TaskCanceledException) { }
-        catch (Exception ex)
-        {
-            await ShowErrorPopupAsync(ex.Message);
-        }
-    }
-
-    private async void Btn_filter_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            var selected = await ShowOptionsPopup("Ordenar por:", ["Nome", "Idade"], _filter);
-            if (selected != null)
-            {
-                _filter = selected;
-                Btn_filter.Text = $"Ordenar por {_filter}";
-                await RefreshCollectionAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorPopupAsync(ex.Message);
-        }
-    }
-
-    private async void Btn_order_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            var selected = await ShowOptionsPopup("Ordenar em:", new[] { "Crescente", "Decrescente" }, _order);
-            if (selected != null)
-            {
-                _order = selected;
-                Btn_order.Text = $"Ordem {_order}";
-                await RefreshCollectionAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorPopupAsync(ex.Message);
-        }
-    }
-
-    private async Task RefreshCollectionAsync()
-    {
-        try
-        {
-            _addRegisterViewModel.IsLoading = true;
-            await viewModel.InitAsync(_condition, SB.Text, _filter, _order);
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorPopupAsync(ex.Message);
-        }
-        finally
-        {
-            _addRegisterViewModel.IsLoading = false;
-        }
-    }
-
-    private async void ImageButton_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            await Navigation.PushAsync(new HousesPage());
-        }
         catch (Exception ex)
         {
             await ShowErrorPopupAsync(ex.Message);

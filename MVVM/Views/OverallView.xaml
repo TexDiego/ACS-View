@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.MVVM.Views.OverallView"
-             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
              Background="#E6EBED">
 
     <ContentPage.Resources>
@@ -45,24 +45,22 @@
 
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*,auto">
-
+    <Grid RowDefinitions="auto,*">
 
         <Label 
             Grid.Row="0"
             Text="Visão Geral"
-            Margin="20,15"
+            Margin="10,15"
             FontAttributes="Bold"
             TextColor="Black"
             FontSize="25"
             HorizontalOptions="Center"/>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="10,0">
 
             <Grid
+                Padding="0,10"
                 RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
-                Margin="20,15,20,20"
-                Padding="5"
                 RowSpacing="10">
 
                 <!-- total de pessoas -->
@@ -177,7 +175,7 @@
                     Style="{StaticResource buttons}"
                     Grid.Row="2"
                     Command="{Binding GoToPageAsync}"
-                    CommandParameter="NOHOUSE"/>
+                    CommandParameter="NOHOME"/>
 
                 <!-- gestantes -->
                 <Border 
@@ -251,7 +249,9 @@
                 <Button
                     x:Name="Btn_HAS"
                     Style="{StaticResource buttons}"
-                    Grid.Row="4"/>
+                    Grid.Row="4"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="HAS"/>
 
                 <!-- diabeticos -->
                 <Border 
@@ -287,7 +287,9 @@
                 <Button
                     x:Name="Btn_DB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="5"/>
+                    Grid.Row="5"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="DB"/>
 
                 <!-- hipertensos diabeticos -->
                 <Border 
@@ -323,7 +325,9 @@
                 <Button
                     x:Name="Btn_HASDB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="6"/>
+                    Grid.Row="6"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="HASDB"/>
 
                 <!-- hanseniase -->
                 <Border 
@@ -359,7 +363,9 @@
                 <Button
                     x:Name="Btn_HAN"
                     Style="{StaticResource buttons}"
-                    Grid.Row="7"/>
+                    Grid.Row="7"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="HAN"/>
 
                 <!-- tuberculose -->
                 <Border 
@@ -395,7 +401,9 @@
                 <Button
                     x:Name="Btn_TB"
                     Style="{StaticResource buttons}"
-                    Grid.Row="8"/>
+                    Grid.Row="8"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="TB"/>
 
                 <!-- acamados -->
                 <Border 
@@ -431,7 +439,9 @@
                 <Button
                     x:Name="Btn_Acamados"
                     Style="{StaticResource buttons}"
-                    Grid.Row="9"/>
+                    Grid.Row="9"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="ACAMADO"/>
 
                 <!-- domiciliados -->
                 <Border 
@@ -467,7 +477,9 @@
                 <Button
                     x:Name="Btn_Domiciliados"
                     Style="{StaticResource buttons}"
-                    Grid.Row="10"/>
+                    Grid.Row="10"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="DOMICILIADO"/>
 
                 <!-- menores de 6 anos -->
                 <Border
@@ -503,7 +515,9 @@
                 <Button
                     x:Name="Btn_Menor6Anos"
                     Style="{StaticResource buttons}"
-                    Grid.Row="11"/>
+                    Grid.Row="11"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="MENOR"/>
 
                 <!-- psiquiatricos -->
                 <Border
@@ -537,9 +551,11 @@
                     IsRunning="{Binding IsLoading}"/>
 
                 <Button
-                        x:Name="Btn_Mental"
-                        Style="{StaticResource buttons}"
-                        Grid.Row="12"/>
+                    x:Name="Btn_Mental"
+                    Style="{StaticResource buttons}"
+                    Grid.Row="12"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="MENTAL"/>
 
                 <!-- fumantes -->
                 <Border
@@ -575,7 +591,9 @@
                 <Button
                     x:Name="Btn_Fumante"
                     Style="{StaticResource buttons}"
-                    Grid.Row="13"/>
+                    Grid.Row="13"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="FUMANTE"/>
 
                 <!-- alcoolatras -->
                 <Border
@@ -611,7 +629,9 @@
                 <Button
                     x:Name="Btn_Alcoolatra"
                     Style="{StaticResource buttons}"
-                    Grid.Row="14"/>
+                    Grid.Row="14"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="ALCOOLATRA"/>
 
                 <!-- deficientes -->
                 <Border
@@ -647,7 +667,9 @@
                 <Button
                     x:Name="Btn_Deficiente"
                     Style="{StaticResource buttons}"
-                    Grid.Row="15"/>
+                    Grid.Row="15"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="DEFICIENTE"/>
 
                 <!-- cancer -->
                 <Border
@@ -683,7 +705,9 @@
                 <Button
                     x:Name="Btn_Cancer"
                     Style="{StaticResource buttons}"
-                    Grid.Row="16"/>
+                    Grid.Row="16"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="CANCER"/>
 
                 <!-- idosos -->
                 <Border
@@ -719,7 +743,9 @@
                 <Button
                     x:Name="Btn_Old"
                     Style="{StaticResource buttons}"
-                    Grid.Row="17"/>
+                    Grid.Row="17"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="IDOSO"/>
 
                 <!-- Bolsa família -->
                 <Border
@@ -755,7 +781,9 @@
                 <Button
                     x:Name="Btn_Bolsa"
                     Style="{StaticResource buttons}"
-                    Grid.Row="18"/>
+                    Grid.Row="18"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="BOLSA"/>
 
                 <!-- Cardiacos -->
                 <Border
@@ -791,7 +819,9 @@
                 <Button
                     x:Name="Btn_Cardiaco"
                     Style="{StaticResource buttons}"
-                    Grid.Row="19"/>
+                    Grid.Row="19"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="CORACAO"/>
 
                 <!-- Renais -->
                 <Border
@@ -827,7 +857,9 @@
                 <Button
                     x:Name="Btn_Kidney"
                     Style="{StaticResource buttons}"
-                    Grid.Row="20"/>
+                    Grid.Row="20"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="RIM"/>
 
                 <!-- Hepatopatas -->
                 <Border
@@ -863,7 +895,9 @@
                 <Button
                     x:Name="Btn_Liver"
                     Style="{StaticResource buttons}"
-                    Grid.Row="21"/>
+                    Grid.Row="21"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="FIGADO"/>
 
                 <!-- Pulmonares -->
                 <Border
@@ -899,7 +933,9 @@
                 <Button
                     x:Name="Btn_Lungs"
                     Style="{StaticResource buttons}"
-                    Grid.Row="22"/>
+                    Grid.Row="22"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="PULMAO"/>
 
                 <!-- Neurodivergentes -->
                 <Border
@@ -935,7 +971,9 @@
                 <Button
                     x:Name="Btn_Neurodivergents"
                     Style="{StaticResource buttons}"
-                    Grid.Row="23"/>
+                    Grid.Row="23"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="NEURO"/>
 
                 <!-- Dependentes químicos -->
                 <Border
@@ -971,7 +1009,9 @@
                 <Button
                     x:Name="Btn_Addicted"
                     Style="{StaticResource buttons}"
-                    Grid.Row="24"/>
+                    Grid.Row="24"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="DROGAS"/>
 
                 <!-- Imunodeficientes -->
                 <Border
@@ -1007,21 +1047,13 @@
                 <Button
                     x:Name="Btn_Hiv"
                     Style="{StaticResource buttons}"
-                    Grid.Row="25"/>
+                    Grid.Row="25"
+                    Command="{Binding GoToPageAsync}"
+                    CommandParameter="HIV"/>
 
             </Grid>
-            
-        </ScrollView>
 
-        <Button
-            x:Name="Btn_Menu"
-            Grid.Row="2"
-            Margin="20"
-            FontSize="18"
-            Style="{StaticResource buttons2}"
-            Text="Menu"
-            VerticalOptions="End"
-            Clicked="Btn_Menu_Clicked"/>
+        </ScrollView>
 
     </Grid>
 

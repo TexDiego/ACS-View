@@ -2,11 +2,21 @@ using ACS_View.MVVM.ViewModels;
 
 namespace ACS_View.MVVM.Views;
 
-public partial class FamiliesPage : ContentPage
+public partial class FamiliesPage : ContentPage, IQueryAttributable
 {
-    public FamiliesPage(int id)
+    public FamiliesPage()
 	{
         InitializeComponent();
-        BindingContext = new FamiliesViewModel(id);
+    }
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("id", out var id))
+        {
+            int parsedId = (int)id;
+
+            // Aqui você cria a ViewModel com o id
+            BindingContext = new FamiliesViewModel(parsedId);
+        }
     }
 }

@@ -3,24 +3,27 @@ using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class AddFamilyViewModel : BaseViewModel
+    internal partial class AddFamilyViewModel : BaseViewModel
     {
         private readonly IFamilyService _familyService = App.ServiceProvider.GetRequiredService<IFamilyService>();
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
         private readonly IFamilyManager _familyManager = App.ServiceProvider.GetRequiredService<IFamilyManager>();
 
-        public ObservableCollection<Pessoa> Pessoas { get; } = [];
-        public ObservableCollection<Pessoa> PessoasPesquisadas { get; } = [];
+        [ObservableProperty] private ObservableCollection<Pessoa> pessoas = [];
+        [ObservableProperty] private ObservableCollection<Pessoa> pessoasPesquisadas = [];
 
-        public ICommand SalvarCommand { get; }
-        public ICommand AddPersonCommand { get; }
-        public ICommand SearchCommand { get; }
-        public ICommand DeleteCommand { get; }
+        public ICommand SalvarCommand => new Command(async () => await SalvarFamilia());
+        public ICommand AddPersonCommand => new Command<string>(async s => await AddPerson(s));
+        public ICommand SearchCommand => new Command<string>(async s => await Search(s));
+        public ICommand DeleteCommand => new Command<string>(DeletePerson);
+        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync("..", new Dictionary<string, object> { { "id", IdHouse } }));
+
 
         public int IdHouse { get; set; }
         public int IdPessoa { get; set; }
@@ -34,12 +37,7 @@ namespace ACS_View.MVVM.ViewModels
             IsEdit = isEdit;
             IdPessoa = idFamily ?? 0;
 
-            DeleteCommand = new Command<string>(DeletePerson);
-            SalvarCommand = new Command(async () => await SalvarFamilia());
-            SearchCommand = new Command<string>(async s => await Search(s));
-            AddPersonCommand = new Command<string>(async s => await AddPerson(s));
-
-            _ = LoadDataAsync();
+            MainThread.BeginInvokeOnMainThread(async () => await LoadDataAsync());
         }
 
         private async Task SalvarFamilia()
@@ -64,7 +62,7 @@ namespace ACS_View.MVVM.ViewModels
                 await _familyManager.AddPeopleToFamily(susList, IdHouse, familyId);
 
                 await MostrarSucesso(IsEdit ? "Família atualizada." : "Família criada.");
-                await Application.Current.MainPage.Navigation.PopAsync();
+                await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
             {

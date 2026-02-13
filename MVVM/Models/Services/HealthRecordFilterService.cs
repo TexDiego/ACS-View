@@ -66,7 +66,7 @@ namespace ACS_View.MVVM.Models.Services
                 _ => filtered
             };
 
-            return filtered.ToList();
+            return [.. filtered];
         }
     }
 }

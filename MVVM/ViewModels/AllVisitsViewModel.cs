@@ -1,33 +1,27 @@
 ﻿using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.ComponentModel;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public class AllVisitsViewModel : INotifyPropertyChanged
+    public partial class AllVisitsViewModel : BaseViewModel
     {
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
-        private readonly VisitsService _visitsService = new();
+        private readonly IVisitsService _visitsService = App.ServiceProvider.GetRequiredService<IVisitsService>();
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public List<Visits> VisitsList { get; set; } = [];
-        public List<House> HouseList { get; set; } = [];
+        [ObservableProperty] private List<Visits> visitsList = [];
+        [ObservableProperty] private List<House> houseList = [];
 
 
-        public IRelayCommand DeleteVisit { get; }
-        public IRelayCommand GoToHouseCommand { get; }
+        public IRelayCommand DeleteVisit => new RelayCommand<int>(async id => await DeleteVisitCommand(id));
+        public IRelayCommand GoToHouseCommand => new RelayCommand<int>(async id => await GoToHouse(id));
 
 
         public AllVisitsViewModel()
-        {
-            DeleteVisit = new RelayCommand<int>(async id => await DeleteVisitCommand(id));
-            GoToHouseCommand = new RelayCommand<int>(async id => await GoToHouse(id));
-
+        {            
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 await LoadVisitsAsync();
@@ -69,8 +63,6 @@ namespace ACS_View.MVVM.ViewModels
             {
                 VisitsList = await _visitsService.GetAllVisitsAsync();
                 HouseList = await GetHousesWithoutVisits();
-                OnPropertyChanged(nameof(VisitsList));
-                OnPropertyChanged(nameof(HouseList));
             }
             catch (Exception ex)
             {
@@ -89,8 +81,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (house != null)
                 {
-                    await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(house.CasaId));
-                    OnPropertyChanged(nameof(HouseList));
+                    await Shell.Current.GoToAsync($"//families?id={house.CasaId}");
                 }
                 else
                 {
@@ -162,13 +153,8 @@ namespace ACS_View.MVVM.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao buscar casas com famílias sem visita: {ex.Message}");
-                return new List<House>();
+                return [];
             }
-        }
-
-        private void OnPropertyChanged(string v)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(v));
         }
     }
 }

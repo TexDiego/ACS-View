@@ -14,11 +14,9 @@ namespace ACS_View.MVVM.ViewModels
     {
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-
-        private readonly VisitsService _visitsService = new();
+        private readonly IVisitsService _visitsService = App.ServiceProvider.GetRequiredService<IVisitsService>();
 
         [ObservableProperty] private ObservableCollection<Familia> families = [];
-
         [ObservableProperty] private string house = "";
 
         public IRelayCommand AddFamilyCommand => new RelayCommand(AddFamily);
@@ -31,12 +29,9 @@ namespace ACS_View.MVVM.ViewModels
 
         private readonly int _idHouse = 0;
 
-        public FamiliesViewModel() { }
-
         public FamiliesViewModel(int idHouse)
         {
             _idHouse = idHouse;
-
             LoadFamilies();
         }
 
@@ -196,12 +191,12 @@ namespace ACS_View.MVVM.ViewModels
                 {
                     var popup = new PersonsInfo(record);
                     await popup.LoadAddressAsync();
-                    await Application.Current.MainPage.ShowPopupAsync(popup);
+                    await Shell.Current.ShowPopupAsync(popup);
                 }
             }
             catch
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Erro ao carregar os dados da pessoa.", true, "Fechar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Erro ao carregar os dados da pessoa.", true, "Fechar", false, ""));
             }
         }
     }

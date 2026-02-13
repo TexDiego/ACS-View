@@ -3,7 +3,7 @@ using ACS_View.MVVM.Views;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class VisitsService
+    public class VisitsService : IVisitsService
     {
         private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
 

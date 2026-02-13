@@ -2,8 +2,10 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models.Services"
+             x:DataType="vm:AddFamilyViewModel"
              x:Class="ACS_View.MVVM.Views.AddFamilyPage"
-             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
              Background="#E6EBED">
 
     <ContentPage.Resources>
@@ -96,6 +98,7 @@
                                         Margin="0,5,0,0">
                                         
                                         <Grid
+                                            x:DataType="model:Pessoa"
                                             ColumnDefinitions="*,40"
                                             HorizontalOptions="Fill"
                                             VerticalOptions="Fill"
@@ -150,6 +153,7 @@
                     <DataTemplate>
 
                         <Border
+                            x:DataType="model:Pessoa"
                             Margin="20,5"
                             StrokeShape="RoundRectangle 10"
                             Stroke="LightGray"
@@ -197,16 +201,14 @@
 
             <Button
                 Style="{StaticResource Button}"
-                x:Name="Btn_Salvar"
                 Text="Salvar"
                 Margin="0,0,0,10"
                 Command="{Binding SalvarCommand}"/>
 
             <Button
                 Style="{StaticResource Button}"
-                x:Name="Btn_Voltar"
                 Text="Voltar"
-                Clicked="Btn_Voltar_Clicked"/>
+                Command="{Binding GoBack}"/>
 
         </VerticalStackLayout>
 

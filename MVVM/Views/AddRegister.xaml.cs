@@ -1,11 +1,9 @@
 using ACS_View.MVVM.Models;
-using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.ViewModels;
-using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.MVVM.Views;
 
-public partial class AddRegister : ContentPage
+public partial class AddRegister : ContentPage, IQueryAttributable
 {
     private readonly AddRegisterViewModel _viewModel = new();
 
@@ -19,8 +17,9 @@ public partial class AddRegister : ContentPage
         Entry_Birth.Date = DateTime.Today;
     }
 
-    public AddRegister(HealthRecord record) : this()
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _viewModel.SetRecord(record);
+        if (query.TryGetValue("record", out var record))
+            _viewModel.SetRecord((HealthRecord)record);
     }
 }

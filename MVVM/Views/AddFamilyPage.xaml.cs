@@ -10,17 +10,10 @@ public partial class AddFamilyPage : ContentPage
 
     public AddFamilyPage(int idHouse, bool isEdit, int? idFamily = null)
     {
-        viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
-
         InitializeComponent();
-
+        viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
         BindingContext = viewModel;
 	}
-
-    private async void Btn_Voltar_Clicked(object sender, EventArgs e)
-    {
-        await Navigation.PopAsync();
-    }
 
     private async void Entry_Search_TextChanged(object sender, TextChangedEventArgs e)
     {

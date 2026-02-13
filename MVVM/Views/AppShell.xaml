@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:ACS_View.MVVM.Views"
+       x:Class="ACS_View.MVVM.Views.AppShell">
+
+    <TabBar>
+
+        <Tab Title="Pessoas">
+            <ShellContent Route="registers" ContentTemplate="{DataTemplate pages:Registers}"/>
+        </Tab>
+        
+        <Tab Title="Casas">
+            <ShellContent Route="houses" ContentTemplate="{DataTemplate pages:HousesPage}"/>
+        </Tab>
+
+        <Tab Title="Início">
+            <ShellContent Route="overview" ContentTemplate="{DataTemplate pages:OverallView}"/>
+        </Tab>
+
+        <Tab Title="Visitas">
+            <ShellContent Route="visits" ContentTemplate="{DataTemplate pages:AllVisits}"/>
+        </Tab>
+
+    </TabBar>
+    
+</Shell>

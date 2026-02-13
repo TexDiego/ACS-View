@@ -1,6 +1,4 @@
-﻿using ACS_View.MVVM.Models.Interfaces;
-
-namespace ACS_View.MVVM.Views
+﻿namespace ACS_View.MVVM.Views
 {
     public partial class App : Application
     {
@@ -11,7 +9,11 @@ namespace ACS_View.MVVM.Views
             InitializeComponent();
             SQLitePCL.Batteries_V2.Init();
             ServiceProvider = serviceProvider;
-            MainPage = new NavigationPage(new LoginPage());
+        }
+
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+            return new Window(new AppShell());
         }
     }
 }

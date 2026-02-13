@@ -5,29 +5,19 @@
              xmlns:model="clr-namespace:ACS_View.MVVM.Models"
              x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.MVVM.Views.HousesPage"
-             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
              Background="#E6EBED">
 
     <ContentPage.Content>
-        <Grid RowDefinitions="auto,*" RowSpacing="10" Margin="10">
+        <Grid RowDefinitions="auto,*" RowSpacing="5">
 
             <Grid
+                Margin="10"
                 RowDefinitions="auto, *"
                 ColumnDefinitions="*,auto"
                 Grid.Row="0"
                 HorizontalOptions="Center"
                 RowSpacing="10">
-                
-                <!-- Botão de voltar -->
-                <ImageButton
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    Source="arrowleft.png"
-                    WidthRequest="30"
-                    HeightRequest="30"
-                    HorizontalOptions="Start"
-                    Margin="10,0,0,0"
-                    Command="{Binding GoBack}"/>
 
                 <!-- Título da página -->
                 <Label
@@ -35,42 +25,40 @@
                     Grid.ColumnSpan="2"
                     Text="Residências"
                     HorizontalOptions="Center"
-                    FontSize="25"
+                    FontSize="26"
                     VerticalOptions="Center"
                     TextColor="Black"
                     FontAttributes="Bold"/>
 
                 <!-- Barra de pesquisa -->
-                <Image
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Source="loupe.png"
-                    HeightRequest="19"
-                    WidthRequest="19"
-                    HorizontalOptions="Start"
-                    Margin="21,0,0,0"/>
 
-                <SearchBar
+                <Border
                     Grid.Row="1"
                     Grid.ColumnSpan="2"
-                    Placeholder="Buscar..."
-                    PlaceholderColor="Black"                       
-                    Text="{Binding SearchText, Mode=TwoWay}"
-                    FontSize="16"
-                    CancelButtonColor="#0084B1"
-                    TextColor="Black"
-                    BackgroundColor="White"
-                    TextChanged="SearchBar_TextChanged"
-                    Margin="-10,0"/>
+                    Margin="-12,0"
+                    StrokeThickness="2"
+                    Stroke="Gray">
+                    
+                    <Grid>
+                        <Image
+                            Source="loupe.png"
+                            HeightRequest="19"
+                            WidthRequest="19"
+                            HorizontalOptions="Start"
+                            Margin="21,0,0,0"/>
 
-                <BoxView
-                    Grid.Row="1"
-                    Grid.ColumnSpan="2"
-                    HeightRequest="1"
-                    Color="Black"
-                    Opacity="0.7"
-                    VerticalOptions="End"
-                    Margin="-10,0"/>
+                        <SearchBar
+                            Placeholder="Buscar..."
+                            PlaceholderColor="Black"                       
+                            Text="{Binding SearchText, Mode=TwoWay}"
+                            FontSize="16"
+                            CancelButtonColor="Gray"
+                            TextColor="Black"
+                            BackgroundColor="White"
+                            MaxLength="30"
+                            TextChanged="SearchBar_TextChanged"/>                        
+                    </Grid>
+                </Border>
 
                 <!-- Botão de adicionar residência -->
                 <ImageButton
@@ -86,6 +74,7 @@
 
             <!-- Lista de residências -->
             <CollectionView
+                Margin="10,0"
                 ItemsSource="{Binding Houses}"
                 SelectionMode="None"
                 Grid.Row="1">
@@ -94,7 +83,7 @@
                     <DataTemplate>
                         <Border
                             x:DataType="model:House"
-                            Stroke="LightGray"
+                            Stroke="Gray"
                             BackgroundColor="White"
                             StrokeShape="RoundRectangle 8"
                             Margin="0,0,0,10">

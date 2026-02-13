@@ -31,21 +31,15 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*,auto">
+    <Grid
+        RowDefinitions="auto,*"
+        RowSpacing="5">
 
         <VerticalStackLayout
             Grid.Row="0"
             VerticalOptions="Start">
 
-            <Grid
-                Margin="20,15,10,10">
-
-                <ImageButton
-                    Source="arrowleft.png"
-                    HeightRequest="30"
-                    WidthRequest="30"
-                    HorizontalOptions="Start"
-                    Command="{Binding GoBack}"/>
+            <Grid Margin="10">
 
                 <Label
                     x:Name="Lbl_Title"
@@ -56,108 +50,58 @@
                     HorizontalOptions="Center"
                     LineBreakMode="WordWrap"
                     VerticalTextAlignment="Center"
-                    HorizontalTextAlignment="Center"/>
-
-            </Grid>
-
-            <Grid ColumnDefinitions="*,auto,auto,auto" ColumnSpacing="15">
-
-                <SearchBar
-                    Grid.Column="0"
-                    x:Name="SB"
-                    Placeholder="Buscar..."
-                    TextColor="Black"
-                    FontSize="16"
-                    CancelButtonColor="#0084B1"
-                    MaxLength="30"
-                    IsSpellCheckEnabled="True"
-                    BackgroundColor="Transparent"
-                    TextChanged="SB_TextChanged"/>
-
-                <StackLayout Grid.ColumnSpan="2" Margin="50,0,50,0" VerticalOptions="End">
-                    
-                    <BoxView
-                        HeightRequest="1"
-                        Color="Gray"/>
-                    
-                </StackLayout>                
-
-                <Image
-                    Grid.Column="0"
-                    HorizontalOptions="Start"
-                    Source="loupe.png"
-                    HeightRequest="19"
-                    WidthRequest="19"
-                    Margin="21,0,0,0"/>
+                    HorizontalTextAlignment="Center"
+                    Margin="50,0"/>
 
                 <ImageButton
-                    Grid.Column="1"
-                    ToolTipProperties.Text="Filtrar"
-                    Source="filter.png"
-                    WidthRequest="30"
-                    HeightRequest="30"/>
-
-                <ImageButton
-                    Grid.Column="2"
-                    ToolTipProperties.Text="Adicionar"
                     Source="addperson.png"
-                    WidthRequest="30"
                     HeightRequest="30"
+                    WidthRequest="30"
+                    ToolTipProperties.Text="Adicionar cadastro"
+                    HorizontalOptions="End"
                     Command="{Binding AddPerson}"/>
 
-                <ImageButton
-                    Grid.Column="3"
-                    ToolTipProperties.Text="Residências"
-                    Source="house.png"
-                    WidthRequest="30"
-                    HeightRequest="30"
-                    Margin="0,0,15,0"
-                    Command="{Binding Houses}"/>
-
             </Grid>
 
-            <Grid
-                RowDefinitions="auto,*"
-                ColumnDefinitions="*,*"
-                Margin="10,0,10,5">
+            <Border
+                Stroke="Gray"
+                StrokeThickness="2"
+                Margin="-2,0"
+                BackgroundColor="White">
 
-                <Button
-                    Grid.Column="0"
-                    Grid.Row="1"
-                    x:Name="Btn_filter"
-                    Style="{StaticResource buttons}"
-                    Margin="0,10,5,5"
-                    Padding="5"
-                    BackgroundColor="White"
-                    TextColor="#0084B1"
-                    FontAttributes="Bold"
-                    BorderColor="Gray"
-                    BorderWidth="1"
-                    CornerRadius="10"
-                    FontSize="15"
-                    FontAutoScalingEnabled="True"
-                    Text="Ordenar por Nome"
-                    Clicked="Btn_filter_Clicked"/>
+                <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="15">
 
-                <Button
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    x:Name="Btn_order"
-                    Style="{StaticResource buttons}"
-                    Margin="5,10,0,5"
-                    FontAttributes="Bold"
-                    BackgroundColor="White"
-                    Padding="5"
-                    BorderColor="Gray"
-                    TextColor="#0084B1"
-                    BorderWidth="1"
-                    CornerRadius="10"
-                    FontSize="15"
-                    FontAutoScalingEnabled="True"
-                    Text="Ordem Crescente"
-                    Clicked="Btn_order_Clicked"/>
+                    <SearchBar
+                        Grid.Column="0"
+                        x:Name="SB"
+                        Placeholder="Buscar..."
+                        TextColor="Black"
+                        FontSize="16"
+                        CancelButtonColor="#0084B1"
+                        MaxLength="30"
+                        IsSpellCheckEnabled="True"
+                        BackgroundColor="Transparent"
+                        TextChanged="SB_TextChanged"/>
 
-            </Grid>
+                    <ImageButton
+                        Grid.Column="1"
+                        ToolTipProperties.Text="Filtrar"
+                        Source="filter.png"
+                        WidthRequest="30"
+                        HeightRequest="30"
+                        Command="{Binding Filter}"/>
+
+                    <ImageButton
+                        Grid.Column="3"
+                        ToolTipProperties.Text="Residências"
+                        Source="house.png"
+                        WidthRequest="30"
+                        HeightRequest="30"
+                        Margin="0,0,15,0"
+                        Command="{Binding Houses}"/>
+
+                </Grid>
+            </Border>
 
         </VerticalStackLayout>
 
@@ -177,7 +121,7 @@
                         x:DataType="local:HealthRecord"
                         StrokeShape="RoundRectangle 10"
                         StrokeThickness="1"
-                        Margin="0,0,0,10"
+                        Margin="0,10,0,0"
                         Stroke="Grey">
 
                         <SwipeView>
@@ -249,5 +193,25 @@
             </CollectionView.ItemTemplate>
 
         </CollectionView>
+
+        <Border
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            Padding="10,5"
+            Margin="15"
+            VerticalOptions="End"
+            BackgroundColor="White"
+            StrokeShape="RoundRectangle 15"
+            StrokeThickness="1"
+            Stroke="Gray">
+            
+            <Label
+                Text="{Binding TotalRecords, StringFormat='{0} registros encontrados'}"
+                TextColor="Black"
+                FontSize="16"
+                FontAttributes="Bold"/>
+            
+        </Border>
+        
     </Grid>
 </ContentPage>

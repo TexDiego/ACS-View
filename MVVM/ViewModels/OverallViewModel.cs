@@ -9,6 +9,7 @@ public partial class OverallViewModel : ObservableObject
 {
     private readonly IHealthSummaryService _summaryService = App.ServiceProvider.GetRequiredService<IHealthSummaryService>();
     private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+    private readonly INavigationService _navigationService = App.ServiceProvider.GetRequiredService<INavigationService>();
 
     public OverallViewModel()
     {
@@ -95,9 +96,16 @@ public partial class OverallViewModel : ObservableObject
         }
     }
 
-    private static async Task GoToPage(string condition)
+    private async Task GoToPage(string condition)
     {
-        ContentPage page = condition == "HOUSES" ? new HousesPage() : new Registers(condition);
-        await App.Current.MainPage.Navigation.PushAsync(page);
+        if (condition == "HOUSES")
+        {
+            await Shell.Current.GoToAsync("//houses");
+            return;
+        }
+
+        _navigationService.SetCondition(condition);
+
+        await Shell.Current.GoToAsync("//registers");
     }
 }

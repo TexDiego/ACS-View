@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+          xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+          xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+          x:DataType="vm:FilterPopupViewModel"
+          x:Class="ACS_View.MVVM.Views.FilterPopup"
+          CanBeDismissedByTappingOutsideOfPopup="True"
+          Color="Transparent">
+    
+    <Border
+        WidthRequest="{Binding MaxScreenWidth}"
+        BackgroundColor="White"
+        Stroke="Gray"
+        StrokeThickness="2"
+        StrokeShape="RoundRectangle 15"
+        Padding="10">
+
+        <Grid
+            RowDefinitions="*,*,auto"
+            RowSpacing="10">
+
+            <Label
+                Grid.Row="0"
+                Text="Filtrar"
+                FontSize="24"
+                TextColor="Black"
+                HorizontalOptions="Center"
+                FontAttributes="Bold"/>
+
+            <HorizontalStackLayout
+                Grid.Row="1"
+                Spacing="10"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+
+                <Label
+                    FontSize="18"
+                    TextColor="Black"
+                    Text="Idade entre"/>
+
+                <Entry
+                    Text="0"
+                    FontSize="18"
+                    Keyboard="Numeric"
+                    VerticalOptions="Center"
+                    VerticalTextAlignment="Center"
+                    TextColor="Black"
+                    PlaceholderColor="Black"
+                    FontAttributes="Bold"
+                    MaxLength="3"
+                    Margin="0,-8,0,8"/>
+
+                <Label
+                    FontSize="18"
+                    TextColor="Black"
+                    Text="e"/>
+
+                <Entry
+                    Text="100"
+                    FontSize="18"
+                    Keyboard="Numeric"
+                    VerticalOptions="Center"
+                    TextColor="Black"
+                    MaxLength="3"
+                    PlaceholderColor="Black"
+                    FontAttributes="Bold"
+                    Margin="0,-8,0,8"/>
+
+                <Label
+                    FontSize="18"
+                    TextColor="Black"
+                    Text="anos"/>
+
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout
+                Grid.Row="2"
+                HorizontalOptions="Center"
+                Spacing="10">
+
+                <Label
+                    Text="Ordenar por"
+                    TextColor="Black"
+                    FontSize="18"/>
+
+                <Picker
+                    SelectedIndex="{Binding FilterBy}"
+                    FontSize="18"
+                    TextColor="Black"
+                    Margin="0,-10,0,10">
+                    
+                    <Picker.Items>
+                        <x:String>Nome</x:String>
+                        <x:String>Idade</x:String>
+                    </Picker.Items>
+                </Picker>
+
+                <Picker
+                    SelectedIndex="{Binding OrderBy}"
+                    FontSize="18"
+                    TextColor="Black"
+                    Margin="0,-10,0,10">
+                    
+                    <Picker.Items>
+                        <x:String>Crescente</x:String>
+                        <x:String>Decrescente</x:String>
+                    </Picker.Items>
+                </Picker>
+
+            </HorizontalStackLayout>
+
+        </Grid>
+        
+    </Border>
+    
+</tk:Popup>

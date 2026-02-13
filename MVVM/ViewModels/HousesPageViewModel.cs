@@ -23,7 +23,6 @@ namespace ACS_View.MVVM.ViewModels
         public ICommand FamilyCommand => new Command<int>(async id => await OpenFamilyPageAsync(id));
         public ICommand LoadHousesCommand => new Command<string>(async _ => await LoadHousesAsync(SearchText));
         public ICommand NewHouseCommand => new Command(async _ => await CreateHouseAsync());
-        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
 
         public HousesPageViewModel()
         {
@@ -170,7 +169,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                await Application.Current.MainPage.Navigation.PushAsync(new FamiliesPage(id));
+                await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", id } });
             }
             catch (Exception ex)
             {

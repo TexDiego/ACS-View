@@ -9,7 +9,7 @@ using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class RegistersViewModel : BaseViewModel
+    internal partial class RegistersViewModel : BaseViewModel
     {
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
         private readonly IHealthRecordFilterService _filterService = App.ServiceProvider.GetRequiredService<IHealthRecordFilterService>();
@@ -22,22 +22,21 @@ namespace ACS_View.MVVM.ViewModels
         public string ScrollToSusNumber { get; set; }
 
         [ObservableProperty] private ObservableCollection<HealthRecord> healthRecords = [];
+        [ObservableProperty] private int totalRecords;
 
         public ICommand DeleteCommand => new Command<string>(async susNumber => await DeleteRecordAsync(susNumber));
         public ICommand EditCommand => new Command<string>(async susNumber => await EditRecordAsync(susNumber));
         public ICommand PersonInfo => new Command<string>(async susNumber => await PersonData(susNumber));
         public ICommand Vaccines => new Command<string>(async susNumber => await VaccinesPage(susNumber));
-        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
-        public ICommand AddPerson => new Command(async () => await Application.Current.MainPage.Navigation.PushAsync(new AddRegister()));
+        public ICommand AddPerson => new Command(async () => await Shell.Current.GoToAsync("addregister"));
         public ICommand Houses => new Command(async () => await Application.Current.MainPage.Navigation.PushAsync(new HousesPage()));
-
+        public ICommand Filter => new Command(async () => await Application.Current.MainPage.ShowPopupAsync(new FilterPopup()));
 
 
         public async Task InitAsync(string condition, string? search, string? filter, string? order)
         {
             await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order);
         }
-
 
         private async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string? search, string? filter, string? order)
         {
@@ -62,6 +61,8 @@ namespace ACS_View.MVVM.ViewModels
                         HealthRecords.Add(record);
                     }
                 });
+
+                TotalRecords = HealthRecords.Count;
             }
             catch (Exception ex)
             {
@@ -110,6 +111,8 @@ namespace ACS_View.MVVM.ViewModels
                 await _healthRecordService.DeleteRecordAsync(susNumber);
                 HealthRecords.Remove(record);
             }
+
+            TotalRecords = HealthRecords.Count;
         }
 
         private async Task EditRecordAsync(string susNumber)
@@ -118,8 +121,8 @@ namespace ACS_View.MVVM.ViewModels
             if (record == null) return;
 
             ScrollToSusNumber = record.SusNumber;
-            var page = new AddRegister(record);
-            await Application.Current.MainPage.Navigation.PushAsync(page);
+
+            await Shell.Current.GoToAsync("addregister", new Dictionary<string, object> { { "record", record } });
         }
 
         private async Task PersonData(string susNumber)

@@ -7,15 +7,15 @@ using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class VaccinesPageViewModel : BaseViewModel
+    internal partial class VaccinesPageViewModel : BaseViewModel
     {
-        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
         private readonly IVaccineService _vaccineService = App.ServiceProvider.GetRequiredService<IVaccineService>();
-        public HealthRecord HealthRecord { get; set; }
+        public Patient HealthRecord { get; set; }
 
         [ObservableProperty] private Vaccines vaccines;
 
-        private readonly string _susNumber;
+        private readonly int id;
 
         public ICommand OpenVaccineInfo { get; set; }
 
@@ -196,16 +196,16 @@ namespace ACS_View.MVVM.ViewModels
 
         public VaccinesPageViewModel() { }
 
-        public VaccinesPageViewModel(string sus)
+        public VaccinesPageViewModel(int id)
         {
-            _susNumber = sus;
+            this.id = id;
             OpenVaccineInfo = new Command<string>(async (vaccine) => await OpenVaccineInfoCommand(vaccine));
         }
 
         public async Task InitializeAsync()
         {
-            Vaccines = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
-            HealthRecord = await _healthRecordService.GetRecordBySusAsync(_susNumber);
+            Vaccines = await _vaccineService.GetVaccinesByIdAsync(id);
+            HealthRecord = await _patientService.GetPatientById(id);
         }
 
         private bool GetVaccineStatus(string Vaccine)
@@ -222,7 +222,7 @@ namespace ACS_View.MVVM.ViewModels
                 Console.WriteLine($"Vacina: {Vaccine}, Status: {vaccineChecked}");
 
                 var popup = new VaccinesInfo(Vaccine, vaccineChecked);
-                var status = await Application.Current.MainPage.ShowPopupAsync(popup);
+                var status = await Shell.Current.ShowPopupAsync(popup);
 
                 if (status is bool vaccineStatus && vaccineStatus != vaccineChecked)
                 {
@@ -231,7 +231,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(
+                await Shell.Current.ShowPopupAsync(
                     new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
@@ -240,7 +240,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                var vaccineProperty = await _vaccineService.GetVaccinesBySusAsync(_susNumber);
+                var vaccineProperty = await _vaccineService.GetVaccinesByIdAsync(id);
 
                 vaccineProperty?.ChangeVaccineStatus(Vaccine);
 
@@ -250,7 +250,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
     }

@@ -11,10 +11,4 @@ public partial class AllVisits : ContentPage
 		InitializeComponent();
         BindingContext = _viewModel;
     }
-
-    protected async override void OnAppearing()
-    {
-        base.OnAppearing();
-        await _viewModel.LoadVisitsAsync();
-    }
 }

@@ -5,7 +5,7 @@
              xmlns:model="clr-namespace:ACS_View.MVVM.Models"
              x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.MVVM.Views.AddHouse"
-             NavigationPage.HasNavigationBar="False"
+             Title="Adicionar Residência"
              Background="#E6EBED">
 
     <ContentPage.Resources>
@@ -40,18 +40,11 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*,auto">
+    <Grid Margin="10,0" Padding="0,10">
 
-        <Label 
-            Grid.Row="0"
-            Text="Adicionar casa"
-            Margin="20,10,20,10"
-            FontAttributes="Bold"
-            TextColor="#0084B1"
-            FontSize="30"
-            HorizontalOptions="Center"/>
-
-        <ScrollView Grid.Row="1" Margin="20,0" VerticalScrollBarVisibility="Never">
+        <ScrollView
+            VerticalOptions="Start"
+            VerticalScrollBarVisibility="Never">
 
             <Grid
                 RowDefinitions="*,*,*,*,*,*,*,*"
@@ -80,7 +73,7 @@
 
                         <ImageButton
                             Grid.Column="2"
-                            Margin="30,0"
+                            Margin="15,0"
                             Source="loupe.png"
                             MaximumHeightRequest="30"
                             MaximumWidthRequest="30"
@@ -239,7 +232,7 @@
         </ScrollView>
 
         <ActivityIndicator
-            Grid.Row="1"
+            Grid.Row="0"
             BackgroundColor="Transparent"
             Color="#C93919"
             IsRunning="{Binding IsRunning}"
@@ -247,22 +240,11 @@
             HeightRequest="60"
             WidthRequest="60"/>
 
-        <VerticalStackLayout Grid.Row="2" Margin="20">
-
-            <Button
-                Style="{StaticResource Button}"
-                x:Name="Btn_Salvar"
-                Text="Salvar"
-                Margin="0,0,0,10"
-                Command="{Binding SalvarCommand}"/>
-
-            <Button
-                Style="{StaticResource Button}"
-                x:Name="Btn_Voltar"
-                Text="Voltar"
-                Command="{Binding GoBack}"/>
-
-        </VerticalStackLayout>
+        <Button
+            VerticalOptions="End"
+            Style="{StaticResource Button}"
+            Text="Salvar"
+            Command="{Binding SalvarCommand}"/>
 
     </Grid>
 

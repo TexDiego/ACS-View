@@ -2,8 +2,8 @@
 
 namespace ACS_View.MVVM.Models.Interfaces
 {
-    public interface IRegisterManager
+    internal interface IRegisterManager
     {
-        Task CreateAsync(HealthRecord record);
+        Task CreateAsync(Patient record);
     }
 }

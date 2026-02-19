@@ -19,7 +19,7 @@ namespace ACS_View.MVVM.ViewModels
 
         public ICommand DeleteCommand => new Command<int>(async id => await DeleteNoteAsync(id));
         public ICommand SalvarNota => new Command(async () => await SalvarNotaAsync());
-        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
+        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync(".."));
 
         public NotesPageViewModel()
         {
@@ -30,7 +30,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                bool confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Confirmação", "Deseja excluir esta nota?", true, "Excluir", true, "Cancelar")));
+                bool confirm = Convert.ToBoolean(await Shell.Current.ShowPopupAsync(new DisplayPopUp("Confirmação", "Deseja excluir esta nota?", true, "Excluir", true, "Cancelar")));
                 if (confirm) return;
 
                 int rowsAffected = await _noteService.DeleteNoteAsync(id);
@@ -44,13 +44,13 @@ namespace ACS_View.MVVM.ViewModels
                 }
                 else
                 {
-                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível excluir a nota.", true, "Voltar", false, ""));
+                    await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível excluir a nota.", true, "Voltar", false, ""));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao deletar: {ex.Message}");
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
 
@@ -58,7 +58,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             if (string.IsNullOrWhiteSpace(Note.Content))
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Ops", "O conteúdo não pode estar vazio", false, "", true, "Ok"));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Ops", "O conteúdo não pode estar vazio", false, "", true, "Ok"));
                 return;
             }
 
@@ -83,7 +83,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível carregar as notas.", true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível carregar as notas.", true, "Voltar", false, ""));
             }
             finally
             {

@@ -43,22 +43,26 @@ namespace ACS_View
 
         private static IServiceCollection LoadInterfaces(this IServiceCollection service)
         {
+            // Singleton
             service.AddSingleton<IDatabaseService, DatabaseService>();
-            service.AddSingleton<IHealthSummaryService, HealthSummaryService>();
-            service.AddSingleton<IVaccineService, VaccineService>();
             service.AddSingleton<IHouseService, HouseService>();
             service.AddSingleton<IHealthRecordService, HealthRecordService>();
-            service.AddSingleton<IFamilyService, FamilyService>();
-            service.AddSingleton<IFamilyManager, FamilyManager>();
-            service.AddSingleton<IVaccineService, VaccineService>();
-            service.AddSingleton<IHealthRecordFilterService, HealthRecordFilterService>();
-            service.AddSingleton<IUserDialogService, UserDialogService>();
-            service.AddSingleton<IPersonsInfoService, PersonsInfoService>();
-            service.AddSingleton<IRegisterValidator, RegisterValidator>();
-            service.AddSingleton<IRegisterFactory, RegisterFactory>();
-            service.AddSingleton<INoteService, NoteService>();
             service.AddSingleton<INavigationService, NavigationService>();
             service.AddSingleton<IVisitsService, VisitsService>();
+            service.AddSingleton<IDashboardService, DashboardService>();
+
+            // Transient
+            service.AddTransient<IHealthSummaryService, HealthSummaryService>();
+            service.AddTransient<IVaccineService, VaccineService>();
+            service.AddTransient<IFamilyService, FamilyService>();
+            service.AddTransient<IFamilyManager, FamilyManager>();
+            service.AddTransient<IHealthRecordFilterService, HealthRecordFilterService>();
+            service.AddTransient<IUserDialogService, UserDialogService>();
+            service.AddTransient<IPersonsInfoService, PersonsInfoService>();
+            service.AddTransient<IRegisterValidator, RegisterValidator>();
+            service.AddTransient<IRegisterFactory, RegisterFactory>();
+            service.AddTransient<INoteService, NoteService>();
+            service.AddTransient<IPatientService, PatientService>();
 
             return service;
         }

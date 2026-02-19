@@ -20,6 +20,8 @@ public partial class HousesPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _viewModel.LoadHousesCommand.Execute(null);
+
+        if (_viewModel.LoadHousesCommand.CanExecute(null))
+            _viewModel.LoadHousesCommand.Execute(null);
     }
 }

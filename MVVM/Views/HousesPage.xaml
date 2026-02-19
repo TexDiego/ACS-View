@@ -5,145 +5,131 @@
              xmlns:model="clr-namespace:ACS_View.MVVM.Models"
              x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.MVVM.Views.HousesPage"
-             Shell.NavBarIsVisible="False"
+             Shell.NavBarIsVisible="True"
+             Title="Residências"
              Background="#E6EBED">
 
-    <ContentPage.Content>
-        <Grid RowDefinitions="auto,*" RowSpacing="5">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            IconImageSource="addhouse.png"
+            Command="{Binding NewHouseCommand}"/>
+    </ContentPage.ToolbarItems>
 
-            <Grid
-                Margin="10"
-                RowDefinitions="auto, *"
-                ColumnDefinitions="*,auto"
-                Grid.Row="0"
-                HorizontalOptions="Center"
-                RowSpacing="10">
+    <Grid Margin="10,0,10,10" Padding="0">
 
-                <!-- Título da página -->
-                <Label
-                    Grid.Row="0"
-                    Grid.ColumnSpan="2"
-                    Text="Residências"
-                    HorizontalOptions="Center"
-                    FontSize="26"
-                    VerticalOptions="Center"
-                    TextColor="Black"
-                    FontAttributes="Bold"/>
+        <!-- Barra de pesquisa -->
+        <Border
+            VerticalOptions="Start"
+            Margin="-12,-1"
+            StrokeThickness="2"
+            Stroke="Gray">
 
-                <!-- Barra de pesquisa -->
+            <SearchBar
+                Placeholder="Buscar..."
+                PlaceholderColor="Black"                       
+                Text="{Binding SearchText, Mode=TwoWay}"
+                FontSize="16"
+                CancelButtonColor="Gray"
+                TextColor="Black"
+                BackgroundColor="White"
+                MaxLength="30"
+                VerticalOptions="Center"
+                TextChanged="SearchBar_TextChanged"/>
 
-                <Border
-                    Grid.Row="1"
-                    Grid.ColumnSpan="2"
-                    Margin="-12,0"
-                    StrokeThickness="2"
-                    Stroke="Gray">
-                    
-                    <Grid>
-                        <Image
-                            Source="loupe.png"
-                            HeightRequest="19"
-                            WidthRequest="19"
-                            HorizontalOptions="Start"
-                            Margin="21,0,0,0"/>
+        </Border>
 
-                        <SearchBar
-                            Placeholder="Buscar..."
-                            PlaceholderColor="Black"                       
-                            Text="{Binding SearchText, Mode=TwoWay}"
-                            FontSize="16"
-                            CancelButtonColor="Gray"
-                            TextColor="Black"
-                            BackgroundColor="White"
-                            MaxLength="30"
-                            TextChanged="SearchBar_TextChanged"/>                        
-                    </Grid>
-                </Border>
+        <!-- Lista de residências -->
+        <CollectionView
+            VerticalOptions="Start"
+            Margin="0,55,0,0"
+            ItemsSource="{Binding Houses}"
+            SelectionMode="None">
 
-                <!-- Botão de adicionar residência -->
-                <ImageButton
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Source="addHouse.png"
-                    HeightRequest="30"
-                    WidthRequest="30"
-                    Margin="0,0,10,0"
-                    Command="{Binding NewHouseCommand}"/>
-                
-            </Grid>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border
+                        Margin="0,5"
+                        x:DataType="model:House"
+                        Stroke="Gray"
+                        BackgroundColor="White"
+                        StrokeShape="RoundRectangle 8">
 
-            <!-- Lista de residências -->
-            <CollectionView
-                Margin="10,0"
-                ItemsSource="{Binding Houses}"
-                SelectionMode="None"
-                Grid.Row="1">
-                
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            x:DataType="model:House"
-                            Stroke="Gray"
-                            BackgroundColor="White"
-                            StrokeShape="RoundRectangle 8"
-                            Margin="0,0,0,10">
+                        <SwipeView>
 
-                            <SwipeView>
-
-                                <SwipeView.LeftItems>
-                                    <SwipeItem
+                            <SwipeView.LeftItems>
+                                <SwipeItem
                                         IconImageSource="bin.png"
                                         Text="Excluir"
                                         BackgroundColor="IndianRed"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
                                         CommandParameter="{Binding CasaId}"/>
-                                </SwipeView.LeftItems>
+                            </SwipeView.LeftItems>
 
-                                <SwipeView.RightItems>
-                                    <SwipeItem
+                            <SwipeView.RightItems>
+                                <SwipeItem
                                         IconImageSource="pencil.png"
                                         Text="Editar"
                                         BackgroundColor="DarkOrange"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
                                         CommandParameter="{Binding CasaId}"/>
-                                </SwipeView.RightItems>
-                                
-                                <VerticalStackLayout
-                                    Padding="10"
-                                    BackgroundColor="White">
+                            </SwipeView.RightItems>
 
-                                    <VerticalStackLayout.GestureRecognizers>
-                                        <TapGestureRecognizer
+                            <VerticalStackLayout
+                                Padding="10"
+                                BackgroundColor="White">
+
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
                                             CommandParameter="{Binding CasaId}"/>
-                                    </VerticalStackLayout.GestureRecognizers>
+                                </VerticalStackLayout.GestureRecognizers>
 
-                                    <!-- Rua -->
-                                    <Label
-                                        Text="{Binding Rua}"
-                                        FontSize="18"
-                                        Opacity="0.7"
-                                        TextColor="Black"
-                                        FontAttributes="Bold" />
+                                <!-- Rua -->
+                                <Label
+                                    Text="{Binding Rua}"
+                                    FontSize="18"
+                                    Opacity="0.7"
+                                    TextColor="Black"
+                                    FontAttributes="Bold" />
 
-                                    <!-- Número e Complemento -->
-                                    <HorizontalStackLayout
+                                <!-- Número e Complemento -->
+                                <HorizontalStackLayout
                                         Margin="0,0,0,10">
 
-                                        <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
+                                    <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
 
-                                        <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,5,0"/>
+                                    <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,5,0"/>
 
-                                        <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
+                                    <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
 
-                                    </HorizontalStackLayout>
-                                </VerticalStackLayout>
-                                
-                            </SwipeView>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </Grid>
-    </ContentPage.Content>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+
+                        </SwipeView>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Border
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            Padding="10,5"
+            Margin="15"
+            VerticalOptions="End"
+            BackgroundColor="White"
+            StrokeShape="RoundRectangle 15"
+            StrokeThickness="1"
+            Stroke="Gray">
+
+            <Label
+                Text="{Binding TotalHouses, StringFormat='{0} registros encontrados'}"
+                TextColor="Black"
+                FontSize="16"
+                FontAttributes="Bold"/>
+
+        </Border>
+        
+    </Grid>
+    
 </ContentPage>

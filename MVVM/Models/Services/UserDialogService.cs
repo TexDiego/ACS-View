@@ -7,9 +7,9 @@ namespace ACS_View.MVVM.Models.Services
     public class UserDialogService : IUserDialogService
     {
         public Task ShowError(string message) =>
-            Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", message, true, "Fechar", false, ""));
+            Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", message, true, "Fechar", false, ""));
 
         public Task ShowSuccess(string message) =>
-            Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Sucesso", message, false, "", true, "OK"));
+            Shell.Current.ShowPopupAsync(new DisplayPopUp("Sucesso", message, false, "", true, "OK"));
     }
 }

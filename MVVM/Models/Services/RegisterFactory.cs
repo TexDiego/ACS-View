@@ -3,20 +3,20 @@ using ACS_View.MVVM.ViewModels;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class RegisterFactory : IRegisterFactory
+    internal class RegisterFactory : IRegisterFactory
     {
-        public HealthRecord CreateHealthRecord(AddRegisterViewModel vm)
+        public Patient CreateHealthRecord(AddRegisterViewModel vm)
         {
-            return vm.Record;
+            return vm.CurrentPatient;
         }
 
         public Vaccines CreateVaccines(AddRegisterViewModel vm)
         {
             return new Vaccines
             {
-                SusNumber = vm.Record.SusNumber,
-                BirthDate = vm.Record.BirthDate,
-                IsPregnant = vm.Record.IsPregnant
+                //SusNumber = vm.Record.SusNumber,
+                //BirthDate = vm.Record.BirthDate,
+                //IsPregnant = vm.Record.IsPregnant
                 // demais campos podem iniciar false por padrão no banco
             };
         }

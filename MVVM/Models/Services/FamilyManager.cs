@@ -1,38 +1,36 @@
 ﻿using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class FamilyManager : IFamilyManager
+    internal class FamilyManager : IFamilyManager
     {
-        private readonly IHealthRecordService _healthRecordService;
+        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
 
-        public FamilyManager(IHealthRecordService healthRecordService)
+        public async Task AddPeopleToFamily(List<int> ids, int houseId, int familyId)
         {
-            _healthRecordService = healthRecordService;
-        }
-
-        public async Task AddPeopleToFamily(List<string> susList, int houseId, int familyId)
-        {
-            foreach (var sus in susList)
+            foreach (var id in ids)
             {
-                var pessoa = await _healthRecordService.GetRecordBySusAsync(sus);
+                var pessoa = await _patientService.GetPatientById(id);
+
                 if (pessoa != null)
                 {
                     pessoa.FamilyId = familyId;
                     pessoa.HouseId = houseId;
-                    await _healthRecordService.UpdateRecordAsync(pessoa);
+                    await _patientService.UpdatePatient(pessoa);
                 }
             }
         }
 
-        public async Task RemovePersonFromFamily(string sus)
+        public async Task RemovePersonFromFamily(int id)
         {
-            var pessoa = await _healthRecordService.GetRecordBySusAsync(sus);
+            var pessoa = await _patientService.GetPatientById(id);
+
             if (pessoa != null)
             {
                 pessoa.FamilyId = 0;
                 pessoa.HouseId = 0;
-                await _healthRecordService.UpdateRecordAsync(pessoa);
+                await _patientService.UpdatePatient(pessoa);
             }
         }
     }

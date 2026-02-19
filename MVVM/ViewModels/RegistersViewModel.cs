@@ -1,79 +1,74 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.HealthConditions;
 using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
     internal partial class RegistersViewModel : BaseViewModel
     {
-        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
-        private readonly IHealthRecordFilterService _filterService = App.ServiceProvider.GetRequiredService<IHealthRecordFilterService>();
         private readonly IVaccineService _vaccineService = App.ServiceProvider.GetRequiredService<IVaccineService>();
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
         private readonly IUserDialogService _dialogService = App.ServiceProvider.GetRequiredService<IUserDialogService>();
+        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
+        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        [ObservableProperty] private string condition = "Cadastros";
 
         private Vaccines _vaccines;
 
-        public string ScrollToSusNumber { get; set; }
+        public int ScrollToId { get; set; }
 
-        [ObservableProperty] private ObservableCollection<HealthRecord> healthRecords = [];
+        [ObservableProperty] private List<Patient> patients = [];
         [ObservableProperty] private int totalRecords;
 
-        public ICommand DeleteCommand => new Command<string>(async susNumber => await DeleteRecordAsync(susNumber));
-        public ICommand EditCommand => new Command<string>(async susNumber => await EditRecordAsync(susNumber));
-        public ICommand PersonInfo => new Command<string>(async susNumber => await PersonData(susNumber));
-        public ICommand Vaccines => new Command<string>(async susNumber => await VaccinesPage(susNumber));
+        public ICommand DeleteCommand => new Command<int>(async (id) => await DeleteRecordAsync(id));
+        public ICommand EditCommand => new Command<int>(async (id) => await EditRecordAsync(id));
+        public ICommand PersonInfo => new Command<Patient>(async record => await PersonData(record));
+        public ICommand Vaccines => new Command<int>(async (id) => await VaccinesPage(id));
         public ICommand AddPerson => new Command(async () => await Shell.Current.GoToAsync("addregister"));
-        public ICommand Houses => new Command(async () => await Application.Current.MainPage.Navigation.PushAsync(new HousesPage()));
-        public ICommand Filter => new Command(async () => await Application.Current.MainPage.ShowPopupAsync(new FilterPopup()));
+        public ICommand Houses => new Command(async () => await Shell.Current.GoToAsync("//houses"));
+        public ICommand Filter => new Command(async () => await Shell.Current.ShowPopupAsync(new FilterPopup()));
 
 
-        public async Task InitAsync(string condition, string? search, string? filter, string? order)
+        public async Task InitAsync(string conditionId, string? search, string? filter, string? order)
         {
-            await LoadHealthRecordsAndUpdateDatasAsync(condition, search, filter, order);
+            await LoadHealthRecordsAndUpdateDatasAsync(conditionId, search, filter, order);
         }
 
         private async Task LoadHealthRecordsAndUpdateDatasAsync(string condition, string? search, string? filter, string? order)
         {
             try
             {
-                var records = await _healthRecordService.GetAllRecordsAsync();
-                var filteredRecords = _filterService.ApplyFilters(records, condition, search, filter, order);
-
-                var addressTasks = filteredRecords.Select(async record =>
+                if (condition == "Cadastros")
                 {
-                    record.Endereco = await GetAddressAsync(record.SusNumber);
-                    return record;
-                });
+                    Patients = await _databaseService.Connection.Table<Patient>().ToListAsync();
+                    TotalRecords = Patients.Count;
+                    return;
+                }
 
-                var recordsWithAddress = await Task.WhenAll(addressTasks);
+                var cond = await _databaseService.Connection.Table<ConditionCategory>().FirstAsync(c => c.Name == condition);
+                int id = cond.Id;
 
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    HealthRecords.Clear();
-                    foreach (var record in recordsWithAddress)
-                    {
-                        HealthRecords.Add(record);
-                    }
-                });
+                Patients = await _patientService.GetPatientsByCondition(id);                
 
-                TotalRecords = HealthRecords.Count;
+                TotalRecords = Patients.Count;
             }
             catch (Exception ex)
             {
                 await _dialogService.ShowError("Erro ao carregar registros");
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
         }
 
-        private static List<HealthRecord> FilterRecords(IEnumerable<HealthRecord> records, string condition, string search, string filter, string order)
+        private static List<Patient> FilterRecords(IEnumerable<Patient> records, string condition, string search, string filter, string order)
         {
-            return new HealthRecordFilterService().ApplyFilters(records, condition, search, filter, order);
+            return [];
+            //return new HealthRecordFilterService().ApplyFilters(records, condition, search, filter, order);
         }
 
         private async Task<string> GetAddressAsync(string sus)
@@ -96,69 +91,66 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task DeleteRecordAsync(string susNumber)
+        private async Task DeleteRecordAsync(int id)
         {
-            var confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp(
+            var confirm = Convert.ToBoolean(await Shell.Current.ShowPopupAsync(new DisplayPopUp(
                                             "Confirmar",
-                                            $"Tem certeza de que deseja excluir o cadastro?\n\nSUS: {susNumber}",
+                                            $"Tem certeza de que deseja excluir o cadastro?",
                                             true, "Excluir", true, "Cancelar")));
 
             if (confirm) return;
 
-            var record = HealthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
+            var record = Patients.FirstOrDefault(r => r.Id == id);
             if (record != null)
             {
-                await _healthRecordService.DeleteRecordAsync(susNumber);
-                HealthRecords.Remove(record);
+                await _patientService.DeletePatient(id);
+                Patients.Remove(record);
             }
 
-            TotalRecords = HealthRecords.Count;
+            TotalRecords = Patients.Count;
         }
 
-        private async Task EditRecordAsync(string susNumber)
+        private async Task EditRecordAsync(int id)
         {
-            var record = HealthRecords.FirstOrDefault(r => r.SusNumber == susNumber);
+            var record = Patients.FirstOrDefault(r => r.Id == id);
             if (record == null) return;
 
-            ScrollToSusNumber = record.SusNumber;
+            ScrollToId= record.Id;
 
             await Shell.Current.GoToAsync("addregister", new Dictionary<string, object> { { "record", record } });
         }
 
-        private async Task PersonData(string susNumber)
+        private async Task PersonData(Patient record)
         {
-            var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
             if (record == null) return;
 
             var popup = new PersonsInfo(record);
-
-            await popup.LoadAddressAsync();
-            await Application.Current.MainPage.ShowPopupAsync(popup);
+            await Shell.Current.ShowPopupAsync(popup);
         }
 
-        private async Task VaccinesPage(string susNumber)
+        private async Task VaccinesPage(int id)
         {
-            _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
+            _vaccines = await _vaccineService.GetVaccinesByIdAsync(id);
 
             if (_vaccines == null)
             {
-                await AddVaccineMissing(susNumber);
-                _vaccines = await _vaccineService.GetVaccinesBySusAsync(susNumber);
+                await AddVaccineMissing(id);
+                _vaccines = await _vaccineService.GetVaccinesByIdAsync(id);
             }
 
-            ScrollToSusNumber = _vaccines.SusNumber;
+            ScrollToId = _vaccines.Id;
             var page = new VaccinesPage(_vaccines);
-            await Application.Current.MainPage.Navigation.PushAsync(page);
+            await Shell.Current.Navigation.PushAsync(page);
         }
 
-        private async Task AddVaccineMissing(string susNumber)
+        private async Task AddVaccineMissing(int id)
         {
-            var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+            var record = await _patientService.GetPatientById(id);
             if (record == null) return;
 
             var vaccine = new Vaccines
             {
-                SusNumber = susNumber,
+                Id = record.Id,
                 BirthDate = record.BirthDate
             };
 

@@ -1,23 +1,19 @@
 ﻿using ACS_View.MVVM.Models;
-using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Models.Interfaces;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public class VisitsViewModel
+    internal partial class VisitsViewModel : BaseViewModel
     {
-        private readonly VisitsService _visitsService;
+        private readonly IVisitsService _visitsService = App.ServiceProvider.GetRequiredService<IVisitsService>();
 
-        public List<Visits> VisitsList { get; set; } = [];
+        [ObservableProperty] private List<Visits> visitsList = [];
 
-        public ICommand RegisterVisitCommand { get; set; }
 
-        public VisitsViewModel()
-        {
-            _visitsService = new VisitsService();
-
-            RegisterVisitCommand = new Command<Visits>(RegisterVisit);
-        }
+        public ICommand RegisterVisitCommand => new Command<Visits>(RegisterVisit);
 
         private async void RegisterVisit(Visits visit)
         {

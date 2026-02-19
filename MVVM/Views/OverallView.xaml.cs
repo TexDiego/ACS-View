@@ -12,11 +12,11 @@ public partial class OverallView : ContentPage
         BindingContext = _overallViewModel;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
         if (_overallViewModel.LoadSummaryCommand.CanExecute(null))
-            await _overallViewModel.LoadSummaryCommand.ExecuteAsync(null);
+            _overallViewModel.LoadSummaryCommand.Execute(null);
     }
 }

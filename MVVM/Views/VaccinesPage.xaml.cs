@@ -9,19 +9,17 @@ namespace ACS_View.MVVM.Views;
 public partial class VaccinesPage : ContentPage
 {
     VaccinesPageViewModel viewModel = new();
-    private HealthRecord _healthRecord;
+    private Patient _healthRecord;
     private readonly Vaccines _vaccines;
-    private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+    private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
 
-    private string susNumber;
+    private int id;
     private bool _isInitialized = false;
 
 
     public VaccinesPage(Vaccines vaccines)
 	{
         InitializeComponent();
-
-        _healthRecordService = new HealthRecordService();
         _vaccines = vaccines;
     }
 
@@ -33,10 +31,10 @@ public partial class VaccinesPage : ContentPage
 
         try
         {
-            _healthRecord = await _healthRecordService.GetRecordBySusAsync(_vaccines.SusNumber);
-            susNumber = _healthRecord.SusNumber;
+            _healthRecord = await _patientService.GetPatientById(_vaccines.Id);
+            id = _healthRecord.Id;
 
-            viewModel = new VaccinesPageViewModel(susNumber);
+            viewModel = new VaccinesPageViewModel(id);
             await viewModel.InitializeAsync();
 
             BindingContext = viewModel;
@@ -44,7 +42,7 @@ public partial class VaccinesPage : ContentPage
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.ShowPopupAsync(
+            await Shell.Current.ShowPopupAsync(
                 new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, "")
             );
             Console.WriteLine(ex);
@@ -56,11 +54,11 @@ public partial class VaccinesPage : ContentPage
     {
 		try
 		{
-            await Navigation.PopAsync();
+            await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            Application.Current.MainPage.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            Shell.Current.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }
 }

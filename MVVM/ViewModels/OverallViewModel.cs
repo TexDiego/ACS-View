@@ -1,55 +1,22 @@
 ﻿using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels;
 
-public partial class OverallViewModel : ObservableObject
+internal partial class OverallViewModel : ObservableObject
 {
-    private readonly IHealthSummaryService _summaryService = App.ServiceProvider.GetRequiredService<IHealthSummaryService>();
-    private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-    private readonly INavigationService _navigationService = App.ServiceProvider.GetRequiredService<INavigationService>();
+    private readonly IDashboardService _dashboardService = App.ServiceProvider.GetRequiredService<IDashboardService>();
 
-    public OverallViewModel()
-    {
-        MainThread.BeginInvokeOnMainThread(async () => await _databaseService.InitializeAsync());
+    [ObservableProperty] private ObservableCollection<DashboardItemVM> dashboard = [];
 
-        LoadSummaryCommand = new AsyncRelayCommand(LoadSummaryAsync);
-        LoadSummaryCommand.Execute(null);
+    public ICommand GoToPageAsync => new Command<string>(async (p) => await GoToPage(p));
+    public ICommand LoadSummaryCommand => new Command(async () => await LoadSummaryAsync());
 
-        GoToPageAsync = new Command<string>(async (p) => await GoToPage(p));
-    }
 
-    public Command GoToPageAsync { get; }
-    public IAsyncRelayCommand LoadSummaryCommand { get; }
-
-    [ObservableProperty] private int totalGestantes;
-    [ObservableProperty] private int totalDiabeticos;
-    [ObservableProperty] private int totalHipertensos;
-    [ObservableProperty] private int totalDiabetesHipertensao;
-    [ObservableProperty] private int totalTuberculose;
-    [ObservableProperty] private int totalHanseniase;
-    [ObservableProperty] private int totalAcamados;
-    [ObservableProperty] private int totalDomiciliados;
-    [ObservableProperty] private int totalMenores6Anos;
-    [ObservableProperty] private int totalMental;
-    [ObservableProperty] private int totalFumante;
-    [ObservableProperty] private int totalAlcoolatra;
-    [ObservableProperty] private int totalDeficiente;
-    [ObservableProperty] private int totalHeartDesease;
-    [ObservableProperty] private int totalKidneyDesease;
-    [ObservableProperty] private int totalLungDesease;
-    [ObservableProperty] private int totalLiverDesease;
-    [ObservableProperty] private int totalBolsaFamilia;
-    [ObservableProperty] private int totalNeurodivergents;
-    [ObservableProperty] private int totalDrugsAddicted;
-    [ObservableProperty] private int totalHIV;
-    [ObservableProperty] private int totalCancer;
-    [ObservableProperty] private int totalOld;
-    [ObservableProperty] private int total;
-    [ObservableProperty] private int totalHouses;
-    [ObservableProperty] private int noResidence;
     [ObservableProperty] private bool isLoading;
 
     private async Task LoadSummaryAsync()
@@ -57,38 +24,24 @@ public partial class OverallViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            var resumo = await _summaryService.GetHealthSummaryAsync();
 
-            TotalHouses = resumo.TotalHouses;
-            TotalGestantes = resumo.TotalGestantes;
-            TotalDiabeticos = resumo.TotalDiabeticos;
-            TotalHipertensos = resumo.TotalHipertensos;
-            TotalDiabetesHipertensao = resumo.TotalDiabetesHipertensao;
-            TotalTuberculose = resumo.TotalTuberculose;
-            TotalHanseniase = resumo.TotalHanseniase;
-            TotalAcamados = resumo.TotalAcamados;
-            TotalDomiciliados = resumo.TotalDomiciliados;
-            TotalMenores6Anos = resumo.TotalMenores6Anos;
-            TotalMental = resumo.TotalMental;
-            TotalFumante = resumo.TotalFumante;
-            TotalAlcoolatra = resumo.TotalAlcoolatra;
-            TotalDeficiente = resumo.TotalDeficiente;
-            TotalHeartDesease = resumo.TotalHeartDesease;
-            TotalKidneyDesease = resumo.TotalKidneyDesease;
-            TotalLungDesease = resumo.TotalLungDesease;
-            TotalLiverDesease = resumo.TotalLiverDesease;
-            TotalBolsaFamilia = resumo.TotalBolsaFamilia;
-            TotalNeurodivergents = resumo.TotalNeurodivergents;
-            TotalDrugsAddicted = resumo.TotalDrugsAddicted;
-            TotalHIV = resumo.TotalHIV;
-            TotalCancer = resumo.TotalCancer;
-            TotalOld = resumo.TotalOld;
-            Total = resumo.Total;
-            NoResidence = resumo.NoResidence;
+            var items = await _dashboardService.GetDashboardSummaryAsync();
+
+            Dashboard = new ObservableCollection<DashboardItemVM>(
+                items.Select(x => new DashboardItemVM
+                {
+                    Id = x.Id,
+                    ItemId = x.ItemId,
+                    ItemType = x.ItemType,
+                    Name = x.Name,
+                    Total = x.Total,
+                    DisplayOrder = x.DisplayOrder
+                }));
         }
-        catch
+        catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível carregar os dados", "Voltar");
+            await Shell.Current.DisplayAlert("Erro", "Não foi possível carregar os dados", "Voltar");
+            Debug.WriteLine(ex.StackTrace);
         }
         finally
         {
@@ -104,8 +57,6 @@ public partial class OverallViewModel : ObservableObject
             return;
         }
 
-        _navigationService.SetCondition(condition);
-
-        await Shell.Current.GoToAsync("//registers");
+        await Shell.Current.GoToAsync("//registers", new Dictionary<string, object> { { "condition", condition } });
     }
 }

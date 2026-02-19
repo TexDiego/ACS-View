@@ -17,17 +17,13 @@ namespace ACS_View.MVVM.ViewModels
 
         [ObservableProperty] private string searchText = string.Empty;
         [ObservableProperty] private ObservableCollection<House> houses = [];
+        [ObservableProperty] private int totalHouses;
 
         public ICommand DeleteCommand => new Command<int>(async id => await DeleteHouseAsync(id));
         public ICommand EditCommand => new Command<int>(async id => await EditHouseAsync(id));
-        public ICommand FamilyCommand => new Command<int>(async id => await OpenFamilyPageAsync(id));
+        public ICommand FamilyCommand => new Command<int>(async id => await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", id } }));
         public ICommand LoadHousesCommand => new Command<string>(async _ => await LoadHousesAsync(SearchText));
-        public ICommand NewHouseCommand => new Command(async _ => await CreateHouseAsync());
-
-        public HousesPageViewModel()
-        {
-            MainThread.BeginInvokeOnMainThread(async () => await LoadHousesAsync(string.Empty));
-        }
+        public ICommand NewHouseCommand => new Command(async () => await Shell.Current.GoToAsync("addhouse"));
 
         private async Task LoadHousesAsync(string search)
         {
@@ -88,6 +84,8 @@ namespace ACS_View.MVVM.ViewModels
                         Houses.Add(house);
                     }
                 });
+
+                TotalHouses = Houses.Count;
             }
             catch (TaskCanceledException)
             {
@@ -95,7 +93,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", ex.Message, "OK");
+                await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
             }
         }
 
@@ -103,7 +101,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                bool confirm = Convert.ToBoolean(await Application.Current.MainPage.ShowPopupAsync(
+                bool confirm = Convert.ToBoolean(await Shell.Current.ShowPopupAsync(
                     new DisplayPopUp(
                         "Confirmar",
                         "Tem certeza de que deseja excluir a residência?\n\nTodas as famílias desta casa serão perdidas.",
@@ -132,7 +130,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
 
@@ -144,36 +142,12 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (house != null)
                 {
-                    await Application.Current.MainPage.Navigation.PushAsync(new AddHouse(house));
+                    await Shell.Current.GoToAsync("addhouse", new Dictionary<string, object> { { "house", house } });
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-            }
-        }
-
-        private static async Task CreateHouseAsync()
-        {
-            try
-            {
-                await Application.Current.MainPage.Navigation.PushAsync(new AddHouse());
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-            }
-        }
-
-        private static async Task OpenFamilyPageAsync(int id)
-        {
-            try
-            {
-                await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", id } });
-            }
-            catch (Exception ex)
-            {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
     }

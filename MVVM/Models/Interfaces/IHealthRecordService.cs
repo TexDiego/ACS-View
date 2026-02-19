@@ -2,20 +2,20 @@
 
 namespace ACS_View.MVVM.Models.Interfaces
 {
-    public interface IHealthRecordService
+    internal interface IHealthRecordService
     {
-        Task<List<HealthRecord>> GetAllRecordsAsync();
-        Task<HealthRecord?> GetRecordBySusAsync(string sus);
-        Task<List<HealthRecord>> GetRecordByNameOrSusAsync(string search);
-        Task<int> SaveRecordAsync(HealthRecord record);
-        Task AddRecordAsync(HealthRecord record);
-        Task UpdateRecordAsync(HealthRecord record);
+        Task<List<Patient>> GetAllRecordsAsync();
+        Task<Patient?> GetRecordBySusAsync(string sus);
+        Task<List<Patient>> GetRecordByNameOrSusAsync(string search);
+        Task<int> SaveRecordAsync(Patient record);
+        Task AddRecordAsync(Patient record);
+        Task UpdateRecordAsync(Patient record);
         Task DeleteRecordAsync(string sus);
-        Task<int> GetConditionCountAsync(Expression<Func<HealthRecord, bool>> condition);
+        Task<int> GetConditionCountAsync(Expression<Func<Patient, bool>> condition);
         Task<int> GetTotalCountAsync();
         Task<int> GetElderCountAsync();
         Task<int> GetYoungerCountAsync();
-        Task<List<HealthRecord>> GetRecordsByFamilyAndHouseAsync(int idFamily, int idHouse);
-        Task<List<HealthRecord>> GetRecordsByHouseIdAsync(int idHouse);
+        Task<List<Patient>> GetRecordsByFamilyAndHouseAsync(int idFamily, int idHouse);
+        Task<List<Patient>> GetRecordsByHouseIdAsync(int idHouse);
     }
 }

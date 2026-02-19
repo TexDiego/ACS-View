@@ -1,73 +1,30 @@
 ﻿using ACS_View.MVVM.Models;
+using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Models.Services;
+using ACS_View.MVVM.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public class ForgotPasswordViewModel : INotifyPropertyChanged
+    internal partial class ForgotPasswordViewModel : BaseViewModel
     {
-        private readonly DatabaseService _databaseService;
-        private User _currentUser;
-        private string _username;
-        private string _securityQuestion;
-        private string _answer;
-        private string _statusMessage;
-        private bool _isMessageVisible;
-        private bool _isQuestionVisible;
+        private readonly IDatabaseService databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+        
+        [ObservableProperty] private User currentUser;
+        [ObservableProperty] private string username;
+        [ObservableProperty] private string securityQuestion;
+        [ObservableProperty] private string answer;
+        [ObservableProperty] private string statusMessage;
+        [ObservableProperty] private bool isMessageVisible;
+        [ObservableProperty] private bool isQuestionVisible;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public ICommand FetchUserCommand => new Command(async () => await OnFetchUser());
+        public ICommand VerifyAnswerCommand => new Command(async () => await OnVerifyAnswer());
 
-        public string Username
-        {
-            get => _username;
-            set { _username = value; OnPropertyChanged(); }
-        }
-
-        public string SecurityQuestion
-        {
-            get => _securityQuestion;
-            set { _securityQuestion = value; OnPropertyChanged(); }
-        }
-
-        public string Answer
-        {
-            get => _answer;
-            set { _answer = value; OnPropertyChanged(); }
-        }
-
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set { _statusMessage = value; OnPropertyChanged(); }
-        }
-
-        public bool IsQuestionVisible
-        {
-            get => _isQuestionVisible;
-            set { _isQuestionVisible = value; OnPropertyChanged(); }
-        }
-
-        public bool IsMessageVisible
-        {
-            get => _isMessageVisible;
-            set { _isMessageVisible = value; OnPropertyChanged(); }
-        }
-
-        public ICommand FetchUserCommand { get; }
-        public ICommand VerifyAnswerCommand { get; }
-
-        public ForgotPasswordViewModel() { }
-
-        public ForgotPasswordViewModel(DatabaseService databaseService)
-        {
-            _databaseService = databaseService;
-            FetchUserCommand = new Command(OnFetchUser);
-            VerifyAnswerCommand = new Command(OnVerifyAnswer);
-        }
-
-        private async void OnFetchUser()
+        private async Task OnFetchUser()
         {
             if (string.IsNullOrWhiteSpace(Username))
             {
@@ -76,11 +33,11 @@ namespace ACS_View.MVVM.ViewModels
                 return;
             }
 
-            _currentUser = await _databaseService.GetUserByUsernameAsync(Username);
+            CurrentUser = await databaseService.GetUserByUsernameAsync(Username);
 
-            if (_currentUser != null)
+            if (CurrentUser != null)
             {
-                SecurityQuestion = _currentUser.SecurityQuestion;
+                SecurityQuestion = CurrentUser.SecurityQuestion;
                 IsQuestionVisible = true;
                 IsMessageVisible = false;
                 StatusMessage = string.Empty;
@@ -92,24 +49,19 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async void OnVerifyAnswer()
+        private async Task OnVerifyAnswer()
         {
-            if (_currentUser != null && _currentUser.SecurityAnswer == Answer)
+            if (CurrentUser != null && CurrentUser.SecurityAnswer == Answer)
             {
                 // Simplesmente redefine a senha no exemplo
-                _currentUser.Password = "NovaSenha123"; // Substitua por uma lógica de redefinição real
-                await _databaseService.UpdateUserAsync(_currentUser);
+                CurrentUser.Password = "NovaSenha123"; // Substitua por uma lógica de redefinição real
+                await databaseService.UpdateUserAsync(CurrentUser);
                 StatusMessage = "Senha redefinida com sucesso! Sua nova senha é: NovaSenha123";
             }
             else
             {
                 StatusMessage = "Resposta incorreta.";
             }
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

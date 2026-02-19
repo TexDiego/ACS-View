@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class FamiliesViewModel : BaseViewModel
+    internal partial class FamiliesViewModel : BaseViewModel
     {
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
@@ -24,7 +24,7 @@ namespace ACS_View.MVVM.ViewModels
         public IRelayCommand<int> EditFamilyCommand => new RelayCommand<int>(EditFamily);
         public IRelayCommand<int> VisitFamilyCommand => new RelayCommand<int>(VisitFamily);
         public ICommand PersonInfo => new Command<string>(async susNumber => await PersonData(susNumber));
-        public ICommand GoBack => new Command(async _ => await Application.Current.MainPage.Navigation.PopAsync());
+        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync(".."));
 
 
         private readonly int _idHouse = 0;
@@ -43,7 +43,7 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (house == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Erro", "Casa não encontrada.", "OK");
+                    await Shell.Current.DisplayAlert("Erro", "Casa não encontrada.", "OK");
                     return;
                 }
 
@@ -62,7 +62,7 @@ namespace ACS_View.MVVM.ViewModels
                     .Select(g => new Familia
                     {
                         IdFamily = g.Key,
-                        PessoasFamilia = new ObservableCollection<HealthRecord>(g.ToList())
+                        PessoasFamilia = new ObservableCollection<Patient>([.. g])
                     }).ToList();
 
                 Families.Clear();
@@ -74,7 +74,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", ex.Message, "OK");
+                await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
             }
         }
 
@@ -88,12 +88,11 @@ namespace ACS_View.MVVM.ViewModels
                 };
 
                 Families.Add(newFamily); // Adiciona a nova família à coleção
-                OnPropertyChanged(nameof(Families)); // Notifica a CollectionView para atualizar os dados
-                await Application.Current.MainPage.Navigation.PushAsync(new AddFamilyPage(_idHouse, false));
+                await Shell.Current.Navigation.PushAsync(new AddFamilyPage(_idHouse, false));
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível adicionar a nova família.\n\n{ex.Message}", "OK");
+                await Shell.Current.DisplayAlert("Erro", $"Não foi possível adicionar a nova família.\n\n{ex.Message}", "OK");
             }
         }
 
@@ -101,7 +100,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             try
             {
-                var confirm = await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp(
+                var confirm = await Shell.Current.ShowPopupAsync(new DisplayPopUp(
                     "Confirmar Exclusão",
                     $"Tem certeza de que deseja excluir a família?",
                     true ,"Excluir",
@@ -124,7 +123,7 @@ namespace ACS_View.MVVM.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(
+                await Shell.Current.DisplayAlert(
                     "Erro",
                     $"Não foi possível excluir a família.\n\n{ex.Message}",
                     "OK");
@@ -139,15 +138,15 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (familyToEdit == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Aviso", "Família não encontrada.", "OK");
+                    await Shell.Current.DisplayAlert("Aviso", "Família não encontrada.", "OK");
                     return;
                 }
 
-                await Application.Current.MainPage.Navigation.PushAsync(new AddFamilyPage(_idHouse, true, idFamily));
+                await Shell.Current.Navigation.PushAsync(new AddFamilyPage(_idHouse, true, idFamily));
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível editar a família.\n\n{ex.Message}", "OK");
+                await Shell.Current.DisplayAlert("Erro", $"Não foi possível editar a família.\n\n{ex.Message}", "OK");
             }
         }
 
@@ -159,25 +158,25 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (familyToVisit == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Aviso", "Família não encontrada.", "OK");
+                    await Shell.Current.DisplayAlert("Aviso", "Família não encontrada.", "OK");
                     return;
                 }
 
-                var visit = await Application.Current.MainPage.ShowPopupAsync(new VisitPage(_idHouse, idFamily));
+                var visit = await Shell.Current.ShowPopupAsync(new VisitPage(_idHouse, idFamily));
 
-                if (visit is Visits)
+                if (visit is Visits visits)
                 {
-                    await _visitsService.RegisterVisitAsync((Visits)visit);
-                    await Application.Current.MainPage.DisplayAlert("Sucesso", "Visita realizada", "OK");
+                    await _visitsService.RegisterVisitAsync(visits);
+                    await Shell.Current.DisplayAlert("Sucesso", "Visita realizada", "OK");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Aviso", "Visita não registrada.", "OK");
+                    await Shell.Current.DisplayAlert("Aviso", "Visita não registrada.", "OK");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", $"Não foi possível visitar a família.\n\n{ex.Message}", "OK");
+                await Shell.Current.DisplayAlert("Erro", $"Não foi possível visitar a família.\n\n{ex.Message}", "OK");
             }
         }
 
@@ -190,7 +189,6 @@ namespace ACS_View.MVVM.ViewModels
                 if (record != null)
                 {
                     var popup = new PersonsInfo(record);
-                    await popup.LoadAddressAsync();
                     await Shell.Current.ShowPopupAsync(popup);
                 }
             }

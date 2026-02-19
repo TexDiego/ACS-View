@@ -5,7 +5,7 @@
              xmlns:model="clr-namespace:ACS_View.MVVM.Models.Services"
              x:DataType="vm:AddFamilyViewModel"
              x:Class="ACS_View.MVVM.Views.AddFamilyPage"
-             Shell.NavBarIsVisible="False"
+             Title="Adicionar Família"
              Background="#E6EBED">
 
     <ContentPage.Resources>
@@ -39,25 +39,17 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,auto,*,auto">
+    <Grid RowDefinitions="auto,*">
 
-        <Label 
-            Grid.Row="0"
-            Text="Adicionar família"
-            Margin="20,10,20,10"
-            FontAttributes="Bold"
-            TextColor="#0084B1"
-            FontSize="30"
-            HorizontalOptions="Center"/>
-        
         <StackLayout
-            Grid.Row="1"
-            Margin="20,15,20,20"
+            Grid.Row="0"
             HorizontalOptions="Fill"
             VerticalOptions="Start">
 
             <Border
-                Style="{StaticResource Border}"
+                StrokeThickness="2"
+                Stroke="Gray"
+                Margin="-2,-1"
                 VerticalOptions="Start">
                 
                 <Grid
@@ -68,11 +60,15 @@
                         Grid.Row="0"
                         FontSize="24"
                         Style="{StaticResource Label}"
+                        HorizontalOptions="Center"
                         Text="Indivíduo"/>
 
                     <Entry
                         x:Name="Entry_Search"
                         Grid.Row="1"
+                        Margin="0,15,0,0"
+                        Placeholder="Buscar..."
+                        HorizontalTextAlignment="Center"
                         FontAttributes="None"
                         MinimumWidthRequest="120"
                         TextChanged="Entry_Search_TextChanged"/>
@@ -123,7 +119,7 @@
                                                 VerticalOptions="Center"
                                                 HorizontalOptions="End"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddPersonCommand}"
-                                                CommandParameter="{Binding Sus}"
+                                                CommandParameter="{Binding Id}"
                                                 Clicked="ImageButton_Clicked"/>
 
                                         </Grid>
@@ -142,8 +138,7 @@
             </Border>
         </StackLayout>
 
-        <ScrollView
-            Grid.Row="2">
+        <ScrollView Grid.Row="1">
 
             <CollectionView
                 ItemsSource="{Binding Pessoas}">
@@ -154,7 +149,7 @@
 
                         <Border
                             x:DataType="model:Pessoa"
-                            Margin="20,5"
+                            Margin="10"
                             StrokeShape="RoundRectangle 10"
                             Stroke="LightGray"
                             StrokeThickness="2"
@@ -183,7 +178,7 @@
                                     VerticalOptions="Center"
                                     HorizontalOptions="End"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding Sus}"/>
+                                    CommandParameter="{Binding Id}"/>
 
                             </Grid>
                             
@@ -197,18 +192,12 @@
             
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="3" Margin="20">
+        <VerticalStackLayout Grid.RowSpan="2" Margin="10" VerticalOptions="End">
 
             <Button
                 Style="{StaticResource Button}"
                 Text="Salvar"
-                Margin="0,0,0,10"
                 Command="{Binding SalvarCommand}"/>
-
-            <Button
-                Style="{StaticResource Button}"
-                Text="Voltar"
-                Command="{Binding GoBack}"/>
 
         </VerticalStackLayout>
 

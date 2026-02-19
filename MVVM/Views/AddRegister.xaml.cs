@@ -11,15 +11,12 @@ public partial class AddRegister : ContentPage, IQueryAttributable
     {
         InitializeComponent();
         BindingContext = _viewModel;
-
-        Entry_Birth.MinimumDate = DateTime.Today.AddYears(-120);
-        Entry_Birth.MaximumDate = DateTime.Today;
-        Entry_Birth.Date = DateTime.Today;
     }
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("record", out var record))
-            _viewModel.SetRecord((HealthRecord)record);
+            if (record is Patient p)
+                await _viewModel.LoadConditions(p.Id);
     }
 }

@@ -1,19 +1,21 @@
+using ACS_View.MVVM.Models.HealthConditions;
 using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
+using System.Threading.Tasks;
 
 namespace ACS_View.MVVM.Views;
 
-public partial class Registers : ContentPage
+public partial class Registers : ContentPage, IQueryAttributable
 {
-    private readonly INavigationService navigationService = App.ServiceProvider.GetRequiredService<INavigationService>();
+    private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
 
     private CancellationTokenSource _throttleCts = new();
 
     private readonly AddRegisterViewModel _addRegisterViewModel = new();
     private readonly RegistersViewModel viewModel = new();
 
-    private string _condition = "";
+    private string _condition = "Cadastros";
     private string _filter = "Nome";
     private string _order = "Crescente";
 
@@ -23,10 +25,15 @@ public partial class Registers : ContentPage
         BindingContext = viewModel;
     }
 
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("condition", out var condition))
+            _condition = (string)condition;        
+    }
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _condition = navigationService.GetCondition();
         await LoadDataOnAppearAsync();
     }
 
@@ -38,7 +45,7 @@ public partial class Registers : ContentPage
 
             await viewModel.InitAsync(_condition, SB.Text, _filter, _order);
             await ScrollToTargetIfNeeded();
-            Lbl_Title.Text = CapitalizeTitle(_condition);
+            viewModel.Condition = _condition;
         }
         catch (Exception ex)
         {
@@ -52,14 +59,14 @@ public partial class Registers : ContentPage
 
     private async Task ScrollToTargetIfNeeded()
     {
-        if (!string.IsNullOrEmpty(viewModel.ScrollToSusNumber))
+        if (viewModel.ScrollToId < 1)
         {
-            var item = viewModel.HealthRecords.FirstOrDefault(r => r.SusNumber == viewModel.ScrollToSusNumber);
+            var item = viewModel.Patients.FirstOrDefault(r => r.Id == viewModel.ScrollToId);
             if (item != null)
             {
                 await Task.Delay(100);
                 collectionView.ScrollTo(item, position: ScrollToPosition.Center, animate: true);
-                viewModel.ScrollToSusNumber = null;
+                viewModel.ScrollToId = 0;
             }
         }
     }
@@ -83,43 +90,40 @@ public partial class Registers : ContentPage
         }
     }
 
-    private static string CapitalizeTitle(string cond)
+    private async Task<string> CapitalizeTitle(int id)
     {
-        return cond switch
-        {
-            "GESTANTE" => "Gestante",
-            "HAS" => "Hipertensos",
-            "DB" => "Diabéticos",
-            "HASDB" => "Hipertensos Diabéticos",
-            "HAN" => "Hanseníases",
-            "TB" => "Tuberculosos",
-            "ACAMADO" => "Acamados",
-            "DOMICILIADO" => "Domiciliados",
-            "MENOR" => "Menores de 6 anos",
-            "MENTAL" => "Condições Mentais",
-            "BOLSA" => "Beneficiários de Bolsa Família",
-            "CORACAO" => "Cardíacos",
-            "FIGADO" => "Hepatopatas",
-            "RIM" => "Renais",
-            "PULMAO" => "Pulmonares",
-            "NEURO" => "Neurodivergentes",
-            "HIV" => "Imunodeficientes",
-            "DROGAS" => "Dependentes químicos",
-            "FUMANTE" => "Fumantes",
-            "ALCOOLATRA" => "Álcoolatras",
-            "DEFICIENTE" => "Desabilitados",
-            "IDOSO" => "Idosos",
-            "CANCER" => "Câncer",
-            "NOHOME" => "Sem residência",
-            _ => "Cadastros"
-        };
-    }
+        var condition = await _databaseService.Connection.Table<ConditionCategory>().FirstOrDefaultAsync(c => c.Id == id);
 
-    private async Task<string?> ShowOptionsPopup(string title, string[] options, string currentValue)
-    {
-        var selected = await this.ShowPopupAsync(new DisplaySheetPopUp(title, options[0], options[1], "Voltar", 1));
-        var value = Convert.ToString(selected);
-        return value == currentValue ? null : value;
+        return condition.Name;
+
+        //return cond switch
+        //{
+        //    "GESTANTE" => "Gestante",
+        //    "HAS" => "Hipertensos",
+        //    "DB" => "Diabéticos",
+        //    "HASDB" => "Hipertensos Diabéticos",
+        //    "HAN" => "Hanseníases",
+        //    "TB" => "Tuberculosos",
+        //    "ACAMADO" => "Acamados",
+        //    "DOMICILIADO" => "Domiciliados",
+        //    "MENOR" => "Menores de 6 anos",
+        //    "MENTAL" => "Condições Mentais",
+        //    "BOLSA" => "Beneficiários de Bolsa Família",
+        //    "CORACAO" => "Cardíacos",
+        //    "FIGADO" => "Hepatopatas",
+        //    "RIM" => "Renais",
+        //    "PULMAO" => "Pulmonares",
+        //    "NEURO" => "Neurodivergentes",
+        //    "HIV" => "Imunodeficientes",
+        //    "DROGAS" => "Dependentes químicos",
+        //    "FUMANTE" => "Fumantes",
+        //    "ALCOOLATRA" => "Álcoolatras",
+        //    "DEFICIENTE" => "Desabilitados",
+        //    "IDOSO" => "Idosos",
+        //    "CANCER" => "Câncer",
+        //    "NOHOME" => "Sem residência",
+        //    _ => "Cadastros"
+        //};
     }
 
     private async Task ShowErrorPopupAsync(string message)

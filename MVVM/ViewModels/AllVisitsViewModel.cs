@@ -2,11 +2,11 @@
 using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class AllVisitsViewModel : BaseViewModel
+    internal partial class AllVisitsViewModel : BaseViewModel
     {
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
@@ -16,16 +16,13 @@ namespace ACS_View.MVVM.ViewModels
         [ObservableProperty] private List<House> houseList = [];
 
 
-        public IRelayCommand DeleteVisit => new RelayCommand<int>(async id => await DeleteVisitCommand(id));
-        public IRelayCommand GoToHouseCommand => new RelayCommand<int>(async id => await GoToHouse(id));
+        public ICommand DeleteVisit => new Command<int>(async id => await DeleteVisitCommand(id));
+        public ICommand GoToHouseCommand => new Command<int>(async id => await GoToHouse(id));
 
 
         public AllVisitsViewModel()
         {            
-            MainThread.BeginInvokeOnMainThread(async () =>
-            {
-                await LoadVisitsAsync();
-            });
+            MainThread.BeginInvokeOnMainThread(async () => await LoadVisitsAsync());
         }
 
         private async Task DeleteVisitCommand(int id)
@@ -67,7 +64,7 @@ namespace ACS_View.MVVM.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar visitas: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível carregar as visitas.", "OK");
+                await Shell.Current.DisplayAlert("Erro", "Não foi possível carregar as visitas.", "OK");
             }
         }
 
@@ -81,17 +78,17 @@ namespace ACS_View.MVVM.ViewModels
 
                 if (house != null)
                 {
-                    await Shell.Current.GoToAsync($"//families?id={house.CasaId}");
+                    await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", house.CasaId} });
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Aviso", "Casa não encontrada.", "OK");
+                    await Shell.Current.DisplayAlert("Aviso", "Casa não encontrada.", "OK");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao navegar para a casa: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Erro", "Não foi possível navegar para a casa.", "OK");
+                await Shell.Current.DisplayAlert("Erro", "Não foi possível navegar para a casa.", "OK");
             }
         }
 

@@ -2,9 +2,9 @@
 
 namespace ACS_View.MVVM.Models.Interfaces
 {
-    public interface IRegisterFactory
+    internal interface IRegisterFactory
     {
-        HealthRecord CreateHealthRecord(AddRegisterViewModel vm);
+        Patient CreateHealthRecord(AddRegisterViewModel vm);
         Vaccines CreateVaccines(AddRegisterViewModel vm);
     }
 }

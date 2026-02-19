@@ -2,23 +2,29 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:ACS_View.MVVM.Views"
-       x:Class="ACS_View.MVVM.Views.AppShell">
+       x:Class="ACS_View.MVVM.Views.AppShell"
+       Shell.TitleColor="White"
+       Shell.BackgroundColor="#0084B1"
+       Shell.TabBarTitleColor="White"
+       Shell.TabBarForegroundColor="White"
+       Shell.UnselectedColor="Black"
+       Shell.ForegroundColor="White">
 
     <TabBar>
 
-        <Tab Title="Pessoas">
+        <Tab Title="Pessoas" Icon="group.png">
             <ShellContent Route="registers" ContentTemplate="{DataTemplate pages:Registers}"/>
         </Tab>
-        
-        <Tab Title="Casas">
+
+        <Tab Title="Casas" Icon="house.png">
             <ShellContent Route="houses" ContentTemplate="{DataTemplate pages:HousesPage}"/>
         </Tab>
 
-        <Tab Title="Início">
+        <Tab Title="Início" Icon="layout.png">
             <ShellContent Route="overview" ContentTemplate="{DataTemplate pages:OverallView}"/>
         </Tab>
 
-        <Tab Title="Visitas">
+        <Tab Title="Visitas" Icon="writing.png">
             <ShellContent Route="visits" ContentTemplate="{DataTemplate pages:AllVisits}"/>
         </Tab>
 

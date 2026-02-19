@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace ACS_View.MVVM.Views;
 
-public partial class AddHouse : ContentPage
+public partial class AddHouse : ContentPage, IQueryAttributable
 {
     private readonly AddHouseViewModel viewModel = new();
     private readonly Regex regex = GetDigitsOnlyRegex();
@@ -15,9 +15,10 @@ public partial class AddHouse : ContentPage
         BindingContext = viewModel;
     }
 
-    public AddHouse(House house) : this()
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        viewModel.HouseModel = house;
+        if (query.TryGetValue("house", out var house))
+            viewModel.HouseModel = (House)house;
     }
 
     private void Entry_CEP_TextChanged(object sender, TextChangedEventArgs e)

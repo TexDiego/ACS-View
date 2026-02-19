@@ -13,6 +13,8 @@ public partial class LoginPage : ContentPage
     {
         try
         {
+            Preferences.Set("AuthToken", "User");
+
             await Shell.Current.GoToAsync("//overview");
         }
         catch (Exception ex)

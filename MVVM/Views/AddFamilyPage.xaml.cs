@@ -11,8 +11,7 @@ public partial class AddFamilyPage : ContentPage
     public AddFamilyPage(int idHouse, bool isEdit, int? idFamily = null)
     {
         InitializeComponent();
-        viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
-        BindingContext = viewModel;
+        BindingContext = viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
 	}
 
     private async void Entry_Search_TextChanged(object sender, TextChangedEventArgs e)
@@ -44,7 +43,7 @@ public partial class AddFamilyPage : ContentPage
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.ShowPopupAsync(
+            await Shell.Current.ShowPopupAsync(
                     new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
         }
     }

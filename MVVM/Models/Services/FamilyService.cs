@@ -4,7 +4,7 @@ using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class FamilyService : IFamilyService
+    internal class FamilyService : IFamilyService
     {
         private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
         private readonly SQLiteAsyncConnection _connection;
@@ -23,7 +23,7 @@ namespace ACS_View.MVVM.Models.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao buscar famílias: {ex.Message}");
-                return new List<Family>();
+                return [];
             }
         }
 
@@ -44,14 +44,14 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
-        public async Task<List<HealthRecord>> GetPersonOfFamilyById(int houseId, int familyId)
+        public async Task<List<Patient>> GetPersonOfFamilyById(int houseId, int familyId)
         {
             if (houseId <= 0)
                 throw new ArgumentException("O ID da residência deve ser maior que zero.", nameof(houseId));
 
             try
             {
-                return await _connection.QueryAsync<HealthRecord>(
+                return await _connection.QueryAsync<Patient>(
                     "SELECT * FROM HealthRecord WHERE HouseId = ? AND FamilyId = ?",
                     houseId, familyId
                 );
@@ -59,7 +59,7 @@ namespace ACS_View.MVVM.Models.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao buscar pessoas da família: {ex.Message}");
-                return new List<HealthRecord>();
+                return [];
             }
         }
 
@@ -125,7 +125,7 @@ namespace ACS_View.MVVM.Models.Services
             try
             {
                 var result = await _connection.ExecuteScalarAsync<int?>(
-                    "SELECT MAX(FamilyId) FROM HealthRecord WHERE HouseId = ?", houseId
+                    "SELECT MAX(FamilyId) FROM Patient WHERE HouseId = ?", houseId
                 );
                 return result ?? 0;
             }

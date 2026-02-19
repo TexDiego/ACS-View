@@ -3,6 +3,6 @@
     public class Pessoa
     {
         public string Nome { get; set; }
-        public string Sus { get; set; }
+        public int Id { get; set; }
     }
 }

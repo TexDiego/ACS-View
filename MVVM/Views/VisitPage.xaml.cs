@@ -1,6 +1,5 @@
 using ACS_View.MVVM.Models;
 using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
 
@@ -9,7 +8,7 @@ namespace ACS_View.MVVM.Views;
 public partial class VisitPage : Popup
 {
     private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-    private readonly VisitsViewModel _viewModel;
+    private readonly VisitsViewModel _viewModel = new();
 
     private readonly int _houseID;
     private readonly int _familyID;
@@ -17,15 +16,12 @@ public partial class VisitPage : Popup
     public VisitPage(int HouseID, int FamilyID)
     {
         InitializeComponent();
-
-        _viewModel = new VisitsViewModel();
-
         BindingContext = _viewModel;
 
         _houseID = HouseID;
         _familyID = FamilyID;
 
-        layoutGrid.WidthRequest = Application.Current.MainPage.Width - 50;
+        layoutGrid.WidthRequest = (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 50;
     }
 
     private async Task AddVisitButton_Clicked(object sender, EventArgs e)
@@ -38,7 +34,7 @@ public partial class VisitPage : Popup
         // Verifica se algum foi selecionado
         if (radioSelecionado == null)
         {
-            await Application.Current.MainPage.DisplayAlert("Erro", "Selecione uma descrição para a visita.", "OK");
+            await Shell.Current.DisplayAlert("Erro", "Selecione uma descrição para a visita.", "OK");
             return;
         }
 

@@ -5,19 +5,17 @@
              xmlns:local="clr-namespace:ACS_View.MVVM.Models"
              x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.MVVM.Views.Registers"
-             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="True"
+             Title="{Binding Condition}"
              Background="#E6EBED">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            IconImageSource="addperson.png"
+            Command="{Binding AddPerson}"/>
+    </ContentPage.ToolbarItems>
+
     <ContentPage.Resources>
-        <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="TextColor" Value="White"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="20,10,20,0"/>
-            <Setter Property="MaximumHeightRequest" Value="60"/>
-        </Style>
         <Style x:Key="Lbl_Datas" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Start"/>
             <Setter Property="VerticalOptions" Value="Center"/>
@@ -31,97 +29,55 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid
-        RowDefinitions="auto,*"
-        RowSpacing="5">
+    <Grid Margin="10,0,10,10" Padding="0">
 
-        <VerticalStackLayout
-            Grid.Row="0"
+        <Border
+            Stroke="Gray"
+            StrokeThickness="2"
+            Margin="-12,-1"
+            BackgroundColor="White"
             VerticalOptions="Start">
 
-            <Grid Margin="10">
-
-                <Label
-                    x:Name="Lbl_Title"
+            <Grid>
+                <SearchBar
+                    x:Name="SB"
+                    HorizontalOptions="Start"
+                    Placeholder="Buscar..."
                     TextColor="Black"
-                    Text="Cadastros"
-                    FontSize="26"
-                    FontAttributes="Bold" 
-                    HorizontalOptions="Center"
-                    LineBreakMode="WordWrap"
-                    VerticalTextAlignment="Center"
-                    HorizontalTextAlignment="Center"
-                    Margin="50,0"/>
+                    FontSize="16"
+                    CancelButtonColor="#0084B1"
+                    MaxLength="30"
+                    IsSpellCheckEnabled="True"
+                    BackgroundColor="Transparent"
+                    TextChanged="SB_TextChanged"/>
 
                 <ImageButton
-                    Source="addperson.png"
-                    HeightRequest="30"
+                    ToolTipProperties.Text="Filtrar"
+                    Source="filter.png"
                     WidthRequest="30"
-                    ToolTipProperties.Text="Adicionar cadastro"
+                    HeightRequest="30"
                     HorizontalOptions="End"
-                    Command="{Binding AddPerson}"/>
-
+                    Margin="15,0"
+                    Command="{Binding Filter}"/>
             </Grid>
-
-            <Border
-                Stroke="Gray"
-                StrokeThickness="2"
-                Margin="-2,0"
-                BackgroundColor="White">
-
-                <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="15">
-
-                    <SearchBar
-                        Grid.Column="0"
-                        x:Name="SB"
-                        Placeholder="Buscar..."
-                        TextColor="Black"
-                        FontSize="16"
-                        CancelButtonColor="#0084B1"
-                        MaxLength="30"
-                        IsSpellCheckEnabled="True"
-                        BackgroundColor="Transparent"
-                        TextChanged="SB_TextChanged"/>
-
-                    <ImageButton
-                        Grid.Column="1"
-                        ToolTipProperties.Text="Filtrar"
-                        Source="filter.png"
-                        WidthRequest="30"
-                        HeightRequest="30"
-                        Command="{Binding Filter}"/>
-
-                    <ImageButton
-                        Grid.Column="3"
-                        ToolTipProperties.Text="Residências"
-                        Source="house.png"
-                        WidthRequest="30"
-                        HeightRequest="30"
-                        Margin="0,0,15,0"
-                        Command="{Binding Houses}"/>
-
-                </Grid>
-            </Border>
-
-        </VerticalStackLayout>
+        </Border>
 
         <CollectionView
-            Grid.Row="1"
             x:Name="collectionView"
-            ItemsSource="{Binding HealthRecords}"
+            ItemsSource="{Binding Patients}"
             SelectionMode="None"
             CanReorderItems="False"
             BackgroundColor="Transparent"
             CanMixGroups="False"
-            Margin="10,0">
+            Margin="0,55,0,0">
 
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border
-                        x:DataType="local:HealthRecord"
+                        Margin="0,5"
+                        x:DataType="local:Patient"
                         StrokeShape="RoundRectangle 10"
                         StrokeThickness="1"
-                        Margin="0,10,0,0"
                         Stroke="Grey">
 
                         <SwipeView>
@@ -152,7 +108,7 @@
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                        CommandParameter="{Binding SusNumber}"/>
+                                        CommandParameter="{Binding .}"/>
                                 </Grid.GestureRecognizers>
 
                                 <!-- name -->
@@ -195,7 +151,6 @@
         </CollectionView>
 
         <Border
-            Grid.RowSpan="2"
             HorizontalOptions="Center"
             Padding="10,5"
             Margin="15"
@@ -214,4 +169,5 @@
         </Border>
         
     </Grid>
+    
 </ContentPage>

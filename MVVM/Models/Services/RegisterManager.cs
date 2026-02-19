@@ -30,14 +30,14 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
-        private async Task UpdateAsync(HealthRecord existing, AddRegisterViewModel vm)
+        private async Task UpdateAsync(Patient existing, AddRegisterViewModel vm)
         {
             try
             {
                 var updated = _factory.CreateHealthRecord(vm);
-                updated.SusNumber = existing.SusNumber;
+                updated.Id = existing.Id;
 
-                var vaccines = await _vaccineService.GetVaccinesBySusAsync(existing.SusNumber);
+                var vaccines = await _vaccineService.GetVaccinesByIdAsync(existing.Id);
                 if (vaccines == null)
                 {
                     vaccines = _factory.CreateVaccines(vm);
@@ -46,7 +46,6 @@ namespace ACS_View.MVVM.Models.Services
                 else
                 {
                     vaccines.BirthDate = updated.BirthDate;
-                    vaccines.IsPregnant = updated.IsPregnant;
                     await _vaccineService.AtualizarVacinasAsync(vaccines);
                 }
 

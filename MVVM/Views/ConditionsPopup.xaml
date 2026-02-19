@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+          xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+          xmlns:models="clr-namespace:ACS_View.MVVM.Models.HealthConditions"
+          xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+          xmlns:converter="clr-namespace:ACS_View.Converters"
+          x:DataType="vm:ConditionPopupViewModel"
+          x:Class="ACS_View.MVVM.Views.ConditionsPopup"
+          Color="Transparent">
+    
+    <Border
+        WidthRequest="{Binding Width}"
+        Stroke="Gray"
+        StrokeShape="RoundRectangle 25"
+        StrokeThickness="2"
+        BackgroundColor="#E6EBED"
+        Padding="10">
+
+        <VerticalStackLayout>
+
+            <Label
+                Text="{Binding Name}"
+                FontSize="24"
+                TextColor="Black"
+                FontAttributes="Bold"
+                Opacity="0.8"
+                HorizontalOptions="Center"/>
+
+            <BoxView
+                Color="Gray"
+                HeightRequest="2"
+                Margin="5,5,5,20"/>
+
+            <FlexLayout
+                BindableLayout.ItemsSource="{Binding Conditions}"
+                Wrap="Wrap"
+                Direction="Row"
+                AlignContent="Center"
+                AlignItems="Center"
+                JustifyContent="Center">
+                
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            x:DataType="vm:ConditionVM"
+                            Stroke="Gray"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 25"
+                            Margin="1"
+                            Padding="8,1"
+                            BackgroundColor="{Binding IsSelected, Converter={converter:BoolToColorConverter}}">
+
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.SwitchConditionState}"
+                                    CommandParameter="{Binding Id}"/>
+                            </Border.GestureRecognizers>
+                            
+                            <Label
+                                Text="{Binding Name}"
+                                FontSize="20"
+                                TextColor="Black"
+                                Opacity="0.8"/>
+                            
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+        </VerticalStackLayout>
+        
+    </Border>
+    
+</tk:Popup>

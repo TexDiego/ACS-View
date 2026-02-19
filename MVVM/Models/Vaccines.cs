@@ -5,7 +5,7 @@ namespace ACS_View.MVVM.Models
     public class Vaccines
     {
         [PrimaryKey]
-        public string SusNumber { get; set; }
+        public int Id { get; set; }
         public DateTime BirthDate { get; set; }
         public bool IsPregnant { get; set; } = false;
 

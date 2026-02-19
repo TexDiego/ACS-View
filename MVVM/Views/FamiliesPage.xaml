@@ -5,183 +5,97 @@
              xmlns:services="clr-namespace:ACS_View.MVVM.Models.Services"
              x:DataType="vm:FamiliesViewModel"
              x:Class="ACS_View.MVVM.Views.FamiliesPage"
-             Shell.NavBarIsVisible="False"
+             Shell.NavBarIsVisible="True"
+             Title="{Binding House}"
              Background="#E6EBED">
 
-    <Grid RowDefinitions="auto,*" RowSpacing="10">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            IconImageSource="addhouse.png"
+            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}"/>
+    </ContentPage.ToolbarItems>
 
-        <Grid
-            Grid.Row="0"
-            VerticalOptions="Start">
+    <CollectionView
+        ItemsSource="{Binding Families}"
+        VerticalScrollBarVisibility="Never"
+        Margin="10">
 
-            <BoxView
-                VerticalOptions="Center"
-                HeightRequest="80"
-                BackgroundColor="White"
-                Opacity="0.8">
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <Border
+                    x:DataType="services:Familia"
+                    StrokeThickness="2"
+                    Stroke="Gray"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="White">
 
-                <BoxView.Shadow>
-                    <Shadow
-                        Radius="50"
-                        Brush="White"
-                        Offset="0.5,0"
-                        Opacity="1"/>
-                </BoxView.Shadow>
+                    <SwipeView>
 
-            </BoxView>
+                        <SwipeView.LeftItems>
+                            <SwipeItem
+                                IconImageSource="bin.png"
+                                BackgroundColor="IndianRed"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}"
+                                CommandParameter="{Binding IdFamily}">
+                            </SwipeItem>
+                        </SwipeView.LeftItems>
 
-            <Label TextColor="Black"
-                   Text="{Binding House}"
-                   Opacity="0.7"
-                   Margin="60,10,60,0"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   LineBreakMode="WordWrap"
-                   VerticalTextAlignment="Center"
-                   HorizontalTextAlignment="Center"/>
-
-            <ImageButton
-                Source="plus"
-                HeightRequest="40"
-                WidthRequest="40"
-                Padding="10"
-                x:Name="Btn_AddFamily"
-                BackgroundColor="AliceBlue"
-                BorderColor="Grey"
-                CornerRadius="80"
-                HorizontalOptions="End"
-                VerticalOptions="Center"
-                Margin="0,0,10,0"
-                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}"/>
-
-            <ImageButton
-                Source="arrowleft.png"
-                HeightRequest="40"
-                WidthRequest="40"
-                Margin="10,0,0,0"
-                HorizontalOptions="Start"
-                Command="{Binding GoBack}"/>
-
-        </Grid>
-        
-        <CollectionView
-            Grid.Row="1"
-            ItemsSource="{Binding Families}"
-            VerticalScrollBarVisibility="Never">
-            
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border
-                        Margin="10,5"
-                        x:DataType="services:Familia"
-                        StrokeThickness="2"
-                        Stroke="LightGray"
-                        StrokeShape="RoundRectangle 10"
-                        Padding="10"
-                        BackgroundColor="White">
-
-                        <Grid
-                            ColumnDefinitions="*,*,*"
-                            RowDefinitions="auto,*,35">
-
-                            <CollectionView
-                                Grid.ColumnSpan="3"
-                                Grid.Row="0"
-                                ItemsSource="{Binding PessoasFamilia}">
-
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-
-                                        <Grid x:DataType="models:HealthRecord">
-
-                                            <Label
-                                                Text="{Binding Name}"
-                                                TextColor="Black"
-                                                Opacity="0.7"
-                                                FontSize="16"
-                                                Margin="0,5"
-                                                FontAttributes="Bold"
-                                                LineBreakMode="WordWrap"/>
-
-                                            <Button
-                                                    x:Name="InfoPopup"
-                                                    Grid.Row="0"
-                                                    Grid.RowSpan="6"
-                                                    BackgroundColor="Transparent"
-                                                    BorderColor="Transparent"
-                                                    Text=""
-                                                    Padding="0"
-                                                    Opacity="0.01"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                                    CommandParameter="{Binding SusNumber}"/>
-
-                                        </Grid>
-
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-
-                            <BoxView
-                                    Grid.Row="1"
-                                    Grid.ColumnSpan="3"
-                                    Margin="0,5"
-                                    HorizontalOptions="Fill"
-                                    HeightRequest="2"
-                                    Color="LightGray"/>
-
-                            <Button
-                                    Grid.Column="0"
-                                    Grid.Row="2"
-                                    VerticalOptions="Center"
-                                    HorizontalOptions="Start"
-                                    Padding="10,8"
-                                    Text="Visitar"
-                                    TextColor="Black"
-                                    FontSize="14"
-                                    FontAttributes="Bold"
-                                    ImageSource="writing.png"
-                                    BackgroundColor="AliceBlue"
-                                    BorderColor="DarkOrange"
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem
+                                    IconImageSource="writing.png"
+                                    BackgroundColor="LightYellow"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VisitFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
-
-                            <Button
-                                    Grid.Column="1"
-                                    Grid.Row="2"
-                                    VerticalOptions="Center" 
-                                    ImageSource="pencil.png"
-                                    BackgroundColor="AliceBlue"
-                                    BorderColor="#0084B1"
-                                    Padding="10,8"
-                                    Text="Editar"
-                                    FontAttributes="Bold"
-                                    TextColor="DarkOrange"
+                                <SwipeItem
+                                    IconImageSource="pencil.png"
+                                    BackgroundColor="DarkOrange"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}" 
                                     CommandParameter="{Binding IdFamily}"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        
+                        <CollectionView
+                            ItemsSource="{Binding PessoasFamilia}"
+                            BackgroundColor="White">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
 
-                            <Button 
-                                    Grid.Column="2"
-                                    Grid.Row="2"
-                                    VerticalOptions="Center"
-                                    HorizontalOptions="End"
-                                    ImageSource="bin.png"
-                                    BorderColor="#C93919"
-                                    Text="Excluir"
-                                    Padding="10,8"
-                                    FontAttributes="Bold"
-                                    FontSize="14"
-                                    TextColor="DarkRed"
-                                    BackgroundColor="AliceBlue"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}" 
-                                    CommandParameter="{Binding IdFamily}"/>
+                                    <Grid
+                                        x:DataType="models:Patient"
+                                        Padding="10">
 
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                                        <Label
+                                            Text="{Binding Name}"
+                                            TextColor="Black"
+                                            Opacity="0.7"
+                                            FontSize="16"
+                                            Margin="0,5"
+                                            FontAttributes="Bold"
+                                            LineBreakMode="WordWrap"/>
 
-    </Grid>
+                                        <Button
+                                            x:Name="InfoPopup"
+                                            Grid.Row="0"
+                                            Grid.RowSpan="6"
+                                            BackgroundColor="Transparent"
+                                            BorderColor="Transparent"
+                                            Text=""
+                                            Padding="0"
+                                            Opacity="0.01"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                            CommandParameter="{Binding SusNumber}"/>
+
+                                    </Grid>
+
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        
+                    </SwipeView>
+                </Border>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 
 </ContentPage>

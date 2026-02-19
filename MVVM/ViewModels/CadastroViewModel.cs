@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    public partial class CadastroViewModel : BaseViewModel
+    internal partial class CadastroViewModel : BaseViewModel
     {
         private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
 
@@ -52,50 +52,50 @@ namespace ACS_View.MVVM.ViewModels
         {
             if (string.IsNullOrWhiteSpace(SusNumber))
             {
-                await Application.Current.MainPage.DisplayAlert("Erro", "O número do SUS é obrigatório.", "OK");
+                await Shell.Current.DisplayAlert("Erro", "O número do SUS é obrigatório.", "OK");
                 return;
             }
 
             var existingRecord = await _healthRecordService.GetRecordBySusAsync(SusNumber);
 
-            var record = new HealthRecord
+            var record = new Patient
             {
-                SusNumber = SusNumber,
-                Name = Name,
-                MotherName = MotherName,
-                BirthDate = BirthDate,
-                IsPregnant = IsPregnant,
-                HasDiabetes = HasDiabetes,
-                HasHypertension = HasHypertension,
-                HasTuberculosis = HasTuberculosis,
-                HasLeprosy = HasLeprosy,
-                IsBedridden = IsBedridden,
-                IsHomebound = IsHomebound,
-                HasMentalIllness = HasMentalIllness,
-                IsNeurodivergent = IsNeurodivergent,
-                IsDrugAddicted = IsDrugAddicted,
-                HasHIV = HasHIV,
-                HasHeartDesease = HasHeartDisease,
-                HasKidneyDesease = HasKidneyDisease,
-                HasLiverDesease = HasLiverDisease,
-                HasLungsDesease = HasLungsDisease,
-                BolsaFamilia = BolsaFamilia,
-                IsSmoker = IsSmoker,
-                IsAlcoholic = IsAlcoholic,
-                HasDisabilities = IsDisabled,
-                HasCancer = HasCancer,
-                Observacao = Observacao
+                //SusNumber = SusNumber,
+                //Name = Name,
+                //MotherName = MotherName,
+                //BirthDate = BirthDate,
+                //IsPregnant = IsPregnant,
+                //HasDiabetes = HasDiabetes,
+                //HasHypertension = HasHypertension,
+                //HasTuberculosis = HasTuberculosis,
+                //HasLeprosy = HasLeprosy,
+                //IsBedridden = IsBedridden,
+                //IsHomebound = IsHomebound,
+                //HasMentalIllness = HasMentalIllness,
+                //IsNeurodivergent = IsNeurodivergent,
+                //IsDrugAddicted = IsDrugAddicted,
+                //HasHIV = HasHIV,
+                //HasHeartDesease = HasHeartDisease,
+                //HasKidneyDesease = HasKidneyDisease,
+                //HasLiverDesease = HasLiverDisease,
+                //HasLungsDesease = HasLungsDisease,
+                //BolsaFamilia = BolsaFamilia,
+                //IsSmoker = IsSmoker,
+                //IsAlcoholic = IsAlcoholic,
+                //HasDisabilities = IsDisabled,
+                //HasCancer = HasCancer,
+                //Observacao = Observacao
             };
 
             if (existingRecord != null)
             {
                 await _healthRecordService.SaveRecordAsync(record);
-                await Application.Current.MainPage.DisplayAlert("Atualizado", "Cadastro atualizado com sucesso!", "OK");
+                await Shell.Current.DisplayAlert("Atualizado", "Cadastro atualizado com sucesso!", "OK");
             }
             else
             {
                 await _healthRecordService.SaveRecordAsync(record);
-                await Application.Current.MainPage.DisplayAlert("Cadastrado", "Cadastro adicionado com sucesso!", "OK");
+                await Shell.Current.DisplayAlert("Cadastrado", "Cadastro adicionado com sucesso!", "OK");
             }
 
             ClearFields();

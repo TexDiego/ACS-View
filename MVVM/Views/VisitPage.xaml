@@ -4,14 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    x:DataType="vm:VisitsViewModel"
     x:Class="ACS_View.MVVM.Views.VisitPage"
     Color="Transparent">
 
     <Border
-    Margin="10"
-    StrokeThickness="2"
-    Stroke="Grey"
-    StrokeShape="RoundRectangle 15">
+        Margin="10"
+        StrokeThickness="2"
+        Stroke="Grey"
+        StrokeShape="RoundRectangle 15">
 
     <Grid
         x:Name="layoutGrid"
@@ -74,7 +75,8 @@
             BackgroundColor="AliceBlue"
             BorderColor="DarkOrange"
             BorderWidth="1"
-            CornerRadius="10"/>
+            CornerRadius="10"
+            Command="{Binding RegisterVisitCommand}"/>
 
         </Grid>
     </Border>

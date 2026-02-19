@@ -2,7 +2,7 @@
 {
     public interface IVaccineService
     {
-        Task<Vaccines> GetVaccinesBySusAsync(string sus);
+        Task<Vaccines> GetVaccinesByIdAsync(int id);
         Task AdicionarVacinasAsync(Vaccines registro);
         Task AtualizarVacinasAsync(Vaccines registro);
     }

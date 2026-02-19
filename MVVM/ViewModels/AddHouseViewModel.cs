@@ -18,7 +18,7 @@ namespace ACS_View.MVVM.ViewModels
 
         public ICommand SalvarCommand => new Command(async () => await SalvarCasa());
         public ICommand SearchCEP => new Command(async () => await SearchCEPAsync());
-        public ICommand GoBack => new Command(async () => await Application.Current.MainPage.Navigation.PopAsync());
+        public ICommand GoBack => new Command(async () => await Shell.Current.Navigation.PopAsync());
 
         private bool IsNullOrWhiteSpaceVerifier()
         {
@@ -35,7 +35,7 @@ namespace ACS_View.MVVM.ViewModels
         {
             if (IsNullOrWhiteSpaceVerifier())
             {
-                await Application.Current.MainPage.ShowPopupAsync(
+                await Shell.Current.ShowPopupAsync(
                     new DisplayPopUp("Ops", "Preencha todos os campos obrigatórios.", false, "", true, "OK"));
                 return;
             }
@@ -51,12 +51,12 @@ namespace ACS_View.MVVM.ViewModels
                         HouseModel.CasaId = registroExistente.CasaId;
                         await _houseService.UpdateHouseAsync(HouseModel);
 
-                        await Application.Current.MainPage.ShowPopupAsync(
+                        await Shell.Current.ShowPopupAsync(
                             new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));
                     }
                     else
                     {
-                        await Application.Current.MainPage.ShowPopupAsync(
+                        await Shell.Current.ShowPopupAsync(
                             new DisplayPopUp("Erro", "ID inválido para atualização.", true, "Voltar", false, ""));
                     }
                 }
@@ -64,13 +64,13 @@ namespace ACS_View.MVVM.ViewModels
                 {
                     await _houseService.SaveHouseAsync(HouseModel);
 
-                    await Application.Current.MainPage.ShowPopupAsync(
+                    await Shell.Current.ShowPopupAsync(
                         new DisplayPopUp("Sucesso", "Nova residência criada com sucesso.", false, "", true, "OK"));
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(
+                await Shell.Current.ShowPopupAsync(
                     new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
 
@@ -97,7 +97,7 @@ namespace ACS_View.MVVM.ViewModels
 
             if (!ValidarCep(cep))
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Ops", "CEP inválido", false, "", true, "Voltar"));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Ops", "CEP inválido", false, "", true, "Voltar"));
                 return;
             }
 
@@ -117,16 +117,16 @@ namespace ACS_View.MVVM.ViewModels
                 else
                 {
                     IsRunning = false;
-                    await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", "Endereço não encontrado ou CEP inválido.", false, "", true, "OK"));
+                    await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Endereço não encontrado ou CEP inválido.", false, "", true, "OK"));
                 }
             }
             catch (HttpRequestException ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível conectar ao serviço de CEP.\nVerifique sua conexão com a internet.\n\n {ex.Message}", false, "", true, "OK"));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível conectar ao serviço de CEP.\nVerifique sua conexão com a internet.\n\n {ex.Message}", false, "", true, "OK"));
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
         }
 

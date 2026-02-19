@@ -2,6 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             x:DataType="vm:AllVisitsViewModel"
              x:Class="ACS_View.MVVM.Views.AllVisits"
              NavigationPage.HasNavigationBar="False"
              BackgroundColor="AliceBlue">
@@ -23,14 +25,15 @@
                 Margin="0,10"/>
 
             <CollectionView
-                Grid.Row="1"
                 ItemsSource="{Binding VisitsList}"
+                Grid.Row="1"
                 ItemsUpdatingScrollMode="KeepLastItemInView"
                 VerticalScrollBarVisibility="Never">
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border
+                            x:DataType="model:Visits"
                             Padding="10"
                             Margin="5"
                             StrokeShape="RoundRectangle 10"
@@ -110,6 +113,7 @@
                 <CarouselView.ItemTemplate>
                     <DataTemplate>
                         <Border
+                            x:DataType="model:House"
                             Padding="10"
                             Margin="10"
                             StrokeShape="RoundRectangle 10"

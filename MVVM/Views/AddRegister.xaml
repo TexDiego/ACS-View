@@ -3,9 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
              xmlns:model="clr-namespace:ACS_View.MVVM.Models"
+             xmlns:models="clr-namespace:ACS_View.MVVM.Models.HealthConditions"
+             xmlns:enums="clr-namespace:ACS_View.Enums"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.MVVM.Views.AddRegister"
-             NavigationPage.HasNavigationBar="False"
+             Title="Adicionar Cadastro"
              Background="#E6EBED">
 
     <ContentPage.Resources>
@@ -15,42 +17,34 @@
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="20,5,20,5"/>
             <Setter Property="MaximumHeightRequest" Value="60"/>
         </Style>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="20"/>
-            <Setter Property="Margin" Value="30,5"/>
             <Setter Property="TextColor" Value="Black"/>
             <Setter Property="Opacity" Value="0.7"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="CheckBox">
-            <Setter Property="Color" Value="#C93919"/>
+            <Setter Property="Color" Value="#0084B1"/>
             <Setter Property="HorizontalOptions" Value="End"/>
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*,auto">
+    <Grid>
 
-        <Label
-                Grid.Row="0"
-                Text="Cadastrar"
-                Margin="30,15"
-                FontSize="30"
-                FontAttributes="Bold"
-                TextColor="#0084B1"
-                VerticalOptions="Start" 
-                HorizontalOptions="Center"/>
-
-        <ScrollView Grid.Row="1">
+        <ScrollView
+            VerticalOptions="Start"
+            VerticalScrollBarVisibility="Never">
+            
             <VerticalStackLayout
-                BindingContext="{Binding Record}"
-                x:DataType="model:HealthRecord">
+                Padding="10,10,10,100"
+                Spacing="10"
+                BindingContext="{Binding CurrentPatient}"
+                x:DataType="model:Patient">
 
                 <Border                    
-                    Margin="20,0"
-                    Stroke="LightGray"
+                    Stroke="Gray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
@@ -68,7 +62,6 @@
                         <Entry
                             Grid.Row="0"
                             Grid.Column="1"
-                            x:Name="Entry_Name"
                             TextColor="Black"
                             Opacity="0.7"
                             VerticalOptions="Center"
@@ -82,8 +75,7 @@
                 </Border>
 
                 <Border
-                    Margin="20,10"
-                    Stroke="LightGray"
+                    Stroke="Gray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
@@ -98,7 +90,6 @@
 
                         <Entry
                             Grid.Column="1"
-                            x:Name="Entry_MotherName"
                             TextColor="Black"
                             Opacity="0.7"
                             VerticalOptions="Center"
@@ -111,8 +102,34 @@
                 </Border>
 
                 <Border
-                    Margin="20,0,20,10"
-                    Stroke="LightGray"
+                    Stroke="Gray"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="Pai:"/>
+
+                        <Entry
+                            Grid.Column="1"
+                            TextColor="Black"
+                            Opacity="0.7"
+                            VerticalOptions="Center"
+                            FontSize="18"
+                            Margin="0,0,20,0"
+                            MaxLength="70"
+                            Keyboard="Text"
+                            Text="{Binding FatherName, Mode=TwoWay}"/>
+                    </Grid>
+                </Border>
+
+                <Border
+                    Stroke="Gray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
@@ -127,7 +144,6 @@
                             Text="SUS:"/>
 
                         <Entry
-                            x:Name="Entry_Sus"
                             Grid.Column="1"
                             TextColor="Black"
                             Opacity="0.7"
@@ -142,27 +158,26 @@
                 </Border>
 
                 <Border
-                    Margin="20,0"
-                    Stroke="LightGray"
+                    Stroke="Gray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
                     <Grid ColumnDefinitions="auto,*">
 
                         <Label
-                             Grid.Column="0"
-                             Style="{StaticResource labels}"
-                             Margin="20,10,10,10"
-                             VerticalOptions="Center"
-                             HorizontalOptions="Start"
-                            Text="DN:"/>
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="Data de Nascimento:"/>
 
                         <DatePicker
-                            x:Name="Entry_Birth"
                             Grid.Column="1"
                             TextColor="Black"
                             Opacity="0.7"
                             VerticalOptions="Center"
+                            HorizontalOptions="End"
                             FontSize="18"
                             Margin="0,0,20,0"
                             Date="{Binding BirthDate, Mode=TwoWay}">
@@ -173,8 +188,34 @@
                 </Border>
 
                 <Border
-                    Margin="20,10,20,0"
-                    Stroke="LightGray"
+                    Stroke="Gray"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="White">
+
+                    <Grid ColumnDefinitions="auto,*">
+
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource labels}"
+                            Margin="20,10,10,10"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Text="Bolsa Família:"/>
+
+                        <CheckBox
+                            Grid.Column="1"
+                            IsChecked="{Binding BolsaFamilia, Mode=TwoWay}"
+                            Opacity="0.7"
+                            VerticalOptions="Center"
+                            Margin="0,0,20,0">
+
+                        </CheckBox>
+
+                    </Grid>
+                </Border>
+
+                <Border
+                    Stroke="Gray"
                     StrokeShape="RoundRectangle 10"
                     BackgroundColor="White">
 
@@ -189,7 +230,6 @@
                         <Editor
                             Grid.Row="1"
                             Margin="20,0"
-                            x:Name="Entry_Obs"
                             TextColor="Black"
                             Opacity="0.7"
                             FontSize="18"
@@ -201,287 +241,55 @@
 
                 </Border>
 
+                <Label
+                    Text="Condições de saúde"
+                    FontSize="20"
+                    TextColor="Black"
+                    HorizontalOptions="Center"
+                    FontAttributes="Bold"
+                    Opacity="0.8"/>
 
-                <Grid
-                    Margin="0,20,30,0"
-                    ColumnDefinitions="*,auto"
-                    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
-                    RowSpacing="5">
+                <CollectionView
+                    ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Categories}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ConditionCategoryVM">
 
-                    <Label
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Gestante"/>
+                            <Border
+                                StrokeShape="RoundRectangle 10"
+                                Padding="5"
+                                Margin="0,5"
+                                Stroke="Gray"
+                                StrokeThickness="1"
+                                BackgroundColor="White">
 
-                    <CheckBox 
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        x:Name="CB_Gestante"
-                        IsChecked="{Binding IsPregnant, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Diabetes"/>
-
-                    <CheckBox
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        x:Name="CB_DB"
-                        IsChecked="{Binding HasDiabetes, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Hipertensão"/>
-
-                    <CheckBox
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        x:Name="CB_HAS"
-                        IsChecked="{Binding HasHypertension, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="3"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Tuberculose"/>
-
-                    <CheckBox
-                        Grid.Row="3"
-                        Grid.Column="1"
-                        x:Name="CB_TB"
-                        IsChecked="{Binding HasTuberculosis, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="4"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Hanseníase"/>
-
-                    <CheckBox
-                        Grid.Row="4"
-                        Grid.Column="1"
-                        x:Name="CB_HAN"
-                        IsChecked="{Binding HasLeprosy, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="5"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Acamado"/>
-
-                    <CheckBox
-                        Grid.Row="5"
-                        Grid.Column="1"
-                        x:Name="CB_Acamado"
-                        IsChecked="{Binding IsBedridden, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="6"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Domiciliado"/>
-
-                    <CheckBox
-                        Grid.Row="6"
-                        Grid.Column="1"
-                        x:Name="CB_Domiciliado"
-                        IsChecked="{Binding IsHomebound, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="7"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Condição mental"/>
-
-                    <CheckBox
-                        Grid.Row="7"
-                        Grid.Column="1"
-                        x:Name="CB_Mental"
-                        IsChecked="{Binding HasMentalIllness, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="8"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Fumante"/>
-
-                    <CheckBox
-                        Grid.Row="8"
-                        Grid.Column="1"
-                        x:Name="CB_Smoker"
-                        IsChecked="{Binding IsSmoker, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="9"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Álcool"/>
-
-                    <CheckBox
-                        Grid.Row="9"
-                        Grid.Column="1"
-                        x:Name="CB_Alcoholic"
-                        IsChecked="{Binding IsAlcoholic, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="10"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Deficiência"/>
-
-                    <CheckBox
-                        Grid.Row="10"
-                        Grid.Column="1"
-                        x:Name="CB_Disability"
-                        IsChecked="{Binding HasDisabilities, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="11"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Câncer"/>
-
-                    <CheckBox
-                        Grid.Row="11"
-                        Grid.Column="1"
-                        x:Name="CB_Cancer"
-                        IsChecked="{Binding HasCancer, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="12"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Bolsa Família"/>
-
-                    <CheckBox
-                        Grid.Row="12"
-                        Grid.Column="1"
-                        x:Name="CB_Bolsa"
-                        IsChecked="{Binding BolsaFamilia, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="13"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Cardíaco"/>
-
-                    <CheckBox
-                        Grid.Row="13"
-                        Grid.Column="1"
-                        x:Name="CB_Heart"
-                        IsChecked="{Binding HasHeartDesease, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="14"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Pulmonar"/>
-
-                    <CheckBox
-                        Grid.Row="14"
-                        Grid.Column="1"
-                        x:Name="CB_Lungs"
-                        IsChecked="{Binding HasLungsDesease, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="15"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Renal"/>
-
-                    <CheckBox
-                        Grid.Row="15"
-                        Grid.Column="1"
-                        x:Name="CB_Kidney"
-                        IsChecked="{Binding HasKidneyDesease, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="16"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Hepatopata"/>
-
-                    <CheckBox
-                        Grid.Row="16"
-                        Grid.Column="1"
-                        x:Name="CB_Liver"
-                        IsChecked="{Binding HasLiverDesease, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="17"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Neurodivergente"/>
-
-                    <CheckBox
-                        Grid.Row="17"
-                        Grid.Column="1"
-                        x:Name="CB_Neuro"
-                        IsChecked="{Binding IsNeurodivergent, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="18"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Dependente químico"/>
-
-                    <CheckBox
-                        Grid.Row="18"
-                        Grid.Column="1"
-                        x:Name="CB_Addicted"
-                        IsChecked="{Binding IsDrugAddicted, Mode=TwoWay}"/>
-
-                    <Label
-                        Grid.Row="19"
-                        Grid.Column="0"
-                        Style="{StaticResource labels}"
-                        Text="Imunodeficiente"/>
-
-                    <CheckBox
-                        Grid.Row="19"
-                        Grid.Column="1"
-                        x:Name="CB_HIV"
-                        IsChecked="{Binding HasHIV, Mode=TwoWay}"/>
-
-                </Grid>
-
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenCategories}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                
+                                <Label
+                                    Text="{Binding Name}"
+                                    FontSize="20"
+                                    TextColor="Black"
+                                    Opacity="0.8"
+                                    HorizontalOptions="Center"/>
+                            </Border>
+                            
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
             </VerticalStackLayout>
+            
         </ScrollView>
 
-        <VerticalStackLayout
-                Grid.Row="2"
-                Margin="0,20">
-
-            <Button
-                Style="{StaticResource buttons}"
-                Text="Salvar"
-                Command="{Binding RegisterCommand}"/>
-            <Grid>
-
-                <Button
-                        x:Name="Btn_AddGoBack"
-                        Style="{StaticResource buttons}"
-                        Text="Voltar"
-                        Command="{Binding GoBack}"/>
-
-                <ActivityIndicator
-                        IsRunning="{Binding IsLoading}"
-                        Color="#C93919"
-                        BackgroundColor="Transparent"
-                        MaximumHeightRequest="30"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center"/>
-
-            </Grid>
-
-
-        </VerticalStackLayout>
+        <Button
+            Margin="10"
+            VerticalOptions="End"
+            Style="{StaticResource buttons}"
+            Text="Salvar"
+            Command="{Binding RegisterCommand}"/>
 
     </Grid>
 

@@ -101,9 +101,6 @@
 	  <MauiXaml Update="MVVM\Views\DisplayPopUp.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\DisplaySheetPopUp.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
 	  <MauiXaml Update="MVVM\Views\FamiliesPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

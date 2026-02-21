@@ -88,7 +88,7 @@
                                     Text="Excluir"
                                     BackgroundColor="IndianRed"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding SusNumber}"/>
+                                    CommandParameter="{Binding Id}"/>
                             </SwipeView.LeftItems>
 
                             <SwipeView.RightItems>
@@ -97,7 +97,7 @@
                                     Text="Editar"
                                     BackgroundColor="DarkOrange"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding SusNumber}"/>
+                                    CommandParameter="{Binding .}"/>
                             </SwipeView.RightItems>
                             
                             <Grid

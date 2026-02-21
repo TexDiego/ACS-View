@@ -68,12 +68,11 @@ namespace ACS_View.MVVM.Models.Services
             // Totais por categoria
             var categoryTotals = await _connection.QueryAsync<CategoryTotalDto>(@"
                 SELECT c.CategoryId as CategoryId,
-                       COUNT(pc.Id) as Total
+                       COUNT(DISTINCT pc.PatientId) as Total
                 FROM Condition c
                 LEFT JOIN PatientCondition pc ON pc.ConditionId = c.Id
                 GROUP BY c.CategoryId");
 
-            Debug.WriteLine($"Total por categoria encontrado: [{categoryTotals.Count}]");
 
             var categoryDict = categoryTotals
                 .ToDictionary(x => x.CategoryId, x => x.Total);
@@ -84,8 +83,6 @@ namespace ACS_View.MVVM.Models.Services
                        COUNT(Id) as Total
                 FROM PatientCondition
                 GROUP BY ConditionId");
-
-            Debug.WriteLine($"Total por condição encontrado: [{conditionTotals.Count}]");
 
             var conditionDict = conditionTotals
                 .ToDictionary(x => x.ConditionId, x => x.Total);

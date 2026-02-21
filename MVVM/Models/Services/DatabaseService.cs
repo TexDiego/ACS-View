@@ -68,7 +68,7 @@ namespace ACS_View.MVVM.Models.Services
                     Name = item.Condition,
                     CategoryId = value
                 };
-
+                
                 await _database.InsertAsync(condition);
             }
         }

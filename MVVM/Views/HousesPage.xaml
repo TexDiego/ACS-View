@@ -71,7 +71,7 @@
                                         Text="Editar"
                                         BackgroundColor="DarkOrange"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
-                                        CommandParameter="{Binding CasaId}"/>
+                                        CommandParameter="{Binding .}"/>
                             </SwipeView.RightItems>
 
                             <VerticalStackLayout

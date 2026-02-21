@@ -1,28 +1,25 @@
-using ACS_View.MVVM.Models.HealthConditions;
 using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.ViewModels;
 using CommunityToolkit.Maui.Views;
-using System.Threading.Tasks;
 
 namespace ACS_View.MVVM.Views;
 
 public partial class Registers : ContentPage, IQueryAttributable
 {
-    private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-
     private CancellationTokenSource _throttleCts = new();
 
-    private readonly AddRegisterViewModel _addRegisterViewModel = new();
+    private readonly AddRegisterViewModel _addRegisterViewModel;
     private readonly RegistersViewModel viewModel = new();
 
     private string _condition = "Cadastros";
     private string _filter = "Nome";
     private string _order = "Crescente";
 
-    public Registers()
+    public Registers(IDatabaseService _db)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        _addRegisterViewModel = new(_db);
+        BindingContext = viewModel = new RegistersViewModel();
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -88,42 +85,6 @@ public partial class Registers : ContentPage, IQueryAttributable
         {
             await ShowErrorPopupAsync(ex.Message);
         }
-    }
-
-    private async Task<string> CapitalizeTitle(int id)
-    {
-        var condition = await _databaseService.Connection.Table<ConditionCategory>().FirstOrDefaultAsync(c => c.Id == id);
-
-        return condition.Name;
-
-        //return cond switch
-        //{
-        //    "GESTANTE" => "Gestante",
-        //    "HAS" => "Hipertensos",
-        //    "DB" => "Diabéticos",
-        //    "HASDB" => "Hipertensos Diabéticos",
-        //    "HAN" => "Hanseníases",
-        //    "TB" => "Tuberculosos",
-        //    "ACAMADO" => "Acamados",
-        //    "DOMICILIADO" => "Domiciliados",
-        //    "MENOR" => "Menores de 6 anos",
-        //    "MENTAL" => "Condições Mentais",
-        //    "BOLSA" => "Beneficiários de Bolsa Família",
-        //    "CORACAO" => "Cardíacos",
-        //    "FIGADO" => "Hepatopatas",
-        //    "RIM" => "Renais",
-        //    "PULMAO" => "Pulmonares",
-        //    "NEURO" => "Neurodivergentes",
-        //    "HIV" => "Imunodeficientes",
-        //    "DROGAS" => "Dependentes químicos",
-        //    "FUMANTE" => "Fumantes",
-        //    "ALCOOLATRA" => "Álcoolatras",
-        //    "DEFICIENTE" => "Desabilitados",
-        //    "IDOSO" => "Idosos",
-        //    "CANCER" => "Câncer",
-        //    "NOHOME" => "Sem residência",
-        //    _ => "Cadastros"
-        //};
     }
 
     private async Task ShowErrorPopupAsync(string message)

@@ -180,9 +180,9 @@
                             HorizontalOptions="End"
                             FontSize="18"
                             Margin="0,0,20,0"
-                            Date="{Binding BirthDate, Mode=TwoWay}">
-
-                        </DatePicker>
+                            Date="{Binding BirthDate, Mode=TwoWay}"
+                            MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
+                            MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MaximumDate}"/>
 
                     </Grid>
                 </Border>

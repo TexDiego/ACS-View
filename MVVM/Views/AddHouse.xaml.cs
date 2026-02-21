@@ -24,9 +24,7 @@ public partial class AddHouse : ContentPage, IQueryAttributable
     private void Entry_CEP_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!string.IsNullOrEmpty(e.NewTextValue) && !regex.IsMatch(e.NewTextValue))
-        {
             viewModel.HouseModel.CEP = e.OldTextValue;
-        }
     }
 
     [GeneratedRegex("^[0-9]*$")]

@@ -4,25 +4,24 @@ using ACS_View.MVVM.Models.Interfaces;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SQLite;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
 {
-    internal partial class AddRegisterViewModel : BaseViewModel
+    internal partial class AddRegisterViewModel(IDatabaseService _db) : BaseViewModel
     {
+        private readonly SQLiteAsyncConnection _connection = _db.Connection;
         private readonly IUserDialogService _dialogService = App.ServiceProvider.GetRequiredService<IUserDialogService>();
-        private readonly IDatabaseService _db = App.ServiceProvider.GetRequiredService<IDatabaseService>();
         private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
-
+        
         [ObservableProperty] private Patient currentPatient = new();
         [ObservableProperty] private ObservableCollection<ConditionCategoryVM> categories = [];
 
-        public AddRegisterViewModel()
-        {
-            MainThread.BeginInvokeOnMainThread(async () => await LoadConditions());
-        }
+        public DateTime MinimumDate => DateTime.Today.AddYears(-120);
+        public DateTime MaximumDate => DateTime.Today;
 
         public ICommand RegisterCommand => new Command(async () => await Save());
         public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync(".."));
@@ -80,6 +79,18 @@ namespace ACS_View.MVVM.ViewModels
             {
                 var existing = await _patientService.GetPatientById(CurrentPatient.Id);
 
+                List<int> conditionIds = [];
+
+                foreach (var category in Categories)
+                {
+                    foreach (var condition in category.Conditions.Where(s => s.IsSelected))
+                    {
+                        conditionIds.Add(condition.Id);
+                    }
+                }
+
+                await SavePatientConditionsAsync(CurrentPatient.Id, conditionIds);
+
                 if (existing is not null)
                     await _patientService.UpdatePatient(CurrentPatient);
                 else
@@ -90,6 +101,40 @@ namespace ACS_View.MVVM.ViewModels
             catch (Exception ex)
             {
                 await _dialogService.ShowError(ex.Message);
+            }
+        }
+
+        // O paciente está sendo salvo com todas as condições possíveis, não só as selecionadas
+        public async Task SavePatientConditionsAsync(int patientId, List<int> selectedConditionIds)
+        {
+            var existing = await _connection.Table<PatientCondition>()
+                .Where(pc => pc.PatientId == patientId)
+                .ToListAsync();
+
+            var existingIds = existing.Select(x => x.ConditionId).ToList();
+
+            // Condições a remover
+            var toRemove = existing
+                .Where(x => !selectedConditionIds.Contains(x.ConditionId))
+                .ToList();
+
+            // Condições a adicionar
+            var toAdd = selectedConditionIds
+                .Where(id => !existingIds.Contains(id))
+                .ToList();
+
+            // Remove
+            foreach (var item in toRemove)
+                await _connection.DeleteAsync(item);
+
+            // Adiciona
+            foreach (var id in toAdd)
+            {
+                await _connection.InsertAsync(new PatientCondition
+                {
+                    PatientId = patientId,
+                    ConditionId = id
+                });
             }
         }
     }

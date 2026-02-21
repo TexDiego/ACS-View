@@ -52,7 +52,7 @@ namespace ACS_View
             service.AddSingleton<IDashboardService, DashboardService>();
 
             // Transient
-            service.AddTransient<IHealthSummaryService, HealthSummaryService>();
+            service.AddTransient<IPatientConditionsService, PatientConditionService>();
             service.AddTransient<IVaccineService, VaccineService>();
             service.AddTransient<IFamilyService, FamilyService>();
             service.AddTransient<IFamilyManager, FamilyManager>();

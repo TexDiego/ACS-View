@@ -7,6 +7,8 @@ namespace ACS_View.MVVM.Models
     {
         [PrimaryKey, AutoIncrement]
         public int CasaId { get; set; }
+
+        [JsonPropertyName("cep")]
         public string CEP { get; set; } = string.Empty;
 
         [JsonPropertyName("logradouro")]

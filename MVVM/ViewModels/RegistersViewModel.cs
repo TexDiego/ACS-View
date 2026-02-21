@@ -27,7 +27,7 @@ namespace ACS_View.MVVM.ViewModels
         [ObservableProperty] private int totalRecords;
 
         public ICommand DeleteCommand => new Command<int>(async (id) => await DeleteRecordAsync(id));
-        public ICommand EditCommand => new Command<int>(async (id) => await EditRecordAsync(id));
+        public ICommand EditCommand => new Command<Patient>(async (p) => await EditRecordAsync(p));
         public ICommand PersonInfo => new Command<Patient>(async record => await PersonData(record));
         public ICommand Vaccines => new Command<int>(async (id) => await VaccinesPage(id));
         public ICommand AddPerson => new Command(async () => await Shell.Current.GoToAsync("addregister"));
@@ -51,7 +51,8 @@ namespace ACS_View.MVVM.ViewModels
                     return;
                 }
 
-                var cond = await _databaseService.Connection.Table<ConditionCategory>().FirstAsync(c => c.Name == condition);
+                var cond = await _databaseService.Connection.Table<ConditionCategory>().FirstOrDefaultAsync(c => c.Name == condition);
+                
                 int id = cond.Id;
 
                 Patients = await _patientService.GetPatientsByCondition(id);                
@@ -71,11 +72,11 @@ namespace ACS_View.MVVM.ViewModels
             //return new HealthRecordFilterService().ApplyFilters(records, condition, search, filter, order);
         }
 
-        private async Task<string> GetAddressAsync(string sus)
+        private async Task<string> GetAddressAsync(int id)
         {
             try
             {
-                var house = await _houseService.GetHouseBySusAsync(sus);
+                var house = await _houseService.GetHouseByPatientIdAsync(id);
                 if (house == null) return "Sem endereço.";
 
                 string rua = house.Rua ?? "";
@@ -110,14 +111,11 @@ namespace ACS_View.MVVM.ViewModels
             TotalRecords = Patients.Count;
         }
 
-        private async Task EditRecordAsync(int id)
+        private async Task EditRecordAsync(Patient patient)
         {
-            var record = Patients.FirstOrDefault(r => r.Id == id);
-            if (record == null) return;
+            ScrollToId = patient.Id;
 
-            ScrollToId= record.Id;
-
-            await Shell.Current.GoToAsync("addregister", new Dictionary<string, object> { { "record", record } });
+            await Shell.Current.GoToAsync("addregister", new Dictionary<string, object> { { "record", patient } });
         }
 
         private async Task PersonData(Patient record)

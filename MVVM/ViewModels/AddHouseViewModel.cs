@@ -4,6 +4,7 @@ using ACS_View.MVVM.Models.Services;
 using ACS_View.MVVM.Views;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ACS_View.MVVM.ViewModels
@@ -44,21 +45,10 @@ namespace ACS_View.MVVM.ViewModels
             {
                 if (HouseModel.CasaId > 0)
                 {
-                    var registroExistente = await _houseService.GetHouseByIdAsync(HouseModel.CasaId);
+                    await _houseService.UpdateHouseAsync(HouseModel);
 
-                    if (registroExistente != null)
-                    {
-                        HouseModel.CasaId = registroExistente.CasaId;
-                        await _houseService.UpdateHouseAsync(HouseModel);
-
-                        await Shell.Current.ShowPopupAsync(
-                            new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));
-                    }
-                    else
-                    {
-                        await Shell.Current.ShowPopupAsync(
-                            new DisplayPopUp("Erro", "ID inválido para atualização.", true, "Voltar", false, ""));
-                    }
+                    await Shell.Current.ShowPopupAsync(
+                        new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));
                 }
                 else
                 {
@@ -74,28 +64,12 @@ namespace ACS_View.MVVM.ViewModels
                     new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
             }
 
-            LimparCampos();
-        }
-
-        private void LimparCampos()
-        {
-            HouseModel.CEP = "";
-            HouseModel.Rua = "";
-            HouseModel.NumeroCasa = "";
-            HouseModel.Bairro = "";
-            HouseModel.Cidade = "";
-            HouseModel.Estado = "";
-            HouseModel.Pais = "";
-            HouseModel.Complemento = "";
-            HouseModel.PossuiComplemento = false;
-            HouseModel.CasaId = 0;
+            HouseModel = new();
         }
 
         private async Task SearchCEPAsync()
         {
-            string cep = HouseModel.CEP;
-
-            if (!ValidarCep(cep))
+            if (!ValidarCep(HouseModel.CEP))
             {
                 await Shell.Current.ShowPopupAsync(new DisplayPopUp("Ops", "CEP inválido", false, "", true, "Voltar"));
                 return;
@@ -105,12 +79,13 @@ namespace ACS_View.MVVM.ViewModels
             {
                 IsRunning = true;
 
-                var endereco = await CEPService.BuscarEnderecoPorCep(cep);
+                var endereco = await CEPService.BuscarEnderecoPorCep(HouseModel.CEP);
 
                 if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
                 {
+                    endereco.CEP = endereco.CEP.Replace("-", "");
+
                     HouseModel = endereco;
-                    HouseModel.CEP = cep;
 
                     IsRunning = false;
                 }

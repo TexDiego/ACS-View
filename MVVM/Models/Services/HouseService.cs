@@ -1,19 +1,12 @@
 ﻿using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.Views;
 using SQLite;
 using System.Diagnostics;
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class HouseService : IHouseService
+    public class HouseService(IDatabaseService _databaseService) : IHouseService
     {
-        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-        private readonly SQLiteAsyncConnection _connection;
-
-        public HouseService()
-        {
-            _connection = _databaseService.Connection;
-        }
+        private readonly SQLiteAsyncConnection _connection = _databaseService.Connection;
 
         public async Task DeleteHouseAsync(int id)
         {
@@ -58,22 +51,22 @@ namespace ACS_View.MVVM.Models.Services
             }
         }
 
-        public async Task<House?> GetHouseBySusAsync(string susNumber)
+        public async Task<House?> GetHouseByPatientIdAsync(int id)
         {
             try
             {
                 var query = @"
                     SELECT h.*
                     FROM House h
-                    JOIN HealthRecord r ON h.CasaId = r.HouseId
-                    WHERE r.SusNumber = ?";
+                    JOIN Patient r ON h.CasaId = r.HouseId
+                    WHERE r.Id = ?";
 
-                var result = await _connection.FindWithQueryAsync<House>(query, susNumber);
+                var result = await _connection.FindWithQueryAsync<House>(query, id);
                 return result;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Erro ao buscar casa pelo SUS: {ex.Message}");
+                Debug.WriteLine($"Erro ao buscar casa pelo Id: {ex.Message}");
                 throw new Exception("Erro ao buscar informações da casa.");
             }
         }

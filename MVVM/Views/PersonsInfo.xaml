@@ -5,6 +5,7 @@
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:ACS_View.MVVM.ViewModels"
     xmlns:local="clr-namespace:ACS_View.MVVM.Models"
+    xmlns:converters="clr-namespace:ACS_View.Converters"
     x:DataType="vm:PersonsInfoViewModel"
     x:Class="ACS_View.MVVM.Views.PersonsInfo"
     Color="Transparent"
@@ -42,15 +43,23 @@
 
             <!-- Nome da mãe -->
             <Label
-                x:Name="MothersName"
                 Text="{Binding MotherName, StringFormat='Mãe: {0}'}"
+                IsVisible="{Binding MotherName, Converter={converters:NullValueToBoolConverter}}"
                 TextColor="Black"
                 FontSize="16"
-                LineBreakMode="WordWrap"/>
+                LineBreakMode="TailTruncation"/>
+
+            <!-- Nome do pai -->
+            <Label
+                Text="{Binding FatherName, StringFormat='Pai: {0}'}"
+                IsVisible="{Binding FatherName, Converter={converters:NullValueToBoolConverter}}"
+                TextColor="Black"
+                FontSize="16"
+                LineBreakMode="TailTruncation"/>
 
             <!-- Sus -->
             <Label
-                Text="{Binding SusNumber, Converter={StaticResource SUSFormatConverter}}"
+                Text="{Binding SusNumber, Converter={StaticResource SUSFormatConverter}, StringFormat='SUS: {0}'}"
                 TextColor="Black"
                 FontSize="16"/>
 
@@ -68,7 +77,7 @@
                     FontSize="16"/>
 
                 <Label
-                    Text="{Binding Idade}"
+                    Text="{Binding BirthDate, Converter={converters:DateTimeToAgeConverter}}"
                     TextColor="Black"
                     FontSize="16"/>
 
@@ -77,7 +86,7 @@
             <!-- Observação -->
             <Label
                 Text="{Binding Observacao}"
-                IsVisible="{Binding HasObs}"
+                IsVisible="{Binding Observacao, Converter={converters:NullValueToBoolConverter}}"
                 TextColor="Black"
                 FontSize="16"
                 LineBreakMode="WordWrap"
@@ -95,6 +104,7 @@
             
             <Label
                 Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Complemento}"
+                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Complemento, Converter={converters:NullValueToBoolConverter}}"
                 TextColor="Black"
                 FontSize="16"
                 FontAttributes="Italic"/>
@@ -103,10 +113,9 @@
                 HeightRequest="1"
                 Margin="0,15,0,10"
                 Color="Grey"
-                IsVisible="{Binding HasNothing}"/>
+                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.IconsVisibility}"/>
             
             <!-- icons -->
-
             <CollectionView
                 ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Icons}"
                 x:DataType="local:HealthIcon"

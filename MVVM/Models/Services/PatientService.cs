@@ -1,5 +1,4 @@
-﻿using ACS_View.MVVM.Models.HealthConditions;
-using ACS_View.MVVM.Models.Interfaces;
+﻿using ACS_View.MVVM.Models.Interfaces;
 using SQLite;
 
 namespace ACS_View.MVVM.Models.Services
@@ -20,29 +19,27 @@ namespace ACS_View.MVVM.Models.Services
             await _connection.DeleteAsync<Patient>(Id);
         }
 
-        public Task<List<Patient>> GetAllPatients()
+        public Task<List<Patient>?> GetAllPatients()
         {
             return _connection.Table<Patient>()
                               .OrderBy(n => n.Name)
                               .ToListAsync();
         }
 
-        public Task<List<Patient>> GetPatientsByCondition(int conditionId)
+        public async Task<List<Patient>?> GetPatientsByCondition(int conditionId)
         {
-            var patients = new List<Patient>();
+            if (conditionId <= 0) return await _connection.Table<Patient>().OrderBy(p => p.Name).ToListAsync();
 
-            var conditions = _connection.Table<PatientCondition>().Where(i => i.Id == conditionId).ToListAsync();
-
-            if (conditionId > 0)
-                return _connection.Table<Patient>()
-                                  .Where(i => i.Id == conditions.Id)
-                                  .OrderBy(i => i.Name)
-                                  .ToListAsync();
-
-            else return _connection.Table<Patient>().OrderBy(i => i.Name).ToListAsync();
+            return await _connection.QueryAsync<Patient>(@"
+                SELECT p.*
+                FROM Patient p
+                INNER JOIN PatientCondition pc ON pc.PatientId = p.Id
+                WHERE pc.ConditionId = ?
+                ORDER BY p.Name",
+                conditionId);
         }
 
-        public Task<Patient> GetPatientById(int Id)
+        public Task<Patient?> GetPatientById(int Id)
         {
             return _connection.Table<Patient>()
                               .FirstOrDefaultAsync(p => p.Id == Id);
@@ -56,6 +53,11 @@ namespace ACS_View.MVVM.Models.Services
         public async Task UpdatePatient(Patient patient)
         {
             await _connection.UpdateAsync(patient);
+        }
+
+        public async Task<List<Patient>?> GetPatientsByHouseId(int houseId)
+        {
+            return await _connection.Table<Patient>().Where(p => p.HouseId == houseId).ToListAsync();
         }
     }
 }

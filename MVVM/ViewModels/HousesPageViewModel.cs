@@ -11,7 +11,7 @@ namespace ACS_View.MVVM.ViewModels
     internal partial class HousesPageViewModel : BaseViewModel
     {
         private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
+        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
 
         private CancellationTokenSource _throttleCts = new();
 
@@ -19,9 +19,9 @@ namespace ACS_View.MVVM.ViewModels
         [ObservableProperty] private ObservableCollection<House> houses = [];
         [ObservableProperty] private int totalHouses;
 
-        public ICommand DeleteCommand => new Command<int>(async id => await DeleteHouseAsync(id));
-        public ICommand EditCommand => new Command<int>(async id => await EditHouseAsync(id));
-        public ICommand FamilyCommand => new Command<int>(async id => await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", id } }));
+        public ICommand DeleteCommand => new Command<int>(async (id) => await DeleteHouseAsync(id));
+        public ICommand EditCommand => new Command<House>(async (house) => await EditHouseAsync(house));
+        public ICommand FamilyCommand => new Command<int>(async (id) => await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", id } }));
         public ICommand LoadHousesCommand => new Command<string>(async _ => await LoadHousesAsync(SearchText));
         public ICommand NewHouseCommand => new Command(async () => await Shell.Current.GoToAsync("addhouse"));
 
@@ -114,13 +114,16 @@ namespace ACS_View.MVVM.ViewModels
                 if (confirm) return;
 
                 // Obter registros associados à residência
-                var people = await _healthRecordService.GetRecordsByHouseIdAsync(id);
+                var people = await _patientService.GetPatientsByHouseId(id);
 
-                foreach (var person in people)
+                if (people != null)
                 {
-                    person.HouseId = 0;
-                    person.FamilyId = 0;
-                    await _healthRecordService.UpdateRecordAsync(person);
+                    foreach (var person in people)
+                    {
+                        person.HouseId = 0;
+                        person.FamilyId = 0;
+                        await _patientService.UpdatePatient(person);
+                    }
                 }
 
                 await _houseService.DeleteHouseAsync(id);
@@ -134,16 +137,11 @@ namespace ACS_View.MVVM.ViewModels
             }
         }
 
-        private async Task EditHouseAsync(int id)
+        private async Task EditHouseAsync(House house)
         {
             try
             {
-                var house = await _houseService.GetHouseByIdAsync(id);
-
-                if (house != null)
-                {
-                    await Shell.Current.GoToAsync("addhouse", new Dictionary<string, object> { { "house", house } });
-                }
+                await Shell.Current.GoToAsync("addhouse", new Dictionary<string, object> { { "house", house } });
             }
             catch (Exception ex)
             {

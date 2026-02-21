@@ -47,7 +47,7 @@
 
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="auto,*">
+    <Grid RowDefinitions="auto,auto,*">
 
         <Label 
             Grid.Row="0"
@@ -58,8 +58,35 @@
             FontSize="25"
             HorizontalOptions="Center"/>
 
-        <CollectionView
+        <Border
             Grid.Row="1"
+            BindingContext="{Binding Total}"
+            x:DataType="vm:DashboardItemVM"
+            Style="{x:StaticResource borders}">
+
+            <Grid>
+
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer
+                        Command="{Binding Source={x:RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
+                        CommandParameter="{Binding Name}"/>
+                </Grid.GestureRecognizers>
+
+                <Label
+                    HorizontalOptions="Start"
+                    Text="{Binding Name}"
+                    Style="{x:StaticResource infos}"/>
+
+                <Label
+                    HorizontalOptions="End"
+                    Text="{Binding Total}"
+                    Style="{x:StaticResource infos}"/>
+
+            </Grid>
+        </Border>
+
+        <CollectionView
+            Grid.Row="2"
             ItemsSource="{Binding Dashboard}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>

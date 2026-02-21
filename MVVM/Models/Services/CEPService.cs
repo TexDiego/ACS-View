@@ -2,9 +2,9 @@
 
 namespace ACS_View.MVVM.Models.Services
 {
-    public class CEPService
+    internal class CEPService
     {
-        public static async Task<House> BuscarEnderecoPorCep(string cep)
+        public static async Task<House?> BuscarEnderecoPorCep(string cep)
         {
             using var httpClient = new HttpClient();
             string url = $"https://viacep.com.br/ws/{cep}/json/";

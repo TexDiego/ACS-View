@@ -1,4 +1,4 @@
-﻿using ACS_View.MVVM.Models;
+﻿using ACS_View.Domain.ValueObjects;
 using System.Globalization;
 
 namespace ACS_View.Converters

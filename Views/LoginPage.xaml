@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.Views.LoginPage"
+             BackgroundColor="#E6EBED"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="Margin" Value="20,30,20,0"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="TextColor" Value="Black"/>
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="MinimumWidthRequest" Value="250"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            <Setter Property="VerticalTextAlignment" Value="Center"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout
+        Margin="20">
+
+        <Image
+            Source="form.png"
+            HeightRequest="150"
+            WidthRequest="150"
+            Margin="20,20,20,50"/>
+
+        <Border
+            Stroke="LightGray"
+            BackgroundColor="White"
+            Padding="10"
+            StrokeShape="RoundRectangle 20"
+            StrokeThickness="2">
+
+            <Grid
+                RowDefinitions="*,*,*,*,*,*"
+                HorizontalOptions="Fill">
+
+                <Label 
+                    Grid.Row="0"
+                    Text="LOGIN"/>                
+
+                <Entry Grid.Row="1"/>
+
+                <BoxView
+                    Grid.Row="1"
+                    HeightRequest="1"
+                    Color="Black"
+                    Margin="20,0,20,8"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="End"/>
+
+                <Label 
+                    Grid.Row="2"
+                    Text="SENHA"/>
+
+                <Entry
+                    Grid.Row="3"
+                    IsPassword="True"/>
+
+                <BoxView
+                    Grid.Row="3"
+                    HeightRequest="1"
+                    Color="Black"
+                    Margin="20,0,20,8"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="End"/>
+
+                <Button
+                    Grid.Row="4"
+                    x:Name="Btn_Login"
+                    Text="Entrar"
+                    Margin="20,20,20,0"
+                    TextColor="Black"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    BackgroundColor="AliceBlue"
+                    BorderColor="LightGray"
+                    CornerRadius="10"
+                    Clicked="Btn_Login_Clicked"/>                
+            </Grid>
+        </Border>
+
+        <Grid VerticalOptions="End">
+
+            <Button
+                x:Name="RegisterUser"
+                Text="Cadastre-se"
+                BackgroundColor="Transparent"
+                FontSize="16"
+                TextColor="Blue"
+                HorizontalOptions="Start"
+                CornerRadius="100"
+                Clicked="RegisterUser_Clicked"/>
+
+            <Button
+                Text="Esqueci minha senha"
+                BackgroundColor="Transparent"
+                FontSize="16"
+                TextColor="#C93919"
+                HorizontalOptions="End"
+                CornerRadius="100"
+                Clicked="Button_Clicked"/>
+            
+        </Grid>
+    </VerticalStackLayout>
+</ContentPage>

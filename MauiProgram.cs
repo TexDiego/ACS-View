@@ -1,9 +1,12 @@
-﻿using ACS_View.MVVM.Models.Interfaces;
-using ACS_View.MVVM.Models.Services;
-using ACS_View.MVVM.ViewModels;
-using ACS_View.MVVM.Views;
+﻿using ACS_View.Domain.Interfaces;
+using ACS_View.Infrastructure.Data.SQLite;
+using ACS_View.UseCases;
+using ACS_View.UseCases.Services;
+using ACS_View.ViewModels;
+using ACS_View.Views;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using SQLite;
 
 namespace ACS_View
 {
@@ -33,10 +36,20 @@ namespace ACS_View
 
             // ViewModels - Transient
             builder.Services.AddTransient<AddRegister>();
+            builder.Services.AddTransient<OverallView>();
             builder.Services.AddTransient<AddRegisterViewModel>();
             builder.Services.AddTransient<RegistersViewModel>();
             builder.Services.AddTransient<HousesPageViewModel>();
             builder.Services.AddTransient<OverallViewModel>();
+
+            builder.Services.AddSingleton(sp =>
+            {
+                var dbPath = Path.Combine(FileSystem.AppDataDirectory, "health_app.db");
+                return new SQLiteAsyncConnection(dbPath);
+            });
+
+            builder.Services.AddSingleton<ICidRepository, SQLiteCidRepository>();
+            builder.Services.AddSingleton<ICidSeeder, CidSeeder>();
 
             return builder.Build();
         }
@@ -47,20 +60,15 @@ namespace ACS_View
             service.AddSingleton<IDatabaseService, DatabaseService>();
             service.AddSingleton<IHouseService, HouseService>();
             service.AddSingleton<IHealthRecordService, HealthRecordService>();
-            service.AddSingleton<INavigationService, NavigationService>();
             service.AddSingleton<IVisitsService, VisitsService>();
-            service.AddSingleton<IDashboardService, DashboardService>();
+            service.AddSingleton<IDashboardMetricsService, DashboardMetricsService>();
 
             // Transient
-            service.AddTransient<IPatientConditionsService, PatientConditionService>();
             service.AddTransient<IVaccineService, VaccineService>();
             service.AddTransient<IFamilyService, FamilyService>();
             service.AddTransient<IFamilyManager, FamilyManager>();
-            service.AddTransient<IHealthRecordFilterService, HealthRecordFilterService>();
             service.AddTransient<IUserDialogService, UserDialogService>();
             service.AddTransient<IPersonsInfoService, PersonsInfoService>();
-            service.AddTransient<IRegisterValidator, RegisterValidator>();
-            service.AddTransient<IRegisterFactory, RegisterFactory>();
             service.AddTransient<INoteService, NoteService>();
             service.AddTransient<IPatientService, PatientService>();
 

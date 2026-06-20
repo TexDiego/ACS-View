@@ -7,7 +7,7 @@
              x:Class="ACS_View.Views.FamiliesPage"
              Shell.NavBarIsVisible="True"
              Title="{Binding House}"
-             Background="#E6EBED">
+             Background="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem
@@ -25,9 +25,9 @@
                 <Border
                     x:DataType="services:Familia"
                     StrokeThickness="2"
-                    Stroke="Gray"
+                    Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                     StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
 
                     <SwipeView>
 
@@ -57,7 +57,7 @@
                         
                         <CollectionView
                             ItemsSource="{Binding PessoasFamilia}"
-                            BackgroundColor="White">
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
 
@@ -67,7 +67,7 @@
 
                                         <Label
                                             Text="{Binding Name}"
-                                            TextColor="Black"
+                                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                                             Opacity="0.7"
                                             FontSize="16"
                                             Margin="0,5"
@@ -84,7 +84,7 @@
                                             Padding="0"
                                             Opacity="0.01"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                            CommandParameter="{Binding SusNumber}"/>
+                                            CommandParameter="{Binding Id}"/>
 
                                     </Grid>
 

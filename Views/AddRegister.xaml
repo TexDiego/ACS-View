@@ -4,28 +4,27 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
+             xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
-             Title="Adicionar Cadastro"
-             Background="#E6EBED">
+             Title="Adicionar cadastro">
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="BackgroundColor" Value="{StaticResource Primary}"/>
+            <Setter Property="TextColor" Value="{StaticResource White}"/>
             <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="MaximumHeightRequest" Value="60"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="MinimumHeightRequest" Value="48"/>
         </Style>
         <Style x:Key="labels" TargetType="Label">
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="CheckBox">
-            <Setter Property="Color" Value="#0084B1"/>
+            <Setter Property="Color" Value="{StaticResource Primary}"/>
             <Setter Property="HorizontalOptions" Value="End"/>
         </Style>
     </ContentPage.Resources>
@@ -35,17 +34,14 @@
         <ScrollView
             VerticalOptions="Start"
             VerticalScrollBarVisibility="Never">
-            
+
             <VerticalStackLayout
-                Padding="10,10,10,100"
+                Padding="16,16,16,92"
                 Spacing="10"
                 BindingContext="{Binding CurrentPatient}"
                 x:DataType="model:Patient">
 
-                <Border                    
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
 
@@ -53,19 +49,16 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
+                            Margin="0,0,10,0"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
-                            Text="Nome:"/>
+                            Text="Nome"/>
 
                         <Entry
                             Grid.Row="0"
                             Grid.Column="1"
-                            TextColor="Black"
-                            Opacity="0.7"
                             VerticalOptions="Center"
-                            FontSize="18"
-                            Margin="0,0,20,0"
+                            Margin="0"
                             MaxLength="70"
                             Keyboard="Text"
                             Text="{Binding Name, Mode=TwoWay}"/>
@@ -73,82 +66,64 @@
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
+                            Margin="0,0,10,0"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
                             Text="Mãe:"/>
 
                         <Entry
                             Grid.Column="1"
-                            TextColor="Black"
-                            Opacity="0.7"
                             VerticalOptions="Center"
-                            FontSize="18"
-                            Margin="0,0,20,0"
+                            Margin="0"
                             MaxLength="70"
                             Keyboard="Text"
                             Text="{Binding MotherName, Mode=TwoWay}"/>
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
+                            Margin="0,0,10,0"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
-                            Text="Pai:"/>
+                            Text="Pai"/>
 
                         <Entry
                             Grid.Column="1"
-                            TextColor="Black"
-                            Opacity="0.7"
                             VerticalOptions="Center"
-                            FontSize="18"
-                            Margin="0,0,20,0"
+                            Margin="0"
                             MaxLength="70"
                             Keyboard="Text"
                             Text="{Binding FatherName, Mode=TwoWay}"/>
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
 
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
+                            Margin="0,0,10,0"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
-                            Text="SUS:"/>
+                            Text="SUS"/>
 
                         <Entry
                             Grid.Column="1"
-                            TextColor="Black"
-                            Opacity="0.7"
                             VerticalOptions="Center"
-                            FontSize="18"
-                            Margin="0,0,20,0"
+                            Margin="0"
                             MaxLength="15"
                             Keyboard="Numeric"
                             Text="{Binding SusNumber, Mode=TwoWay}"/>
@@ -156,10 +131,7 @@
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
 
@@ -173,23 +145,21 @@
 
                         <DatePicker
                             Grid.Column="1"
-                            TextColor="Black"
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                             Opacity="0.7"
                             VerticalOptions="Center"
                             HorizontalOptions="End"
                             FontSize="18"
                             Margin="0,0,20,0"
                             Date="{Binding BirthDate, Mode=TwoWay}"
+                            Format="dd/MM/yyyy"
                             MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
                             MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MaximumDate}"/>
 
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid ColumnDefinitions="auto,*">
 
@@ -213,10 +183,7 @@
                     </Grid>
                 </Border>
 
-                <Border
-                    Stroke="Gray"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="White">
+                <Border Style="{StaticResource FieldBorder}">
 
                     <Grid RowDefinitions="auto,*">
 
@@ -229,7 +196,7 @@
                         <Editor
                             Grid.Row="1"
                             Margin="20,0"
-                            TextColor="Black"
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                             Opacity="0.7"
                             FontSize="18"
                             MaxLength="200"
@@ -243,44 +210,86 @@
                 <Label
                     Text="Condições de saúde"
                     FontSize="20"
-                    TextColor="Black"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                     HorizontalOptions="Center"
+                    VerticalOptions="Center"
                     FontAttributes="Bold"
                     Opacity="0.8"/>
 
-                <CollectionView
-                    ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Categories}">
+                <CollectionView ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CommonConditions}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ConditionCategoryVM">
+                        <DataTemplate x:DataType="objects:HealthConditions">
 
-                            <Border
-                                StrokeShape="RoundRectangle 10"
-                                Padding="5"
-                                Margin="0,5"
-                                Stroke="Gray"
-                                StrokeThickness="1"
-                                BackgroundColor="White">
+                            <Grid ColumnDefinitions="*,auto"
+                                  ColumnSpacing="15"
+                                  Padding="10"
+                                  Margin="0,5"
+                                  BackgroundColor="Transparent">
 
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenCategories}"
-                                        CommandParameter="{Binding .}"/>
-                                </Border.GestureRecognizers>
-                                
                                 <Label
+                                    Grid.Column="0"
                                     Text="{Binding Name}"
-                                    FontSize="20"
-                                    TextColor="Black"
+                                    LineBreakMode="WordWrap"
+                                    FontSize="18"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                    Opacity="0.8"/>
+
+                                <CheckBox
+                                    Grid.Column="1"
+                                    IsChecked="{Binding Selected, Mode=TwoWay}"
+                                    Color="{StaticResource Primary}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SwitchConditionCommand}"
+                                    CommandParameter="{Binding .}"/>
+
+                            </Grid>
+
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Button
+                    Text="Adicionar CID"
+                    HorizontalOptions="Fill"
+                    Style="{StaticResource buttons}"
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenConditionsPopup}"/>
+
+                <CollectionView
+                    ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.HealthCategories}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="objects:HealthConditions">
+
+                            <Grid ColumnDefinitions="*,auto"
+                                  ColumnSpacing="15"
+                                  Padding="10"
+                                  Margin="0,5"
+                                  BackgroundColor="Transparent">
+
+                                <Label
+                                    Grid.Column="0"
+                                    Text="{Binding Name}"
+                                    FontSize="18"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                                     Opacity="0.8"
-                                    HorizontalOptions="Center"/>
-                            </Border>
-                            
+                                    HorizontalOptions="Start"/>
+
+                                <ImageButton
+                                    Grid.Column="1"
+                                    Source="remove.png"
+                                    HeightRequest="20"
+                                    WidthRequest="20"
+                                    Margin="0,0,5,0"
+                                    Aspect="AspectFit"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveConditionCommand}"
+                                    CommandParameter="{Binding .}"/>
+
+                            </Grid>
+
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
             </VerticalStackLayout>
-            
+
         </ScrollView>
 
         <Button

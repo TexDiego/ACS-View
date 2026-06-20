@@ -1,56 +1,55 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
-using CommunityToolkit.Maui.Views;
+using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Plugin.LocalNotification;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    internal partial class NotesPageViewModel : BaseViewModel
+    public partial class NotesPageViewModel : BaseViewModel
     {
-        private readonly INoteService _noteService = App.ServiceProvider.GetRequiredService<INoteService>();
+        private readonly INoteService _noteService;
+        private int _loadedVersion = -1;
+        private bool _hasLoaded;
 
         [ObservableProperty] private ObservableCollection<Note> notes = [];
         [ObservableProperty] private Note note = new();
-        [ObservableProperty] private bool isLoading = false;
 
 
         public ICommand DeleteCommand => new Command<int>(async id => await DeleteNoteAsync(id));
         public ICommand SalvarNota => new Command(async () => await SalvarNotaAsync());
-        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync(".."));
+        public ICommand GoBack => new Command(async () => await NavigateBackAsync());
+        public ICommand AddNotification => new Command<int>(async (id) => await AddNotificationAsync(id));
+        public ICommand Refresh => new Command(async () => await LoadNotesAsync());
 
-        public NotesPageViewModel()
+
+        public NotesPageViewModel(INoteService noteService)
         {
-            MainThread.BeginInvokeOnMainThread(async () => await LoadNotesAsync());
+            _noteService = noteService;
         }
 
         private async Task DeleteNoteAsync(int id)
         {
             try
             {
-                bool confirm = Convert.ToBoolean(await Shell.Current.ShowPopupAsync(new DisplayPopUp("Confirmação", "Deseja excluir esta nota?", true, "Excluir", true, "Cancelar")));
-                if (confirm) return;
+                bool confirm = await DisplayConfirmationAsync("Confirmação", "Deseja excluir esta nota?", "Excluir");
+                if (!confirm) return;
 
-                int rowsAffected = await _noteService.DeleteNoteAsync(id);
-                if (rowsAffected > 0)
-                {
-                    var noteToRemove = Notes.FirstOrDefault(n => n.Id == id);
-                    if (noteToRemove != null)
-                    {
-                        Notes.Remove(noteToRemove);
-                    }
-                }
-                else
-                {
-                    await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível excluir a nota.", true, "Voltar", false, ""));
-                }
+                Note note = Notes.Where(n => n.Id == id).First();
+                if (note.NotifyOn is not null)
+                    LocalNotificationCenter.Current.Cancel(id.GetHashCode());
+
+                await _noteService.DeleteNoteAsync(id);
+
+                var noteToRemove = Notes.FirstOrDefault(n => n.Id == id);
+                if (noteToRemove != null) Notes.Remove(noteToRemove);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao deletar: {ex.Message}");
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await DisplayAlertAsync("Erro", ex.Message, "Voltar");
             }
         }
 
@@ -58,43 +57,111 @@ namespace ACS_View.ViewModels
         {
             if (string.IsNullOrWhiteSpace(Note.Content))
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Ops", "O conteúdo não pode estar vazio", false, "", true, "Ok"));
+                await DisplayAlertAsync("Ops", "O conteúdo não pode estar vazio", "Ok");
                 return;
             }
 
             await _noteService.SaveNoteAsync(Note);
-            ClearNote();
+            Note = new Note();
             await LoadNotesAsync();
         }
 
         public async Task LoadNotesAsync()
         {
+            if (_hasLoaded && _loadedVersion == DataChangeTracker.NotesVersion)
+            {
+                return;
+            }
+
             try
             {
-                IsLoading = true;
-
-                var notes = await _noteService.GetAllNotesAsync();
-
-                Notes.Clear();
-                foreach (var note in notes)
+                await ExecuteWithLoadingAsync(async () =>
                 {
-                    Notes.Add(note);
-                }
+                    var notes = await _noteService.GetAllNotesAsync();
+
+                    Notes.Clear();
+
+                    foreach (var note in notes)
+                    {
+                        if (note.NotifyOn < DateTime.Now) note.NotifyOn = null;
+                        Notes.Add(note);
+                    }
+
+                    _loadedVersion = DataChangeTracker.NotesVersion;
+                    _hasLoaded = true;
+                });
             }
             catch (Exception)
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Não foi possível carregar as notas.", true, "Voltar", false, ""));
-            }
-            finally
-            {
-                IsLoading = false;
+                await DisplayAlertAsync("Erro", "Não foi possível carregar as notas.", "Voltar");
             }
         }
 
-        private void ClearNote()
+        private async Task AddNotificationAsync(int id)
         {
-            Note.CreationDate = DateTime.Now;
-            Note.Content = "";
+            Note note = Notes.Where(n => n.Id == id).First();
+
+            var reminder = await DisplayActionSheetAsync(
+                "Definir lembrete para:",
+                "Cancelar",
+                null,
+                "1 dia",
+                "3 dias",
+                "1 semana",
+                "1 mês",
+                "teste");
+
+            if (reminder is null) return;
+
+            DateTime reminderDate = reminder switch
+            {
+                "1 dia" => DateTime.Now.AddDays(1),
+                "3 dias" => DateTime.Now.AddDays(3),
+                "1 semana" => DateTime.Now.AddDays(7),
+                "1 mês" => DateTime.Now.AddMonths(1),
+                _ => DateTime.Now.AddSeconds(10) // Para teste
+            };
+
+            var request = new NotificationRequest
+            {
+                NotificationId = note.Id.GetHashCode(),
+                Title = "Lembrete",
+                Description = note.Content,
+                Schedule = new NotificationRequestSchedule
+                {
+                    NotifyTime = reminderDate
+                }
+            };
+
+            bool permit = await LocalNotificationCenter.Current.RequestNotificationPermission();
+
+            if (permit)
+            {
+                LocalNotificationCenter.Current.Cancel(note.Id.GetHashCode());
+                await LocalNotificationCenter.Current.Show(request);
+                await DisplayAlertAsync("Sucesso", $"Lembrete definido para {reminderDate.ToShortDateString()}", "Ok");
+            }
+            else await DisplayAlertAsync("Permissão Negada", "Não foi possível definir o lembrete. Permissão de notificações negada.", "Ok");
+
+            if (OperatingSystem.IsAndroidVersionAtLeast(13))
+            {
+                var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+                if (status != PermissionStatus.Granted)
+                    status = await Permissions.RequestAsync<Permissions.PostNotifications>();
+
+                if (status != PermissionStatus.Granted)
+                {
+                    // Tratar recusa (log, fallback ou informar usuário)
+                    return;
+                }
+            }
+
+            note.NotifyOn = reminderDate;
+
+            await _noteService.UpdateNoteAsync(note);
+
+            await LoadNotesAsync();
         }
     }
 }
+

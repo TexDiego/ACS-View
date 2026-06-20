@@ -1,44 +1,21 @@
-﻿using ACS_View.Domain.Entities;
+using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
 using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.ValueObjects;
 using SQLite;
 using System.Diagnostics;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class DatabaseService : IDatabaseService
+    internal class DatabaseService(SQLiteAsyncConnection database) : IDatabaseService
     {
-        private SQLiteAsyncConnection _database;
-        private readonly string _databasePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "health_app.db");
-
-        public DatabaseService()
-        {
-            MainThread.BeginInvokeOnMainThread(async () => await InitializeAsync());
-        }
-
-        public SQLiteAsyncConnection Connection
-        {
-            get
-            {
-                if (_database == null) throw new InvalidOperationException("A conexão ainda não foi inicializada.");
-                return _database;
-            }
-        }
+        public SQLiteAsyncConnection Connection { get; } = database;
 
         public async Task InitializeAsync()
         {
             try
             {
-                _database ??= new SQLiteAsyncConnection(_databasePath);
-
-                await _database.CreateTablesAsync<Patient, Vaccines>();
-                await _database.CreateTablesAsync<Note, House>();
-                await _database.CreateTablesAsync<Family, User>();
-                await _database.CreateTablesAsync<CidCategory, CidChapter>();
-                await _database.CreateTablesAsync<CidGroup, CidSubcategory>();
-                await _database.CreateTableAsync<Visits>();
+                await CreateDomainTablesAsync();
             }
             catch (Exception ex)
             {
@@ -55,6 +32,28 @@ namespace ACS_View.UseCases.Services
         public Task<int> UpdateUserAsync(User user)
         {
             return Connection.UpdateAsync(user);
+        }
+
+        private async Task CreateDomainTablesAsync()
+        {
+            await Connection.CreateTablesAsync<Patient, Vaccines>();
+            await Connection.CreateTablesAsync<Note, House>();
+            await Connection.CreateTablesAsync<Family, User>();
+            await Connection.CreateTablesAsync<CidCategory, CidChapter>();
+            await Connection.CreateTablesAsync<CidGroup, CidSubcategory>();
+            await Connection.CreateTablesAsync<Visits, PatientCID>();
+            await Connection.CreateTablesAsync<CommonConditions, PatientConditions>();
+
+            await CreateIndexesAsync();
+        }
+
+        private async Task CreateIndexesAsync()
+        {
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Name ON Patient(Name COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SusNumber ON Patient(SusNumber COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_HouseId ON Patient(HouseId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Family_House ON Patient(FamilyId, HouseId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Rua_Numero ON House(Rua COLLATE NOCASE, NumeroCasa)");
         }
     }
 }

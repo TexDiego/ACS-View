@@ -1,4 +1,5 @@
-﻿using ACS_View.Domain.Entities;
+using ACS_View.Domain.Entities;
+using ACS_View.UseCases.DTOs;
 
 namespace ACS_View.Domain.Interfaces
 {
@@ -6,6 +7,7 @@ namespace ACS_View.Domain.Interfaces
     {
         Task<int> GetTotalCountAsync();
         Task<List<House>> GetAllHousesAsync();
+        Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take);
         Task<House?> GetHouseByIdAsync(int id);
         Task<House?> GetHouseByPatientIdAsync(int id);
         Task SaveHouseAsync(House house);

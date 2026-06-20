@@ -2,82 +2,77 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:local="clr-namespace:ACS_View.Domain.Entities"
+             xmlns:dto="clr-namespace:ACS_View.UseCases.DTOs"
+             xmlns:controls="clr-namespace:ACS_View.Controls"
              x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.Views.Registers"
              Shell.NavBarIsVisible="True"
-             Title="{Binding Condition}"
-             Background="#E6EBED">
+             Style="{StaticResource PageBackground}"
+             Title="{Binding Condition}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem
-            IconImageSource="addperson.png"
-            Command="{Binding AddPerson}"/>
+        <ToolbarItem IconImageSource="addperson.png" Command="{Binding AddPerson}"/>
     </ContentPage.ToolbarItems>
 
-    <ContentPage.Resources>
-        <Style x:Key="Lbl_Datas" TargetType="Label">
-            <Setter Property="HorizontalOptions" Value="Start"/>
-            <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="Margin" Value="5,0,0,0"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="Opacity" Value="0.7"/>
-        </Style>
-    </ContentPage.Resources>
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
 
-    <Grid Margin="10,0,10,10" Padding="0">
-
-        <Border
-            Stroke="Gray"
-            StrokeThickness="2"
-            Margin="-12,-1"
-            BackgroundColor="White"
-            VerticalOptions="Start">
-
-            <Grid>
+        <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
+            <Grid ColumnDefinitions="*,44">
                 <SearchBar
                     x:Name="SB"
-                    HorizontalOptions="Start"
-                    Placeholder="Buscar..."
-                    TextColor="Black"
-                    FontSize="16"
-                    CancelButtonColor="#0084B1"
+                    Margin="0,0,0,-1"
+                    Placeholder="Buscar paciente"
+                    Text="{Binding SearchText, Mode=TwoWay}"
                     MaxLength="30"
                     IsSpellCheckEnabled="True"
-                    BackgroundColor="Transparent"
                     TextChanged="SB_TextChanged"/>
 
                 <ImageButton
+                    Grid.Column="1"
                     ToolTipProperties.Text="Filtrar"
                     Source="filter.png"
-                    WidthRequest="30"
-                    HeightRequest="30"
-                    HorizontalOptions="End"
-                    Margin="15,0"
+                    MaximumHeightRequest="30"
+                    MaximumWidthRequest="30"
                     Command="{Binding Filter}"/>
             </Grid>
         </Border>
 
+        <Grid ColumnDefinitions="*,*" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
+            <Label
+                Grid.Column="0"
+                HorizontalOptions="Start"
+                Text="{Binding FilterSummary}"
+                Style="{StaticResource BodyMuted}"
+                IsVisible="{Binding HasActiveFilters}"/>
+
+            <Label
+                Grid.Column="1"
+                HorizontalOptions="End"
+                Text="Remover filtros"
+                Style="{StaticResource BodyMuted}"
+                TextColor="IndianRed"
+                IsVisible="{Binding HasActiveFilters}">
+
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer 
+                        Command="{Binding ClearFiltersCommand}"/>
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
         <CollectionView
             x:Name="collectionView"
+            Grid.Row="2"
             ItemsSource="{Binding Patients}"
             SelectionMode="None"
-            CanReorderItems="False"
             BackgroundColor="Transparent"
-            CanMixGroups="False"
-            Margin="0,55,0,0">
+            RemainingItemsThreshold="5"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMorePatientsCommand}">
 
             <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border
-                        Margin="0,5"
-                        x:DataType="local:Patient"
-                        StrokeShape="RoundRectangle 10"
-                        StrokeThickness="1"
-                        Stroke="Grey">
-
+                <DataTemplate x:DataType="dto:PatientListItemDto">
+                    <Border Style="{StaticResource CardBorder}" Padding="0">
                         <SwipeView>
-
                             <SwipeView.LeftItems>
                                 <SwipeItem
                                     IconImageSource="bin.png"
@@ -95,75 +90,78 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                     CommandParameter="{Binding .}"/>
                             </SwipeView.RightItems>
-                            
-                            <Grid
-                                ColumnDefinitions="*,auto"
-                                BackgroundColor="White"
-                                Padding="5">
 
+                            <Grid 
+                                ColumnDefinitions="*,auto" 
+                                ColumnSpacing="12" 
+                                BackgroundColor="{AppThemeBinding 
+                                                    Light={StaticResource Surface}, 
+                                                    Dark={StaticResource DarkSurface}}">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
                                         CommandParameter="{Binding .}"/>
                                 </Grid.GestureRecognizers>
 
-                                <!-- name -->
-                                <Label
-                                    Grid.Column="0"
-                                    Text="{Binding Name}"
-                                    FontAttributes="Bold"
-                                    FontSize="18"
-                                    LineBreakMode="CharacterWrap"
-                                    Style="{StaticResource Lbl_Datas}"/>
-
-                                <!-- vaccine button -->
-                                <VerticalStackLayout
-                                    Grid.Column="1"
-                                    Margin="5,5,10,5"
+                                <VerticalStackLayout 
+                                    Grid.Column="0" 
+                                    Spacing="4" 
+                                    Margin="10"
                                     VerticalOptions="Center">
-
-                                    <ImageButton
-                                        BackgroundColor="Transparent"
-                                        Source="syringe"
-                                        HeightRequest="30"
-                                        WidthRequest="30"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
-                                        CommandParameter="{Binding SusNumber}"/>
-
-                                    <Label
-                                        Text="Vacinas"
-                                        TextColor="Black"
-                                        FontSize="14"/>
-
+                                    <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                                    <Label Text="{Binding SusNumber, StringFormat='SUS {0}'}" Style="{StaticResource BodyMuted}"/>
                                 </VerticalStackLayout>
 
+                                <VerticalStackLayout 
+                                    Grid.Column="1" 
+                                    Spacing="2"
+                                    Margin="0,0,10,0"
+                                    HorizontalOptions="Center" 
+                                    VerticalOptions="Center">
+                                    
+                                    <ImageButton
+                                        Source="syringe"
+                                        MaximumHeightRequest="25"
+                                        MaximumWidthRequest="25"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                                        CommandParameter="{Binding Id}"/>
+
+                                    <Label Text="Vacinas" Style="{StaticResource BodyMuted}" FontSize="12" HorizontalTextAlignment="Center"/>
+                                </VerticalStackLayout>
                             </Grid>
-                            
                         </SwipeView>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
-
         </CollectionView>
 
-        <Border
-            HorizontalOptions="Center"
-            Padding="10,5"
-            Margin="15"
+        <CollectionView
+            Grid.Row="2"
+            ItemsSource="{Binding SkeletonItems}"
+            IsVisible="{Binding IsLoading}"
+            InputTransparent="True"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <controls:ShimmerSkeletonRow ShowTrailingBlock="True" ShowSecondaryLine="True"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator
+            Grid.Row="2"
+            IsVisible="{Binding IsLoadingMore}"
+            IsRunning="{Binding IsLoadingMore}"
             VerticalOptions="End"
-            BackgroundColor="White"
-            StrokeShape="RoundRectangle 15"
-            StrokeThickness="1"
-            Stroke="Gray">
-            
+            HorizontalOptions="Center"
+            Margin="0,0,0,52"/>
+
+        <Border Grid.RowSpan="3" Style="{StaticResource CountPill}">
             <Label
                 Text="{Binding TotalRecords, StringFormat='{0} registros encontrados'}"
-                TextColor="Black"
-                FontSize="16"
+                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                FontSize="13"
                 FontAttributes="Bold"/>
-            
         </Border>
-        
     </Grid>
-    
 </ContentPage>

@@ -2,9 +2,10 @@
 
 namespace ACS_View.Domain.Entities.Health
 {
-    internal class CidChapter
+    public class CidChapter
     {
-        [PrimaryKey]
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
         public string Code { get; set; } // Ex: "I"
         public string InitialCode { get; set; }
         public string FinalCode { get; set; }

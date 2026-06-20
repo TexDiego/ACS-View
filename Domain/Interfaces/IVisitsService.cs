@@ -2,7 +2,7 @@
 
 namespace ACS_View.Domain.Interfaces
 {
-    internal interface IVisitsService
+    public interface IVisitsService
     {
         Task<List<Visits>> GetAllVisitsAsync();
         Task RegisterVisitAsync(Visits visit);

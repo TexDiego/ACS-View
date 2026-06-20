@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ACS_View.Views.GeneralMetrics"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
+             x:DataType="vm:OverallViewModel">
+
+    <CollectionView ItemsSource="{Binding MetricsDashboard}">
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="model:Dashboard">
+                <Border Style="{StaticResource CardBorder}" Padding="0">
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItem
+                                IconImageSource="bin.png"
+                                Text="Remover"
+                                BackgroundColor="IndianRed"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
+                                CommandParameter="{Binding .}"/>
+                        </SwipeView.LeftItems>
+
+                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="16" BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
+                                        CommandParameter="{Binding FilterKey}"/>
+                            </Grid.GestureRecognizers>
+
+                            <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
+                                <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                                <Label Text="Resumo geral" Style="{StaticResource BodyMuted}"/>
+                            </VerticalStackLayout>
+
+                            <Label Grid.Column="1" Text="{Binding Total}" Style="{StaticResource MetricNumber}" VerticalOptions="Center" Margin="0,0,10,0"/>
+                        </Grid>
+                    </SwipeView>
+                </Border>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentView>

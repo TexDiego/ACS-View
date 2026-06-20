@@ -4,5 +4,6 @@
     {
         Task<string> GetEnderecoAsync(int id);
         Task<string?> GetComplementoAsync(int id);
+        Task<(string Endereco, string Complemento)> GetAddressInfoAsync(int id);
     }
 }

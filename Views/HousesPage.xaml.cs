@@ -4,12 +4,12 @@ namespace ACS_View.Views;
 
 public partial class HousesPage : ContentPage
 {
-    private readonly HousesPageViewModel _viewModel = new();
+    private readonly HousesPageViewModel _viewModel;
 
-    public HousesPage()
+    public HousesPage(HousesPageViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = _viewModel;
+        BindingContext = _viewModel = viewModel;
     }
 
     private void SearchBar_TextChanged(object sender, TextChangedEventArgs e)
@@ -20,8 +20,6 @@ public partial class HousesPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        if (_viewModel.LoadHousesCommand.CanExecute(null))
-            _viewModel.LoadHousesCommand.Execute(null);
+        _ = _viewModel.LoadInitialHousesAsync();
     }
 }

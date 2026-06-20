@@ -2,10 +2,11 @@
 
 namespace ACS_View.Domain.Interfaces
 {
-    internal interface INoteService
+    public interface INoteService
     {
         Task<List<Note>> GetAllNotesAsync();
-        Task<int> SaveNoteAsync(Note note);
-        Task<int> DeleteNoteAsync(int id);
+        Task SaveNoteAsync(Note note);
+        Task UpdateNoteAsync(Note note);
+        Task DeleteNoteAsync(int id);
     }
 }

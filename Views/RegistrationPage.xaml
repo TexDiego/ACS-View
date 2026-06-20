@@ -3,48 +3,28 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              x:Class="ACS_View.Views.RegistrationPage"
-             BackgroundColor="#E6EBED"
-             NavigationPage.HasNavigationBar="False">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}"
+             Shell.TabBarIsVisible="False"
+             Title="Cadastre-se">
 
     <VerticalStackLayout Margin="10">
-
-        <Grid Margin="0,0,0,30">
-
-            <ImageButton
-                Source="arrowleft.png"
-                HeightRequest="30"
-                WidthRequest="30"
-                HorizontalOptions="Start"
-                VerticalOptions="Center"
-                Clicked="GoBackButton_Clicked"/>
-
-            <Label 
-                Text="Cadastre-se"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center"
-                FontSize="25"
-                FontAttributes="Bold"
-                TextColor="Black"
-                Opacity="0.7"/>
-
-        </Grid>
 
         <Border
             StrokeShape="RoundRectangle 10"
             Padding="10"
-            BackgroundColor="White"
-            Stroke="LightGray">
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}">
 
             <VerticalStackLayout>
 
                 <Entry
                     FontSize="16"
-                    TextColor="Black"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                     Placeholder="Digite seu nome..."/>
 
                 <Entry
                     FontSize="16"
-                    TextColor="Black"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                     Placeholder="Nome de usuário..."/>
 
                 <Label
@@ -57,7 +37,7 @@
                         x:Name="PasswordEntry"
                         Grid.Column="0"
                         FontSize="16"
-                        TextColor="Black"
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                         Placeholder="Senha..."/>
 
                     <Button
@@ -67,7 +47,7 @@
                         HeightRequest="20"
                         WidthRequest="20"
                         CornerRadius="20"
-                        BorderColor="Black"
+                        BorderColor="{AppThemeBinding Light={StaticResource BorderStrong}, Dark={StaticResource DarkBorderStrong}}"
                         Margin="0,0,5,0"
                         Clicked="ViewPasswordButton_Clicked"/>
 
@@ -82,7 +62,7 @@
                     Title="Selecione uma pergunta de segurança"
                     ItemsSource="{Binding SecurityQuestions}"
                     FontSize="16"
-                    TextColor="Black"/>
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
                 <Entry
                     Placeholder="Resposta de segurança..."
@@ -100,7 +80,7 @@
             CornerRadius="10"
             BackgroundColor="AliceBlue"
             BorderColor="LightGray"
-            TextColor="Black"
+            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
             FontSize="18"
             FontAttributes="Bold"/>
 

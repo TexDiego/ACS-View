@@ -1,94 +1,101 @@
 using ACS_View.Domain.Interfaces;
 using ACS_View.ViewModels;
-using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
 public partial class Registers : ContentPage, IQueryAttributable
 {
-    private CancellationTokenSource _throttleCts = new();
-
     private readonly AddRegisterViewModel _addRegisterViewModel;
-    private readonly RegistersViewModel viewModel = new();
+    private readonly RegistersViewModel _viewModel;
 
-    private string _condition = "Cadastros";
-    private string _filter = "Nome";
-    private string _order = "Crescente";
+    private string _condition = "ALL";
+    private bool _hasAppeared;
+    private int _loadVersion;
 
-    public Registers(IUserDialogService dialogue, IPatientService patientService)
+    public Registers(
+        IPatientService patientService,
+        ICidRepository cidRepo,
+        IPatientCidRepository patientCid,
+        ISQLiteConditionsRepository conditionsRepository,
+        RegistersViewModel viewModel)
     {
         InitializeComponent();
-        _addRegisterViewModel = new(dialogue, patientService);
-        BindingContext = viewModel = new RegistersViewModel();
+        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository);
+        BindingContext = _viewModel = viewModel;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("condition", out var condition))
-            _condition = (string)condition;        
+        {
+            _condition = condition?.ToString() ?? "ALL";
+            _viewModel.SetFilter(_condition);
+
+            if (_hasAppeared)
+            {
+                _ = LoadDataOnAppearAsync();
+            }
+        }
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        await LoadDataOnAppearAsync();
+        _hasAppeared = true;
+
+        if (_viewModel.ShouldSkipTransientReload())
+        {
+            return;
+        }
+
+        _ = LoadDataOnAppearAsync();
     }
 
     private async Task LoadDataOnAppearAsync()
     {
+        var loadVersion = Interlocked.Increment(ref _loadVersion);
+
         try
         {
             _addRegisterViewModel.IsLoading = true;
 
-            await viewModel.LoadPatients();
+            await _viewModel.LoadPatients();
+            if (loadVersion != _loadVersion)
+            {
+                return;
+            }
+
             await ScrollToTargetIfNeeded();
-            viewModel.Condition = _condition;
         }
         catch (Exception ex)
         {
-            await ShowErrorPopupAsync(ex.Message);
+            await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
         }
         finally
         {
-            _addRegisterViewModel.IsLoading = false;
+            if (loadVersion == _loadVersion)
+            {
+                _addRegisterViewModel.IsLoading = false;
+            }
         }
     }
 
     private async Task ScrollToTargetIfNeeded()
     {
-        if (viewModel.ScrollToId < 1)
+        if (_viewModel.ScrollToId > 0)
         {
-            var item = viewModel.Patients.FirstOrDefault(r => r.Id == viewModel.ScrollToId);
+            var item = _viewModel.Patients.FirstOrDefault(r => r.Id == _viewModel.ScrollToId);
             if (item != null)
             {
                 await Task.Delay(100);
-                //collectionView.ScrollTo(item, position: ScrollToPosition.Center, animate: true);
-                viewModel.ScrollToId = 0;
+                collectionView.ScrollTo(item, position: ScrollToPosition.Center, animate: true);
+                _viewModel.ScrollToId = 0;
             }
         }
     }
 
-    private async void SB_TextChanged(object sender, TextChangedEventArgs e)
+    private void SB_TextChanged(object sender, TextChangedEventArgs e)
     {
-        _throttleCts?.Cancel();
-        _throttleCts = new CancellationTokenSource();
-
-        try
-        {
-            await Task.Delay(300, _throttleCts.Token);
-            _throttleCts.Token.ThrowIfCancellationRequested();
-
-            //await viewModel.InitAsync(_condition, e.NewTextValue, _filter, _order);
-        }
-        catch (TaskCanceledException) { }
-        catch (Exception ex)
-        {
-            await ShowErrorPopupAsync(ex.Message);
-        }
-    }
-
-    private async Task ShowErrorPopupAsync(string message)
-    {
-        await this.ShowPopupAsync(new DisplayPopUp("Erro", message, true, "Voltar", false, ""));
+        _viewModel.SearchPatientsCommand.Execute(e.NewTextValue);
     }
 }

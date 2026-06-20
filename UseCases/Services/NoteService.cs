@@ -1,25 +1,18 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
+using ACS_View.Domain.ValueObjects;
 using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class NoteService : INoteService
+    internal class NoteService(IDatabaseService db) : INoteService
     {
-        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-        private readonly SQLiteAsyncConnection _database;
-
-        public NoteService()
-        {
-            _database = _databaseService.Connection;
-        }
+        private readonly SQLiteAsyncConnection _database = db.Connection;
 
         public async Task<List<Note>> GetAllNotesAsync()
         {
             try
             {
-                // Consulta SQL direta para buscar todas as notas, ordenadas pela data de criação
                 return await _database.QueryAsync<Note>("SELECT * FROM Note ORDER BY CreationDate");
             }
             catch (Exception ex)
@@ -29,16 +22,16 @@ namespace ACS_View.UseCases.Services
             }
         }
 
-        public async Task<int> SaveNoteAsync(Note note)
+        public async Task SaveNoteAsync(Note note)
         {
             try
             {
-                // Inserção direta de uma nota
-                return await _database.ExecuteAsync(
+                await _database.ExecuteAsync(
                     "INSERT INTO Note (Content, CreationDate) VALUES (?, ?)",
                     note.Content,
                     note.CreationDate
                 );
+                DataChangeTracker.MarkNotesChanged();
             }
             catch (Exception ex)
             {
@@ -47,12 +40,24 @@ namespace ACS_View.UseCases.Services
             }
         }
 
-        public async Task<int> DeleteNoteAsync(int id)
+        public async Task UpdateNoteAsync(Note note)
+        {
+            await _database.ExecuteAsync(
+                "UPDATE Note SET Content = ?, CreationDate = ?, NotifyOn = ? WHERE Id = ?",
+                note.Content,
+                note.CreationDate,
+                note.NotifyOn,
+                note.Id
+            );
+            DataChangeTracker.MarkNotesChanged();
+        }
+
+        public async Task DeleteNoteAsync(int id)
         {
             try
             {
-                // Exclusão direta de uma nota pelo ID
-                return await _database.ExecuteAsync("DELETE FROM Note WHERE Id = ?", id);
+                await _database.ExecuteAsync("DELETE FROM Note WHERE Id = ?", id);
+                DataChangeTracker.MarkNotesChanged();
             }
             catch (Exception ex)
             {

@@ -4,65 +4,72 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
     x:Class="ACS_View.Views.VaccinesInfo"
-    Color="Transparent"
+    x:TypeArguments="system:Boolean"
+    x:DataType="vm:VaccinesInfoViewModel"
     CanBeDismissedByTappingOutsideOfPopup="True">
 
-    <Border
-        BackgroundColor="White"
-        Stroke="Grey"
-        StrokeShape="RoundRectangle 15"
-        StrokeThickness="2"
-        Margin="15">
+    <VerticalStackLayout x:Name="PopupContent">
 
-        <VerticalStackLayout x:Name="PopupContent" Padding="15">
-
-            <Label
+        <Label
                 FontSize="24"
-                TextColor="Black"
+                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                 FontAttributes="Bold"
                 Text="{Binding VaccineName}"/>
 
-            <BoxView
+        <BoxView
                 Color="Grey"
                 HeightRequest="2"/>
 
-            <Label
+        <Label
                 Text="Doenças evitadas:"
                 Margin="0,5,0,5"
-                FontSize="20"
+                FontSize="18"
                 FontAttributes="Bold"
-                TextColor="Black"/>
+                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
-            <Label
+        <Label
                 x:Name="DiseasesAvoided"
-                FontSize="20"
-                TextColor="Black"
+                FontSize="16"
+                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                 Margin="0,0,0,5"
                 FontAttributes="Italic"
                 Text="{Binding DiseaseDescription}"/>
 
-            <BoxView
+        <BoxView
                 Color="Grey"
                 HeightRequest="2"/>
 
-            <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
-                
-                <CheckBox
+        <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
+
+            <CheckBox
                     x:Name="VaccineChecked"
                     VerticalOptions="Center"
                     Color="Grey"
                     CheckedChanged="VaccineChecked_CheckedChanged"/>
 
-                <Label
+            <Label
                     VerticalOptions="Center"
                     Text="Vacina aplicada"
-                    TextColor="Black"/>
-                
-            </HorizontalStackLayout>
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
-        </VerticalStackLayout>
+        </HorizontalStackLayout>
 
-    </Border>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,12,0,0">
+            <Button
+                    Text="Cancelar"
+                    Style="{StaticResource GhostButton}"
+                    Clicked="CancelButton_Clicked"/>
+
+            <Button
+                    Grid.Column="1"
+                    Text="Salvar"
+                    Style="{StaticResource PrimaryButton}"
+                    Clicked="SaveButton_Clicked"/>
+        </Grid>
+
+    </VerticalStackLayout>
+
 
 </tk:Popup>

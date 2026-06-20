@@ -6,9 +6,15 @@ namespace ACS_View.Views;
 
 public partial class PersonsInfo : Popup
 {
-    internal PersonsInfo(Patient record)
+    public PersonsInfo(PersonsInfoViewModel vm)
     {
         InitializeComponent();
-        BindingContext = new PersonsInfoViewModel(record);
+        BindingContext = vm;
+    }
+
+    public void SetPatient(Patient patient)
+    {
+        if (BindingContext is PersonsInfoViewModel viewModel)
+            viewModel.SetPatient(patient);
     }
 }

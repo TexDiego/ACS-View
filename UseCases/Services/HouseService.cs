@@ -1,5 +1,7 @@
-﻿using ACS_View.Domain.Entities;
+using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.ValueObjects;
+using ACS_View.UseCases.DTOs;
 using SQLite;
 using System.Diagnostics;
 
@@ -17,6 +19,7 @@ namespace ACS_View.UseCases.Services
                 if (house != null)
                 {
                     await _connection.DeleteAsync(house);
+                    DataChangeTracker.MarkHousesChanged();
                 }
             }
             catch (Exception ex)
@@ -36,6 +39,44 @@ namespace ACS_View.UseCases.Services
             {
                 Debug.WriteLine($"Erro ao buscar casas: {ex.Message}");
                 return [];
+            }
+        }
+
+        public async Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take)
+        {
+            try
+            {
+                skip = Math.Max(skip, 0);
+                take = Math.Clamp(take, 1, 100);
+
+                var searchCriteria = BuildSearchCriteria(search);
+                var totalCount = await _connection.ExecuteScalarAsync<int>(
+                    $"SELECT COUNT(*) FROM House {searchCriteria.WhereClause}",
+                    [.. searchCriteria.Parameters]);
+
+                searchCriteria.Parameters.Add(take);
+                searchCriteria.Parameters.Add(skip);
+
+                var items = await _connection.QueryAsync<HouseListItemDto>(
+                    $"""
+                    SELECT CasaId, Rua, NumeroCasa, Complemento
+                    FROM House
+                    {searchCriteria.WhereClause}
+                    ORDER BY Rua COLLATE NOCASE, CAST(NumeroCasa AS INTEGER), NumeroCasa COLLATE NOCASE, Complemento COLLATE NOCASE
+                    LIMIT ? OFFSET ?
+                    """,
+                    [.. searchCriteria.Parameters]);
+
+                return new PagedResultDto<HouseListItemDto>
+                {
+                    Items = items,
+                    TotalCount = totalCount
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erro ao buscar casas paginadas: {ex.Message}");
+                return new PagedResultDto<HouseListItemDto>();
             }
         }
 
@@ -105,6 +146,7 @@ namespace ACS_View.UseCases.Services
             try
             {
                 await _connection.InsertAsync(house);
+                DataChangeTracker.MarkHousesChanged();
             }
             catch (Exception ex)
             {
@@ -118,12 +160,61 @@ namespace ACS_View.UseCases.Services
             try
             {
                 await _connection.UpdateAsync(house);
+                DataChangeTracker.MarkHousesChanged();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao atualizar casa: {ex.Message}");
                 throw;
             }
+        }
+
+        private static HouseSearchCriteria BuildSearchCriteria(string? search)
+        {
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return new HouseSearchCriteria();
+            }
+
+            var searchParts = search.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+            var possibleNumber = searchParts.LastOrDefault();
+            var hasNumber = int.TryParse(possibleNumber, out _);
+            var streetSearch = string.Join(" ", searchParts.Take(searchParts.Length - (hasNumber ? 1 : 0))).Trim();
+            var parameters = new List<object>();
+            var clauses = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(streetSearch))
+            {
+                clauses.Add("Rua LIKE ? COLLATE NOCASE");
+                parameters.Add($"%{streetSearch}%");
+            }
+
+            if (hasNumber && !string.IsNullOrWhiteSpace(possibleNumber))
+            {
+                clauses.Add("NumeroCasa = ?");
+                parameters.Add(possibleNumber);
+            }
+
+            if (clauses.Count == 0)
+            {
+                clauses.Add("(Rua LIKE ? COLLATE NOCASE OR NumeroCasa LIKE ? COLLATE NOCASE OR Complemento LIKE ? COLLATE NOCASE)");
+                var likeSearch = $"%{search.Trim()}%";
+                parameters.Add(likeSearch);
+                parameters.Add(likeSearch);
+                parameters.Add(likeSearch);
+            }
+
+            return new HouseSearchCriteria
+            {
+                WhereClause = $"WHERE {string.Join(" AND ", clauses)}",
+                Parameters = parameters
+            };
+        }
+
+        private sealed class HouseSearchCriteria
+        {
+            public string WhereClause { get; init; } = string.Empty;
+            public List<object> Parameters { get; init; } = [];
         }
     }
 }

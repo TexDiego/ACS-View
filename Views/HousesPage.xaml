@@ -2,134 +2,111 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+             xmlns:dto="clr-namespace:ACS_View.UseCases.DTOs"
+             xmlns:controls="clr-namespace:ACS_View.Controls"
              x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.Views.HousesPage"
              Shell.NavBarIsVisible="True"
-             Title="Residências"
-             Background="#E6EBED">
+             Style="{StaticResource PageBackground}"
+             Title="Residências">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem
-            IconImageSource="addhouse.png"
-            Command="{Binding NewHouseCommand}"/>
+        <ToolbarItem IconImageSource="addhouse.png" Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
-    <Grid Margin="10,0,10,10" Padding="0">
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*">
 
-        <!-- Barra de pesquisa -->
-        <Border
-            VerticalOptions="Start"
-            Margin="-12,-1"
-            StrokeThickness="2"
-            Stroke="Gray">
-
+        <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
             <SearchBar
-                Placeholder="Buscar..."
-                PlaceholderColor="Black"                       
+                Margin="0,0,0,-1"
+                Placeholder="Buscar rua ou número"
                 Text="{Binding SearchText, Mode=TwoWay}"
-                FontSize="16"
-                CancelButtonColor="Gray"
-                TextColor="Black"
-                BackgroundColor="White"
                 MaxLength="30"
-                VerticalOptions="Center"
                 TextChanged="SearchBar_TextChanged"/>
-
         </Border>
 
-        <!-- Lista de residências -->
         <CollectionView
-            VerticalOptions="Start"
-            Margin="0,55,0,0"
+            Grid.Row="1"
             ItemsSource="{Binding Houses}"
-            SelectionMode="None">
+            SelectionMode="None"
+            VerticalScrollBarVisibility="Never"
+            RemainingItemsThreshold="5"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMoreHousesCommand}">
 
             <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border
-                        Margin="0,5"
-                        x:DataType="model:House"
-                        Stroke="Gray"
-                        BackgroundColor="White"
-                        StrokeShape="RoundRectangle 8">
-
+                <DataTemplate x:DataType="dto:HouseListItemDto">
+                    <Border Style="{StaticResource CardBorder}" Padding="0">
                         <SwipeView>
-
                             <SwipeView.LeftItems>
                                 <SwipeItem
-                                        IconImageSource="bin.png"
-                                        Text="Excluir"
-                                        BackgroundColor="IndianRed"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=DeleteCommand}"
-                                        CommandParameter="{Binding CasaId}"/>
+                                    IconImageSource="bin.png"
+                                    Text="Excluir"
+                                    BackgroundColor="IndianRed"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding CasaId}"/>
                             </SwipeView.LeftItems>
 
                             <SwipeView.RightItems>
                                 <SwipeItem
-                                        IconImageSource="pencil.png"
-                                        Text="Editar"
-                                        BackgroundColor="DarkOrange"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=EditCommand}"
-                                        CommandParameter="{Binding .}"/>
+                                    IconImageSource="pencil.png"
+                                    Text="Editar"
+                                    BackgroundColor="DarkOrange"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding .}"/>
                             </SwipeView.RightItems>
 
-                            <VerticalStackLayout
-                                Padding="10"
-                                BackgroundColor="White">
-
-                                <VerticalStackLayout.GestureRecognizers>
+                            <Grid
+                                ColumnDefinitions="*,auto" 
+                                ColumnSpacing="12"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                                <Grid.GestureRecognizers>
                                     <TapGestureRecognizer
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HousesPageViewModel}}, Path=FamilyCommand}"
-                                            CommandParameter="{Binding CasaId}"/>
-                                </VerticalStackLayout.GestureRecognizers>
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
+                                        CommandParameter="{Binding CasaId}"/>
+                                </Grid.GestureRecognizers>
 
-                                <!-- Rua -->
-                                <Label
-                                    Text="{Binding Rua}"
-                                    FontSize="18"
-                                    Opacity="0.7"
-                                    TextColor="Black"
-                                    FontAttributes="Bold" />
-
-                                <!-- Número e Complemento -->
-                                <HorizontalStackLayout
-                                        Margin="0,0,0,10">
-
-                                    <Label Text="Número: " FontSize="14" TextColor="Black" Opacity="0.7"/>
-
-                                    <Label Text="{Binding NumeroCasa}" FontSize="14" TextColor="Black" Opacity="0.7" Margin="0,0,5,0"/>
-
-                                    <Label Text="{Binding Complemento}" FontSize="14" TextColor="Black" Opacity="0.7"/>
-
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-
+                                <VerticalStackLayout Grid.Column="0" Spacing="5" Margin="10">
+                                    <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}"/>
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label Text="Número" Style="{StaticResource BodyMuted}"/>
+                                        <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
+                                        <Label Text="{Binding Complemento}" Style="{StaticResource BodyMuted}"/>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Grid>
                         </SwipeView>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Border
-            Grid.RowSpan="2"
-            HorizontalOptions="Center"
-            Padding="10,5"
-            Margin="15"
-            VerticalOptions="End"
-            BackgroundColor="White"
-            StrokeShape="RoundRectangle 15"
-            StrokeThickness="1"
-            Stroke="Gray">
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding SkeletonItems}"
+            IsVisible="{Binding IsLoading}"
+            InputTransparent="True"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <controls:ShimmerSkeletonRow ShowTrailingBlock="False" ShowSecondaryLine="True"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
+        <ActivityIndicator
+            Grid.Row="1"
+            IsVisible="{Binding IsLoadingMore}"
+            IsRunning="{Binding IsLoadingMore}"
+            VerticalOptions="End"
+            HorizontalOptions="Center"
+            Margin="0,0,0,52"/>
+
+        <Border Grid.RowSpan="2" Style="{StaticResource CountPill}">
             <Label
                 Text="{Binding TotalHouses, StringFormat='{0} registros encontrados'}"
-                TextColor="Black"
-                FontSize="16"
+                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                FontSize="13"
                 FontAttributes="Bold"/>
-
         </Border>
-        
     </Grid>
-    
 </ContentPage>

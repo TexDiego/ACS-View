@@ -2,9 +2,12 @@
 
 namespace ACS_View.Domain.ValueObjects
 {
-    internal partial class Dashboard : ObservableObject
+    public partial class Dashboard : ObservableObject
     {
         [ObservableProperty] private string name;
+        [ObservableProperty] private string cid;
+        [ObservableProperty] private string filterKey;
         [ObservableProperty] private int total;
+        [ObservableProperty] private bool isCombination;
     }
 }

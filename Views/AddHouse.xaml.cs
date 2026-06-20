@@ -6,19 +6,41 @@ namespace ACS_View.Views;
 
 public partial class AddHouse : ContentPage, IQueryAttributable
 {
-    private readonly AddHouseViewModel viewModel = new();
+    private readonly AddHouseViewModel viewModel;
     private readonly Regex regex = GetDigitsOnlyRegex();
+    private int? _houseId;
+    private bool _loaded;
 
-    public AddHouse()
+    public AddHouse(AddHouseViewModel vm)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        BindingContext = viewModel = vm;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("house", out var house))
+        {
             viewModel.HouseModel = (House)house;
+            _loaded = true;
+        }
+
+        if (query.TryGetValue("houseId", out var houseId))
+        {
+            _houseId = Convert.ToInt32(houseId);
+            _loaded = false;
+        }
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (!_loaded && _houseId is int houseId)
+        {
+            _loaded = true;
+            _ = viewModel.LoadHouseAsync(houseId);
+        }
     }
 
     private void Entry_CEP_TextChanged(object sender, TextChangedEventArgs e)

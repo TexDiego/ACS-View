@@ -1,63 +1,79 @@
-using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
 using ACS_View.ViewModels;
-using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
-public partial class VaccinesPage : ContentPage
+public partial class VaccinesPage : ContentPage, IQueryAttributable
 {
-    VaccinesPageViewModel viewModel = new();
-    private Patient _healthRecord;
-    private readonly Vaccines _vaccines;
-    private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
+    private readonly VaccinesPageViewModel _viewModel;
+    private int? _patientId;
+    private bool _isVisible;
+    private int _navigationVersion;
 
-    private int id;
-    private bool _isInitialized = false;
-
-
-    public VaccinesPage(Vaccines vaccines)
-	{
+    public VaccinesPage(VaccinesPageViewModel viewModel)
+    {
         InitializeComponent();
-        _vaccines = vaccines;
+        BindingContext = _viewModel = viewModel;
     }
 
-    protected override async void OnAppearing()
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("patientId", out var patientId))
+        {
+            _patientId = Convert.ToInt32(patientId);
+            _navigationVersion++;
+        }
+
+        if (_isVisible)
+        {
+            QueuePatientLoad();
+        }
+    }
+
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        if (_isInitialized) return;
-
-        try
-        {
-            _healthRecord = await _patientService.GetPatientById(_vaccines.Id);
-            id = _healthRecord.Id;
-
-            viewModel = new VaccinesPageViewModel(id);
-            await viewModel.InitializeAsync();
-
-            BindingContext = viewModel;
-            _isInitialized = true;
-        }
-        catch (Exception ex)
-        {
-            await Shell.Current.ShowPopupAsync(
-                new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, "")
-            );
-            Console.WriteLine(ex);
-        }
+        _isVisible = true;
+        QueuePatientLoad();
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isVisible = false;
+    }
+
+    private void QueuePatientLoad()
+    {
+        if (_patientId is not int patientId)
+        {
+            return;
+        }
+
+        var navigationVersion = _navigationVersion;
+
+        Dispatcher.Dispatch(async () =>
+        {
+            await Task.Yield();
+
+            if (!_isVisible || navigationVersion != _navigationVersion)
+            {
+                return;
+            }
+
+            try
+            {
+                await _viewModel.LoadPatientAsync(patientId);
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
+                Console.WriteLine(ex);
+            }
+        });
+    }
 
     private async void Btn_GoBack_Clicked(object sender, EventArgs e)
     {
-		try
-		{
-            await Shell.Current.GoToAsync("..");
-        }
-        catch (Exception ex)
-        {
-            Shell.Current.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-        }
+        await Shell.Current.GoToAsync("..");
     }
 }

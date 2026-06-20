@@ -1,5 +1,3 @@
-using CommunityToolkit.Maui.Views;
-
 namespace ACS_View.Views;
 
 public partial class LoginPage : ContentPage
@@ -15,35 +13,24 @@ public partial class LoginPage : ContentPage
         {
             Preferences.Set("AuthToken", "User");
 
-            await Shell.Current.GoToAsync("//overview");
+            if (Application.Current is App app)
+            {
+                await app.ResetToAuthenticatedShellAsync();
+            }
         }
         catch (Exception ex)
         {
-            this.ShowPopup(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+            await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
         }
     }
 
     private async void RegisterUser_Clicked(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new RegistrationPage());
-        }
-        catch (Exception ex)
-        {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-        }
+        await Navigation.PushAsync(new RegistrationPage());
     }
 
     private async void Button_Clicked(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new ForgotPassword());
-        }
-        catch (Exception ex)
-        {
-            await this.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
-        }
+        await Navigation.PushAsync(new ForgotPassword());
     }
 }

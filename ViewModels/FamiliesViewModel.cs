@@ -2,7 +2,7 @@
 using ACS_View.Domain.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -12,9 +12,12 @@ namespace ACS_View.ViewModels
 {
     internal partial class FamiliesViewModel : BaseViewModel
     {
-        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
-        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-        private readonly IVisitsService _visitsService = App.ServiceProvider.GetRequiredService<IVisitsService>();
+        private readonly IHouseService _houseService = App.StaticServiceProvider.GetRequiredService<IHouseService>();
+        private readonly IVisitsService _visitsService = App.StaticServiceProvider.GetRequiredService<IVisitsService>();
+        private readonly IPatientService _patientService = App.StaticServiceProvider.GetRequiredService<IPatientService>();
+        private DateTime _suppressReloadUntilUtc = DateTime.MinValue;
+        private int _loadedVersion = -1;
+        private bool _hasLoaded;
 
         [ObservableProperty] private ObservableCollection<Familia> families = [];
         [ObservableProperty] private string house = "";
@@ -23,8 +26,8 @@ namespace ACS_View.ViewModels
         public IRelayCommand<int> DeleteFamilyCommand => new RelayCommand<int>(DeleteFamily);
         public IRelayCommand<int> EditFamilyCommand => new RelayCommand<int>(EditFamily);
         public IRelayCommand<int> VisitFamilyCommand => new RelayCommand<int>(VisitFamily);
-        public ICommand PersonInfo => new Command<string>(async susNumber => await PersonData(susNumber));
-        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync(".."));
+        public ICommand PersonInfo => new Command<int>(async (id) => await PersonData(id));
+        public ICommand GoBack => new Command(async () => await NavigateBackAsync());
 
 
         private readonly int _idHouse = 0;
@@ -32,49 +35,65 @@ namespace ACS_View.ViewModels
         public FamiliesViewModel(int idHouse)
         {
             _idHouse = idHouse;
-            LoadFamilies();
         }
 
-        public async void LoadFamilies()
+        internal bool ShouldSkipTransientReload()
         {
+            return DateTime.UtcNow <= _suppressReloadUntilUtc;
+        }
+
+        public async Task LoadFamiliesAsync()
+        {
+            var currentVersion = DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
+            if (_hasLoaded && _loadedVersion == currentVersion)
+            {
+                return;
+            }
+
             try
             {
-                var house = await _houseService.GetHouseByIdAsync(_idHouse);
-
-                if (house == null)
+                await ExecuteWithLoadingAsync(async () =>
                 {
-                    await Shell.Current.DisplayAlert("Erro", "Casa não encontrada.", "OK");
-                    return;
-                }
+                    var house = await _houseService.GetHouseByIdAsync(_idHouse);
 
-                string rua = house.Rua ?? "Famílias";
-                string numero = house.NumeroCasa ?? "";
-                string complemento = house.Complemento ?? "";
-
-                House = complemento == "" ? $"{rua}\n Nº {numero}" : $"{rua}\n Nº {numero} - {complemento}";
-
-                Console.WriteLine(House);
-
-                var familiesFromDb = await _healthRecordService.GetRecordsByHouseIdAsync(_idHouse);
-                var familiesGrouped = familiesFromDb
-                    .Where(p => p.FamilyId > 0)
-                    .GroupBy(p => p.FamilyId)
-                    .Select(g => new Familia
+                    if (house == null)
                     {
-                        IdFamily = g.Key,
-                        PessoasFamilia = new ObservableCollection<Patient>([.. g])
-                    }).ToList();
+                        await DisplayAlertAsync("Erro", "Casa não encontrada.");
+                        return;
+                    }
 
-                Families.Clear();
+                    string rua = house.Rua ?? "Famílias";
+                    string numero = house.NumeroCasa ?? "";
+                    string complemento = house.Complemento ?? "";
 
-                foreach (var family in familiesGrouped)
-                {
-                    Families.Add(family);
-                }
+                    House = complemento == "" ? $"{rua}\n Nº {numero}" : $"{rua}\n Nº {numero} - {complemento}";
+
+                    Console.WriteLine(House);
+
+                    var familiesFromDb = await _patientService.GetPatientsByHouseId(_idHouse);
+                    var familiesGrouped = familiesFromDb
+                        .Where(p => p.FamilyId > 0)
+                        .GroupBy(p => p.FamilyId)
+                        .Select(g => new Familia
+                        {
+                            IdFamily = g.Key,
+                            PessoasFamilia = new ObservableCollection<Patient>([.. g])
+                        }).ToList();
+
+                    Families.Clear();
+
+                    foreach (var family in familiesGrouped)
+                    {
+                        Families.Add(family);
+                    }
+
+                    _loadedVersion = currentVersion;
+                    _hasLoaded = true;
+                });
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Erro", ex.Message, "OK");
+                await DisplayAlertAsync("Erro", ex.Message);
             }
         }
 
@@ -88,11 +107,11 @@ namespace ACS_View.ViewModels
                 };
 
                 Families.Add(newFamily); // Adiciona a nova família à coleção
-                await Shell.Current.Navigation.PushAsync(new AddFamilyPage(_idHouse, false));
+                await PushPageAsync(new AddFamilyPage(_idHouse, false));
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Erro", $"Não foi possível adicionar a nova família.\n\n{ex.Message}", "OK");
+                await DisplayAlertAsync("Erro", $"Não foi possível adicionar a nova família.\n\n{ex.Message}");
             }
         }
 
@@ -100,30 +119,29 @@ namespace ACS_View.ViewModels
         {
             try
             {
-                var confirm = await Shell.Current.ShowPopupAsync(new DisplayPopUp(
+                var confirm = await DisplayConfirmationAsync(
                     "Confirmar Exclusão",
                     $"Tem certeza de que deseja excluir a família?",
-                    true ,"Excluir",
-                    true, "Cancelar"));
+                    "Excluir");
 
-                if ((bool)confirm) return;
+                if (!confirm) return;
 
-                var pessoasDaFamilia = await _healthRecordService.GetRecordsByFamilyAndHouseAsync(idFamily, _idHouse);
+                var pessoasDaFamilia = await _patientService.GetPatientsByFamilyAndHouseId(idFamily, _idHouse);
 
                 foreach (var person in pessoasDaFamilia)
                 {
                     person.HouseId = 0;
                     person.FamilyId = 0;
 
-                    await _healthRecordService.UpdateRecordAsync(person);
+                    await _patientService.UpdatePatient(person);
                 }
 
                 OnPropertyChanged(nameof(Families));
-                LoadFamilies();
+                await LoadFamiliesAsync();
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert(
+                await DisplayAlertAsync(
                     "Erro",
                     $"Não foi possível excluir a família.\n\n{ex.Message}",
                     "OK");
@@ -138,15 +156,15 @@ namespace ACS_View.ViewModels
 
                 if (familyToEdit == null)
                 {
-                    await Shell.Current.DisplayAlert("Aviso", "Família não encontrada.", "OK");
+                    await DisplayAlertAsync("Aviso", "Família não encontrada.");
                     return;
                 }
 
-                await Shell.Current.Navigation.PushAsync(new AddFamilyPage(_idHouse, true, idFamily));
+                await PushPageAsync(new AddFamilyPage(_idHouse, true, idFamily));
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Erro", $"Não foi possível editar a família.\n\n{ex.Message}", "OK");
+                await DisplayAlertAsync("Erro", $"Não foi possível editar a família.\n\n{ex.Message}");
             }
         }
 
@@ -158,44 +176,57 @@ namespace ACS_View.ViewModels
 
                 if (familyToVisit == null)
                 {
-                    await Shell.Current.DisplayAlert("Aviso", "Família não encontrada.", "OK");
+                    await DisplayAlertAsync("Aviso", "Família não encontrada.");
                     return;
                 }
 
-                var visit = await Shell.Current.ShowPopupAsync(new VisitPage(_idHouse, idFamily));
+                var popupResult = await Shell.Current.ShowPopupAsync<Visits>(new VisitPage(_idHouse, idFamily), PopupConfigs.Default);
 
-                if (visit is Visits visits)
+                if (popupResult is null || popupResult.WasDismissedByTappingOutsideOfPopup || popupResult.Result is null)
                 {
-                    await _visitsService.RegisterVisitAsync(visits);
-                    await Shell.Current.DisplayAlert("Sucesso", "Visita realizada", "OK");
+                    return;
                 }
-                else
-                {
-                    await Shell.Current.DisplayAlert("Aviso", "Visita não registrada.", "OK");
-                }
+
+                await _visitsService.RegisterVisitAsync(popupResult.Result);
+                await DisplayAlertAsync("Sucesso", $"Visita registrada como {popupResult.Result.Description}.");
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Erro", $"Não foi possível visitar a família.\n\n{ex.Message}", "OK");
+                await DisplayAlertAsync("Erro", $"Não foi possível visitar a família.\n\n{ex.Message}");
             }
         }
 
-        private async Task PersonData(string susNumber)
+        private async Task PersonData(int Id)
         {
             try
             {
-                var record = await _healthRecordService.GetRecordBySusAsync(susNumber);
+                PersonsInfoViewModel vm = App.StaticServiceProvider.GetRequiredService<PersonsInfoViewModel>();
+                var record = await _patientService.GetPatientById(Id);
 
                 if (record != null)
                 {
-                    var popup = new PersonsInfo(record);
-                    await Shell.Current.ShowPopupAsync(popup);
+                    var popup = new PersonsInfo(vm);
+                    popup.SetPatient(record);
+                    SuppressTransientReload();
+                    try
+                    {
+                        await Shell.Current.ShowPopupAsync(popup);
+                    }
+                    finally
+                    {
+                        SuppressTransientReload();
+                    }
                 }
             }
             catch
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Erro ao carregar os dados da pessoa.", true, "Fechar", false, ""));
+                await DisplayAlertAsync("Erro", "Erro ao carregar os dados da pessoa.", "Fechar");
             }
+        }
+
+        private void SuppressTransientReload()
+        {
+            _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
         }
     }
 }

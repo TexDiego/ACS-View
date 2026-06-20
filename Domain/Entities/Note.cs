@@ -7,6 +7,7 @@ namespace ACS_View.Domain.Entities
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
         public string Content { get; set; }
-        public DateTime CreationDate { get; set; }
+        public DateTime CreationDate { get; set; } = DateTime.Now;
+        public DateTime? NotifyOn { get; set; } = null;
     }
 }

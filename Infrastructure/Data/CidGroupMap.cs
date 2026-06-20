@@ -7,6 +7,7 @@ namespace ACS_View.Infrastructure.Data
     {
         public CidGroupMap()
         {
+            // Keep original code as range (e.g. "A00-A09")
             Map(m => m.Code).Convert(row =>
             {
                 var initial = row.Row.GetField("CATINIC");
@@ -14,6 +15,9 @@ namespace ACS_View.Infrastructure.Data
 
                 return $"{initial}-{final}";
             });
+            // Also store initial and final parts separately on the entity
+            Map(m => m.InitialCode).Name("CATINIC");
+            Map(m => m.FinalCode).Name("CATFIM");
             Map(m => m.Description).Name("DESCRICAO");
         }
     }

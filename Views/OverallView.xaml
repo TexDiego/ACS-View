@@ -2,95 +2,87 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.Views.OverallView"
-             Shell.NavBarIsVisible="False"
-             Background="#E6EBED">
+             Title="Início"
+             Style="{StaticResource PageBackground}">
 
-    <ContentPage.Resources>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="plus.png"
+                     Command="{Binding AddCombinedMetricCommand}"/>
+    </ContentPage.ToolbarItems>
 
-        <Style x:Key="infos" TargetType="Label">
-            <Setter Property="HorizontalOptions" Value="Center"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="Opacity" Value="0.7"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="HorizontalTextAlignment" Value="Center"/>
-        </Style>
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*" RowSpacing="14">
 
-        <Style x:Key="borders" TargetType="Border">
-            <Setter Property="Stroke" Value="Grey"/>
-            <Setter Property="StrokeShape" Value="RoundRectangle 10"/>
-            <Setter Property="StrokeThickness" Value="2"/>
-            <Setter Property="Padding" Value="10,15"/>
-            <Setter Property="BackgroundColor" Value="White"/>
-            <Setter Property="Margin" Value="10,5"/>
-        </Style>
+        <Border Grid.Row="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                StrokeShape="RoundRectangle 8"
+                Padding="4">
+            <Grid ColumnDefinitions="*,*">
+                <Border Grid.Column="0"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 7"
+                        Padding="10,9">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding GeneralTabSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}"/>
+                        </DataTrigger>
+                    </Border.Triggers>
 
-        <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="CornerRadius" Value="15"/>
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SwitchView}" CommandParameter="0"/>
+                    </Border.GestureRecognizers>
 
-        <Style x:Key="buttons2" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="AliceBlue"/>
-            <Setter Property="BorderColor" Value="LightGray"/>
-            <Setter Property="BorderWidth" Value="2"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="20,5,20,5"/>
-            <Setter Property="MaximumHeightRequest" Value="60"/>
-        </Style>
+                    <Label
+                        Text="Métricas"
+                        FontSize="15"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                        FontAttributes="Bold">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding GeneralTabSelected}" Value="True">
+                                <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </Border>
 
-    </ContentPage.Resources>
+                <Border Grid.Column="1"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 7"
+                        Padding="10,9">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding HealthTabSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}"/>
+                        </DataTrigger>
+                    </Border.Triggers>
 
-    <Grid RowDefinitions="auto,auto,*">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SwitchView}" CommandParameter="1"/>
+                    </Border.GestureRecognizers>
 
-        <Label 
-            Grid.Row="0"
-            Text="Visão Geral"
-            Margin="10,15"
-            FontAttributes="Bold"
-            TextColor="Black"
-            FontSize="25"
-            HorizontalOptions="Center"/>        
+                    <Label
+                        Text="Saúde"
+                        FontSize="15"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                        FontAttributes="Bold">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding HealthTabSelected}" Value="True">
+                                <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </Border>
+            </Grid>
+        </Border>
 
-        <CollectionView
-            Grid.Row="2"
-            ItemsSource="{Binding Dashboard}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border
-                        x:DataType="model:Dashboard"
-                        Style="{x:StaticResource borders}">
-                        
-                        <Grid>
-
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={x:RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
-                                    CommandParameter="{Binding Name}"/>
-                            </Grid.GestureRecognizers>
-                            
-                            <Label
-                                HorizontalOptions="Start"
-                                Text="{Binding Name}"
-                                Style="{x:StaticResource infos}"/>
-
-                            <Label
-                                HorizontalOptions="End"
-                                Text="{Binding Total}"
-                                Style="{x:StaticResource infos}"/>
-                            
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
+        <ContentView
+            x:Name="Metrics"
+            Grid.Row="1"
+            Content="{Binding CurrentView}"/>
     </Grid>
-
 </ContentPage>

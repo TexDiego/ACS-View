@@ -1,24 +1,33 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
 using ACS_View.UseCases.Services;
-using ACS_View.Views;
-using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    public partial class AddHouseViewModel : BaseViewModel
+    public partial class AddHouseViewModel(IHouseService _houseService) : BaseViewModel
     {
-        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-        
         [ObservableProperty] private House houseModel = new();
-        [ObservableProperty] private bool isLoading;
-        [ObservableProperty] private bool isRunning;
 
         public ICommand SalvarCommand => new Command(async () => await SalvarCasa());
         public ICommand SearchCEP => new Command(async () => await SearchCEPAsync());
-        public ICommand GoBack => new Command(async () => await Shell.Current.Navigation.PopAsync());
+        public ICommand GoBack => new Command(async () => await NavigateBackAsync());
+
+        public async Task LoadHouseAsync(int houseId)
+        {
+            try
+            {
+                await ExecuteWithLoadingAsync(async () =>
+                {
+                    HouseModel = await _houseService.GetHouseByIdAsync(houseId) ?? new House();
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Erro", ex.Message, "Voltar");
+            }
+        }
 
         private bool IsNullOrWhiteSpaceVerifier()
         {
@@ -35,8 +44,7 @@ namespace ACS_View.ViewModels
         {
             if (IsNullOrWhiteSpaceVerifier())
             {
-                await Shell.Current.ShowPopupAsync(
-                    new DisplayPopUp("Ops", "Preencha todos os campos obrigatórios.", false, "", true, "OK"));
+                await DisplayAlertAsync("Ops", "Preencha todos os campos obrigatórios.");
                 return;
             }
 
@@ -46,21 +54,18 @@ namespace ACS_View.ViewModels
                 {
                     await _houseService.UpdateHouseAsync(HouseModel);
 
-                    await Shell.Current.ShowPopupAsync(
-                        new DisplayPopUp("Sucesso", "Residência atualizada com sucesso.", false, "", true, "OK"));
+                    await DisplayAlertAsync("Sucesso", "Residência atualizada com sucesso.");
                 }
                 else
                 {
                     await _houseService.SaveHouseAsync(HouseModel);
 
-                    await Shell.Current.ShowPopupAsync(
-                        new DisplayPopUp("Sucesso", "Nova residência criada com sucesso.", false, "", true, "OK"));
+                    await DisplayAlertAsync("Sucesso", "Nova residência criada com sucesso.");
                 }
             }
             catch (Exception ex)
             {
-                await Shell.Current.ShowPopupAsync(
-                    new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await DisplayAlertAsync("Erro", ex.Message, "Voltar");
             }
 
             HouseModel = new();
@@ -70,41 +75,37 @@ namespace ACS_View.ViewModels
         {
             if (!ValidarCep(HouseModel.CEP))
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Ops", "CEP inválido", false, "", true, "Voltar"));
+                await DisplayAlertAsync("Ops", "CEP inválido", "Voltar");
                 return;
             }
 
             try
             {
-                IsRunning = true;
-
-                var endereco = await CEPService.BuscarEnderecoPorCep(HouseModel.CEP);
-
-                if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
+                await ExecuteWithRunningAsync(async () =>
                 {
-                    endereco.CEP = endereco.CEP.Replace("-", "");
+                    var endereco = await CEPService.BuscarEnderecoPorCep(HouseModel.CEP);
 
-                    HouseModel = endereco;
+                    if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
+                    {
+                        endereco.CEP = endereco.CEP.Replace("-", "");
+                        HouseModel = endereco;
+                        return;
+                    }
 
-                    IsRunning = false;
-                }
-                else
-                {
-                    IsRunning = false;
-                    await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", "Endereço não encontrado ou CEP inválido.", false, "", true, "OK"));
-                }
+                    await DisplayAlertAsync("Erro", "Endereço não encontrado ou CEP inválido.");
+                });
             }
             catch (HttpRequestException ex)
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", $"Não foi possível conectar ao serviço de CEP.\nVerifique sua conexão com a internet.\n\n {ex.Message}", false, "", true, "OK"));
+                await DisplayAlertAsync("Erro", $"Não foi possível conectar ao serviço de CEP.\nVerifique sua conexão com a internet.\n\n {ex.Message}");
             }
             catch (Exception ex)
             {
-                await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", ex.Message, true, "Voltar", false, ""));
+                await DisplayAlertAsync("Erro", ex.Message, "Voltar");
             }
         }
 
-        private bool ValidarCep(string cep)
+        private static bool ValidarCep(string cep)
         {
             return !string.IsNullOrWhiteSpace(cep) && cep.Length == 8 && cep.All(char.IsDigit);
         }

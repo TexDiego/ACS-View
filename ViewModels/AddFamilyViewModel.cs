@@ -1,7 +1,6 @@
 ﻿using ACS_View.Domain.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -10,23 +9,26 @@ namespace ACS_View.ViewModels
 {
     internal partial class AddFamilyViewModel : BaseViewModel
     {
-        private readonly IFamilyService _familyService = App.ServiceProvider.GetRequiredService<IFamilyService>();
-        private readonly IFamilyManager _familyManager = App.ServiceProvider.GetRequiredService<IFamilyManager>();
-        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
+        private readonly IFamilyService _familyService = App.StaticServiceProvider.GetRequiredService<IFamilyService>();
+        private readonly IFamilyManager _familyManager = App.StaticServiceProvider.GetRequiredService<IFamilyManager>();
+        private readonly IPatientService _patientService = App.StaticServiceProvider.GetRequiredService<IPatientService>();
 
         [ObservableProperty] private ObservableCollection<Pessoa> pessoas = [];
         [ObservableProperty] private ObservableCollection<Pessoa> pessoasPesquisadas = [];
+        [ObservableProperty] private bool hasSearchResults;
 
         public ICommand SalvarCommand => new Command(async () => await SalvarFamilia());
         public ICommand AddPersonCommand => new Command<int>(async (id) => await AddPerson(id));
-        public ICommand SearchCommand => new Command<string>(async s => await Search(s));
+        public ICommand SearchCommand => new Command<string>(async s => await SearchAsync(s));
         public ICommand DeleteCommand => new Command<int>(async (id) => await DeletePerson(id));
-        public ICommand GoBack => new Command(async () => await Shell.Current.GoToAsync("..", new Dictionary<string, object> { { "id", IdHouse } }));
+        public ICommand GoBack => new Command(async () => await NavigateBackAsync(new Dictionary<string, object> { { "id", IdHouse } }));
 
 
         public int IdHouse { get; set; }
         public int IdPessoa { get; set; }
         public bool IsEdit { get; }
+        private int _loadedVersion = -1;
+        private bool _hasLoaded;
 
         private CancellationTokenSource _debounceTimer = new();
 
@@ -35,21 +37,19 @@ namespace ACS_View.ViewModels
             IdHouse = idHouse;
             IsEdit = isEdit;
             IdPessoa = idFamily ?? 0;
-
-            MainThread.BeginInvokeOnMainThread(async () => await LoadDataAsync());
         }
 
         private async Task SalvarFamilia()
         {
             if (IdHouse <= 0)
             {
-                await MostrarErro("IdHouse inválido. Selecione uma residência.");
+                await DisplayAlertAsync("Erro", "IdHouse inválido. Selecione uma residência.", "Voltar");
                 return;
             }
 
             if (Pessoas.Count == 0)
             {
-                await MostrarErro("Família sem membros. Adicione pelo menos uma pessoa.");
+                await DisplayAlertAsync("Erro", "Família sem membros. Adicione ao menos uma pessoa.", "Voltar");
                 return;
             }
 
@@ -60,12 +60,15 @@ namespace ACS_View.ViewModels
 
                 await _familyManager.AddPeopleToFamily(susList, IdHouse, familyId);
 
-                await MostrarSucesso(IsEdit ? "Família atualizada." : "Família criada.");
-                await Shell.Current.GoToAsync("..");
+                if (IsEdit)
+                    await DisplayAlertAsync("Sucesso!", "Família atualizada.", "Voltar");
+                else
+                    await DisplayAlertAsync("Sucesso!", "Família criada.", "Voltar");
+                await NavigateBackAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                await MostrarErro($"Erro ao salvar família: {ex.Message}");
+                await DisplayAlertAsync("Erro", "Erro ao salvar família.", "Voltar");
             }
         }
 
@@ -74,12 +77,14 @@ namespace ACS_View.ViewModels
             var pessoa = Pessoas.FirstOrDefault(p => p.Id == id);
             if (pessoa == null)
             {
-                await MostrarErro("Pessoa não encontrada.");
+                await DisplayAlertAsync("Erro", "Pessoa não encontrada.", "Voltar");
                 return;
             }
 
-            bool confirm = Convert.ToBoolean(await Shell.Current.ShowPopupAsync(
-                new DisplayPopUp("Confirmar", $"Deseja remover {pessoa.Nome}?", true, "Remover", true, "Cancelar")));
+            bool confirm = await DisplayConfirmationAsync(
+                "Confirmar",
+                $"Deseja remover {pessoa.Nome}?",
+                "Remover");
 
             if (!confirm) return;
 
@@ -87,25 +92,42 @@ namespace ACS_View.ViewModels
             await _familyManager.RemovePersonFromFamily(id);
         }
 
-        private async Task Search(string termo)
+        public async Task SearchAsync(string termo)
         {
             _debounceTimer?.Cancel();
             _debounceTimer = new CancellationTokenSource();
-            await Task.Delay(300, _debounceTimer.Token);
+            var token = _debounceTimer.Token;
 
-            PessoasPesquisadas.Clear();
-            if (string.IsNullOrWhiteSpace(termo)) return;
-
-            var parcial = await _patientService.GetAllPatients();
-            var resultados = parcial.Where(n => n.Name.Contains(termo) || 
-                                           n.SusNumber.Contains(termo) || 
-                                           n.MotherName.Contains(termo) || 
-                                           n.FatherName.Contains(termo));
-
-            foreach (var p in resultados)
+            var normalizedTerm = termo?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(normalizedTerm))
             {
-                PessoasPesquisadas.Add(new Pessoa { Nome = p.Name, Id = p.Id });
+                PessoasPesquisadas.Clear();
+                HasSearchResults = false;
+                return;
             }
+
+            await Task.Delay(300, token);
+            token.ThrowIfCancellationRequested();
+
+            var parcial = await _patientService.GetAllPatients() ?? [];
+            token.ThrowIfCancellationRequested();
+
+            var resultados = parcial
+                .Where(n => ContainsTerm(n.Name, normalizedTerm) ||
+                            ContainsTerm(n.SusNumber, normalizedTerm) ||
+                            ContainsTerm(n.MotherName, normalizedTerm) ||
+                            ContainsTerm(n.FatherName, normalizedTerm))
+                .Where(n => !Pessoas.Any(p => p.Id == n.Id))
+                .OrderBy(n => n.Name)
+                .Take(20)
+                .Select(p => new Pessoa { Nome = p.Name, Id = p.Id })
+                .ToList();
+
+            RunOnMainThread(() =>
+            {
+                PessoasPesquisadas = new ObservableCollection<Pessoa>(resultados);
+                HasSearchResults = PessoasPesquisadas.Count > 0;
+            });
         }
 
         private async Task AddPerson(int id)
@@ -116,17 +138,31 @@ namespace ACS_View.ViewModels
             {
                 Pessoas.Add(new Pessoa { Nome = pessoa.Name, Id = pessoa.Id });
             }
+
+            var searchedPerson = PessoasPesquisadas.FirstOrDefault(p => p.Id == id);
+            if (searchedPerson != null)
+            {
+                PessoasPesquisadas.Remove(searchedPerson);
+                HasSearchResults = PessoasPesquisadas.Count > 0;
+            }
         }
 
-        private async Task LoadDataAsync()
+        private static bool ContainsTerm(string? value, string term)
+        {
+            return !string.IsNullOrWhiteSpace(value) &&
+                   value.Contains(term, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public async Task LoadDataAsync()
         {
             if (IsEdit)
             {
-                //var registros = await _healthRecordService.GetRecordsByFamilyAndHouseAsync(IdPessoa, IdHouse);
-                
-                var parcial = await _patientService.GetAllPatients();
+                if (_hasLoaded && _loadedVersion == DataChangeTracker.PatientsVersion)
+                {
+                    return;
+                }
 
-                var registros = parcial.Where(n => n.FamilyId == IdPessoa && n.HouseId == IdHouse);
+                var registros = await _patientService.GetPatientsByFamilyAndHouseId(IdPessoa, IdHouse) ?? [];
 
                 Pessoas.Clear();
 
@@ -134,14 +170,10 @@ namespace ACS_View.ViewModels
                 {
                     Pessoas.Add(new Pessoa { Nome = r.Name, Id = r.Id });
                 }
+
+                _loadedVersion = DataChangeTracker.PatientsVersion;
+                _hasLoaded = true;
             }
         }
-
-        private static async Task MostrarErro(string msg)
-        {
-            await Shell.Current.ShowPopupAsync(new DisplayPopUp("Erro", msg, true, "Voltar", false, ""));
-        }
-
-        private static async Task MostrarSucesso(string msg) => await Shell.Current.ShowPopupAsync(new DisplayPopUp("Sucesso", msg, true, "Voltar", false, ""));
     }
 }

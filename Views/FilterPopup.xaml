@@ -1,117 +1,80 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<tk:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-          xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-          xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-          xmlns:vm="clr-namespace:ACS_View.ViewModels"
-          x:DataType="vm:FilterPopupViewModel"
-          x:Class="ACS_View.Views.FilterPopup"
-          CanBeDismissedByTappingOutsideOfPopup="True"
-          Color="Transparent">
-    
-    <Border
-        WidthRequest="{Binding MaxScreenWidth}"
-        BackgroundColor="White"
-        Stroke="Gray"
-        StrokeThickness="2"
-        StrokeShape="RoundRectangle 15"
-        Padding="10">
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.UseCases.DTOs"
+    x:Class="ACS_View.Views.FilterPopup"
+    x:TypeArguments="dto:PatientListFilterDto"
+    x:DataType="vm:FilterPopupViewModel"
+    CanBeDismissedByTappingOutsideOfPopup="True">
 
-        <Grid
-            RowDefinitions="*,*,auto"
-            RowSpacing="10">
+    <VerticalStackLayout Spacing="16">
+        <Label
+            Text="Filtros"
+            Style="{StaticResource SectionTitle}"
+            HorizontalOptions="Center"/>
 
-            <Label
-                Grid.Row="0"
-                Text="Filtrar"
-                FontSize="24"
-                TextColor="Black"
-                HorizontalOptions="Center"
-                FontAttributes="Bold"/>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
+                <Border Style="{StaticResource FieldBorder}">
+                    <Entry
+                        Text="{Binding MinimumAge}"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Sem mínimo"/>
+                </Border>
+            </VerticalStackLayout>
 
-            <HorizontalStackLayout
-                Grid.Row="1"
-                Spacing="10"
-                HorizontalOptions="Center"
-                VerticalOptions="Center">
+            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
+                <Border Style="{StaticResource FieldBorder}">
+                    <Entry
+                        Text="{Binding MaximumAge}"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Sem máximo"/>
+                </Border>
+            </VerticalStackLayout>
+        </Grid>
 
-                <Label
-                    FontSize="18"
-                    TextColor="Black"
-                    Text="Idade entre"/>
-
-                <Entry
-                    Text="0"
-                    FontSize="18"
-                    Keyboard="Numeric"
-                    VerticalOptions="Center"
-                    VerticalTextAlignment="Center"
-                    TextColor="Black"
-                    PlaceholderColor="Black"
-                    FontAttributes="Bold"
-                    MaxLength="3"
-                    Margin="0,-8,0,8"/>
-
-                <Label
-                    FontSize="18"
-                    TextColor="Black"
-                    Text="e"/>
-
-                <Entry
-                    Text="100"
-                    FontSize="18"
-                    Keyboard="Numeric"
-                    VerticalOptions="Center"
-                    TextColor="Black"
-                    MaxLength="3"
-                    PlaceholderColor="Black"
-                    FontAttributes="Bold"
-                    Margin="0,-8,0,8"/>
-
-                <Label
-                    FontSize="18"
-                    TextColor="Black"
-                    Text="anos"/>
-
-            </HorizontalStackLayout>
-
-            <HorizontalStackLayout
-                Grid.Row="2"
-                HorizontalOptions="Center"
-                Spacing="10">
-
-                <Label
-                    Text="Ordenar por"
-                    TextColor="Black"
-                    FontSize="18"/>
-
-                <Picker
-                    SelectedIndex="{Binding FilterBy}"
-                    FontSize="18"
-                    TextColor="Black"
-                    Margin="0,-10,0,10">
-                    
+        <VerticalStackLayout Spacing="4">
+            <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
+            <Border Style="{StaticResource FieldBorder}">
+                <Picker SelectedIndex="{Binding FilterBy}">
                     <Picker.Items>
                         <x:String>Nome</x:String>
                         <x:String>Idade</x:String>
                     </Picker.Items>
                 </Picker>
+            </Border>
+        </VerticalStackLayout>
 
-                <Picker
-                    SelectedIndex="{Binding OrderBy}"
-                    FontSize="18"
-                    TextColor="Black"
-                    Margin="0,-10,0,10">
-                    
+        <VerticalStackLayout Spacing="4">
+            <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
+            <Border Style="{StaticResource FieldBorder}">
+                <Picker SelectedIndex="{Binding OrderBy}">
                     <Picker.Items>
                         <x:String>Crescente</x:String>
                         <x:String>Decrescente</x:String>
                     </Picker.Items>
                 </Picker>
+            </Border>
+        </VerticalStackLayout>
 
-            </HorizontalStackLayout>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Button
+                Text="Cancelar"
+                Style="{StaticResource GhostButton}"
+                Clicked="CancelButton_Clicked"/>
 
+            <Button
+                Grid.Column="1"
+                Text="Aplicar"
+                Style="{StaticResource PrimaryButton}"
+                Clicked="ApplyButton_Clicked"/>
         </Grid>
-        
-    </Border>
-    
+    </VerticalStackLayout>
 </tk:Popup>

@@ -7,17 +7,75 @@ namespace ACS_View.Views;
 public partial class AddRegister : ContentPage, IQueryAttributable
 {
     private readonly AddRegisterViewModel _viewModel;
+    private int? _patientId;
+    private bool _loaded;
+    private bool _isLoading;
 
-    public AddRegister(IUserDialogService dialogue, IPatientService patientService)
+    public AddRegister(
+        IPatientService patientService,
+        ICidRepository cidRepo,
+        IPatientCidRepository patientCid,
+        ISQLiteConditionsRepository conditionsRepository)
     {
         InitializeComponent();
-        BindingContext = _viewModel = new AddRegisterViewModel(dialogue, patientService);
+        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository);
     }
 
-    public async void ApplyQueryAttributes(IDictionary<string, object> query)
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("record", out var record))
-            if (record is Patient p)
-                await _viewModel.LoadPatiant(p.Id);
+        if (query.TryGetValue("patientId", out var patientId))
+        {
+            SetPatientId(Convert.ToInt32(patientId));
+        }
+
+        if (query.TryGetValue("record", out var record) && record is Patient p)
+        {
+            SetPatientId(p.Id);
+        }
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _ = LoadPageDataAsync();
+    }
+
+    private async Task LoadPageDataAsync()
+    {
+        if (_loaded || _isLoading)
+        {
+            return;
+        }
+
+        _isLoading = true;
+        try
+        {
+            if (!(_viewModel.Subcategories is { Count: > 0 }))
+            {
+                await _viewModel.LoadSubcategories();
+            }
+
+            if (_patientId is int id)
+            {
+                await _viewModel.LoadPatient(id);
+            }
+
+            _loaded = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void SetPatientId(int patientId)
+    {
+        if (_patientId == patientId)
+        {
+            return;
+        }
+
+        _patientId = patientId;
+        _loaded = false;
     }
 }

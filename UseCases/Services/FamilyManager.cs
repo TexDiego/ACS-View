@@ -1,36 +1,33 @@
 ﻿using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class FamilyManager : IFamilyManager
+    internal class FamilyManager(IPatientService service) : IFamilyManager
     {
-        private readonly IPatientService _patientService = App.ServiceProvider.GetRequiredService<IPatientService>();
-
         public async Task AddPeopleToFamily(List<int> ids, int houseId, int familyId)
         {
             foreach (var id in ids)
             {
-                var pessoa = await _patientService.GetPatientById(id);
+                var pessoa = await service.GetPatientById(id);
 
                 if (pessoa != null)
                 {
                     pessoa.FamilyId = familyId;
                     pessoa.HouseId = houseId;
-                    await _patientService.UpdatePatient(pessoa);
+                    await service.UpdatePatient(pessoa);
                 }
             }
         }
 
         public async Task RemovePersonFromFamily(int id)
         {
-            var pessoa = await _patientService.GetPatientById(id);
+            var pessoa = await service.GetPatientById(id);
 
             if (pessoa != null)
             {
-                pessoa.FamilyId = 0;
-                pessoa.HouseId = 0;
-                await _patientService.UpdatePatient(pessoa);
+                pessoa.FamilyId = -1;
+                pessoa.HouseId = -1;
+                await service.UpdatePatient(pessoa);
             }
         }
     }

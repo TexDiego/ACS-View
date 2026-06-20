@@ -1,103 +1,114 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.ViewModels;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
-public partial class VisitPage : Popup
+public partial class VisitPage : Popup<Visits>
 {
-    private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-    private readonly VisitsViewModel _viewModel = new();
+    private readonly IHouseService _houseService = App.StaticServiceProvider.GetRequiredService<IHouseService>();
+    private readonly int _houseId;
+    private readonly int _familyId;
 
-    private readonly int _houseID;
-    private readonly int _familyID;
-
-    public VisitPage(int HouseID, int FamilyID)
+    public VisitPage(int houseId, int familyId)
     {
         InitializeComponent();
-        BindingContext = _viewModel;
 
-        _houseID = HouseID;
-        _familyID = FamilyID;
+        _houseId = houseId;
+        _familyId = familyId;
 
         layoutGrid.WidthRequest = (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 50;
+        UpdateOutcomeColors();
     }
 
-    private async Task AddVisitButton_Clicked(object sender, EventArgs e)
+    private async void AddVisitButton_Clicked(object sender, EventArgs e)
     {
-        // Busca o RadioButton selecionado
-        var radioSelecionado = Descricao.Children
-            .OfType<RadioButton>()
-            .FirstOrDefault(rb => rb.IsChecked);
+        var descricaoSelecionada = GetSelectedOutcome();
 
-        // Verifica se algum foi selecionado
-        if (radioSelecionado == null)
+        if (string.IsNullOrWhiteSpace(descricaoSelecionada))
         {
-            await Shell.Current.DisplayAlert("Erro", "Selecione uma descrição para a visita.", "OK");
+            await Shell.Current.DisplayAlertAsync("Erro", "Selecione o desfecho da visita.", "OK");
             return;
         }
 
-        string descricaoSelecionada = radioSelecionado.Content?.ToString();
-        string address = await GetAddress();
-
         var visit = new Visits
         {
-            HouseId = _houseID,
-            FamilyId = _familyID,
+            HouseId = _houseId,
+            FamilyId = _familyId,
             Date = DateTime.Now,
             Description = descricaoSelecionada,
-            Address = address
+            Address = await GetAddress()
         };
 
-        this.Close(visit);
+        await CloseAsync(visit);
     }
 
-    private async Task<String> GetAddress()
+    private async void CancelButton_Clicked(object sender, EventArgs e)
+    {
+        await CloseAsync();
+    }
+
+    private string? GetSelectedOutcome()
+    {
+        return Descricao.Children
+            .OfType<RadioButton>()
+            .FirstOrDefault(rb => rb.IsChecked)
+            ?.Content
+            ?.ToString()
+            ?.Trim();
+    }
+
+    private async Task<string> GetAddress()
     {
         try
         {
-            var house = await _houseService.GetHouseByIdAsync(_houseID);
+            var house = await _houseService.GetHouseByIdAsync(_houseId);
 
-            if (house != null)
+            if (house is null)
             {
-                return house.PossuiComplemento
-                    ? $"{house.Rua}, {house.NumeroCasa} - {house.Complemento}"
-                    : $"{house.Rua}, {house.NumeroCasa}";
+                return "EndereÃ§o nÃ£o encontrado.";
             }
-            else
-            {
-                return "Endereço não encontrado.";
-            }
+
+            var street = string.IsNullOrWhiteSpace(house.Rua) ? "EndereÃ§o sem rua" : house.Rua.Trim();
+            var number = string.IsNullOrWhiteSpace(house.NumeroCasa) ? "S/N" : house.NumeroCasa.Trim();
+
+            return house.PossuiComplemento && !string.IsNullOrWhiteSpace(house.Complemento)
+                ? $"{street}, {number} - {house.Complemento.Trim()}"
+                : $"{street}, {number}";
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao obter endereço: {ex.Message}");
-            return "Erro ao obter endereço.";
+            Console.WriteLine($"Erro ao obter endereÃ§o: {ex.Message}");
+            return "Erro ao obter endereÃ§o.";
         }
     }
 
     private void RadioButton_CheckedChanged(object sender, CheckedChangedEventArgs e)
     {
-        if (sender is not RadioButton selectedRadio || !selectedRadio.IsChecked)
-            return;
+        if (sender is RadioButton && e.Value)
+        {
+            UpdateOutcomeColors();
+        }
+    }
 
+    private void UpdateOutcomeColors()
+    {
         foreach (var child in Descricao.Children)
         {
             if (child is RadioButton rb)
             {
-                rb.TextColor = rb == selectedRadio
+                rb.TextColor = rb.IsChecked
                     ? GetCorPorDescricao(rb.Content?.ToString()?.Trim())
-                    : Colors.Black;
+                    : ThemeColors.TextPrimary;
             }
         }
     }
 
-    private static Color GetCorPorDescricao(string descricao) => descricao switch
+    private static Color GetCorPorDescricao(string? descricao) => descricao switch
     {
-        "Realizada" => Colors.Green,
-        "Ausente" => Colors.Orange,
-        "Recusada" => Colors.Red,
-        _ => Colors.Black
+        "Realizada" => ThemeColors.Success,
+        "Ausente" => ThemeColors.Warning,
+        "Recusada" => ThemeColors.Danger,
+        _ => ThemeColors.TextPrimary
     };
 }

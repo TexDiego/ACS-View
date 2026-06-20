@@ -4,9 +4,17 @@ namespace ACS_View.Views;
 
 public partial class NotesPage : ContentPage
 {
-    public NotesPage()
+    private readonly NotesPageViewModel _viewModel;
+
+    public NotesPage(NotesPageViewModel vm)
     {
         InitializeComponent();
-        BindingContext = new NotesPageViewModel();
+        BindingContext = _viewModel = vm;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _ = _viewModel.LoadNotesAsync();
     }
 }

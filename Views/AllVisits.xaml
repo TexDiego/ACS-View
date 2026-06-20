@@ -5,161 +5,98 @@
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              x:DataType="vm:AllVisitsViewModel"
              x:Class="ACS_View.Views.AllVisits"
-             NavigationPage.HasNavigationBar="False"
-             BackgroundColor="AliceBlue">
+             Shell.NavBarIsVisible="True"
+             Title="Visitas">
 
-    <Grid RowDefinitions="*,auto">
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="*,auto" RowSpacing="14">
 
-        <Grid
+        <CollectionView
             Grid.Row="0"
-            RowDefinitions="auto,*"
-            VerticalOptions="Start">
+            ItemsSource="{Binding VisitsList}"
+            ItemsUpdatingScrollMode="KeepLastItemInView"
+            VerticalScrollBarVisibility="Never">
 
-            <Label
-                Grid.Row="0"
-                Text="Visitas realizadas"
-                TextColor="Black"
-                HorizontalOptions="Center"
-                FontSize="20"
-                FontAttributes="Bold"
-                Margin="0,10"/>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="model:Visits">
+                    <Border Style="{StaticResource CardBorder}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
+                                CommandParameter="{Binding Id}" />
+                        </Border.GestureRecognizers>
 
-            <CollectionView
-                ItemsSource="{Binding VisitsList}"
-                Grid.Row="1"
-                ItemsUpdatingScrollMode="KeepLastItemInView"
-                VerticalScrollBarVisibility="Never">
-
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            x:DataType="model:Visits"
-                            Padding="10"
-                            Margin="5"
-                            StrokeShape="RoundRectangle 10"
-                            Stroke="Grey"
-                            BackgroundColor="White">
-
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                    CommandParameter="{Binding Id}" />
-                            </Border.GestureRecognizers>
-
-                            <Grid
-                                RowDefinitions="*,*,*"
-                                ColumnDefinitions="*,auto">
+                        <Grid ColumnDefinitions="*,44" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                <Label
+                                    Text="{Binding Date, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                    Style="{StaticResource CardTitle}"/>
 
                                 <Label
-                                    Grid.Column="0"
-                                    Grid.Row="0"
-                                    Text="{Binding Date, StringFormat='{}{0:dd/MM/yyyy  -  HH:mm}'}"
-                                    FontSize="14"
-                                    TextColor="Black"
-                                    LineBreakMode="WordWrap"/>
-
-                                <Label
-                                    Grid.Column="0"
-                                    Grid.Row="1"
                                     Text="{Binding Address}"
-                                    FontSize="14"
-                                    TextColor="Black"
-                                    LineBreakMode="WordWrap"/>
+                                    Style="{StaticResource BodyMuted}"/>
 
                                 <Label
-                                    Grid.Column="0"
-                                    Grid.Row="2"
                                     Text="{Binding Description}"
-                                    FontSize="14"
-                                    TextColor="Black"
-                                    LineBreakMode="WordWrap"/>
-
-                                <ImageButton
-                                    Grid.Column="1"
-                                    Grid.RowSpan="3"
-                                    Source="bin"
-                                    HeightRequest="30"
-                                    WidthRequest="30"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisit}"
-                                    CommandParameter="{Binding Id}" />
-
-                            </Grid>
-
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </Grid>
-
-        <VerticalStackLayout
-            Grid.Row="1"
-            VerticalOptions="End"
-            Margin="0,20">
-
-            <Label
-                Text="Sugestões de visitas"
-                TextColor="Black"
-                HorizontalOptions="Center"
-                FontSize="20"
-                FontAttributes="Bold"
-                Margin="0,10"/>
-
-            <CarouselView
-                ItemsSource="{Binding HouseList}"
-                PeekAreaInsets="0"
-                IsBounceEnabled="True"
-                IsSwipeEnabled="True">
-
-                <CarouselView.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            x:DataType="model:House"
-                            Padding="10"
-                            Margin="10"
-                            StrokeShape="RoundRectangle 10"
-                            Stroke="Grey"
-                            BackgroundColor="White">
-
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                    CommandParameter="{Binding CasaId}" />
-                            </Border.GestureRecognizers>
-
-                            <VerticalStackLayout>
-                                <HorizontalStackLayout Spacing="10">
-
-                                    <Label
-                                        Text="{Binding Rua}"
-                                        VerticalOptions="Center"
-                                        FontSize="14"
-                                        TextColor="Black"
-                                        LineBreakMode="WordWrap"/>
-
-                                    <Label
-                                        Text="{Binding NumeroCasa}"
-                                        VerticalOptions="Center"
-                                        FontSize="14"
-                                        TextColor="Black"/>
-
-                                </HorizontalStackLayout>
-
-                                <Label
-                                    Text="{Binding Complemento}"
-                                    IsVisible="{Binding PossuiComplemento}"
-                                    VerticalOptions="Center"
-                                    FontSize="14"
-                                    TextColor="Gray"/>
-
+                                    TextColor="{StaticResource Accent}"
+                                    FontSize="13"
+                                    FontAttributes="Bold"/>
                             </VerticalStackLayout>
 
-                        </Border>
-                    </DataTemplate>
-                </CarouselView.ItemTemplate>
-            </CarouselView>
+                            <ImageButton
+                                Grid.Column="1"
+                                Source="bin"
+                                HeightRequest="25"
+                                WidthRequest="25"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisit}"
+                                CommandParameter="{Binding Id}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-        </VerticalStackLayout>
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Sugestões de visitas" Style="{StaticResource SectionTitle}"/>
 
+                <CarouselView
+                    ItemsSource="{Binding HouseList}"
+                    PeekAreaInsets="22"
+                    IsBounceEnabled="True"
+                    IsSwipeEnabled="True"
+                    HeightRequest="112">
+
+                    <CarouselView.ItemTemplate>
+                        <DataTemplate x:DataType="model:House">
+                            <Border
+                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="12"
+                                Margin="4,0">
+
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
+                                        CommandParameter="{Binding CasaId}" />
+                                </Border.GestureRecognizers>
+
+                                <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                    <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}" FontSize="15"/>
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label Text="Número" Style="{StaticResource BodyMuted}"/>
+                                        <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
+                                    </HorizontalStackLayout>
+                                    <Label
+                                        Text="{Binding Complemento}"
+                                        IsVisible="{Binding PossuiComplemento}"
+                                        Style="{StaticResource BodyMuted}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CarouselView.ItemTemplate>
+                </CarouselView>
+            </VerticalStackLayout>
+        </Border>
     </Grid>
-    
 </ContentPage>

@@ -3,9 +3,9 @@ using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
-public partial class VaccinesInfo : Popup
+public partial class VaccinesInfo : Popup<bool>
 {
-	private VaccinesInfoViewModel _viewModel;
+	private readonly VaccinesInfoViewModel _viewModel;
     private bool _vaccineStatus;
 
 	public VaccinesInfo(string vaccineName, bool vaccineChecked)
@@ -22,18 +22,19 @@ public partial class VaccinesInfo : Popup
         _vaccineStatus = vaccineChecked;
     }
 
-    protected override Task OnDismissedByTappingOutsideOfPopup(CancellationToken token = default)
-    {
-#if DEBUG
-        Console.WriteLine("Fechando popup com o valor " + _vaccineStatus);
-#endif
-        ResultWhenUserTapsOutsideOfPopup = _vaccineStatus;
-        return base.OnDismissedByTappingOutsideOfPopup(token);
-    }
-
     private void VaccineChecked_CheckedChanged(object sender, CheckedChangedEventArgs e)
     {
         _vaccineStatus = e.Value;
         Console.WriteLine(_vaccineStatus);
+    }
+
+    private async void CancelButton_Clicked(object sender, EventArgs e)
+    {
+        await CloseAsync();
+    }
+
+    private async void SaveButton_Clicked(object sender, EventArgs e)
+    {
+        await CloseAsync(_vaccineStatus);
     }
 }

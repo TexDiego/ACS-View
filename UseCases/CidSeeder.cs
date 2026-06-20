@@ -1,5 +1,6 @@
 ﻿using ACS_View.Domain.Entities.Health;
 using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.ValueObjects;
 using ACS_View.Infrastructure.Data;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -10,11 +11,9 @@ namespace ACS_View.UseCases
 {
     internal class CidSeeder(ICidRepository repository) : ICidSeeder
     {
-        private readonly ICidRepository _repository = repository;
-
         public async Task SeedAsync()
         {
-            if (await _repository.AnyAsync())
+            if (await repository.AnyAsync())
                 return;
 
             var chapters = CidSeeder.LoadFromCsv<CidChapter>("cid_chapters.csv");
@@ -51,10 +50,12 @@ namespace ACS_View.UseCases
                     group.ChapterCode = chapter.Code;
             }
 
-            await _repository.InsertChaptersAsync(chapters);
-            await _repository.InsertGroupsAsync(groups);
-            await _repository.InsertCategoriesAsync(categories);
-            await _repository.InsertSubcategoriesAsync(subcategories);
+            await repository.InsertChaptersAsync(chapters);
+            await repository.InsertGroupsAsync(groups);
+            await repository.InsertCategoriesAsync(categories);
+            await repository.InsertSubcategoriesAsync(subcategories);
+
+            await LoadCommonConditions();
         }
 
         private static List<T> LoadFromCsv<T>(string fileName)
@@ -80,6 +81,21 @@ namespace ACS_View.UseCases
             csv.Context.RegisterClassMap<CidSubcategoriesMap>();
 
             return [.. csv.GetRecords<T>()];
+        }
+
+        private async Task LoadCommonConditions()
+        {
+            List<CommonConditions> commonConditions =
+            [
+                new() { Name = "Diabetes mellitus não-insulino-dependente - sem complicações", Cid = "E119" },
+                new() { Name = "Diabetes mellitus insulino-dependente - sem complicações", Cid = "E109" },
+                new() { Name = "Hipertensão essencial (primária)", Cid = "I10" },
+                new() { Name = "Gravidez confirmada", Cid = "Z321" },
+                new() { Name = "Tuberculose pulmonar, com confirmação por exame microscópico da expectoração, com ou sem cultura", Cid = "A150" },
+                new() { Name = "Hanseníase [lepra] indeterminada", Cid = "A300" },
+            ];
+    
+            await repository.InsertCommonConditionsAsync(commonConditions);
         }
     }
 }

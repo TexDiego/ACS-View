@@ -3,7 +3,7 @@ using SQLite;
 
 namespace ACS_View.Domain.Interfaces
 {
-    internal interface IDatabaseService
+    public interface IDatabaseService
     {
         Task InitializeAsync();
         SQLiteAsyncConnection Connection { get; }

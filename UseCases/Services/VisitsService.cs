@@ -1,19 +1,19 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
+using ACS_View.Domain.ValueObjects;
+using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    public class VisitsService : IVisitsService
+    internal class VisitsService(IDatabaseService db) : IVisitsService
     {
-        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
+        private readonly SQLiteAsyncConnection _connection = db.Connection;
 
         public async Task<List<Visits>> GetAllVisitsAsync()
         {
             try
             {
-                return await _databaseService
-                             .Connection
+                return await _connection
                              .Table<Visits>()
                              .OrderBy(v => v.Date)
                              .ToListAsync() ?? new List<Visits>();
@@ -32,7 +32,8 @@ namespace ACS_View.UseCases.Services
 
             try
             {
-                await _databaseService.Connection.InsertAsync(visit);
+                await _connection.InsertAsync(visit);
+                DataChangeTracker.MarkVisitsChanged();
             }
             catch (Exception ex)
             {
@@ -47,7 +48,8 @@ namespace ACS_View.UseCases.Services
                 throw new ArgumentException("O ID da visita deve ser maior que zero.");
             try
             {
-                await _databaseService.Connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ?", id);
+                await _connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ?", id);
+                DataChangeTracker.MarkVisitsChanged();
             }
             catch (Exception ex)
             {

@@ -6,10 +6,8 @@ using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    internal partial class ForgotPasswordViewModel : BaseViewModel
-    {
-        private readonly IDatabaseService databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-        
+    internal partial class ForgotPasswordViewModel(IDatabaseService databaseService) : BaseViewModel
+    {        
         [ObservableProperty] private User currentUser;
         [ObservableProperty] private string username;
         [ObservableProperty] private string securityQuestion;

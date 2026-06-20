@@ -7,7 +7,7 @@ namespace ACS_View.Converters
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool b)
-                return b ? Colors.Beige : Colors.White;
+                return b ? ThemeColors.SelectedSurface : ThemeColors.Surface;
 
             return null;
         }

@@ -2,83 +2,45 @@
 <tk:Popup
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:models="clr-namespace:ACS_View.Domain.Entities"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-    x:DataType="vm:VisitsViewModel"
     x:Class="ACS_View.Views.VisitPage"
+    x:TypeArguments="models:Visits"
     Color="Transparent">
 
     <Border
-        Margin="10"
-        StrokeThickness="2"
-        Stroke="Grey"
-        StrokeShape="RoundRectangle 15">
+        Margin="16"
+        Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+        StrokeThickness="1"
+        StrokeShape="RoundRectangle 12"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+        Padding="16">
 
-    <Grid
-        x:Name="layoutGrid"
-        RowDefinitions="*,*,auto,*"
-        RowSpacing="10"
-        Padding="10"
-        BackgroundColor="White">
+        <VerticalStackLayout x:Name="layoutGrid" Spacing="16">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Registrar visita" Style="{StaticResource PageTitle}" FontSize="22" HorizontalTextAlignment="Center"/>
+                <Label Text="Informe o desfecho da visita" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
 
-        <Label
-            Grid.Row="0"
-            Text="Realizar visita"
-            VerticalOptions="End" 
-            HorizontalOptions="Center"
-            FontSize="26"
-            FontAttributes="Bold"
-            TextColor="Black"/>
+            <VerticalStackLayout x:Name="Descricao" Spacing="4">
+                <RadioButton GroupName="DescricaoVisita" Content="Realizada" IsChecked="True" CheckedChanged="RadioButton_CheckedChanged"/>
+                <RadioButton GroupName="DescricaoVisita" Content="Ausente" CheckedChanged="RadioButton_CheckedChanged"/>
+                <RadioButton GroupName="DescricaoVisita" Content="Recusada" CheckedChanged="RadioButton_CheckedChanged"/>
+            </VerticalStackLayout>
 
-        <Label
-            Grid.Row="1"
-            Text="Descrição:"
-            FontSize="20"
-            TextColor="Black"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button
+                    Text="Cancelar"
+                    Style="{StaticResource GhostButton}"
+                    Clicked="CancelButton_Clicked"/>
 
-        <VerticalStackLayout x:Name="Descricao" Grid.Row="2">
-
-            <RadioButton
-                GroupName="DescricaoVisita"
-                Content="Realizada"
-                FontSize="16"              
-                VerticalOptions="Center"
-                BackgroundColor="Transparent"
-                CheckedChanged="RadioButton_CheckedChanged"/>
-
-            <RadioButton
-                GroupName="DescricaoVisita"
-                Content="Ausente"
-                FontSize="16"
-                VerticalOptions="Center"
-                BackgroundColor="Transparent"
-                CheckedChanged="RadioButton_CheckedChanged"/>
-
-            <RadioButton
-                GroupName="DescricaoVisita"
-                Content="Recusada"
-                FontSize="16"
-                VerticalOptions="Center"
-                BackgroundColor="Transparent"
-                CheckedChanged="RadioButton_CheckedChanged"/>
-
+                <Button
+                    Grid.Column="1"
+                    x:Name="AddVisitButton"
+                    Text="Registrar"
+                    Style="{StaticResource PrimaryButton}"
+                    Clicked="AddVisitButton_Clicked"/>
+            </Grid>
         </VerticalStackLayout>
-
-        <Button
-            x:Name="AddVisitButton"
-            Grid.Row="3"
-            Text="Adicionar visita"
-            VerticalOptions="End"
-            HorizontalOptions="Fill"
-            FontSize="14"
-            TextColor="Black"
-            BackgroundColor="AliceBlue"
-            BorderColor="DarkOrange"
-            BorderWidth="1"
-            CornerRadius="10"
-            Command="{Binding RegisterVisitCommand}"/>
-
-        </Grid>
     </Border>
-
 </tk:Popup>

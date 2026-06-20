@@ -1,28 +1,31 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
+using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    internal partial class AllVisitsViewModel : BaseViewModel
+    public partial class AllVisitsViewModel : BaseViewModel
     {
-        private readonly IHouseService _houseService = App.ServiceProvider.GetRequiredService<IHouseService>();
-        private readonly IHealthRecordService _healthRecordService = App.ServiceProvider.GetRequiredService<IHealthRecordService>();
-        private readonly IVisitsService _visitsService = App.ServiceProvider.GetRequiredService<IVisitsService>();
+        private readonly IHouseService _houseService;
+        private readonly IVisitsService _visitsService;
+        private readonly IPatientService _patientService;
+        private int _loadedVersion = -1;
+        private bool _hasLoaded;
 
         [ObservableProperty] private List<Visits> visitsList = [];
         [ObservableProperty] private List<House> houseList = [];
 
-
         public ICommand DeleteVisit => new Command<int>(async id => await DeleteVisitCommand(id));
         public ICommand GoToHouseCommand => new Command<int>(async id => await GoToHouse(id));
 
-
-        public AllVisitsViewModel()
-        {            
-            MainThread.BeginInvokeOnMainThread(async () => await LoadVisitsAsync());
+        public AllVisitsViewModel(IHouseService houseService, IVisitsService visitsService, IPatientService patientService)
+        {
+            _houseService = houseService;
+            _visitsService = visitsService;
+            _patientService = patientService;
         }
 
         private async Task DeleteVisitCommand(int id)
@@ -36,7 +39,7 @@ namespace ACS_View.ViewModels
 
                 var visit = VisitsList.FirstOrDefault(v => v.Id == id);
 
-                Console.WriteLine($"Visita: {visit}");
+                Debug.WriteLine($"Visita: {visit}");
 
                 if (visit != null)
                 {
@@ -46,25 +49,33 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                Console.WriteLine($"Nenhuma visita encontrada com o ID {id}.");
+                Debug.WriteLine($"Nenhuma visita encontrada com o ID {id}.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao excluir visita: {ex.Message}");
+                Debug.WriteLine($"Erro ao excluir visita: {ex.Message}");
             }
         }
 
         internal async Task LoadVisitsAsync()
         {
+            var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
+            if (_hasLoaded && _loadedVersion == currentVersion)
+            {
+                return;
+            }
+
             try
             {
                 VisitsList = await _visitsService.GetAllVisitsAsync();
                 HouseList = await GetHousesWithoutVisits();
+                _loadedVersion = currentVersion;
+                _hasLoaded = true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao carregar visitas: {ex.Message}");
-                await Shell.Current.DisplayAlert("Erro", "Não foi possível carregar as visitas.", "OK");
+                Debug.WriteLine($"Erro ao carregar visitas: {ex.Message}");
+                await DisplayAlertAsync("Erro", "Não foi possível carregar as visitas.");
             }
         }
 
@@ -74,21 +85,12 @@ namespace ACS_View.ViewModels
 
             try
             {
-                var house = await _houseService.GetHouseByIdAsync(id);
-
-                if (house != null)
-                {
-                    await Shell.Current.GoToAsync("families", new Dictionary<string, object> { { "id", house.CasaId} });
-                }
-                else
-                {
-                    await Shell.Current.DisplayAlert("Aviso", "Casa não encontrada.", "OK");
-                }
+                await NavigateToAsync("families", new Dictionary<string, object> { { "id", id } });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao navegar para a casa: {ex.Message}");
-                await Shell.Current.DisplayAlert("Erro", "Não foi possível navegar para a casa.", "OK");
+                Debug.WriteLine($"Erro ao navegar para a casa: {ex.Message}");
+                await DisplayAlertAsync("Erro", "Não foi possível navegar para a casa.");
             }
         }
 
@@ -97,7 +99,7 @@ namespace ACS_View.ViewModels
             try
             {
                 var allHouses = await _houseService.GetAllHousesAsync();
-                var allPeople = await _healthRecordService.GetAllRecordsAsync();
+                var allPeople = await _patientService.GetAllPatients();
 
                 var allFamilies = allPeople
                     .Where(p => p.HouseId > 0 && p.FamilyId > 0)
@@ -149,9 +151,10 @@ namespace ACS_View.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao buscar casas com famílias sem visita: {ex.Message}");
+                Debug.WriteLine($"Erro ao buscar casas com famílias sem visita: {ex.Message}");
                 return [];
             }
         }
     }
 }
+

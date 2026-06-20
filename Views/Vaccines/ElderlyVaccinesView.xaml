@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+             x:DataType="vm:VaccinesPageViewModel"
+             x:Class="ACS_View.Views.Vaccines.ElderlyVaccinesView">
+
+    <ContentView.Resources>
+        <Style x:Key="vacinasp" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="LineBreakMode" Value="WordWrap"/>
+        </Style>
+
+        <Style x:Key="title" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="LineBreakMode" Value="WordWrap"/>
+        </Style>
+    </ContentView.Resources>
+
+    <VerticalStackLayout
+        BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+        x:DataType="model:Vaccines">
+<!-- Vacinas idosos -->
+                <Grid
+                    RowDefinitions="*,*,*,*"
+                    IsVisible="{Binding IsElderly}">
+
+                    <!-- Hepatite B -->
+                    <Border
+                        IsVisible="{Binding ShowHBIdoso}"
+                        Grid.Row="0"
+                        Margin="15,0,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoHepatiteBIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="Hepatite B"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="HB4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dT -->
+                    <Border
+                        IsVisible="{Binding ShowdTIdoso}"
+                        Grid.Row="1"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            RowDefinitions="*"
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="dT"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DT4"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Febre amarela -->
+                    <Border
+                        IsVisible="{Binding ShowFebreAmarelaIdoso}"
+                        Grid.Row="2"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaoFebreAmarelaIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Text="Febre amarela"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="FA6"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,5"/>
+
+                        </Grid>
+                    </Border>
+
+                    <!-- dTpa -->
+                    <Border
+                        IsVisible="{Binding ShowdTpaIdoso}"
+                        Grid.Row="3"
+                        Margin="15,15,15,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20">
+
+                        <Grid
+                            ColumnDefinitions="*,*,*"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SituacaodTpaIdoso}"
+                                StrokeShape="RoundRectangle 20">
+
+                                <Label
+                                    Text="60 anos +"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    FontAttributes="Bold"/>
+
+                            </Border>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="1"
+                                Text="DTPA"
+                                Margin="0,5,0,5">
+
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
+                                        CommandParameter="DTPA2"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+
+                            <Label
+                                Style="{StaticResource vacinasp}"
+                                Grid.Column="2"
+                                Text="Completar"
+                                Margin="0,5,0,0"/>
+
+                        </Grid>
+                    </Border>
+
+                </Grid>
+    </VerticalStackLayout>
+</ContentView>

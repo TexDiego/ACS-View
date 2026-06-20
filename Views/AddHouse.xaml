@@ -5,236 +5,81 @@
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.Views.AddHouse"
-             Title="Adicionar Residência"
-             Background="#E6EBED">
+             Title="Adicionar Residência">
 
-    <ContentPage.Resources>
-        <Style x:Key="Button" TargetType="Button">
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="BackgroundColor" Value="#0084B1"/>
-            <Setter Property="TextColor" Value="White"/>
-            <Setter Property="CornerRadius" Value="10"/>
-        </Style>
-        <Style x:Key="Border" TargetType="Border">
-            <Setter Property="HeightRequest" Value="70"/>
-            <Setter Property="Stroke" Value="LightGray"/>
-            <Setter Property="StrokeThickness" Value="2"/>
-            <Setter Property="StrokeShape" Value="RoundRectangle 10"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="BackgroundColor" Value="White"/>
-        </Style>
-        <Style x:Key="Label" TargetType="Label">
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="Opacity" Value="0.7"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-        </Style>
-        <Style TargetType="Entry">
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="VerticalOptions" Value="Center"/>
-            <Setter Property="TextColor" Value="Black"/>
-            <Setter Property="Opacity" Value="0.7"/>
-            <Setter Property="PlaceholderColor" Value="#C93919"/>
-        </Style>
-    </ContentPage.Resources>
-
-    <Grid Margin="10,0" Padding="0,10">
-
-        <ScrollView
-            VerticalOptions="Start"
-            VerticalScrollBarVisibility="Never">
-
-            <Grid
-                RowDefinitions="*,*,*,*,*,*,*,*"
-                RowSpacing="10"
+    <Grid Padding="{StaticResource PagePadding}">
+        <ScrollView VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout
+                Padding="0,0,0,76"
+                Spacing="10"
                 BindingContext="{Binding HouseModel}"
                 x:DataType="model:House">
 
-                <Border Grid.Row="0" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*,auto">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="CEP: "/>
-
-                        <Entry
-                            Text="{Binding CEP, Mode=TwoWay}"
-                            Grid.Column="1"
-                            MaxLength="8"
-                            Keyboard="Numeric"
-                            Placeholder="*"
-                            FontAttributes="None"
-                            MinimumWidthRequest="120"
-                            TextChanged="Entry_CEP_TextChanged"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*,44" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="CEP"/>
+                        <Entry Grid.Column="1" Text="{Binding CEP, Mode=TwoWay}" MaxLength="8" Keyboard="Numeric" Placeholder="Obrigatório" TextChanged="Entry_CEP_TextChanged"/>
                         <ImageButton
                             Grid.Column="2"
-                            Margin="15,0"
                             Source="loupe.png"
-                            MaximumHeightRequest="30"
-                            MaximumWidthRequest="30"
-                            HorizontalOptions="End"
-                            VerticalOptions="Center"
-                            Command="{Binding BindingContext.SearchCEP, Source={x:RelativeSource AncestorType={x:Type ContentPage}}}"/>
-
+                            MaximumHeightRequest="40"
+                            BackgroundColor="{StaticResource PrimaryLight}"
+                            Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="1" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Logradouro: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Rua, Mode=TwoWay}"
-                            Grid.Column="1"
-                            Placeholder="*"
-                            FontAttributes="None"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Logradouro"/>
+                        <Entry Grid.Column="1" Text="{Binding Rua, Mode=TwoWay}" Placeholder="Obrigatório"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="2" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Número: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding NumeroCasa, Mode=TwoWay}"
-                            Grid.Column="1"
-                            MaxLength="5"
-                            FontAttributes="None"
-                            Keyboard="Numeric"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Número"/>
+                        <Entry Grid.Column="1" Text="{Binding NumeroCasa, Mode=TwoWay}" MaxLength="5" Keyboard="Numeric"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="3" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Complemento: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Complemento, Mode=TwoWay}"
-                            Grid.Column="1"
-                            FontAttributes="None"
-                            MaxLength="30"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Complemento"/>
+                        <Entry Grid.Column="1" Text="{Binding Complemento, Mode=TwoWay}" MaxLength="30"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="4" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Bairro: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Bairro, Mode=TwoWay}"
-                            Grid.Column="1"
-                            Placeholder="*"
-                            FontAttributes="None"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Bairro"/>
+                        <Entry Grid.Column="1" Text="{Binding Bairro, Mode=TwoWay}" Placeholder="Obrigatório"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="5" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Cidade: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Cidade, Mode=TwoWay}"
-                            Grid.Column="1"
-                            Placeholder="*"
-                            FontAttributes="None"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Cidade"/>
+                        <Entry Grid.Column="1" Text="{Binding Cidade, Mode=TwoWay}" Placeholder="Obrigatório"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="6" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="Estado: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Estado, Mode=TwoWay}"
-                            Grid.Column="1"
-                            Placeholder="*"
-                            FontAttributes="None"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Estado"/>
+                        <Entry Grid.Column="1" Text="{Binding Estado, Mode=TwoWay}" Placeholder="Obrigatório"/>
                     </Grid>
-
                 </Border>
 
-                <Border Grid.Row="7" Style="{StaticResource Border}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Style="{StaticResource Label}"
-                            Grid.Column="0"
-                            Text="País: "
-                            HorizontalOptions="Start"/>
-
-                        <Entry
-                            Text="{Binding Pais, Mode=TwoWay}"
-                            Grid.Column="1"
-                            MaxLength="20"
-                            Placeholder="*"
-                            FontAttributes="None"/>
-
+                <Border Style="{StaticResource FieldBorder}">
+                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
+                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="País"/>
+                        <Entry Grid.Column="1" Text="{Binding Pais, Mode=TwoWay}" MaxLength="20" Placeholder="Obrigatório"/>
                     </Grid>
-
                 </Border>
-
-            </Grid>
-
+            </VerticalStackLayout>
         </ScrollView>
 
         <ActivityIndicator
-            Grid.Row="0"
-            BackgroundColor="Transparent"
-            Color="#C93919"
             IsRunning="{Binding IsRunning}"
             IsVisible="{Binding IsRunning}"
             HeightRequest="60"
@@ -242,10 +87,8 @@
 
         <Button
             VerticalOptions="End"
-            Style="{StaticResource Button}"
             Text="Salvar"
+            Style="{StaticResource PrimaryButton}"
             Command="{Binding SalvarCommand}"/>
-
     </Grid>
-
 </ContentPage>

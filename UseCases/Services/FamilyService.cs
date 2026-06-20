@@ -1,19 +1,12 @@
 ﻿using ACS_View.Domain.Entities;
 using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
 using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class FamilyService : IFamilyService
+    internal class FamilyService(IDatabaseService db) : IFamilyService
     {
-        private readonly IDatabaseService _databaseService = App.ServiceProvider.GetRequiredService<IDatabaseService>();
-        private readonly SQLiteAsyncConnection _connection;
-
-        public FamilyService()
-        {
-            _connection = _databaseService.Connection;
-        }
+        private readonly SQLiteAsyncConnection _connection = db.Connection;
 
         public async Task<List<Family>> GetAllFamiliesAsync()
         {

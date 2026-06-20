@@ -4,42 +4,51 @@ namespace ACS_View.Views;
 
 public partial class AppShell : Shell
 {
+    private static bool routesRegistered;
     private readonly IDatabaseService _databaseService;
-    internal AppShell(IDatabaseService db)
+    private readonly IServiceProvider _serviceProvider;
+
+    internal AppShell(IDatabaseService db, IServiceProvider serviceProvider)
     {
         _databaseService = db;
+        _serviceProvider = serviceProvider;
         InitializeComponent();
         RegisterRoutes();
+        RegistersPage.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<Registers>());
+        HousesPageContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<HousesPage>());
+        OverallViewContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<OverallView>());
+        AllVisitsContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<AllVisits>());
+        ProfileContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<Profile>());
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-
         await InitializeDb();
-
-        // Verifica se há um token/flag de autenticação salvo; ajuste a chave conforme sua implementação.
-        var token = Preferences.Get("AuthToken", string.Empty);
-
-        if (string.IsNullOrEmpty(token))
-            await Shell.Current.GoToAsync("login");
-        else
-            await Shell.Current.GoToAsync("//overview");
     }
 
-    private static void RegisterRoutes()
+    private void RegisterRoutes()
     {
-        // Registrar apenas rotas que não estão declaradas no AppShell.xaml (evita duplicação)
+        if (routesRegistered)
+        {
+            return;
+        }
+
+        routesRegistered = true;
+
         Routing.RegisterRoute("login", typeof(LoginPage));
-        Routing.RegisterRoute("families", typeof(FamiliesPage));
-        Routing.RegisterRoute("addregister", typeof(AddRegister));
-        Routing.RegisterRoute("addfamily", typeof(AddFamilyPage));
-        Routing.RegisterRoute("addhouse", typeof(AddHouse));
+        Routing.RegisterRoute("families", new ServiceProviderRouteFactory<FamiliesPage>(_serviceProvider));
+        Routing.RegisterRoute("addregister", new ServiceProviderRouteFactory<AddRegister>(_serviceProvider));
+        Routing.RegisterRoute("addhouse", new ServiceProviderRouteFactory<AddHouse>(_serviceProvider));
+        Routing.RegisterRoute("notes", new ServiceProviderRouteFactory<NotesPage>(_serviceProvider));
+        Routing.RegisterRoute("vaccines", new ServiceProviderRouteFactory<VaccinesPage>(_serviceProvider));
     }
 
     private async Task InitializeDb()
     {
         if (_databaseService.Connection is null)
+        {
             await _databaseService.InitializeAsync();
+        }
     }
 }

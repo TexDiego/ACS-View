@@ -1,8 +1,8 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
-using ACS_View.UseCases.DTOs;
+using ACS_View.Application.DTOs;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
@@ -102,24 +102,44 @@ namespace ACS_View.UseCases.Services
                     patient.BirthDate = birthDate.Value;
                 }
 
-                var isExistingPatient = patient.Id > 0;
-                if (isExistingPatient)
+                try
                 {
-                    await patientService.UpdatePatient(patient);
-                    result.UpdatedCount++;
-                }
-                else
-                {
-                    await patientService.CreatePatient(patient);
-                    result.ImportedCount++;
-                }
+                    var isExistingPatient = patient.Id > 0;
+                    if (isExistingPatient)
+                    {
+                        await patientService.UpdatePatient(patient);
+                    }
+                    else
+                    {
+                        await patientService.CreatePatient(patient);
+                    }
 
-                if (!string.IsNullOrWhiteSpace(patient.SusNumber))
-                {
-                    patientsBySus[Normalize(patient.SusNumber)] = patient;
-                }
+                    if (!string.IsNullOrWhiteSpace(patient.SusNumber))
+                    {
+                        patientsBySus[Normalize(patient.SusNumber)] = patient;
+                    }
 
-                await SyncImportedConditionsAsync(patient.Id, conditionColumnIndexes.Select(map => map.ConditionName), importedConditions);
+                    await SyncImportedConditionsAsync(patient.Id, conditionColumnIndexes.Select(map => map.ConditionName), importedConditions);
+
+                    if (isExistingPatient)
+                    {
+                        result.UpdatedCount++;
+                    }
+                    else
+                    {
+                        result.ImportedCount++;
+                    }
+                }
+                catch (ArgumentException ex)
+                {
+                    result.IgnoredCount++;
+                    result.Errors.Add($"Linha {rowIndex + 1}: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    result.IgnoredCount++;
+                    result.Errors.Add($"Linha {rowIndex + 1}: não foi possível importar o paciente. {ex.Message}");
+                }
             }
 
             return result;

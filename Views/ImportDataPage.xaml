@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             x:DataType="vm:ImportDataViewModel"
+             x:Class="ACS_View.Views.ImportDataPage"
+             Title="Importar dados">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Pacientes" Style="{StaticResource SectionTitle}"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="auto,auto,auto,auto">
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <Label Text="Nome do paciente" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding NameColumn}" Placeholder="Nome"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                            <Label Text="SUS" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding SusNumberColumn}" Placeholder="SUS"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <Label Text="Mãe" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding MotherNameColumn}" Placeholder="Mãe"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Label Text="Pai" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding FatherNameColumn}" Placeholder="Pai"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <Label Text="Data de nascimento" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding BirthDateColumn}" Placeholder="Data de nascimento"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                            <Label Text="Bolsa Família" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding BolsaFamiliaColumn}" Placeholder="Bolsa Família"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
+                            <Label Text="Observação" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding ObservationColumn}" Placeholder="Observação"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <BoxView HeightRequest="1"
+                             Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                             Margin="0,4"/>
+
+                    <Label Text="Condições de saúde" Style="{StaticResource SectionTitle}"/>
+
+                    <VerticalStackLayout Spacing="10"
+                                         BindableLayout.ItemsSource="{Binding HealthConditionColumns}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="dto:PatientImportConditionColumnDto">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding ConditionName}" Style="{StaticResource BodyMuted}"/>
+                                    <Entry Text="{Binding ColumnName, Mode=TwoWay}" Placeholder="Nome da coluna"/>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Button Text="Selecionar planilha de pacientes"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ImportPatientsCommand}"/>
+
+                    <Label Text="{Binding PatientImportSummary}"
+                           Style="{StaticResource BodyMuted}"
+                           LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Residências" Style="{StaticResource SectionTitle}"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="auto,auto,auto,auto,auto">
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <Label Text="CEP" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseCepColumn}" Placeholder="CEP"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                            <Label Text="Rua" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseStreetColumn}" Placeholder="Rua"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <Label Text="Número" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseNumberColumn}" Placeholder="Número"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Label Text="Bairro" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseNeighborhoodColumn}" Placeholder="Bairro"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <Label Text="Cidade" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseCityColumn}" Placeholder="Cidade"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                            <Label Text="Estado" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseStateColumn}" Placeholder="Estado"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="3" Grid.Column="0" Spacing="4">
+                            <Label Text="País" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseCountryColumn}" Placeholder="País"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="4">
+                            <Label Text="Complemento" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseComplementColumn}" Placeholder="Complemento"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="4">
+                            <Label Text="Possui complemento" Style="{StaticResource BodyMuted}"/>
+                            <Entry Text="{Binding HouseHasComplementColumn}" Placeholder="Possui complemento"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Button Text="Selecionar planilha de residências"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ImportHousesCommand}"/>
+
+                    <Label Text="{Binding HouseImportSummary}"
+                           Style="{StaticResource BodyMuted}"
+                           LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsVisible="{Binding IsRunning}"
+                               IsRunning="{Binding IsRunning}"
+                               HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

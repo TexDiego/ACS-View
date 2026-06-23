@@ -1,4 +1,4 @@
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
@@ -17,10 +17,11 @@ public partial class Registers : ContentPage, IQueryAttributable
         ICidRepository cidRepo,
         IPatientCidRepository patientCid,
         ISQLiteConditionsRepository conditionsRepository,
+        IPopupService popupService,
         RegistersViewModel viewModel)
     {
         InitializeComponent();
-        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository);
+        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, popupService);
         BindingContext = _viewModel = viewModel;
     }
 

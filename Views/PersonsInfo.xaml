@@ -10,9 +10,12 @@
     x:DataType="vm:PersonsInfoViewModel"
     x:Class="ACS_View.Views.PersonsInfo"
     WidthRequest="{Binding Width}"
-    CanBeDismissedByTappingOutsideOfPopup="true">
+    CanBeDismissedByTappingOutsideOfPopup="true"
+    BackgroundColor="Transparent"
+    Padding="0">
 
     <VerticalStackLayout
+        Padding="10"
         HorizontalOptions="Fill"
         VerticalOptions="Fill"
         BindingContext="{Binding PersonInfo}"
@@ -29,6 +32,13 @@
             FontAttributes="Bold"
             FontSize="20"
             Margin="0,0,0,5"/>
+
+        <!-- Sexo -->
+        <Label
+            Text="{Binding Sexo, StringFormat='Sexo: {0}'}"
+            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+            FontSize="16"
+            LineBreakMode="TailTruncation"/>
 
         <!-- Nome da mãe -->
         <Label
@@ -48,7 +58,7 @@
 
         <!-- Sus -->
         <Label
-            Text="{Binding SusNumber, Converter={converters:SUSFormatConverter}, StringFormat='SUS: {0}'}"
+            Text="{Binding SusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
             TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
             FontSize="16"/>
 
@@ -97,8 +107,6 @@
             TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
             FontSize="16"
             FontAttributes="Italic"/>
-
-
 
         <!-- icons -->
         <CollectionView

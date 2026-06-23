@@ -1,7 +1,7 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
-using ACS_View.UseCases.DTOs;
+using ACS_View.Application.DTOs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -157,8 +157,8 @@ namespace ACS_View.ViewModels
                 {
                     foreach (var person in people)
                     {
-                        person.HouseId = 0;
-                        person.FamilyId = 0;
+                        person.HouseId = -1;
+                        person.FamilyId = -1;
                         await _patientService.UpdatePatient(person);
                     }
                 }

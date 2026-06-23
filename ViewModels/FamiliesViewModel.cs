@@ -1,8 +1,7 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -12,10 +11,15 @@ namespace ACS_View.ViewModels
 {
     internal partial class FamiliesViewModel : BaseViewModel
     {
-        private readonly IHouseService _houseService = App.StaticServiceProvider.GetRequiredService<IHouseService>();
-        private readonly IVisitsService _visitsService = App.StaticServiceProvider.GetRequiredService<IVisitsService>();
-        private readonly IPatientService _patientService = App.StaticServiceProvider.GetRequiredService<IPatientService>();
-        private DateTime _suppressReloadUntilUtc = DateTime.MinValue;
+        private readonly IHouseService _houseService;
+        private readonly IVisitsService _visitsService;
+        private readonly IPatientService _patientService;
+        private readonly IPersonsInfoPopupService _personsInfoPopupService;
+        private readonly IFamilyService _familyService;
+        private readonly IFamilyManager _familyManager;
+        private readonly IPopupService _popupService;
+        private int _transientPopupDepth;
+        private bool _skipNextAppearReload;
         private int _loadedVersion = -1;
         private bool _hasLoaded;
 
@@ -32,14 +36,45 @@ namespace ACS_View.ViewModels
 
         private readonly int _idHouse = 0;
 
-        public FamiliesViewModel(int idHouse)
+        public FamiliesViewModel(
+            int idHouse,
+            IHouseService houseService,
+            IVisitsService visitsService,
+            IPatientService patientService,
+            IPersonsInfoPopupService personsInfoPopupService,
+            IFamilyService familyService,
+            IFamilyManager familyManager,
+            IPopupService popupService)
         {
             _idHouse = idHouse;
+            _houseService = houseService;
+            _visitsService = visitsService;
+            _patientService = patientService;
+            _personsInfoPopupService = personsInfoPopupService;
+            _familyService = familyService;
+            _familyManager = familyManager;
+            _popupService = popupService;
         }
 
         internal bool ShouldSkipTransientReload()
         {
-            return DateTime.UtcNow <= _suppressReloadUntilUtc;
+            if (!_hasLoaded)
+            {
+                return false;
+            }
+
+            if (_transientPopupDepth > 0)
+            {
+                return true;
+            }
+
+            if (!_skipNextAppearReload)
+            {
+                return false;
+            }
+
+            _skipNextAppearReload = false;
+            return true;
         }
 
         public async Task LoadFamiliesAsync()
@@ -67,8 +102,6 @@ namespace ACS_View.ViewModels
                     string complemento = house.Complemento ?? "";
 
                     House = complemento == "" ? $"{rua}\n Nº {numero}" : $"{rua}\n Nº {numero} - {complemento}";
-
-                    Console.WriteLine(House);
 
                     var familiesFromDb = await _patientService.GetPatientsByHouseId(_idHouse);
                     var familiesGrouped = familiesFromDb
@@ -107,7 +140,13 @@ namespace ACS_View.ViewModels
                 };
 
                 Families.Add(newFamily); // Adiciona a nova família à coleção
-                await PushPageAsync(new AddFamilyPage(_idHouse, false));
+                await PushPageAsync(new AddFamilyPage(
+                    _idHouse,
+                    false,
+                    null,
+                    _familyService,
+                    _familyManager,
+                    _patientService));
             }
             catch (Exception ex)
             {
@@ -130,8 +169,8 @@ namespace ACS_View.ViewModels
 
                 foreach (var person in pessoasDaFamilia)
                 {
-                    person.HouseId = 0;
-                    person.FamilyId = 0;
+                    person.HouseId = -1;
+                    person.FamilyId = -1;
 
                     await _patientService.UpdatePatient(person);
                 }
@@ -160,7 +199,13 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                await PushPageAsync(new AddFamilyPage(_idHouse, true, idFamily));
+                await PushPageAsync(new AddFamilyPage(
+                    _idHouse,
+                    true,
+                    idFamily,
+                    _familyService,
+                    _familyManager,
+                    _patientService));
             }
             catch (Exception ex)
             {
@@ -180,9 +225,9 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                var popupResult = await Shell.Current.ShowPopupAsync<Visits>(new VisitPage(_idHouse, idFamily), PopupConfigs.Default);
+                var popupResult = await _popupService.ShowAsync<Visits>(new VisitPage(_houseService, _idHouse, idFamily));
 
-                if (popupResult is null || popupResult.WasDismissedByTappingOutsideOfPopup || popupResult.Result is null)
+                if (popupResult.WasDismissed || popupResult.Result is null)
                 {
                     return;
                 }
@@ -200,21 +245,18 @@ namespace ACS_View.ViewModels
         {
             try
             {
-                PersonsInfoViewModel vm = App.StaticServiceProvider.GetRequiredService<PersonsInfoViewModel>();
                 var record = await _patientService.GetPatientById(Id);
 
                 if (record != null)
                 {
-                    var popup = new PersonsInfo(vm);
-                    popup.SetPatient(record);
-                    SuppressTransientReload();
+                    BeginTransientPopup();
                     try
                     {
-                        await Shell.Current.ShowPopupAsync(popup);
+                        await _personsInfoPopupService.ShowAsync(record);
                     }
                     finally
                     {
-                        SuppressTransientReload();
+                        EndTransientPopup();
                     }
                 }
             }
@@ -224,9 +266,20 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private void SuppressTransientReload()
+        private void BeginTransientPopup()
         {
-            _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
+            _transientPopupDepth++;
+            _skipNextAppearReload = true;
+        }
+
+        private void EndTransientPopup()
+        {
+            if (_transientPopupDepth > 0)
+            {
+                _transientPopupDepth--;
+            }
+
+            _skipNextAppearReload = true;
         }
     }
 }

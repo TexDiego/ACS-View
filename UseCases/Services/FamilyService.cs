@@ -1,5 +1,5 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
 using SQLite;
 
 namespace ACS_View.UseCases.Services

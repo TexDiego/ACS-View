@@ -1,5 +1,7 @@
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Infrastructure.Data.SQLite;
+using ACS_View.Infrastructure.Services;
 using ACS_View.UseCases;
 using ACS_View.UseCases.Services;
 using ACS_View.ViewModels;
@@ -11,6 +13,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        BaseViewModel.ConfigureInfrastructure(
+            new ShellDialogService(),
+            new ShellNavigationService(),
+            new MauiMainThreadDispatcher());
+
         services.AddDomainServices();
         services.AddViewModels();
         services.AddViews();
@@ -28,6 +35,20 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICidRepository, SQLiteCidRepository>();
         services.AddSingleton<ICidSeeder, CidSeeder>();
         services.AddSingleton<IPatientConditionSeeder, PatientConditionsSeeder>();
+        services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
+        services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IDialogService, ShellDialogService>();
+        services.AddSingleton<INavigationService, ShellNavigationService>();
+        services.AddSingleton<IMainThreadDispatcher, MauiMainThreadDispatcher>();
+        services.AddSingleton<IPopupService, PopupService>();
+        services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();
+        services.AddSingleton<IPatientRepository, SQLitePatientRepository>();
+        services.AddSingleton(new HttpClient
+        {
+            BaseAddress = new Uri("https://viacep.com.br/"),
+            Timeout = TimeSpan.FromSeconds(10)
+        });
+        services.AddSingleton<ICepService, ViaCepService>();
 
         services.AddTransient<IVaccineService, VaccineService>();
         services.AddTransient<IFamilyService, FamilyService>();
@@ -36,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<INoteService, NoteService>();
         services.AddTransient<IPatientService, PatientService>();
         services.AddTransient<IPatientImportService, PatientImportService>();
+        services.AddTransient<IHouseImportService, HouseImportService>();
         services.AddTransient<IPatientCidRepository, PatientCidService>();
 
         return services;
@@ -51,6 +73,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<VaccinesPageViewModel>();
         services.AddTransient<NotesPageViewModel>();
         services.AddTransient<PersonsInfoViewModel>();
+        services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
+        services.AddTransient<ImportDataViewModel>();
+        services.AddTransient<ForgotPasswordViewModel>();
 
         services.AddSingleton<RegistersViewModel>();
         services.AddSingleton<HousesPageViewModel>();
@@ -64,9 +89,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddRegister>();
         services.AddTransient<AddHouse>();
         services.AddTransient<AllVisits>();
+        services.AddTransient<LoginPage>();
+        services.AddTransient<RegistrationPage>();
+        services.AddTransient<ForgotPassword>();
         services.AddTransient<FamiliesPage>();
         services.AddTransient<Profile>();
         services.AddTransient<VaccinesPage>();
+        services.AddTransient<ImportDataPage>();
 
         services.AddTransient<HousesPage>();
         services.AddTransient<NotesPage>();

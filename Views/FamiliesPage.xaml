@@ -21,9 +21,8 @@
         Margin="10">
 
         <CollectionView.ItemTemplate>
-            <DataTemplate>
+            <DataTemplate x:DataType="services:Familia">
                 <Border
-                    x:DataType="services:Familia"
                     StrokeThickness="2"
                     Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                     StrokeShape="RoundRectangle 10"
@@ -54,44 +53,29 @@
                                     CommandParameter="{Binding IdFamily}"/>
                             </SwipeItems>
                         </SwipeView.RightItems>
-                        
-                        <CollectionView
-                            ItemsSource="{Binding PessoasFamilia}"
+
+                        <VerticalStackLayout
+                            BindableLayout.ItemsSource="{Binding PessoasFamilia}"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-
-                                    <Grid
-                                        x:DataType="models:Patient"
-                                        Padding="10">
-
-                                        <Label
-                                            Text="{Binding Name}"
-                                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                                            Opacity="0.7"
-                                            FontSize="16"
-                                            Margin="0,5"
-                                            FontAttributes="Bold"
-                                            LineBreakMode="WordWrap"/>
-
-                                        <Button
-                                            x:Name="InfoPopup"
-                                            Grid.Row="0"
-                                            Grid.RowSpan="6"
-                                            BackgroundColor="Transparent"
-                                            BorderColor="Transparent"
-                                            Text=""
-                                            Padding="0"
-                                            Opacity="0.01"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                            CommandParameter="{Binding Id}"/>
-
-                                    </Grid>
-
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:Patient">
+                                    <Label
+                                        Text="{Binding Name}"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                        Opacity="0.7"
+                                        FontSize="16"
+                                        Margin="10,5"
+                                        FontAttributes="Bold"
+                                        LineBreakMode="WordWrap">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                                CommandParameter="{Binding Id}"/>
+                                        </Label.GestureRecognizers>
+                                    </Label>
                                 </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
-                        
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
                     </SwipeView>
                 </Border>
             </DataTemplate>

@@ -1,9 +1,8 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Enums;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Views;
 using CommunityToolkit.Maui.Core;
-using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -14,6 +13,7 @@ namespace ACS_View.ViewModels
     {
         private readonly IPatientService _patientService;
         private readonly IVaccineService _vaccineService;
+        private readonly IPopupService _popupService;
         private int? _loadedPatientId;
         private int _loadVersion;
 
@@ -199,10 +199,11 @@ namespace ACS_View.ViewModels
 
         #endregion
 
-        public VaccinesPageViewModel(IPatientService patientService, IVaccineService vaccineService)
+        public VaccinesPageViewModel(IPatientService patientService, IVaccineService vaccineService, IPopupService popupService)
         {
             _patientService = patientService;
             _vaccineService = vaccineService;
+            _popupService = popupService;
             OpenVaccineInfo = new Command<string>(async (vaccine) => await OpenVaccineInfoCommand(vaccine));
         }
 
@@ -330,9 +331,9 @@ namespace ACS_View.ViewModels
                 bool vaccineChecked = GetVaccineStatus(Vaccine);
 
                 var popup = new VaccinesInfo(Vaccine, vaccineChecked);
-                var status = await Shell.Current.ShowPopupAsync<bool>(popup, PopupConfigs.Default);
+                var status = await _popupService.ShowAsync<bool>(popup);
 
-                if (status.WasDismissedByTappingOutsideOfPopup) return;
+                if (status.WasDismissed) return;
 
                 if (status.Result is bool vaccineStatus && vaccineStatus != vaccineChecked)
                 {

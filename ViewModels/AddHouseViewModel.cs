@@ -1,12 +1,12 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
-using ACS_View.UseCases.Services;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
+using ACS_View.Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    public partial class AddHouseViewModel(IHouseService _houseService) : BaseViewModel
+    public partial class AddHouseViewModel(IHouseService _houseService, ICepService _cepService) : BaseViewModel
     {
         [ObservableProperty] private House houseModel = new();
 
@@ -83,7 +83,7 @@ namespace ACS_View.ViewModels
             {
                 await ExecuteWithRunningAsync(async () =>
                 {
-                    var endereco = await CEPService.BuscarEnderecoPorCep(HouseModel.CEP);
+                    var endereco = await _cepService.GetAddressByCepAsync(HouseModel.CEP);
 
                     if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
                     {

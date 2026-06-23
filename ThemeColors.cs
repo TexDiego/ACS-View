@@ -2,7 +2,7 @@ namespace ACS_View
 {
     internal static class ThemeColors
     {
-        private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+        private static bool IsDark => Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Dark;
 
         internal static Color PageBackground => Color.FromArgb(IsDark ? "#101820" : "#FFFFFF");
         internal static Color Surface => Color.FromArgb(IsDark ? "#17232D" : "#FFFFFF");

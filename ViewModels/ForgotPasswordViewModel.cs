@@ -1,18 +1,17 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
-using ACS_View.Views;
+using ACS_View.Application.Interfaces;
+using ACS_View.Domain.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    internal partial class ForgotPasswordViewModel(IDatabaseService databaseService) : BaseViewModel
-    {        
-        [ObservableProperty] private User currentUser;
-        [ObservableProperty] private string username;
-        [ObservableProperty] private string securityQuestion;
-        [ObservableProperty] private string answer;
-        [ObservableProperty] private string statusMessage;
+    public partial class ForgotPasswordViewModel(IAuthService authService) : BaseViewModel
+    {
+        [ObservableProperty] private User? currentUser;
+        [ObservableProperty] private string username = string.Empty;
+        [ObservableProperty] private string securityQuestion = string.Empty;
+        [ObservableProperty] private string answer = string.Empty;
+        [ObservableProperty] private string statusMessage = string.Empty;
         [ObservableProperty] private bool isMessageVisible;
         [ObservableProperty] private bool isQuestionVisible;
 
@@ -28,7 +27,7 @@ namespace ACS_View.ViewModels
                 return;
             }
 
-            CurrentUser = await databaseService.GetUserByUsernameAsync(Username);
+            CurrentUser = await authService.GetUserForPasswordRecoveryAsync(Username);
 
             if (CurrentUser != null)
             {
@@ -46,17 +45,25 @@ namespace ACS_View.ViewModels
 
         private async Task OnVerifyAnswer()
         {
-            if (CurrentUser != null && CurrentUser.SecurityAnswer == Answer)
+            if (CurrentUser is null)
             {
-                // Simplesmente redefine a senha no exemplo
-                CurrentUser.Password = "NovaSenha123"; // Substitua por uma lógica de redefinição real
-                await databaseService.UpdateUserAsync(CurrentUser);
-                StatusMessage = "Senha redefinida com sucesso! Sua nova senha é: NovaSenha123";
+                StatusMessage = "Usuário não encontrado.";
+                IsMessageVisible = true;
+                return;
             }
-            else
+
+            try
             {
-                StatusMessage = "Resposta incorreta.";
+                const string temporaryPassword = "NovaSenha123";
+                await authService.ResetPasswordAsync(CurrentUser.Username, Answer, temporaryPassword);
+                StatusMessage = $"Senha redefinida com sucesso! Sua nova senha é: {temporaryPassword}";
             }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message;
+            }
+
+            IsMessageVisible = true;
         }
     }
 }

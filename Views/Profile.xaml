@@ -2,7 +2,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:dto="clr-namespace:ACS_View.UseCases.DTOs"
              x:DataType="vm:ProfileViewModel"
              x:Class="ACS_View.Views.Profile"
              Title="Perfil">
@@ -13,7 +12,19 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Área pessoal" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Acesse anotações e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir anotações" Style="{StaticResource PrimaryButton}" Command="{Binding OpenNotesPage}"/>
+                    <Button Text="Abrir anotações"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding OpenNotesPage}"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Importação" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Importe cadastros de pacientes e residências por planilha." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Abrir importação"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding OpenImportDataPage}"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -21,82 +32,10 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Conta" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Encerre a sessão neste dispositivo." Style="{StaticResource BodyMuted}"/>
-                    <Button
-                        Text="Sair"
-                        BackgroundColor="{StaticResource Accent}"
-                        TextColor="{StaticResource White}"
-                        Command="{Binding LogoutCommand}"/>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Importar pacientes" Style="{StaticResource SectionTitle}"/>
-
-                    <VerticalStackLayout Spacing="10">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Nome do paciente" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding NameColumn}" Placeholder="Nome"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="SUS" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding SusNumberColumn}" Placeholder="SUS"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Mãe" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding MotherNameColumn}" Placeholder="Mãe"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Pai" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding FatherNameColumn}" Placeholder="Pai"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Data de nascimento" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding BirthDateColumn}" Placeholder="Data de nascimento"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Bolsa Família" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding BolsaFamiliaColumn}" Placeholder="Bolsa Família"/>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Observação" Style="{StaticResource BodyMuted}"/>
-                            <Entry Text="{Binding ObservationColumn}" Placeholder="Observação"/>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-
-                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" Margin="0,4"/>
-
-                    <Label Text="Condições de saúde" Style="{StaticResource SectionTitle}"/>
-
-                    <VerticalStackLayout Spacing="10"
-                                         BindableLayout.ItemsSource="{Binding HealthConditionColumns}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="dto:PatientImportConditionColumnDto">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="{Binding ConditionName}" Style="{StaticResource BodyMuted}"/>
-                                    <Entry Text="{Binding ColumnName, Mode=TwoWay}" Placeholder="Nome da coluna"/>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-
-                    <Button Text="Selecionar planilha .xlsx"
-                            Style="{StaticResource PrimaryButton}"
-                            Command="{Binding ImportPatientsCommand}"/>
-
-                    <ActivityIndicator IsVisible="{Binding IsRunning}"
-                                       IsRunning="{Binding IsRunning}"
-                                       HorizontalOptions="Center"/>
-
-                    <Label Text="{Binding ImportSummary}"
-                           Style="{StaticResource BodyMuted}"
-                           LineBreakMode="WordWrap"/>
+                    <Button Text="Sair"
+                            BackgroundColor="{StaticResource Accent}"
+                            TextColor="{StaticResource White}"
+                            Command="{Binding LogoutCommand}"/>
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>

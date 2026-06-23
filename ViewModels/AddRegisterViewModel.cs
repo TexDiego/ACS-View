@@ -1,9 +1,8 @@
-﻿using ACS_View.Domain.Entities;
+using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -15,12 +14,14 @@ namespace ACS_View.ViewModels
         IPatientService patientService,
         ICidRepository cidRepo,
         IPatientCidRepository patientCid,
-        ISQLiteConditionsRepository conditionsRepository) : BaseViewModel
+        ISQLiteConditionsRepository conditionsRepository,
+        IPopupService popupService) : BaseViewModel
     {
         private readonly IPatientService _patientService = patientService;
         private readonly ICidRepository _cidRepo = cidRepo;
         private readonly IPatientCidRepository _patientCid = patientCid;
         private readonly ISQLiteConditionsRepository _conditionsRepository = conditionsRepository;
+        private readonly IPopupService _popupService = popupService;
 
         internal List<CidSubcategory> Subcategories = [];
 
@@ -187,9 +188,11 @@ namespace ACS_View.ViewModels
         {
             var popup = new ConditionsPopup(_cidRepo);
 
-            var popupResult = await Shell.Current.ShowPopupAsync<object>(popup, PopupConfigs.Default, new Dictionary<string, object> { { "record", HealthCategories.ToList() } });
+            var popupResult = await _popupService.ShowAsync<object>(
+                popup,
+                new Dictionary<string, object> { { "record", HealthCategories.ToList() } });
 
-            if (popupResult is null || popupResult.WasDismissedByTappingOutsideOfPopup) return;
+            if (popupResult.WasDismissed) return;
 
             if (popupResult.Result is List<HealthConditions> list)
             {

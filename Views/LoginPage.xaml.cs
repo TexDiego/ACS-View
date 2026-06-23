@@ -1,19 +1,24 @@
+using ACS_View.Application.Interfaces;
+
 namespace ACS_View.Views;
 
 public partial class LoginPage : ContentPage
 {
-    public LoginPage()
+    private readonly IAuthService _authService;
+
+    public LoginPage(IAuthService authService)
     {
         InitializeComponent();
+        _authService = authService;
     }
 
     private async void Btn_Login_Clicked(object sender, EventArgs e)
     {
         try
         {
-            Preferences.Set("AuthToken", "User");
+            await _authService.LoginAsync(UsernameEntry.Text ?? string.Empty, PasswordEntry.Text ?? string.Empty);
 
-            if (Application.Current is App app)
+            if (Microsoft.Maui.Controls.Application.Current is App app)
             {
                 await app.ResetToAuthenticatedShellAsync();
             }
@@ -26,11 +31,11 @@ public partial class LoginPage : ContentPage
 
     private async void RegisterUser_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new RegistrationPage());
+        await Shell.Current.GoToAsync("registration");
     }
 
     private async void Button_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new ForgotPassword());
+        await Shell.Current.GoToAsync("forgotpassword");
     }
 }

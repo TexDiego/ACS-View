@@ -1,3 +1,4 @@
+using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
@@ -6,10 +7,22 @@ public partial class AddFamilyPage : ContentPage
 {
     private readonly AddFamilyViewModel viewModel;
 
-    public AddFamilyPage(int idHouse, bool isEdit, int? idFamily = null)
+    public AddFamilyPage(
+        int idHouse,
+        bool isEdit,
+        int? idFamily,
+        IFamilyService familyService,
+        IFamilyManager familyManager,
+        IPatientService patientService)
     {
         InitializeComponent();
-        BindingContext = viewModel = new AddFamilyViewModel(idHouse, isEdit, idFamily);
+        BindingContext = viewModel = new AddFamilyViewModel(
+            idHouse,
+            isEdit,
+            idFamily,
+            familyService,
+            familyManager,
+            patientService);
 	}
 
     protected override void OnAppearing()

@@ -1,3 +1,4 @@
+using ACS_View.Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
 
@@ -8,6 +9,19 @@ namespace ACS_View.ViewModels
         private bool _isBusy;
         private bool _isLoading;
         private bool _isRunning;
+        private static IDialogService dialogService = new UnconfiguredDialogService();
+        private static INavigationService navigationService = new UnconfiguredNavigationService();
+        private static IMainThreadDispatcher mainThreadDispatcher = new UnconfiguredMainThreadDispatcher();
+
+        internal static void ConfigureInfrastructure(
+            IDialogService dialogs,
+            INavigationService navigation,
+            IMainThreadDispatcher mainThread)
+        {
+            dialogService = dialogs;
+            navigationService = navigation;
+            mainThreadDispatcher = mainThread;
+        }
 
         public bool IsBusy
         {
@@ -29,7 +43,7 @@ namespace ACS_View.ViewModels
 
         protected static Task DisplayAlertAsync(string title, string message, string cancel = "OK")
         {
-            return Shell.Current.DisplayAlertAsync(title, message, cancel);
+            return dialogService.ShowAlertAsync(title, message, cancel);
         }
 
         protected static Task<bool> DisplayConfirmationAsync(
@@ -38,7 +52,7 @@ namespace ACS_View.ViewModels
             string accept,
             string cancel = "Cancelar")
         {
-            return Shell.Current.DisplayAlertAsync(title, message, accept, cancel);
+            return dialogService.ShowConfirmationAsync(title, message, accept, cancel);
         }
 
         protected static Task<string> DisplayActionSheetAsync(
@@ -47,42 +61,42 @@ namespace ACS_View.ViewModels
             string? destruction,
             params string[] buttons)
         {
-            return Shell.Current.DisplayActionSheetAsync(title, cancel, destruction, buttons);
+            return dialogService.ShowActionSheetAsync(title, cancel, destruction, buttons);
         }
 
         protected static Task NavigateBackAsync()
         {
-            return Shell.Current.GoToAsync("..");
+            return navigationService.GoBackAsync();
         }
 
         protected static Task NavigateBackAsync(IDictionary<string, object> parameters)
         {
-            return Shell.Current.GoToAsync("..", parameters);
+            return navigationService.GoBackAsync(parameters);
         }
 
         protected static Task NavigateToAsync(string route)
         {
-            return Shell.Current.GoToAsync(route);
+            return navigationService.NavigateToAsync(route);
         }
 
         protected static Task NavigateToAsync(string route, IDictionary<string, object> parameters)
         {
-            return Shell.Current.GoToAsync(route, parameters);
+            return navigationService.NavigateToAsync(route, parameters);
         }
 
         protected static Task PushPageAsync(Page page)
         {
-            return Shell.Current.Navigation.PushAsync(page);
+            return navigationService.PushPageAsync(page);
         }
 
         protected static void RunOnMainThread(Action action)
         {
-            MainThread.BeginInvokeOnMainThread(action);
+            mainThreadDispatcher.Dispatch(action);
         }
 
         protected static void RunOnMainThread(Func<Task> action)
         {
-            MainThread.BeginInvokeOnMainThread(async () => await action());
+            mainThreadDispatcher.Dispatch(action);
         }
 
         protected async Task ExecuteWithLoadingAsync(Func<Task> action)
@@ -134,6 +148,65 @@ namespace ACS_View.ViewModels
             finally
             {
                 setState(false);
+            }
+        }
+
+        private sealed class UnconfiguredDialogService : IDialogService
+        {
+            public Task ShowAlertAsync(string title, string message, string cancel = "OK")
+            {
+                throw new InvalidOperationException("IDialogService não foi configurado.");
+            }
+
+            public Task<bool> ShowConfirmationAsync(string title, string message, string accept, string cancel = "Cancelar")
+            {
+                throw new InvalidOperationException("IDialogService não foi configurado.");
+            }
+
+            public Task<string> ShowActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons)
+            {
+                throw new InvalidOperationException("IDialogService não foi configurado.");
+            }
+        }
+
+        private sealed class UnconfiguredNavigationService : INavigationService
+        {
+            public Task GoBackAsync()
+            {
+                throw new InvalidOperationException("INavigationService não foi configurado.");
+            }
+
+            public Task GoBackAsync(IDictionary<string, object> parameters)
+            {
+                throw new InvalidOperationException("INavigationService não foi configurado.");
+            }
+
+            public Task NavigateToAsync(string route)
+            {
+                throw new InvalidOperationException("INavigationService não foi configurado.");
+            }
+
+            public Task NavigateToAsync(string route, IDictionary<string, object> parameters)
+            {
+                throw new InvalidOperationException("INavigationService não foi configurado.");
+            }
+
+            public Task PushPageAsync(object page)
+            {
+                throw new InvalidOperationException("INavigationService não foi configurado.");
+            }
+        }
+
+        private sealed class UnconfiguredMainThreadDispatcher : IMainThreadDispatcher
+        {
+            public void Dispatch(Action action)
+            {
+                throw new InvalidOperationException("IMainThreadDispatcher não foi configurado.");
+            }
+
+            public void Dispatch(Func<Task> action)
+            {
+                throw new InvalidOperationException("IMainThreadDispatcher não foi configurado.");
             }
         }
     }

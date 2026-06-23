@@ -1,4 +1,4 @@
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;

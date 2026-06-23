@@ -1,5 +1,5 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
@@ -15,10 +15,11 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         IPatientService patientService,
         ICidRepository cidRepo,
         IPatientCidRepository patientCid,
-        ISQLiteConditionsRepository conditionsRepository)
+        ISQLiteConditionsRepository conditionsRepository,
+        IPopupService popupService)
     {
         InitializeComponent();
-        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository);
+        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, popupService);
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)

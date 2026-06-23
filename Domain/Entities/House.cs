@@ -15,6 +15,8 @@ namespace ACS_View.Domain.Entities
         public string Rua { get; set; } = string.Empty;
 
         public string NumeroCasa { get; set; } = string.Empty;
+        public string SearchRua { get; set; } = string.Empty;
+        public string SearchComplemento { get; set; } = string.Empty;
 
         [JsonPropertyName("bairro")]
         public string Bairro { get; set; } = string.Empty;

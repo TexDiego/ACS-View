@@ -1,16 +1,20 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
-using ACS_View.UseCases.DTOs;
+using ACS_View.Application.DTOs;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    public partial class RegistersViewModel(IVaccineService _vaccineService, IHouseService _houseService, IPatientService _patientService) : BaseViewModel
+    public partial class RegistersViewModel(
+        IVaccineService _vaccineService,
+        IHouseService _houseService,
+        IPatientService _patientService,
+        IPersonsInfoPopupService _personsInfoPopupService,
+        IPopupService _popupService) : BaseViewModel
     {
         private const int PageSize = 30;
         private const int SearchDebounceMilliseconds = 300;
@@ -226,14 +230,10 @@ namespace ACS_View.ViewModels
                 return;
             }
 
-            PersonsInfoViewModel vm = App.StaticServiceProvider.GetService<PersonsInfoViewModel>();
-            var popup = new PersonsInfo(vm);
-
-            popup.SetPatient(patient);
             SuppressTransientReload();
             try
             {
-                await Shell.Current.ShowPopupAsync(popup, PopupConfigs.Default);
+                await _personsInfoPopupService.ShowAsync(patient);
             }
             finally
             {
@@ -250,9 +250,9 @@ namespace ACS_View.ViewModels
         private async Task ShowFilterPopupAsync()
         {
             var popup = new FilterPopup(_listFilter.Clone());
-            var popupResult = await Shell.Current.ShowPopupAsync<PatientListFilterDto>(popup, PopupConfigs.Default);
+            var popupResult = await _popupService.ShowAsync<PatientListFilterDto>(popup);
 
-            if (popupResult.WasDismissedByTappingOutsideOfPopup ||
+            if (popupResult.WasDismissed ||
                 popupResult.Result is null)
             {
                 return;

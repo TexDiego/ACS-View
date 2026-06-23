@@ -1,19 +1,20 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
 public partial class VisitPage : Popup<Visits>
 {
-    private readonly IHouseService _houseService = App.StaticServiceProvider.GetRequiredService<IHouseService>();
+    private readonly IHouseService _houseService;
     private readonly int _houseId;
     private readonly int _familyId;
 
-    public VisitPage(int houseId, int familyId)
+    public VisitPage(IHouseService houseService, int houseId, int familyId)
     {
         InitializeComponent();
 
+        _houseService = houseService;
         _houseId = houseId;
         _familyId = familyId;
 

@@ -27,8 +27,72 @@
             <Setter Property="Color" Value="{StaticResource Primary}"/>
             <Setter Property="HorizontalOptions" Value="End"/>
         </Style>
-    </ContentPage.Resources>
 
+        <ControlTemplate x:Key="RadioButtonTemplate">
+            <Border
+                Style="{StaticResource FieldBorder}"
+                Padding="5"
+                Margin="5,0"
+                StrokeThickness="2"
+                StrokeShape="RoundRectangle 10"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CheckedStates">
+                            <VisualState x:Name="Checked">
+                                <VisualState.Setters>
+                                    <Setter Property="Stroke"
+                                        Value="#0084B1" />
+                                    <Setter TargetName="check"
+                                        Property="Opacity"
+                                        Value="1" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Unchecked">
+                                <VisualState.Setters>
+                                    <Setter Property="Stroke"
+                                        Value="#F3F2F1" />
+                                    <Setter TargetName="check"
+                                        Property="Opacity"
+                                        Value="0" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+                <Grid ColumnDefinitions="auto, *" ColumnSpacing="10" BackgroundColor="Transparent" HorizontalOptions="Fill">
+
+                    <Grid
+                        Grid.Column="1"
+                        HorizontalOptions="End"
+                        VerticalOptions="Center">
+
+                        <Ellipse Stroke="#0084B1"
+                                Fill="White"
+                                WidthRequest="16"
+                                HeightRequest="16"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        <Ellipse x:Name="check"
+                                Fill="#0084B1"
+                                WidthRequest="8"
+                                HeightRequest="8"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <ContentPresenter Grid.Column="0"/>
+                </Grid>
+            </Border>
+        </ControlTemplate>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="ControlTemplate"
+                Value="{StaticResource RadioButtonTemplate}" />
+        </Style>
+    </ContentPage.Resources>
     <Grid>
 
         <ScrollView
@@ -130,6 +194,19 @@
 
                     </Grid>
                 </Border>
+
+                <HorizontalStackLayout
+                    RadioButtonGroup.GroupName="Sexo"
+                    RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}"
+                    HorizontalOptions="Center"
+                    Margin="0"
+                    Padding="0">
+
+                    <RadioButton Content="Masculino" Value="Masculino"/>
+                    <RadioButton Content="Feminino" Value="Feminino"/>
+                    <RadioButton Content="Indeterminado" Value="Indeterminado"/>
+
+                </HorizontalStackLayout>
 
                 <Border Style="{StaticResource FieldBorder}">
 

@@ -1,5 +1,5 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Plugin.LocalNotification;

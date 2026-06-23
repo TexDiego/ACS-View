@@ -1,19 +1,19 @@
-﻿using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
+
+using ACS_View.Application.Interfaces;
 
 namespace ACS_View.Views
 {
-    public partial class App : Application
+    public partial class App : Microsoft.Maui.Controls.Application
     {
         private readonly IDatabaseService db;
         public IServiceProvider ServiceProvider { get; private set; }
-        public static IServiceProvider StaticServiceProvider { get; private set; }
 
         public App(IServiceProvider serviceProvider)
         {
             InitializeComponent();
             SQLitePCL.Batteries_V2.Init();
             ServiceProvider = serviceProvider;
-            StaticServiceProvider = serviceProvider;
             db = serviceProvider.GetRequiredService<IDatabaseService>();
 
             MainThread.BeginInvokeOnMainThread(async () => await InitializeDatabase());
@@ -25,9 +25,10 @@ namespace ACS_View.Views
 
             MainThread.BeginInvokeOnMainThread(async () =>
             {
-                var route = string.IsNullOrEmpty(Preferences.Get("AuthToken", string.Empty))
-                    ? "login"
-                    : "//overallview";
+                var authService = ServiceProvider.GetRequiredService<IAuthService>();
+                var route = await authService.IsAuthenticatedAsync()
+                    ? "//overallview"
+                    : "login";
 
                 await shell.GoToAsync(route);
             });

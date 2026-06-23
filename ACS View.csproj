@@ -19,7 +19,7 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<DefaultItemExcludes>$(DefaultItemExcludes);tmp\**</DefaultItemExcludes>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tmp\**;Tests\**</DefaultItemExcludes>
 
 		<!-- Display name -->
 		<ApplicationTitle>ACS View</ApplicationTitle>
@@ -59,9 +59,13 @@
 
 	<ItemGroup>
 	  <Compile Remove="tmp\**" />
+	  <Compile Remove="Tests\**" />
 	  <EmbeddedResource Remove="tmp\**" />
+	  <EmbeddedResource Remove="Tests\**" />
 	  <MauiXaml Remove="tmp\**" />
+	  <MauiXaml Remove="Tests\**" />
 	  <None Remove="tmp\**" />
+	  <None Remove="Tests\**" />
 	</ItemGroup>
 
 	<ItemGroup>

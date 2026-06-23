@@ -1,4 +1,4 @@
-﻿using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,9 +9,9 @@ namespace ACS_View.ViewModels
 {
     internal partial class AddFamilyViewModel : BaseViewModel
     {
-        private readonly IFamilyService _familyService = App.StaticServiceProvider.GetRequiredService<IFamilyService>();
-        private readonly IFamilyManager _familyManager = App.StaticServiceProvider.GetRequiredService<IFamilyManager>();
-        private readonly IPatientService _patientService = App.StaticServiceProvider.GetRequiredService<IPatientService>();
+        private readonly IFamilyService _familyService;
+        private readonly IFamilyManager _familyManager;
+        private readonly IPatientService _patientService;
 
         [ObservableProperty] private ObservableCollection<Pessoa> pessoas = [];
         [ObservableProperty] private ObservableCollection<Pessoa> pessoasPesquisadas = [];
@@ -32,11 +32,20 @@ namespace ACS_View.ViewModels
 
         private CancellationTokenSource _debounceTimer = new();
 
-        public AddFamilyViewModel(int idHouse, bool isEdit, int? idFamily)
+        public AddFamilyViewModel(
+            int idHouse,
+            bool isEdit,
+            int? idFamily,
+            IFamilyService familyService,
+            IFamilyManager familyManager,
+            IPatientService patientService)
         {
             IdHouse = idHouse;
             IsEdit = isEdit;
             IdPessoa = idFamily ?? 0;
+            _familyService = familyService;
+            _familyManager = familyManager;
+            _patientService = patientService;
         }
 
         private async Task SalvarFamilia()
@@ -149,8 +158,11 @@ namespace ACS_View.ViewModels
 
         private static bool ContainsTerm(string? value, string term)
         {
+            var normalizedValue = SearchTextNormalizer.Normalize(value);
+            var normalizedTerm = SearchTextNormalizer.Normalize(term);
+
             return !string.IsNullOrWhiteSpace(value) &&
-                   value.Contains(term, StringComparison.OrdinalIgnoreCase);
+                   normalizedValue.Contains(normalizedTerm, StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task LoadDataAsync()

@@ -1,4 +1,4 @@
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
 
 namespace ACS_View.Views;
 
@@ -36,12 +36,15 @@ public partial class AppShell : Shell
 
         routesRegistered = true;
 
-        Routing.RegisterRoute("login", typeof(LoginPage));
+        Routing.RegisterRoute("login", new ServiceProviderRouteFactory<LoginPage>(_serviceProvider));
+        Routing.RegisterRoute("registration", new ServiceProviderRouteFactory<RegistrationPage>(_serviceProvider));
+        Routing.RegisterRoute("forgotpassword", new ServiceProviderRouteFactory<ForgotPassword>(_serviceProvider));
         Routing.RegisterRoute("families", new ServiceProviderRouteFactory<FamiliesPage>(_serviceProvider));
         Routing.RegisterRoute("addregister", new ServiceProviderRouteFactory<AddRegister>(_serviceProvider));
         Routing.RegisterRoute("addhouse", new ServiceProviderRouteFactory<AddHouse>(_serviceProvider));
         Routing.RegisterRoute("notes", new ServiceProviderRouteFactory<NotesPage>(_serviceProvider));
         Routing.RegisterRoute("vaccines", new ServiceProviderRouteFactory<VaccinesPage>(_serviceProvider));
+        Routing.RegisterRoute("importdata", new ServiceProviderRouteFactory<ImportDataPage>(_serviceProvider));
     }
 
     private async Task InitializeDb()

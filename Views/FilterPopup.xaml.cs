@@ -1,4 +1,4 @@
-using ACS_View.UseCases.DTOs;
+using ACS_View.Application.DTOs;
 using ACS_View.ViewModels;
 using CommunityToolkit.Maui.Views;
 

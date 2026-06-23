@@ -1,5 +1,5 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
@@ -17,6 +17,7 @@ namespace ACS_View.ViewModels
 
         [ObservableProperty] private List<Visits> visitsList = [];
         [ObservableProperty] private List<House> houseList = [];
+        [ObservableProperty] private bool canSwipe = true;
 
         public ICommand DeleteVisit => new Command<int>(async id => await DeleteVisitCommand(id));
         public ICommand GoToHouseCommand => new Command<int>(async id => await GoToHouse(id));
@@ -71,6 +72,7 @@ namespace ACS_View.ViewModels
                 HouseList = await GetHousesWithoutVisits();
                 _loadedVersion = currentVersion;
                 _hasLoaded = true;
+                CanSwipe = HouseList.Count > 1;
             }
             catch (Exception ex)
             {
@@ -129,23 +131,7 @@ namespace ACS_View.ViewModels
                     .Where(h => houseIdsWithoutVisit.Contains(h.CasaId))
                     .ToList();
 
-                // Se não houver casas, adicionar uma "dummy house"
-                if (result.Count == 0)
-                {
-                    result.Add(new House
-                    {
-                        CasaId = -1,
-                        Rua = "Todas as famílias foram visitadas neste mês.",
-                        NumeroCasa = "",
-                        Bairro = "",
-                        Cidade = "",
-                        Estado = "",
-                        CEP = "",
-                        Complemento = "",
-                        PossuiComplemento = false,
-                        Pais = "Brasil"
-                    });
-                }
+                Console.WriteLine(result.Count);
 
                 return result;
             }

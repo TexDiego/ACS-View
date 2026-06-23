@@ -1,7 +1,8 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Application.Interfaces;
+using ACS_View.Application.Querying;
 using ACS_View.Domain.ValueObjects;
-using ACS_View.UseCases.DTOs;
+using ACS_View.Application.DTOs;
 using SQLite;
 
 namespace ACS_View.UseCases.Services

@@ -1,5 +1,5 @@
-﻿using ACS_View.Domain.Entities;
-using ACS_View.Domain.Interfaces;
+using ACS_View.Domain.Entities;
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
@@ -76,11 +76,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     {
         try
         {
-            var addressTask = _infoService.GetEnderecoAsync(patientId);
-            var complementTask = _infoService.GetComplementoAsync(patientId);
+            var addressTask = _infoService.GetAddressInfoAsync(patientId);
             var iconsTask = BuildHealthIconsAsync(patientId);
 
-            await Task.WhenAll(addressTask, complementTask, iconsTask);
+            await Task.WhenAll(addressTask, iconsTask);
 
             if (loadVersion != _loadVersion)
             {
@@ -89,8 +88,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                Endereco = addressTask.Result;
-                Complemento = complementTask.Result ?? string.Empty;
+                Endereco = addressTask.Result.Endereco;
+                Complemento = addressTask.Result.Complemento ?? string.Empty;
                 Icons = new ObservableCollection<HealthIcon>(iconsTask.Result);
             });
         }

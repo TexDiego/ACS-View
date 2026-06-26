@@ -11,7 +11,7 @@
 
     <ContentPage.Resources>
         <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="{StaticResource Primary}"/>
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"/>
             <Setter Property="TextColor" Value="{StaticResource White}"/>
             <Setter Property="FontAttributes" Value="Bold"/>
             <Setter Property="FontSize" Value="16"/>
@@ -24,7 +24,7 @@
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="CheckBox">
-            <Setter Property="Color" Value="{StaticResource Primary}"/>
+            <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
             <Setter Property="HorizontalOptions" Value="End"/>
         </Style>
 
@@ -44,7 +44,7 @@
                             <VisualState x:Name="Checked">
                                 <VisualState.Setters>
                                     <Setter Property="Stroke"
-                                        Value="#0084B1" />
+                                        Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
                                     <Setter TargetName="check"
                                         Property="Opacity"
                                         Value="1" />
@@ -53,7 +53,7 @@
                             <VisualState x:Name="Unchecked">
                                 <VisualState.Setters>
                                     <Setter Property="Stroke"
-                                        Value="#F3F2F1" />
+                                        Value="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" />
                                     <Setter TargetName="check"
                                         Property="Opacity"
                                         Value="0" />
@@ -69,14 +69,14 @@
                         HorizontalOptions="End"
                         VerticalOptions="Center">
 
-                        <Ellipse Stroke="#0084B1"
-                                Fill="White"
+                        <Ellipse Stroke="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+                                Fill="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
                                 WidthRequest="16"
                                 HeightRequest="16"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center" />
                         <Ellipse x:Name="check"
-                                Fill="#0084B1"
+                                Fill="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                                 WidthRequest="8"
                                 HeightRequest="8"
                                 HorizontalOptions="Center"
@@ -132,7 +132,7 @@
 
                 <Border Style="{StaticResource FieldBorder}">
 
-                    <Grid ColumnDefinitions="auto,*">
+                    <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="8">
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
@@ -147,13 +147,23 @@
                             Margin="0"
                             MaxLength="70"
                             Keyboard="Text"
-                            Text="{Binding MotherName, Mode=TwoWay}"/>
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MotherNameInput, Mode=TwoWay}"/>
+
+                        <ImageButton
+                            Grid.Column="2"
+                            Source="loupe.png"
+                            Style="{StaticResource SoftIconButton}"
+                            HeightRequest="40"
+                            WidthRequest="40"
+                            Padding="9"
+                            ToolTipProperties.Text="Selecionar cadastro da mãe"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectMotherCommand}"/>
                     </Grid>
                 </Border>
 
                 <Border Style="{StaticResource FieldBorder}">
 
-                    <Grid ColumnDefinitions="auto,*">
+                    <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="8">
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
@@ -168,7 +178,17 @@
                             Margin="0"
                             MaxLength="70"
                             Keyboard="Text"
-                            Text="{Binding FatherName, Mode=TwoWay}"/>
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FatherNameInput, Mode=TwoWay}"/>
+
+                        <ImageButton
+                            Grid.Column="2"
+                            Source="loupe.png"
+                            Style="{StaticResource SoftIconButton}"
+                            HeightRequest="40"
+                            WidthRequest="40"
+                            Padding="9"
+                            ToolTipProperties.Text="Selecionar cadastro do pai"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectFatherCommand}"/>
                     </Grid>
                 </Border>
 
@@ -314,7 +334,7 @@
                                 <CheckBox
                                     Grid.Column="1"
                                     IsChecked="{Binding Selected, Mode=TwoWay}"
-                                    Color="{StaticResource Primary}"
+                                    Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SwitchConditionCommand}"
                                     CommandParameter="{Binding .}"/>
 

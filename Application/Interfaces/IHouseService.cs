@@ -7,7 +7,7 @@ namespace ACS_View.Application.Interfaces
     {
         Task<int> GetTotalCountAsync();
         Task<List<House>> GetAllHousesAsync();
-        Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take);
+        Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take, string? filterKey = null);
         Task<House?> GetHouseByIdAsync(int id);
         Task<House?> GetHouseByPatientIdAsync(int id);
         Task SaveHouseAsync(House house);

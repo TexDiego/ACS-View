@@ -55,7 +55,7 @@
                     Grid.Column="1"
                     Text="Esqueci minha senha"
                     Style="{StaticResource GhostButton}"
-                    TextColor="{StaticResource Accent}"
+                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
                     Clicked="Button_Clicked"/>
             </Grid>
         </VerticalStackLayout>

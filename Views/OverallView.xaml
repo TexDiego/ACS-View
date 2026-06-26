@@ -15,19 +15,19 @@
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*" RowSpacing="14">
 
         <Border Grid.Row="0"
-                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}"
                 Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                 StrokeShape="RoundRectangle 8"
                 Padding="4">
             <Grid ColumnDefinitions="*,*">
                 <Border Grid.Column="0"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 7"
                         Padding="10,9">
                     <Border.Triggers>
                         <DataTrigger TargetType="Border" Binding="{Binding GeneralTabSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}"/>
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkSurface}}"/>
                         </DataTrigger>
                     </Border.Triggers>
 
@@ -43,20 +43,20 @@
                         FontAttributes="Bold">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label" Binding="{Binding GeneralTabSelected}" Value="True">
-                                <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDark}}"/>
                             </DataTrigger>
                         </Label.Triggers>
                     </Label>
                 </Border>
 
                 <Border Grid.Column="1"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 7"
                         Padding="10,9">
                     <Border.Triggers>
                         <DataTrigger TargetType="Border" Binding="{Binding HealthTabSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}"/>
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkSurface}}"/>
                         </DataTrigger>
                     </Border.Triggers>
 
@@ -72,7 +72,7 @@
                         FontAttributes="Bold">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label" Binding="{Binding HealthTabSelected}" Value="True">
-                                <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDark}}"/>
                             </DataTrigger>
                         </Label.Triggers>
                     </Label>

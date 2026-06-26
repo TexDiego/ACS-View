@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             x:DataType="vm:DataCleanupViewModel"
+             x:Class="ACS_View.Views.DataCleanupPage"
+             Title="Apagar dados">
+
+    <Grid RowDefinitions="*,auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Dados deste login" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="As opções abaixo apagam apenas dados associados ao usuário logado. Essa ação não pode ser desfeita."
+                               Style="{StaticResource BodyMuted}"
+                               LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Tudo" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Remove pacientes, residências, visitas, vacinas, condições, CIDs e notas deste login."
+                               Style="{StaticResource BodyMuted}"
+                               LineBreakMode="WordWrap"/>
+                        <Button Text="Apagar todos os registros"
+                                Style="{StaticResource DangerButton}"
+                                Command="{Binding DeleteAllCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Pacientes" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Remove pacientes e dados vinculados, como vacinas, condições, CIDs e visitas. Residências e notas são mantidas."
+                               Style="{StaticResource BodyMuted}"
+                               LineBreakMode="WordWrap"/>
+                        <Button Text="Apagar apenas pacientes"
+                                Style="{StaticResource DangerButton}"
+                                Command="{Binding DeletePatientsCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Residências" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Remove residências, famílias e visitas. Pacientes são mantidos, mas ficam sem residência e sem família."
+                               Style="{StaticResource BodyMuted}"
+                               LineBreakMode="WordWrap"/>
+                        <Button Text="Apagar apenas residências"
+                                Style="{StaticResource DangerButton}"
+                                Command="{Binding DeleteHousesCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Notas" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Remove somente as notas deste login."
+                               Style="{StaticResource BodyMuted}"
+                               LineBreakMode="WordWrap"/>
+                        <Button Text="Apagar apenas notas"
+                                Style="{StaticResource DangerButton}"
+                                Command="{Binding DeleteNotesCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <ActivityIndicator IsVisible="{Binding IsRunning}"
+                                   IsRunning="{Binding IsRunning}"
+                                   HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1"
+                Text="Voltar"
+                Style="{StaticResource GhostButton}"
+                Margin="{StaticResource PagePadding}"
+                Command="{Binding GoBackCommand}"/>
+    </Grid>
+</ContentPage>

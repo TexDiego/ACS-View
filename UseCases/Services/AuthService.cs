@@ -1,25 +1,41 @@
 using ACS_View.Application.Interfaces;
 using ACS_View.Application.Security;
 using ACS_View.Domain.Entities;
+using ACS_View.Domain.ValueObjects;
 using System.Security.Cryptography;
 
 namespace ACS_View.UseCases.Services;
 
-internal sealed class AuthService(IDatabaseService databaseService) : IAuthService
+internal sealed class AuthService(IDatabaseService databaseService, ICurrentUserContext currentUserContext) : IAuthService
 {
     private const string AuthTokenKey = "AuthToken";
+    private const string AuthUserIdKey = "AuthUserId";
     private const int HashVersion = 1;
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        if (!string.IsNullOrWhiteSpace(await SecureStorage.Default.GetAsync(AuthTokenKey)))
+        var secureToken = await SecureStorage.Default.GetAsync(AuthTokenKey);
+        if (!string.IsNullOrWhiteSpace(secureToken))
         {
-            return true;
+            if (await RestoreCurrentUserAsync())
+            {
+                return true;
+            }
+
+            SecureStorage.Default.Remove(AuthTokenKey);
+            SecureStorage.Default.Remove(AuthUserIdKey);
         }
 
         var legacyToken = Preferences.Get(AuthTokenKey, string.Empty);
         if (string.IsNullOrWhiteSpace(legacyToken))
         {
+            return false;
+        }
+
+        if (!await RestoreCurrentUserAsync())
+        {
+            SecureStorage.Default.Remove(AuthTokenKey);
+            Preferences.Remove(AuthTokenKey);
             return false;
         }
 
@@ -38,13 +54,30 @@ internal sealed class AuthService(IDatabaseService databaseService) : IAuthServi
         }
 
         await SecureStorage.Default.SetAsync(AuthTokenKey, Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
+        await SecureStorage.Default.SetAsync(AuthUserIdKey, user.Id.ToString());
+        currentUserContext.SetCurrentUser(user.Id);
+        await databaseService.ClaimLegacyDataForUserAsync(user.Id);
+        DataChangeTracker.MarkSessionChanged();
+        DataChangeTracker.MarkAllChanged();
     }
 
     public Task LogoutAsync()
     {
         SecureStorage.Default.Remove(AuthTokenKey);
+        SecureStorage.Default.Remove(AuthUserIdKey);
         Preferences.Remove(AuthTokenKey);
+        Preferences.Remove(AuthUserIdKey);
+        currentUserContext.Clear();
+        DataChangeTracker.MarkSessionChanged();
+        DataChangeTracker.MarkAllChanged();
         return Task.CompletedTask;
+    }
+
+    public Task<User?> GetCurrentUserAsync()
+    {
+        return currentUserContext.HasCurrentUser
+            ? databaseService.GetUserByIdAsync(currentUserContext.CurrentUserId)
+            : Task.FromResult<User?>(null);
     }
 
     public async Task RegisterAsync(string username, string password, string securityQuestion, string securityAnswer)
@@ -111,6 +144,34 @@ internal sealed class AuthService(IDatabaseService databaseService) : IAuthServi
         username = NormalizeRequired(username, "Usuário");
         return await databaseService.GetUserByUsernameAsync(username)
             ?? throw new InvalidOperationException("Usuário ou senha inválidos.");
+    }
+
+    private async Task<bool> RestoreCurrentUserAsync()
+    {
+        var storedUserId = await SecureStorage.Default.GetAsync(AuthUserIdKey);
+        if (string.IsNullOrWhiteSpace(storedUserId))
+        {
+            storedUserId = Preferences.Get(AuthUserIdKey, string.Empty);
+        }
+
+        if (!int.TryParse(storedUserId, out var userId) || userId <= 0)
+        {
+            currentUserContext.Clear();
+            return false;
+        }
+
+        var user = await databaseService.GetUserByIdAsync(userId);
+        if (user is null)
+        {
+            currentUserContext.Clear();
+            return false;
+        }
+
+        currentUserContext.SetCurrentUser(user.Id);
+        await databaseService.ClaimLegacyDataForUserAsync(user.Id);
+        DataChangeTracker.MarkSessionChanged();
+        DataChangeTracker.MarkAllChanged();
+        return true;
     }
 
     private async Task<bool> TryMigrateLegacyPasswordAsync(User user, string password)

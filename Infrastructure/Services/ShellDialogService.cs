@@ -18,4 +18,17 @@ internal sealed class ShellDialogService : IDialogService
     {
         return Shell.Current.DisplayActionSheetAsync(title, cancel, destruction, buttons);
     }
+
+    public Task<string?> ShowPromptAsync(
+        string title,
+        string message,
+        string accept = "OK",
+        string cancel = "Cancelar",
+        string? placeholder = null,
+        int maxLength = -1,
+        Keyboard? keyboard = null,
+        string initialValue = "")
+    {
+        return Shell.Current.DisplayPromptAsync(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue);
+    }
 }

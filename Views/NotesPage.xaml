@@ -38,9 +38,9 @@
                             <SwipeView>
                                 <SwipeView.LeftItems>
                                     <SwipeItem
+                                        Style="{StaticResource DangerSwipeItem}"
                                         Text="Excluir"
                                         IconImageSource="bin.png"
-                                        BackgroundColor="IndianRed"
                                         Command="{Binding Source={x:Reference NotesCollectionView}, Path=BindingContext.DeleteCommand}"
                                         CommandParameter="{Binding Id}"/>
                                 </SwipeView.LeftItems>
@@ -49,7 +49,7 @@
                                     <SwipeItem
                                         Text="Notificação"
                                         IconImageSource="notification.png"
-                                        BackgroundColor="{StaticResource PrimaryLight}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
                                         Command="{Binding Source={x:Reference NotesCollectionView}, Path=BindingContext.AddNotification}"
                                         CommandParameter="{Binding Id}"/>
                                 </SwipeView.RightItems>
@@ -58,12 +58,12 @@
                                     <Label Text="{Binding Content}" Style="{StaticResource CardTitle}" FontSize="16"/>
 
                                     <HorizontalStackLayout Spacing="4">
-                                        <Label Text="Criado em" TextColor="{StaticResource Accent}" FontSize="13" FontAttributes="Bold"/>
+                                        <Label Text="Criado em" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="13" FontAttributes="Bold"/>
                                         <Label Text="{Binding CreationDate, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}"/>
                                     </HorizontalStackLayout>
 
                                     <HorizontalStackLayout Spacing="4" IsVisible="{Binding NotifyOn, Converter={converter:NullValueToBoolConverter}}">
-                                        <Label Text="Notificar em" TextColor="{StaticResource Accent}" FontSize="13" FontAttributes="Bold"/>
+                                        <Label Text="Notificar em" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="13" FontAttributes="Bold"/>
                                         <Label Text="{Binding NotifyOn, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}"/>
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>

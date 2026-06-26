@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    x:Class="ACS_View.Views.ParentPatientPickerPopup"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    x:TypeArguments="dto:PatientListItemDto"
+    x:DataType="vm:ParentPatientPickerViewModel"
+    WidthRequest="{Binding Width}"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
+    Padding="0">
+
+    <Border
+        Style="{StaticResource CardBorder}"
+        Padding="14"
+        Margin="0"
+        StrokeShape="RoundRectangle 8">
+
+        <Grid RowDefinitions="auto,auto,*,auto" RowSpacing="10">
+            <Label
+                Grid.Row="0"
+                Text="{Binding Title}"
+                Style="{StaticResource SectionTitle}"/>
+
+            <Border Grid.Row="1" Style="{StaticResource SearchPanel}" Margin="0">
+                <SearchBar
+                    Text="{Binding SearchText, Mode=TwoWay}"
+                    Placeholder="Buscar por nome, mãe, pai ou CNS"/>
+            </Border>
+
+            <Grid Grid.Row="2" MinimumHeightRequest="260">
+                <CollectionView
+                    ItemsSource="{Binding Patients}"
+                    SelectionMode="Single"
+                    SelectionChanged="OnPatientSelected">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout
+                            Padding="12"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center">
+                            <Label
+                                Text="{Binding EmptyMessage}"
+                                Style="{StaticResource BodyMuted}"
+                                HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:PatientListItemDto">
+                            <Border
+                                Style="{StaticResource FieldBorder}"
+                                Margin="0,0,0,8"
+                                Padding="12">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label
+                                        Text="{Binding Name}"
+                                        FontAttributes="Bold"
+                                        FontSize="15"
+                                        LineBreakMode="TailTruncation"/>
+                                    <Label
+                                        Text="{Binding SusNumber, StringFormat='CNS: {0}'}"
+                                        Style="{StaticResource BodyMuted}"
+                                        LineBreakMode="TailTruncation"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <Button
+                Grid.Row="3"
+                Text="Cancelar"
+                Style="{StaticResource GhostButton}"
+                Clicked="OnCancelClicked"/>
+        </Grid>
+    </Border>
+</tk:Popup>

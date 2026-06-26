@@ -64,6 +64,19 @@ namespace ACS_View.ViewModels
             return dialogService.ShowActionSheetAsync(title, cancel, destruction, buttons);
         }
 
+        protected static Task<string?> DisplayPromptAsync(
+            string title,
+            string message,
+            string accept = "OK",
+            string cancel = "Cancelar",
+            string? placeholder = null,
+            int maxLength = -1,
+            Keyboard? keyboard = null,
+            string initialValue = "")
+        {
+            return dialogService.ShowPromptAsync(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue);
+        }
+
         protected static Task NavigateBackAsync()
         {
             return navigationService.GoBackAsync();
@@ -167,8 +180,19 @@ namespace ACS_View.ViewModels
             {
                 throw new InvalidOperationException("IDialogService não foi configurado.");
             }
+            public Task<string?> ShowPromptAsync(
+                string title,
+                string message,
+                string accept = "OK",
+                string cancel = "Cancelar",
+                string? placeholder = null,
+                int maxLength = -1,
+                Keyboard? keyboard = null,
+                string initialValue = "")
+            {
+                throw new InvalidOperationException("IDialogService nao foi configurado.");
+            }
         }
-
         private sealed class UnconfiguredNavigationService : INavigationService
         {
             public Task GoBackAsync()

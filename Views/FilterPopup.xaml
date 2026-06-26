@@ -10,7 +10,7 @@
     x:DataType="vm:FilterPopupViewModel"
     CanBeDismissedByTappingOutsideOfPopup="True">
 
-    <VerticalStackLayout Spacing="16">
+    <VerticalStackLayout Padding="10" Spacing="16" Style="{StaticResource PageBackground}">
         <Label
             Text="Filtros"
             Style="{StaticResource SectionTitle}"

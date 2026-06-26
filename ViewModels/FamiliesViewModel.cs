@@ -171,6 +171,7 @@ namespace ACS_View.ViewModels
                 {
                     person.HouseId = -1;
                     person.FamilyId = -1;
+                    person.FamilyResponsibleSus = null;
 
                     await _patientService.UpdatePatient(person);
                 }

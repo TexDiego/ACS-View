@@ -19,7 +19,7 @@
                 Text="{Binding VaccineName}"/>
 
         <BoxView
-                Color="Grey"
+                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                 HeightRequest="2"/>
 
         <Label
@@ -38,7 +38,7 @@
                 Text="{Binding DiseaseDescription}"/>
 
         <BoxView
-                Color="Grey"
+                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                 HeightRequest="2"/>
 
         <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
@@ -46,7 +46,6 @@
             <CheckBox
                     x:Name="VaccineChecked"
                     VerticalOptions="Center"
-                    Color="Grey"
                     CheckedChanged="VaccineChecked_CheckedChanged"/>
 
             <Label

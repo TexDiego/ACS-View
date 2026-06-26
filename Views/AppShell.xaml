@@ -5,17 +5,22 @@
        xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
        x:Class="ACS_View.Views.AppShell"
        Shell.TitleColor="{StaticResource White}"
-       Shell.BackgroundColor="{StaticResource Primary}"
-       Shell.ForegroundColor="{StaticResource White}"
-       Shell.TabBarTitleColor="{StaticResource Primary}"
-       Shell.TabBarForegroundColor="{StaticResource Primary}"
-       Shell.TabBarUnselectedColor="{StaticResource TextMuted}">
+       Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
+       Shell.ForegroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+       Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
+       Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
+       Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
+       Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource DarkSurface}, Dark={StaticResource DarkTextMuted}}">
 
     <Shell.Behaviors>
-        <tk:StatusBarBehavior StatusBarColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"/>
+        <tk:StatusBarBehavior
+            x:Name="StatusBarThemeBehavior"
+            StatusBarColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"/>
     </Shell.Behaviors>
 
-    <TabBar>
+    <ShellContent Route="login" x:Name="LoginContent"/>
+
+    <TabBar x:Name="MainTabBar">
 
         <Tab Title="Pessoas" Icon="group.png">
             <ShellContent Route="registers" x:Name="RegistersPage"/>

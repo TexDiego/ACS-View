@@ -6,16 +6,16 @@
              x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.Views.HealthMetrics">
 
-    <CollectionView ItemsSource="{Binding HealthDashboard}" VerticalScrollBarVisibility="Never">
+    <CollectionView ItemsSource="{Binding HealthDashboard}" VerticalScrollBarVisibility="Never" CanReorderItems="True">
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="model:Dashboard">
                 <Border Style="{StaticResource CardBorder}" Padding="0">
                     <SwipeView Margin="0">
                         <SwipeView.LeftItems>
                             <SwipeItem
+                                Style="{StaticResource DangerSwipeItem}"
                                 IconImageSource="bin.png"
                                 Text="Remover"
-                                BackgroundColor="IndianRed"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
                                 CommandParameter="{Binding .}"/>
                         </SwipeView.LeftItems>
@@ -30,7 +30,7 @@
 
                             <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
                                 <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                <Label Text="Condição monitorada" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding Summary}" Style="{StaticResource BodyMuted}"/>
                             </VerticalStackLayout>
 
                             <Label Grid.Column="1" Text="{Binding Total}" Style="{StaticResource MetricNumber}" VerticalOptions="Center" Margin="0,0,10,0"/>

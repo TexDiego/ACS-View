@@ -6,6 +6,19 @@ public static class PatientFilterSqlBuilder
 {
     public static void AddFilterClause(string? filterKey, List<string> whereParts, List<object> parameters)
     {
+        var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
+        var modifiers = DashboardFilterKeys.GetModifiers(filterKey);
+
+        if (!string.IsNullOrWhiteSpace(baseFilterKey) && baseFilterKey != DashboardFilterKeys.All)
+        {
+            AddBaseFilterClause(baseFilterKey, whereParts, parameters);
+        }
+
+        AddModifierClauses(modifiers, whereParts, parameters);
+    }
+
+    private static void AddBaseFilterClause(string filterKey, List<string> whereParts, List<object> parameters)
+    {
         if (string.IsNullOrWhiteSpace(filterKey) || filterKey == DashboardFilterKeys.All)
         {
             return;
@@ -41,6 +54,14 @@ public static class PatientFilterSqlBuilder
             case DashboardFilterKeys.ChildrenUnder6:
                 whereParts.Add("p.BirthDate > ?");
                 parameters.Add(today.AddYears(-6));
+                return;
+            case DashboardFilterKeys.Women25To64:
+                whereParts.Add("p.Sexo = ? COLLATE NOCASE");
+                parameters.Add("Feminino");
+                whereParts.Add("p.BirthDate <= ?");
+                parameters.Add(today.AddYears(-25));
+                whereParts.Add("p.BirthDate > ?");
+                parameters.Add(today.AddYears(-65));
                 return;
         }
 
@@ -85,6 +106,31 @@ public static class PatientFilterSqlBuilder
                 )
                 """);
             parameters.Add(cid);
+        }
+    }
+
+    private static void AddModifierClauses(
+        DashboardFilterModifiers modifiers,
+        List<string> whereParts,
+        List<object> parameters)
+    {
+        if (!string.IsNullOrWhiteSpace(modifiers.Sex))
+        {
+            whereParts.Add("p.Sexo = ? COLLATE NOCASE");
+            parameters.Add(modifiers.Sex.Trim());
+        }
+
+        var today = DateTime.Today;
+        if (modifiers.MinimumAge.HasValue)
+        {
+            whereParts.Add("p.BirthDate <= ?");
+            parameters.Add(today.AddYears(-modifiers.MinimumAge.Value));
+        }
+
+        if (modifiers.MaximumAge.HasValue)
+        {
+            whereParts.Add("p.BirthDate > ?");
+            parameters.Add(today.AddYears(-(modifiers.MaximumAge.Value + 1)));
         }
     }
 }

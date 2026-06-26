@@ -15,6 +15,7 @@ namespace ACS_View.ViewModels
 
         [ObservableProperty] private ObservableCollection<Pessoa> pessoas = [];
         [ObservableProperty] private ObservableCollection<Pessoa> pessoasPesquisadas = [];
+        [ObservableProperty] private Pessoa? responsiblePerson;
         [ObservableProperty] private bool hasSearchResults;
 
         public ICommand SalvarCommand => new Command(async () => await SalvarFamilia());
@@ -62,12 +63,19 @@ namespace ACS_View.ViewModels
                 return;
             }
 
+            ResponsiblePerson ??= Pessoas.FirstOrDefault();
+            if (ResponsiblePerson == null || !Pessoas.Any(p => p.Id == ResponsiblePerson.Id))
+            {
+                await DisplayAlertAsync("Erro", "Selecione um responsavel familiar.", "Voltar");
+                return;
+            }
+
             try
             {
                 int familyId = IsEdit ? IdPessoa : await _familyService.GetMaxIdAsync(IdHouse) + 1;
                 var susList = Pessoas.Select(p => p.Id).ToList();
 
-                await _familyManager.AddPeopleToFamily(susList, IdHouse, familyId);
+                await _familyManager.AddPeopleToFamily(susList, IdHouse, familyId, ResponsiblePerson.Id);
 
                 if (IsEdit)
                     await DisplayAlertAsync("Sucesso!", "Família atualizada.", "Voltar");
@@ -98,6 +106,11 @@ namespace ACS_View.ViewModels
             if (!confirm) return;
 
             Pessoas.Remove(pessoa);
+            if (ResponsiblePerson?.Id == pessoa.Id)
+            {
+                ResponsiblePerson = Pessoas.FirstOrDefault();
+            }
+
             await _familyManager.RemovePersonFromFamily(id);
         }
 
@@ -129,7 +142,7 @@ namespace ACS_View.ViewModels
                 .Where(n => !Pessoas.Any(p => p.Id == n.Id))
                 .OrderBy(n => n.Name)
                 .Take(20)
-                .Select(p => new Pessoa { Nome = p.Name, Id = p.Id })
+                .Select(p => new Pessoa { Nome = p.Name, Id = p.Id, SusNumber = p.SusNumber })
                 .ToList();
 
             RunOnMainThread(() =>
@@ -145,7 +158,9 @@ namespace ACS_View.ViewModels
 
             if (pessoa != null && !Pessoas.Any(p => p.Id == id))
             {
-                Pessoas.Add(new Pessoa { Nome = pessoa.Name, Id = pessoa.Id });
+                var pessoaSelecionada = new Pessoa { Nome = pessoa.Name, Id = pessoa.Id, SusNumber = pessoa.SusNumber };
+                Pessoas.Add(pessoaSelecionada);
+                ResponsiblePerson ??= pessoaSelecionada;
             }
 
             var searchedPerson = PessoasPesquisadas.FirstOrDefault(p => p.Id == id);
@@ -180,8 +195,16 @@ namespace ACS_View.ViewModels
 
                 foreach (var r in registros)
                 {
-                    Pessoas.Add(new Pessoa { Nome = r.Name, Id = r.Id });
+                    Pessoas.Add(new Pessoa { Nome = r.Name, Id = r.Id, SusNumber = r.SusNumber });
                 }
+
+                var responsibleSus = registros
+                    .Select(r => r.FamilyResponsibleSus)
+                    .FirstOrDefault(sus => !string.IsNullOrWhiteSpace(sus));
+
+                ResponsiblePerson = Pessoas.FirstOrDefault(p =>
+                    string.Equals(p.SusNumber, responsibleSus, StringComparison.OrdinalIgnoreCase)) ??
+                    Pessoas.FirstOrDefault();
 
                 _loadedVersion = DataChangeTracker.PatientsVersion;
                 _hasLoaded = true;

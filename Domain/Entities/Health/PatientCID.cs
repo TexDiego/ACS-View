@@ -6,6 +6,7 @@ namespace ACS_View.Domain.Entities.Health
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
+        public int UserId { get; set; }
         public int PatientId { get; set; }
         public int CidId { get; set; }
     }

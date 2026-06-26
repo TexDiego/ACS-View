@@ -6,6 +6,7 @@ namespace ACS_View.Domain.Entities
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
+        public int UserId { get; set; }
         public int HouseId { get; set; }
         public int FamilyId { get; set; }
         public DateTime Date { get; set; }

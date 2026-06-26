@@ -3,6 +3,8 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace ACS_View.UseCases.Services
 {
@@ -39,9 +41,9 @@ namespace ACS_View.UseCases.Services
             }
         }
 
-        public Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take)
+        public Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take, string? filterKey = null)
         {
-            return repository.GetListAsync(search, skip, take);
+            return repository.GetListAsync(search, skip, take, filterKey);
         }
 
         public Task<House?> GetHouseByIdAsync(int id)
@@ -88,13 +90,21 @@ namespace ACS_View.UseCases.Services
 
         private static void NormalizeHouseFields(House house)
         {
-            house.Rua = PatientNameRules.NormalizeRequired(house.Rua, "Logradouro");
-            house.Bairro = PatientNameRules.NormalizeRequired(house.Bairro, "Bairro");
-            house.Cidade = PatientNameRules.NormalizeRequired(house.Cidade, "Cidade");
+            house.TipoLogradouro = NormalizeAddressOptional(house.TipoLogradouro);
+            house.Rua = NormalizeAddressRequired(house.Rua, "Logradouro");
+            house.Bairro = NormalizeAddressRequired(house.Bairro, "Bairro");
+            house.Cidade = NormalizeAddressRequired(house.Cidade, "Cidade");
             house.Estado = NormalizeState(house.Estado);
-            house.Pais = PatientNameRules.NormalizeRequired(house.Pais, "País");
-            house.SearchRua = SearchTextNormalizer.Normalize(house.Rua);
+            house.Pais = NormalizeAddressRequired(house.Pais, "Pais");
+            house.SearchRua = SearchTextNormalizer.Normalize(BuildStreetDisplay(house.TipoLogradouro, house.Rua));
             house.SearchComplemento = SearchTextNormalizer.Normalize(house.Complemento);
+        }
+
+        private static string BuildStreetDisplay(string? streetType, string? street)
+        {
+            return string.Join(" ", new[] { streetType, street }
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!.Trim()));
         }
 
         private static string NormalizeState(string state)
@@ -107,7 +117,50 @@ namespace ACS_View.UseCases.Services
             var trimmed = state.Trim();
             return trimmed.Length == 2
                 ? trimmed.ToUpperInvariant()
-                : PatientNameRules.NormalizeRequired(trimmed, "Estado");
+                : NormalizeAddressRequired(trimmed, "Estado");
+        }
+
+        private static string NormalizeAddressRequired(string? value, string fieldName)
+        {
+            var normalized = NormalizeAddressOptional(value);
+            return string.IsNullOrWhiteSpace(normalized)
+                ? throw new ArgumentException($"{fieldName} é obrigatório.")
+                : normalized;
+        }
+
+        private static string NormalizeAddressOptional(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var compact = Regex.Replace(value.Trim(), @"\s+", " ");
+            return CapitalizeAddress(compact);
+        }
+
+        private static string CapitalizeAddress(string value)
+        {
+            var culture = CultureInfo.GetCultureInfo("pt-BR");
+            var result = new char[value.Length];
+            var capitalizeNext = true;
+
+            for (var index = 0; index < value.Length; index++)
+            {
+                var character = value[index] == '\u2019' ? '\'' : value[index];
+                if (char.IsLetter(character))
+                {
+                    var lower = char.ToLower(character, culture);
+                    result[index] = capitalizeNext ? char.ToUpper(lower, culture) : lower;
+                    capitalizeNext = false;
+                    continue;
+                }
+
+                result[index] = character;
+                capitalizeNext = character is ' ' or '-' or '\'' or '/' or '.';
+            }
+
+            return new string(result);
         }
     }
 }

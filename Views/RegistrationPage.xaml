@@ -77,8 +77,8 @@
             VerticalOptions="End"
             Margin="0,10"
             CornerRadius="10"
-            BackgroundColor="AliceBlue"
-            BorderColor="LightGray"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
+            BorderColor="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
             TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
             FontSize="18"
             FontAttributes="Bold"/>

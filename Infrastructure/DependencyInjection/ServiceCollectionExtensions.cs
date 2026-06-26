@@ -1,5 +1,4 @@
 using ACS_View.Application.Interfaces;
-using ACS_View.Application.Interfaces;
 using ACS_View.Infrastructure.Data.SQLite;
 using ACS_View.Infrastructure.Services;
 using ACS_View.UseCases;
@@ -28,15 +27,18 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddSingleton<IDatabaseService, DatabaseService>();
+        services.AddSingleton<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IHouseService, HouseService>();
         services.AddSingleton<IVisitsService, VisitsService>();
         services.AddSingleton<IDashboardMetricsService, DashboardMetricsService>();
+        services.AddSingleton<IDashboardMetricPreferencesService, DashboardMetricPreferencesService>();
         services.AddSingleton<ISQLiteConditionsRepository, SQLiteConditionsRepository>();
         services.AddSingleton<ICidRepository, SQLiteCidRepository>();
         services.AddSingleton<ICidSeeder, CidSeeder>();
         services.AddSingleton<IPatientConditionSeeder, PatientConditionsSeeder>();
         services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IUserDataCleanupService, UserDataCleanupService>();
         services.AddSingleton<IDialogService, ShellDialogService>();
         services.AddSingleton<INavigationService, ShellNavigationService>();
         services.AddSingleton<IMainThreadDispatcher, MauiMainThreadDispatcher>();
@@ -75,6 +77,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PersonsInfoViewModel>();
         services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
         services.AddTransient<ImportDataViewModel>();
+        services.AddTransient<DataCleanupViewModel>();
         services.AddTransient<ForgotPasswordViewModel>();
 
         services.AddSingleton<RegistersViewModel>();
@@ -96,6 +99,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Profile>();
         services.AddTransient<VaccinesPage>();
         services.AddTransient<ImportDataPage>();
+        services.AddTransient<DataCleanupPage>();
 
         services.AddTransient<HousesPage>();
         services.AddTransient<NotesPage>();

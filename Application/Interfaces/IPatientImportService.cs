@@ -1,9 +1,13 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 
 namespace ACS_View.Application.Interfaces
 {
     public interface IPatientImportService
     {
-        Task<PatientImportResultDto> ImportAsync(Stream fileStream, PatientImportColumnMapDto columnMap);
+        Task<PatientImportResultDto> ImportAsync(
+            Stream fileStream,
+            PatientImportColumnMapDto columnMap,
+            IProgress<ImportProgressDto>? progress = null,
+            CancellationToken cancellationToken = default);
     }
 }

@@ -1,7 +1,10 @@
 using ACS_View.Application.Interfaces;
+using ACS_View.Application.DTOs;
+using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
@@ -11,6 +14,7 @@ namespace ACS_View.ViewModels;
 public partial class OverallViewModel : BaseViewModel
 {
     private readonly IDashboardMetricsService dash;
+    private readonly IDashboardMetricPreferencesService metricPreferences;
 
     private readonly GeneralMetrics generalMetrics = new();
     private readonly HealthMetrics healthMetrics = new();
@@ -20,6 +24,9 @@ public partial class OverallViewModel : BaseViewModel
     private readonly HashSet<string> removedGeneralRootFilterKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> removedHealthRootFilterKeys = new(StringComparer.OrdinalIgnoreCase);
     private int _loadedMetricsVersion = -1;
+    private int _loadedSessionVersion = -1;
+    private bool hasLoadedMetricPreferences;
+    private bool suppressMetricPreferencePersistence;
 
     [ObservableProperty] private ContentView currentView;
 
@@ -31,21 +38,32 @@ public partial class OverallViewModel : BaseViewModel
     public ICommand LoadSummaryCommand => new Command(async () => await LoadSummaryAsync());
     public ICommand SwitchView => new Command<string>(SwitchMetricsView);
     public ICommand AddCombinedMetricCommand => new Command(async () => await AddCombinedMetricAsync());
-    public ICommand RemoveMetricCommand => new Command<Dashboard>(RemoveMetric);
+    public ICommand RemoveMetricCommand => new Command<Dashboard>(async metric => await RemoveMetricAsync(metric));
 
-    public OverallViewModel(IDashboardMetricsService _dash)
+    public OverallViewModel(
+        IDashboardMetricsService _dash,
+        IDashboardMetricPreferencesService metricPreferencesService)
     {
         dash = _dash;
+        metricPreferences = metricPreferencesService;
         CurrentView = generalMetrics;
         generalMetrics.BindingContext = this;
         healthMetrics.BindingContext = this;
+        MetricsDashboard.CollectionChanged += OnDashboardCollectionChanged;
+        HealthDashboard.CollectionChanged += OnDashboardCollectionChanged;
     }
 
     private async Task LoadSummaryAsync()
     {
+        if (_loadedSessionVersion != DataChangeTracker.SessionVersion)
+        {
+            ResetMetricPreferenceState();
+        }
+
         if (MetricsDashboard.Count > 0 &&
             HealthDashboard.Count > 0 &&
-            _loadedMetricsVersion == DataChangeTracker.MetricsVersion)
+            _loadedMetricsVersion == DataChangeTracker.MetricsVersion &&
+            _loadedSessionVersion == DataChangeTracker.SessionVersion)
         {
             return;
         }
@@ -54,8 +72,12 @@ public partial class OverallViewModel : BaseViewModel
         {
             await ExecuteWithLoadingAsync(async () =>
             {
+                suppressMetricPreferencePersistence = true;
                 HealthDashboard.Clear();
                 MetricsDashboard.Clear();
+
+                var preferences = await metricPreferences.GetAsync();
+                ApplyMetricPreferencesToState(preferences);
 
                 var metrics = await dash.GetMetricsAsync();
 
@@ -73,15 +95,15 @@ public partial class OverallViewModel : BaseViewModel
                 });
                 MetricsDashboard.Add(new Dashboard()
                 {
-                    Name = "Pacientes Sem Residência",
-                    FilterKey = DashboardFilterKeys.NoHouse,
-                    Total = metrics.TotalSemResidencia
+                    Name = "Residências vazias",
+                    FilterKey = DashboardFilterKeys.EmptyResidences,
+                    Total = metrics.TotalResidenciasVazias
                 });
                 MetricsDashboard.Add(new Dashboard()
                 {
-                    Name = "Pacientes Sem Família",
-                    FilterKey = DashboardFilterKeys.NoFamily,
-                    Total = metrics.TotalSemFamilia
+                    Name = "Pacientes Sem Residência",
+                    FilterKey = DashboardFilterKeys.NoHouse,
+                    Total = metrics.TotalSemResidencia
                 });
                 MetricsDashboard.Add(new Dashboard()
                 {
@@ -101,6 +123,13 @@ public partial class OverallViewModel : BaseViewModel
                     FilterKey = DashboardFilterKeys.ChildrenUnder6,
                     Total = metrics.TotalCriancasMenoresDe6
                 });
+                MetricsDashboard.Add(new Dashboard()
+                {
+                    Name = "Mulheres 25 a 64",
+                    FilterKey = DashboardFilterKeys.Women25To64,
+                    Summary = BuildModifierSummary(new MetricModifierSelection(nameof(Sexo.Feminino), 25, 64), "Resumo geral"),
+                    Total = metrics.TotalMulheres25a64
+                });
 
                 foreach (var condition in await dash.GetConditionsAsync())
                 {
@@ -108,6 +137,7 @@ public partial class OverallViewModel : BaseViewModel
                     {
                         Name = condition.Description,
                         FilterKey = $"{DashboardFilterKeys.ConditionPrefix}{condition.Description}",
+                        Summary = "Condição monitorada",
                         Total = condition.Quantity
                     });
                 }
@@ -119,6 +149,7 @@ public partial class OverallViewModel : BaseViewModel
                         Name = $"{CidMetrics.Cid} - {CidMetrics.Description}",
                         Cid = CidMetrics.Cid,
                         FilterKey = $"{DashboardFilterKeys.CidPrefix}{CidMetrics.Cid}",
+                        Summary = "Condição monitorada",
                         Total = CidMetrics.Quantity
                     });
                 }
@@ -126,11 +157,17 @@ public partial class OverallViewModel : BaseViewModel
                 ApplyRemovedRootMetrics(MetricsDashboard, removedGeneralRootFilterKeys, removedGeneralRootMetrics);
                 ApplyRemovedRootMetrics(HealthDashboard, removedHealthRootFilterKeys, removedHealthRootMetrics);
                 await RestoreCombinedMetricsAsync();
+                ApplyDashboardOrder(MetricsDashboard, preferences.GeneralOrder);
+                ApplyDashboardOrder(HealthDashboard, preferences.HealthOrder);
                 _loadedMetricsVersion = DataChangeTracker.MetricsVersion;
+                _loadedSessionVersion = DataChangeTracker.SessionVersion;
+                hasLoadedMetricPreferences = true;
+                suppressMetricPreferencePersistence = false;
             });
         }
         catch (Exception ex)
         {
+            suppressMetricPreferencePersistence = false;
             await DisplayAlertAsync("Erro", "Não foi possível carregar os dados", "Voltar");
             Debug.WriteLine(ex.StackTrace);
         }
@@ -138,13 +175,22 @@ public partial class OverallViewModel : BaseViewModel
 
     private async Task GoToPage(string condition)
     {
-        if (condition == DashboardFilterKeys.Residences)
+        if (condition == DashboardFilterKeys.Residences ||
+            condition == DashboardFilterKeys.EmptyResidences)
         {
-            await NavigateToAsync("//houses");
+            await NavigateToAsync("//houses", new Dictionary<string, object>
+            {
+                { "filterKey", condition },
+                { "metricNavigationId", DateTime.UtcNow.Ticks.ToString() }
+            });
             return;
         }
 
-        await NavigateToAsync("//registers", new Dictionary<string, object> { { "condition", condition } });
+        await NavigateToAsync("//registers", new Dictionary<string, object>
+        {
+            { "condition", condition },
+            { "metricNavigationId", DateTime.UtcNow.Ticks.ToString() }
+        });
     }
 
     private void SwitchMetricsView(string page)
@@ -223,7 +269,18 @@ public partial class OverallViewModel : BaseViewModel
             return;
         }
 
-        var combinationKey = DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey);
+        var modifiers = await PickMetricModifiersAsync();
+        if (modifiers is null)
+        {
+            return;
+        }
+
+        var combinationKey = DashboardFilterKeys.CreateModified(
+            DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey),
+            modifiers.Sex,
+            modifiers.MinimumAge,
+            modifiers.MaximumAge);
+
         if (targetDashboard.Any(metric => string.Equals(metric.FilterKey, combinationKey, StringComparison.OrdinalIgnoreCase)))
         {
             await DisplayAlertAsync("Métricas", "Essa combinação já foi adicionada.", "Voltar");
@@ -231,13 +288,32 @@ public partial class OverallViewModel : BaseViewModel
         }
 
         var total = await dash.CountPatientsByFilterAsync(combinationKey);
-        var combinedMetric = CreateCombinedDashboard(first, second, combinationKey, total);
+        var combinedMetric = CreateCombinedDashboard(
+            first,
+            second,
+            combinationKey,
+            total,
+            BuildModifierSummary(modifiers, GetDefaultSummary(HealthTabSelected)));
 
-        targetDashboard.Add(combinedMetric);
-        metricCombinations.Add(new MetricCombination(
-            IsHealth: HealthTabSelected,
-            FirstFilterKey: first.FilterKey,
-            SecondFilterKey: second.FilterKey));
+        suppressMetricPreferencePersistence = true;
+
+        try
+        {
+            targetDashboard.Add(combinedMetric);
+            metricCombinations.Add(new MetricCombination(
+                IsHealth: HealthTabSelected,
+                FirstFilterKey: first.FilterKey,
+                SecondFilterKey: second.FilterKey,
+                SexModifier: modifiers.Sex,
+                MinimumAgeModifier: modifiers.MinimumAge,
+                MaximumAgeModifier: modifiers.MaximumAge));
+        }
+        finally
+        {
+            suppressMetricPreferencePersistence = false;
+        }
+
+        await SaveMetricPreferencesAsync();
     }
 
     private IEnumerable<Dashboard> GetCombinationCandidates(IEnumerable<Dashboard> dashboard)
@@ -254,8 +330,8 @@ public partial class OverallViewModel : BaseViewModel
             DashboardFilterKeys.Elderly,
             DashboardFilterKeys.BolsaFamilia,
             DashboardFilterKeys.ChildrenUnder6,
-            DashboardFilterKeys.NoHouse,
-            DashboardFilterKeys.NoFamily
+            DashboardFilterKeys.Women25To64,
+            DashboardFilterKeys.NoHouse
         };
 
         return candidates.Where(metric => allowedGeneralFilters.Contains(metric.FilterKey));
@@ -279,17 +355,151 @@ public partial class OverallViewModel : BaseViewModel
 
     private static bool CanCombine(Dashboard first, Dashboard second)
     {
-        var hasNoHouse = string.Equals(first.FilterKey, DashboardFilterKeys.NoHouse, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(second.FilterKey, DashboardFilterKeys.NoHouse, StringComparison.OrdinalIgnoreCase);
-        var hasNoFamily = string.Equals(first.FilterKey, DashboardFilterKeys.NoFamily, StringComparison.OrdinalIgnoreCase) ||
-                          string.Equals(second.FilterKey, DashboardFilterKeys.NoFamily, StringComparison.OrdinalIgnoreCase);
         var hasElderly = string.Equals(first.FilterKey, DashboardFilterKeys.Elderly, StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(second.FilterKey, DashboardFilterKeys.Elderly, StringComparison.OrdinalIgnoreCase);
         var hasChildrenUnder6 = string.Equals(first.FilterKey, DashboardFilterKeys.ChildrenUnder6, StringComparison.OrdinalIgnoreCase) ||
                                 string.Equals(second.FilterKey, DashboardFilterKeys.ChildrenUnder6, StringComparison.OrdinalIgnoreCase);
+        var hasWomen25To64 = string.Equals(first.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(second.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase);
 
-        return !(hasNoHouse && hasNoFamily) &&
-               !(hasElderly && hasChildrenUnder6);
+        return !(hasElderly && hasChildrenUnder6) &&
+               !(hasWomen25To64 && hasChildrenUnder6);
+    }
+
+    private async Task<MetricModifierSelection?> PickMetricModifiersAsync()
+    {
+        var action = await DisplayActionSheetAsync(
+            "Modificadores",
+            "Cancelar",
+            null,
+            "Sem modificadores",
+            "Sexo",
+            "Idade",
+            "Sexo e idade");
+
+        if (string.IsNullOrWhiteSpace(action) || action == "Cancelar")
+        {
+            return null;
+        }
+
+        if (action == "Sem modificadores")
+        {
+            return new MetricModifierSelection();
+        }
+
+        string? sex = null;
+        int? minimumAge = null;
+        int? maximumAge = null;
+
+        if (action.Contains("Sexo", StringComparison.OrdinalIgnoreCase))
+        {
+            sex = await PickSexModifierAsync();
+            if (sex is null)
+            {
+                return null;
+            }
+        }
+
+        if (action.Contains("Idade", StringComparison.OrdinalIgnoreCase))
+        {
+            var ageModifier = await PickAgeModifierAsync();
+            if (ageModifier is null)
+            {
+                return null;
+            }
+
+            minimumAge = ageModifier.MinimumAge;
+            maximumAge = ageModifier.MaximumAge;
+        }
+
+        return new MetricModifierSelection(sex, minimumAge, maximumAge);
+    }
+
+    private async Task<string?> PickSexModifierAsync()
+    {
+        var selected = await DisplayActionSheetAsync(
+            "Sexo",
+            "Cancelar",
+            null,
+            nameof(Sexo.Feminino),
+            nameof(Sexo.Masculino),
+            nameof(Sexo.Indeterminado));
+
+        return string.IsNullOrWhiteSpace(selected) || selected == "Cancelar"
+            ? null
+            : selected;
+    }
+
+    private async Task<MetricModifierSelection?> PickAgeModifierAsync()
+    {
+        var minimumAgeText = await DisplayPromptAsync(
+            "Idade mínima",
+            "Informe a idade mínima ou deixe em branco.",
+            placeholder: "Ex.: 25",
+            maxLength: 3,
+            keyboard: Keyboard.Numeric);
+
+        if (minimumAgeText is null)
+        {
+            return null;
+        }
+
+        var maximumAgeText = await DisplayPromptAsync(
+            "Idade máxima",
+            "Informe a idade máxima ou deixe em branco.",
+            placeholder: "Ex.: 64",
+            maxLength: 3,
+            keyboard: Keyboard.Numeric);
+
+        if (maximumAgeText is null)
+        {
+            return null;
+        }
+
+        return await ValidateAgeModifierAsync(minimumAgeText, maximumAgeText);
+    }
+
+    private async Task<bool> TryParseAgeModifierAsync(string value, string fieldName, Action<int?> setAge)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            setAge(null);
+            return true;
+        }
+
+        if (!int.TryParse(value.Trim(), out var parsedAge) || parsedAge < 0 || parsedAge > 120)
+        {
+            await DisplayAlertAsync("Métricas", $"Informe uma {fieldName} válida entre 0 e 120.", "Voltar");
+            return false;
+        }
+
+        setAge(parsedAge);
+        return true;
+    }
+
+    private async Task<MetricModifierSelection?> ValidateAgeModifierAsync(string minimumAgeText, string maximumAgeText)
+    {
+        int? minimumAge = null;
+        int? maximumAge = null;
+
+        if (!await TryParseAgeModifierAsync(minimumAgeText, "idade mínima", value => minimumAge = value) ||
+            !await TryParseAgeModifierAsync(maximumAgeText, "idade máxima", value => maximumAge = value))
+        {
+            return null;
+        }
+
+        if (!minimumAge.HasValue && !maximumAge.HasValue)
+        {
+            return new MetricModifierSelection();
+        }
+
+        if (minimumAge.HasValue && maximumAge.HasValue && minimumAge > maximumAge)
+        {
+            await DisplayAlertAsync("Métricas", "A idade mínima não pode ser maior que a idade máxima.", "Voltar");
+            return null;
+        }
+
+        return new MetricModifierSelection(MinimumAge: minimumAge, MaximumAge: maximumAge);
     }
 
     private static async Task<Dashboard?> PickMetricAsync(string title, IReadOnlyList<Dashboard> metrics)
@@ -325,10 +535,21 @@ public partial class OverallViewModel : BaseViewModel
             string.Equals(item.FilterKey, metric.FilterKey, StringComparison.OrdinalIgnoreCase));
 
         GetRemovedRootFilterKeys().Remove(metric.FilterKey);
-        AddRootMetric(targetDashboard, metric);
+        suppressMetricPreferencePersistence = true;
+
+        try
+        {
+            AddRootMetric(targetDashboard, metric);
+        }
+        finally
+        {
+            suppressMetricPreferencePersistence = false;
+        }
+
+        await SaveMetricPreferencesAsync();
     }
 
-    private void RemoveMetric(Dashboard? metric)
+    private async Task RemoveMetricAsync(Dashboard? metric)
     {
         if (metric is null)
         {
@@ -338,25 +559,37 @@ public partial class OverallViewModel : BaseViewModel
         var isHealthMetric = HealthDashboard.Contains(metric);
         var targetDashboard = isHealthMetric ? HealthDashboard : MetricsDashboard;
 
-        if (!targetDashboard.Remove(metric))
+        suppressMetricPreferencePersistence = true;
+
+        try
         {
-            return;
+            if (!targetDashboard.Remove(metric))
+            {
+                return;
+            }
+
+            if (metric.IsCombination)
+            {
+                RemoveCombinationRecord(isHealthMetric, metric.FilterKey);
+            }
+            else
+            {
+                var removedRootMetrics = isHealthMetric ? removedHealthRootMetrics : removedGeneralRootMetrics;
+                var removedRootFilterKeys = isHealthMetric ? removedHealthRootFilterKeys : removedGeneralRootFilterKeys;
+
+                removedRootMetrics.RemoveAll(item =>
+                    string.Equals(item.FilterKey, metric.FilterKey, StringComparison.OrdinalIgnoreCase));
+                removedRootMetrics.Add(metric);
+                removedRootFilterKeys.Add(metric.FilterKey);
+                RemoveDependentCombinations(targetDashboard, isHealthMetric, metric.FilterKey);
+            }
+        }
+        finally
+        {
+            suppressMetricPreferencePersistence = false;
         }
 
-        if (metric.IsCombination)
-        {
-            RemoveCombinationRecord(isHealthMetric, metric.FilterKey);
-            return;
-        }
-
-        var removedRootMetrics = isHealthMetric ? removedHealthRootMetrics : removedGeneralRootMetrics;
-        var removedRootFilterKeys = isHealthMetric ? removedHealthRootFilterKeys : removedGeneralRootFilterKeys;
-
-        removedRootMetrics.RemoveAll(item =>
-            string.Equals(item.FilterKey, metric.FilterKey, StringComparison.OrdinalIgnoreCase));
-        removedRootMetrics.Add(metric);
-        removedRootFilterKeys.Add(metric.FilterKey);
-        RemoveDependentCombinations(targetDashboard, isHealthMetric, metric.FilterKey);
+        await SaveMetricPreferencesAsync();
     }
 
     private static void AddRootMetric(ObservableCollection<Dashboard> dashboard, Dashboard metric)
@@ -399,7 +632,11 @@ public partial class OverallViewModel : BaseViewModel
         metricCombinations.RemoveAll(combination =>
             combination.IsHealth == isHealthMetric &&
             string.Equals(
-                DashboardFilterKeys.CreateCombination(combination.FirstFilterKey, combination.SecondFilterKey),
+                DashboardFilterKeys.CreateModified(
+                    DashboardFilterKeys.CreateCombination(combination.FirstFilterKey, combination.SecondFilterKey),
+                    combination.SexModifier,
+                    combination.MinimumAgeModifier,
+                    combination.MaximumAgeModifier),
                 combinationFilterKey,
                 StringComparison.OrdinalIgnoreCase));
     }
@@ -449,22 +686,209 @@ public partial class OverallViewModel : BaseViewModel
                 continue;
             }
 
-            var combinationKey = DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey);
+            var modifiers = new MetricModifierSelection(
+                combination.SexModifier,
+                combination.MinimumAgeModifier,
+                combination.MaximumAgeModifier);
+            var combinationKey = DashboardFilterKeys.CreateModified(
+                DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey),
+                modifiers.Sex,
+                modifiers.MinimumAge,
+                modifiers.MaximumAge);
             var total = await dash.CountPatientsByFilterAsync(combinationKey);
-            targetDashboard.Add(CreateCombinedDashboard(first, second, combinationKey, total));
+            targetDashboard.Add(CreateCombinedDashboard(
+                first,
+                second,
+                combinationKey,
+                total,
+                BuildModifierSummary(modifiers, GetDefaultSummary(combination.IsHealth))));
         }
     }
 
-    private static Dashboard CreateCombinedDashboard(Dashboard first, Dashboard second, string combinationKey, int total)
+    private static Dashboard CreateCombinedDashboard(Dashboard first, Dashboard second, string combinationKey, int total, string summary)
     {
         return new Dashboard
         {
             Name = $"{first.Name} + {second.Name}",
             FilterKey = combinationKey,
+            Summary = summary,
             Total = total,
             IsCombination = true
         };
     }
 
-    private sealed record MetricCombination(bool IsHealth, string FirstFilterKey, string SecondFilterKey);
+    private static string GetDefaultSummary(bool isHealth)
+    {
+        return isHealth ? "Condição monitorada" : "Resumo geral";
+    }
+
+    private static string BuildModifierSummary(MetricModifierSelection modifiers, string fallback)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(modifiers.Sex))
+        {
+            parts.Add(modifiers.Sex);
+        }
+
+        var ageSummary = (modifiers.MinimumAge, modifiers.MaximumAge) switch
+        {
+            (not null, not null) => $"{modifiers.MinimumAge} a {modifiers.MaximumAge} anos",
+            (not null, null) => $"a partir de {modifiers.MinimumAge} anos",
+            (null, not null) => $"até {modifiers.MaximumAge} anos",
+            _ => null
+        };
+
+        if (!string.IsNullOrWhiteSpace(ageSummary))
+        {
+            parts.Add(ageSummary);
+        }
+
+        return parts.Count == 0 ? fallback : string.Join(" · ", parts);
+    }
+
+    private async void OnDashboardCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (suppressMetricPreferencePersistence || !hasLoadedMetricPreferences)
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveMetricPreferencesAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+        }
+    }
+
+    private void ResetMetricPreferenceState()
+    {
+        suppressMetricPreferencePersistence = true;
+        hasLoadedMetricPreferences = false;
+        _loadedMetricsVersion = -1;
+        metricCombinations.Clear();
+        removedGeneralRootMetrics.Clear();
+        removedHealthRootMetrics.Clear();
+        removedGeneralRootFilterKeys.Clear();
+        removedHealthRootFilterKeys.Clear();
+        MetricsDashboard.Clear();
+        HealthDashboard.Clear();
+        suppressMetricPreferencePersistence = false;
+    }
+
+    private void ApplyMetricPreferencesToState(DashboardMetricPreferencesDto preferences)
+    {
+        metricCombinations.Clear();
+        removedGeneralRootFilterKeys.Clear();
+        removedHealthRootFilterKeys.Clear();
+
+        foreach (var filterKey in preferences.RemovedGeneralRootFilterKeys.Where(key => !string.IsNullOrWhiteSpace(key)))
+        {
+            removedGeneralRootFilterKeys.Add(filterKey);
+        }
+
+        foreach (var filterKey in preferences.RemovedHealthRootFilterKeys.Where(key => !string.IsNullOrWhiteSpace(key)))
+        {
+            removedHealthRootFilterKeys.Add(filterKey);
+        }
+
+        foreach (var combination in preferences.Combinations)
+        {
+            if (string.IsNullOrWhiteSpace(combination.FirstFilterKey) ||
+                string.IsNullOrWhiteSpace(combination.SecondFilterKey))
+            {
+                continue;
+            }
+
+            metricCombinations.Add(new MetricCombination(
+                combination.IsHealth,
+                combination.FirstFilterKey,
+                combination.SecondFilterKey,
+                combination.SexModifier,
+                combination.MinimumAgeModifier,
+                combination.MaximumAgeModifier));
+        }
+    }
+
+    private static void ApplyDashboardOrder(ObservableCollection<Dashboard> dashboard, IReadOnlyList<string> persistedOrder)
+    {
+        if (dashboard.Count <= 1 || persistedOrder.Count == 0)
+        {
+            return;
+        }
+
+        var order = persistedOrder
+            .Select((filterKey, index) => new { filterKey, index })
+            .GroupBy(item => item.filterKey, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First().index, StringComparer.OrdinalIgnoreCase);
+
+        var orderedItems = dashboard
+            .Select((metric, index) => new { metric, index })
+            .OrderBy(item => order.TryGetValue(item.metric.FilterKey, out var persistedIndex) ? persistedIndex : int.MaxValue)
+            .ThenBy(item => item.index)
+            .Select(item => item.metric)
+            .ToList();
+
+        dashboard.Clear();
+        foreach (var metric in orderedItems)
+        {
+            dashboard.Add(metric);
+        }
+    }
+
+    private Task SaveMetricPreferencesAsync()
+    {
+        if (!hasLoadedMetricPreferences)
+        {
+            return Task.CompletedTask;
+        }
+
+        return metricPreferences.SaveAsync(CreateMetricPreferencesSnapshot());
+    }
+
+    private DashboardMetricPreferencesDto CreateMetricPreferencesSnapshot()
+    {
+        return new DashboardMetricPreferencesDto
+        {
+            GeneralOrder = MetricsDashboard.Select(metric => metric.FilterKey).ToList(),
+            HealthOrder = HealthDashboard.Select(metric => metric.FilterKey).ToList(),
+            RemovedGeneralRootFilterKeys = removedGeneralRootFilterKeys.ToList(),
+            RemovedHealthRootFilterKeys = removedHealthRootFilterKeys.ToList(),
+            Combinations = metricCombinations
+                .GroupBy(GetCombinationFilterKey, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .Select(combination => new DashboardMetricCombinationPreferenceDto
+                {
+                    IsHealth = combination.IsHealth,
+                    FirstFilterKey = combination.FirstFilterKey,
+                    SecondFilterKey = combination.SecondFilterKey,
+                    SexModifier = combination.SexModifier,
+                    MinimumAgeModifier = combination.MinimumAgeModifier,
+                    MaximumAgeModifier = combination.MaximumAgeModifier
+                })
+                .ToList()
+        };
+    }
+
+    private static string GetCombinationFilterKey(MetricCombination combination)
+    {
+        return DashboardFilterKeys.CreateModified(
+            DashboardFilterKeys.CreateCombination(combination.FirstFilterKey, combination.SecondFilterKey),
+            combination.SexModifier,
+            combination.MinimumAgeModifier,
+            combination.MaximumAgeModifier);
+    }
+
+    private sealed record MetricModifierSelection(string? Sex = null, int? MinimumAge = null, int? MaximumAge = null);
+
+    private sealed record MetricCombination(
+        bool IsHealth,
+        string FirstFilterKey,
+        string SecondFilterKey,
+        string? SexModifier,
+        int? MinimumAgeModifier,
+        int? MaximumAgeModifier);
 }

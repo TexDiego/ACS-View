@@ -7,12 +7,14 @@ namespace ACS_View.Domain.Entities
     {
         [PrimaryKey, AutoIncrement]
         public int CasaId { get; set; }
+        public int UserId { get; set; }
 
         [JsonPropertyName("cep")]
         public string CEP { get; set; } = string.Empty;
 
         [JsonPropertyName("logradouro")]
         public string Rua { get; set; } = string.Empty;
+        public string TipoLogradouro { get; set; } = string.Empty;
 
         public string NumeroCasa { get; set; } = string.Empty;
         public string SearchRua { get; set; } = string.Empty;

@@ -4,15 +4,20 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              x:DataType="vm:ProfileViewModel"
              x:Class="ACS_View.Views.Profile"
-             Title="Perfil">
+             Style="{StaticResource PageBackground}"
+             Title="{Binding DisplayName}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Sair" Command="{Binding LogoutCommand}"/>
+    </ContentPage.ToolbarItems>
 
     <ScrollView>
         <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Área pessoal" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Acesse anotações e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir anotações"
+                    <Label Text="Area pessoal" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Acesse anotacoes e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Abrir anotacoes"
                             Style="{StaticResource PrimaryButton}"
                             Command="{Binding OpenNotesPage}"/>
                 </VerticalStackLayout>
@@ -20,9 +25,9 @@
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Importação" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Importe cadastros de pacientes e residências por planilha." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir importação"
+                    <Label Text="Importacao" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Importe cadastros de pacientes e residencias por planilha." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Abrir importacao"
                             Style="{StaticResource PrimaryButton}"
                             Command="{Binding OpenImportDataPage}"/>
                 </VerticalStackLayout>
@@ -30,12 +35,11 @@
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Conta" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Encerre a sessão neste dispositivo." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Sair"
-                            BackgroundColor="{StaticResource Accent}"
-                            TextColor="{StaticResource White}"
-                            Command="{Binding LogoutCommand}"/>
+                    <Label Text="Dados" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Apague registros associados apenas a este login." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Gerenciar dados"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding OpenDataCleanupPage}"/>
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>

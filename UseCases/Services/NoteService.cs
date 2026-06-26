@@ -5,7 +5,7 @@ using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class NoteService(IDatabaseService db) : INoteService
+    internal class NoteService(IDatabaseService db, ICurrentUserContext currentUserContext) : INoteService
     {
         private readonly SQLiteAsyncConnection _database = db.Connection;
 
@@ -13,7 +13,8 @@ namespace ACS_View.UseCases.Services
         {
             try
             {
-                return await _database.QueryAsync<Note>("SELECT * FROM Note ORDER BY CreationDate");
+                var userId = currentUserContext.RequireCurrentUserId();
+                return await _database.QueryAsync<Note>("SELECT * FROM Note WHERE UserId = ? ORDER BY CreationDate", userId);
             }
             catch (Exception ex)
             {
@@ -26,10 +27,13 @@ namespace ACS_View.UseCases.Services
         {
             try
             {
+                var userId = currentUserContext.RequireCurrentUserId();
                 await _database.ExecuteAsync(
-                    "INSERT INTO Note (Content, CreationDate) VALUES (?, ?)",
+                    "INSERT INTO Note (UserId, Content, CreationDate, NotifyOn) VALUES (?, ?, ?, ?)",
+                    userId,
                     note.Content,
-                    note.CreationDate
+                    note.CreationDate,
+                    note.NotifyOn
                 );
                 DataChangeTracker.MarkNotesChanged();
             }
@@ -42,12 +46,14 @@ namespace ACS_View.UseCases.Services
 
         public async Task UpdateNoteAsync(Note note)
         {
+            var userId = currentUserContext.RequireCurrentUserId();
             await _database.ExecuteAsync(
-                "UPDATE Note SET Content = ?, CreationDate = ?, NotifyOn = ? WHERE Id = ?",
+                "UPDATE Note SET Content = ?, CreationDate = ?, NotifyOn = ? WHERE Id = ? AND UserId = ?",
                 note.Content,
                 note.CreationDate,
                 note.NotifyOn,
-                note.Id
+                note.Id,
+                userId
             );
             DataChangeTracker.MarkNotesChanged();
         }
@@ -56,7 +62,7 @@ namespace ACS_View.UseCases.Services
         {
             try
             {
-                await _database.ExecuteAsync("DELETE FROM Note WHERE Id = ?", id);
+                await _database.ExecuteAsync("DELETE FROM Note WHERE Id = ? AND UserId = ?", id, currentUserContext.RequireCurrentUserId());
                 DataChangeTracker.MarkNotesChanged();
             }
             catch (Exception ex)

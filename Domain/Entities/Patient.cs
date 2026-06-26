@@ -6,10 +6,15 @@ namespace ACS_View.Domain.Entities
     {        
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
+        public int UserId { get; set; }
         public int FamilyId { get; set; } = -1;
         public int HouseId { get; set; } = -1;
 
         public string SusNumber { get; set; } = string.Empty;
+        public string? FamilyResponsibleSus { get; set; }
+        public int? MotherPatientId { get; set; }
+        public int? FatherPatientId { get; set; }
+        public int? FamilyResponsiblePatientId { get; set; }
         public string Sexo { get; set; } = "Indeterminado";
         public string Name { get; set; } = string.Empty;
         public string MotherName { get; set; } = string.Empty;

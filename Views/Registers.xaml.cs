@@ -9,6 +9,8 @@ public partial class Registers : ContentPage, IQueryAttributable
     private readonly RegistersViewModel _viewModel;
 
     private string _condition = "ALL";
+    private string? _lastMetricNavigationId;
+    private bool _hasAppliedLegacyMetricFilter;
     private bool _hasAppeared;
     private int _loadVersion;
 
@@ -29,7 +31,19 @@ public partial class Registers : ContentPage, IQueryAttributable
     {
         if (query.TryGetValue("condition", out var condition))
         {
-            _condition = condition?.ToString() ?? "ALL";
+            var incomingCondition = condition?.ToString() ?? "ALL";
+            var incomingNavigationId = query.TryGetValue("metricNavigationId", out var navigationId)
+                ? navigationId?.ToString()
+                : null;
+
+            if (ShouldIgnoreMetricFilter(incomingCondition, incomingNavigationId))
+            {
+                return;
+            }
+
+            _condition = incomingCondition;
+            _lastMetricNavigationId = incomingNavigationId;
+            _hasAppliedLegacyMetricFilter = string.IsNullOrWhiteSpace(incomingNavigationId);
             _viewModel.SetFilter(_condition);
 
             if (_hasAppeared)
@@ -37,6 +51,17 @@ public partial class Registers : ContentPage, IQueryAttributable
                 _ = LoadDataOnAppearAsync();
             }
         }
+    }
+
+    private bool ShouldIgnoreMetricFilter(string incomingCondition, string? incomingNavigationId)
+    {
+        if (string.IsNullOrWhiteSpace(incomingNavigationId))
+        {
+            return _hasAppliedLegacyMetricFilter &&
+                   string.Equals(_condition, incomingCondition, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return string.Equals(_lastMetricNavigationId, incomingNavigationId, StringComparison.Ordinal);
     }
 
     protected override void OnAppearing()

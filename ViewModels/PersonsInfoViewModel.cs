@@ -3,10 +3,12 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace ACS_View.ViewModels;
 
 public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
+                                          IPatientService _patientService,
                                           IPatientCidRepository _patientCidRepository,
                                           ICidRepository _cidRepository,
                                           ISQLiteConditionsRepository _conditionsRepository) : BaseViewModel
@@ -55,21 +57,51 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
     [ObservableProperty] private ObservableCollection<HealthIcon> icons = [];
     [ObservableProperty] private Patient personInfo;
+    [ObservableProperty] private bool hasMotherPatientLink;
+    [ObservableProperty] private bool hasFatherPatientLink;
 
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
     private int _loadVersion;
+
+    public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
 
     public void SetPatient(Patient patient)
     {
         var loadVersion = Interlocked.Increment(ref _loadVersion);
 
         PersonInfo = patient;
+        HasMotherPatientLink = patient.MotherPatientId is > 0;
+        HasFatherPatientLink = patient.FatherPatientId is > 0;
         Endereco = "Carregando endereço...";
         Complemento = string.Empty;
         Icons = [];
 
         _ = LoadPatientDetailsAsync(patient.Id, loadVersion);
+    }
+
+    private async Task OpenLinkedPatientAsync(object? id)
+    {
+        var patientId = id switch
+        {
+            int value => value,
+            long value => (int)value,
+            string value when int.TryParse(value, out var parsed) => parsed,
+            _ => 0
+        };
+
+        if (patientId <= 0)
+        {
+            return;
+        }
+
+        var linkedPatient = await _patientService.GetPatientById(patientId);
+        if (linkedPatient is null)
+        {
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(() => SetPatient(linkedPatient));
     }
 
     private async Task LoadPatientDetailsAsync(int patientId, int loadVersion)

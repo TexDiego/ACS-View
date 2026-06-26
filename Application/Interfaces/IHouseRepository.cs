@@ -7,7 +7,7 @@ public interface IHouseRepository
 {
     Task DeleteAsync(House house);
     Task<List<House>> GetAllAsync();
-    Task<PagedResultDto<HouseListItemDto>> GetListAsync(string? search, int skip, int take);
+    Task<PagedResultDto<HouseListItemDto>> GetListAsync(string? search, int skip, int take, string? filterKey = null);
     Task<House?> GetByIdAsync(int id);
     Task<House?> GetByPatientIdAsync(int id);
     Task<int> GetMaxIdAsync();

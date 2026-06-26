@@ -6,6 +6,7 @@ namespace ACS_View.Domain.Entities
     {
         [PrimaryKey]
         public int Id { get; set; }
+        public int UserId { get; set; }
         public DateTime BirthDate { get; set; }
         public bool IsPregnant { get; set; } = false;
 

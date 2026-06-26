@@ -5,7 +5,7 @@ using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class VisitsService(IDatabaseService db) : IVisitsService
+    internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUserContext) : IVisitsService
     {
         private readonly SQLiteAsyncConnection _connection = db.Connection;
 
@@ -13,8 +13,10 @@ namespace ACS_View.UseCases.Services
         {
             try
             {
+                var userId = currentUserContext.RequireCurrentUserId();
                 return await _connection
                              .Table<Visits>()
+                             .Where(v => v.UserId == userId)
                              .OrderBy(v => v.Date)
                              .ToListAsync() ?? new List<Visits>();
             }
@@ -32,6 +34,7 @@ namespace ACS_View.UseCases.Services
 
             try
             {
+                visit.UserId = currentUserContext.RequireCurrentUserId();
                 await _connection.InsertAsync(visit);
                 DataChangeTracker.MarkVisitsChanged();
             }
@@ -48,7 +51,7 @@ namespace ACS_View.UseCases.Services
                 throw new ArgumentException("O ID da visita deve ser maior que zero.");
             try
             {
-                await _connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ?", id);
+                await _connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ? AND UserId = ?", id, currentUserContext.RequireCurrentUserId());
                 DataChangeTracker.MarkVisitsChanged();
             }
             catch (Exception ex)

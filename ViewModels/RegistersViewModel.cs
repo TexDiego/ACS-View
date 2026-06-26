@@ -28,6 +28,7 @@ namespace ACS_View.ViewModels
         private string _lastLoadedFilter = string.Empty;
         private string _filterKey = "ALL";
         private PatientListFilterDto _listFilter = new();
+        private int _loadedSessionVersion = -1;
         private DateTime _suppressReloadUntilUtc = DateTime.MinValue;
 
         [ObservableProperty] private string condition = "Pacientes";
@@ -56,6 +57,8 @@ namespace ACS_View.ViewModels
 
         internal async Task LoadPatients()
         {
+            EnsureCurrentSessionState();
+
             var normalizedSearch = SearchText?.Trim() ?? string.Empty;
             if (Patients.Count > 0 &&
                 _loadedPatientsVersion == DataChangeTracker.PatientsVersion &&
@@ -70,6 +73,8 @@ namespace ACS_View.ViewModels
 
         internal void SetFilter(string filterKey)
         {
+            EnsureCurrentSessionState();
+
             _filterKey = string.IsNullOrWhiteSpace(filterKey) ? "ALL" : filterKey;
             _listFilter.FilterKey = _filterKey;
             Condition = GetFilterTitle(_filterKey);
@@ -287,6 +292,35 @@ namespace ACS_View.ViewModels
             return _searchCts.Token;
         }
 
+        private void EnsureCurrentSessionState()
+        {
+            var sessionVersion = DataChangeTracker.SessionVersion;
+            if (_loadedSessionVersion == sessionVersion)
+            {
+                return;
+            }
+
+            _searchCts?.Cancel();
+            Interlocked.Increment(ref _loadVersion);
+            SearchText = string.Empty;
+            _filterKey = "ALL";
+            _listFilter = new PatientListFilterDto();
+            Condition = GetFilterTitle(_filterKey);
+            Patients.Clear();
+            TotalRecords = 0;
+            IsLoading = false;
+            IsLoadingMore = false;
+            _hasMorePatients = true;
+            _loadedPatientsCount = 0;
+            _loadedPatientsVersion = -1;
+            _lastLoadedSearch = string.Empty;
+            _lastLoadedFilter = string.Empty;
+            ScrollToId = 0;
+            _suppressReloadUntilUtc = DateTime.MinValue;
+            _loadedSessionVersion = sessionVersion;
+            UpdateFilterState();
+        }
+
         private void SuppressTransientReload()
         {
             _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
@@ -338,28 +372,31 @@ namespace ACS_View.ViewModels
 
         private static string GetFilterTitle(string filterKey)
         {
-            if (DashboardFilterKeys.IsCombination(filterKey))
+            var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
+
+            if (DashboardFilterKeys.IsCombination(baseFilterKey))
             {
-                return string.Join(" + ", DashboardFilterKeys.GetCombinationParts(filterKey).Select(GetFilterTitle));
+                return string.Join(" + ", DashboardFilterKeys.GetCombinationParts(baseFilterKey).Select(GetFilterTitle));
             }
 
-            if (filterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase))
+            if (baseFilterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                return filterKey[DashboardFilterKeys.ConditionPrefix.Length..];
+                return baseFilterKey[DashboardFilterKeys.ConditionPrefix.Length..];
             }
 
-            if (filterKey.StartsWith(DashboardFilterKeys.CidPrefix, StringComparison.OrdinalIgnoreCase))
+            if (baseFilterKey.StartsWith(DashboardFilterKeys.CidPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                return $"CID {filterKey[DashboardFilterKeys.CidPrefix.Length..]}";
+                return $"CID {baseFilterKey[DashboardFilterKeys.CidPrefix.Length..]}";
             }
 
-            return filterKey switch
+            return baseFilterKey switch
             {
-                "NO_HOUSE" => "Pacientes Sem Residência",
-                "NO_FAMILY" => "Pacientes Sem Família",
-                "BOLSA_FAMILIA" => "Bolsa Família",
-                "ELDERLY" => "Idosos",
-                "CHILDREN_UNDER_6" => "Crianças menores de 6",
+                DashboardFilterKeys.NoHouse => "Pacientes Sem Residencia",
+                DashboardFilterKeys.NoFamily => "Pacientes Sem Familia",
+                DashboardFilterKeys.BolsaFamilia => "Bolsa Familia",
+                DashboardFilterKeys.Elderly => "Idosos",
+                DashboardFilterKeys.ChildrenUnder6 => "Criancas menores de 6",
+                DashboardFilterKeys.Women25To64 => "Mulheres 25 a 64",
                 _ => "Pacientes"
             };
         }

@@ -4,7 +4,7 @@ using SQLite;
 
 namespace ACS_View.UseCases.Services
 {
-    internal class FamilyService(IDatabaseService db) : IFamilyService
+    internal class FamilyService(IDatabaseService db, ICurrentUserContext currentUserContext) : IFamilyService
     {
         private readonly SQLiteAsyncConnection _connection = db.Connection;
 
@@ -12,7 +12,8 @@ namespace ACS_View.UseCases.Services
         {
             try
             {
-                return await _connection.QueryAsync<Family>("SELECT * FROM Family ORDER BY IdFamilia");
+                var userId = currentUserContext.RequireCurrentUserId();
+                return await _connection.QueryAsync<Family>("SELECT * FROM Family WHERE UserId = ? ORDER BY IdFamilia", userId);
             }
             catch (Exception ex)
             {
@@ -28,7 +29,8 @@ namespace ACS_View.UseCases.Services
 
             try
             {
-                var result = await _connection.QueryAsync<Family>("SELECT * FROM Family WHERE IdFamilia = ?", id);
+                var userId = currentUserContext.RequireCurrentUserId();
+                var result = await _connection.QueryAsync<Family>("SELECT * FROM Family WHERE IdFamilia = ? AND UserId = ?", id, userId);
                 return result.FirstOrDefault();
             }
             catch (Exception ex)
@@ -46,8 +48,8 @@ namespace ACS_View.UseCases.Services
             try
             {
                 return await _connection.QueryAsync<Patient>(
-                    "SELECT * FROM HealthRecord WHERE HouseId = ? AND FamilyId = ?",
-                    houseId, familyId
+                    "SELECT * FROM Patient WHERE HouseId = ? AND FamilyId = ? AND UserId = ?",
+                    houseId, familyId, currentUserContext.RequireCurrentUserId()
                 );
             }
             catch (Exception ex)
@@ -64,9 +66,10 @@ namespace ACS_View.UseCases.Services
 
             try
             {
+                family.UserId = currentUserContext.RequireCurrentUserId();
                 return await _connection.ExecuteAsync(
-                    "INSERT INTO Family (IdFamilia, IdPessoa) VALUES (?, ?)",
-                    family.IdFamilia, family.IdPessoa
+                    "INSERT INTO Family (IdFamilia, UserId, IdPessoa) VALUES (?, ?, ?)",
+                    family.IdFamilia, family.UserId, family.IdPessoa
                 );
             }
             catch (Exception ex)
@@ -83,7 +86,8 @@ namespace ACS_View.UseCases.Services
 
             try
             {
-                return await _connection.ExecuteAsync("DELETE FROM Family WHERE IdFamilia = ?", id);
+                var userId = currentUserContext.RequireCurrentUserId();
+                return await _connection.ExecuteAsync("DELETE FROM Family WHERE IdFamilia = ? AND UserId = ?", id, userId);
             }
             catch (Exception ex)
             {
@@ -99,9 +103,10 @@ namespace ACS_View.UseCases.Services
 
             try
             {
+                family.UserId = currentUserContext.RequireCurrentUserId();
                 await _connection.ExecuteAsync(
-                    "UPDATE Family SET IdPessoa = ? WHERE IdFamilia = ?",
-                    family.IdPessoa, family.IdFamilia
+                    "UPDATE Family SET IdPessoa = ? WHERE IdFamilia = ? AND UserId = ?",
+                    family.IdPessoa, family.IdFamilia, family.UserId
                 );
             }
             catch (Exception ex)
@@ -119,7 +124,9 @@ namespace ACS_View.UseCases.Services
             try
             {
                 var result = await _connection.ExecuteScalarAsync<int?>(
-                    "SELECT MAX(FamilyId) FROM Patient WHERE HouseId = ?", houseId
+                    "SELECT MAX(FamilyId) FROM Patient WHERE HouseId = ? AND UserId = ?",
+                    houseId,
+                    currentUserContext.RequireCurrentUserId()
                 );
                 return result ?? 0;
             }

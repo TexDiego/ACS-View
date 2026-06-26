@@ -30,14 +30,14 @@
                 <ImageButton
                     Grid.Column="1"
                     ToolTipProperties.Text="Filtrar"
-                    Source="filter.png"
+                    Source="slideralt.png"
                     MaximumHeightRequest="30"
                     MaximumWidthRequest="30"
                     Command="{Binding Filter}"/>
             </Grid>
         </Border>
 
-        <Grid ColumnDefinitions="*,*" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
+        <Grid ColumnDefinitions="*,auto" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
             <Label
                 Grid.Column="0"
                 HorizontalOptions="Start"
@@ -50,11 +50,11 @@
                 HorizontalOptions="End"
                 Text="Remover filtros"
                 Style="{StaticResource BodyMuted}"
-                TextColor="IndianRed"
+                TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
                 IsVisible="{Binding HasActiveFilters}">
 
                 <Label.GestureRecognizers>
-                    <TapGestureRecognizer 
+                    <TapGestureRecognizer
                         Command="{Binding ClearFiltersCommand}"/>
                 </Label.GestureRecognizers>
             </Label>
@@ -73,64 +73,69 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="dto:PatientListItemDto">
                     <Border Style="{StaticResource CardBorder}" Padding="0">
-                        <SwipeView>
-                            <SwipeView.LeftItems>
-                                <SwipeItem
-                                    IconImageSource="bin.png"
-                                    Text="Excluir"
-                                    BackgroundColor="IndianRed"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding Id}"/>
-                            </SwipeView.LeftItems>
+                        <Grid
+                            ColumnDefinitions="*,auto"
+                            RowDefinitions="*,*"
+                            ColumnSpacing="12"
+                            Padding="5"
+                            BackgroundColor="{AppThemeBinding
+                                                Light={StaticResource Surface},
+                                                Dark={StaticResource DarkSurface}}">
 
-                            <SwipeView.RightItems>
-                                <SwipeItem
-                                    IconImageSource="pencil.png"
-                                    Text="Editar"
-                                    BackgroundColor="DarkOrange"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </SwipeView.RightItems>
-
-                            <Grid 
-                                ColumnDefinitions="*,auto" 
-                                ColumnSpacing="12" 
-                                BackgroundColor="{AppThemeBinding 
-                                                    Light={StaticResource Surface}, 
-                                                    Dark={StaticResource DarkSurface}}">
-                                <Grid.GestureRecognizers>
+                            <VerticalStackLayout
+                                Grid.Column="0"
+                                Grid.Row="0"
+                                Spacing="4"
+                                Margin="10"
+                                VerticalOptions="Center">
+                                <VerticalStackLayout.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
                                         CommandParameter="{Binding .}"/>
-                                </Grid.GestureRecognizers>
+                                </VerticalStackLayout.GestureRecognizers>
 
-                                <VerticalStackLayout 
-                                    Grid.Column="0" 
-                                    Spacing="4" 
-                                    Margin="10"
-                                    VerticalOptions="Center">
-                                    <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                    <Label Text="{Binding SusNumber, StringFormat='SUS {0}'}" Style="{StaticResource BodyMuted}"/>
-                                </VerticalStackLayout>
+                                <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                                <Label Text="{Binding SusNumber, StringFormat='SUS {0}'}" Style="{StaticResource BodyMuted}"/>
+                            </VerticalStackLayout>
 
-                                <VerticalStackLayout 
-                                    Grid.Column="1" 
-                                    Spacing="2"
-                                    Margin="0,0,10,0"
-                                    HorizontalOptions="Center" 
-                                    VerticalOptions="Center">
-                                    
-                                    <ImageButton
-                                        Source="syringe"
-                                        MaximumHeightRequest="25"
-                                        MaximumWidthRequest="25"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
-                                        CommandParameter="{Binding Id}"/>
+                            <ImageButton
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Source="syringe"
+                                Margin="0,0,5,0"
+                                ToolTipProperties.Text="Vacinas"
+                                MaximumHeightRequest="30"
+                                MaximumWidthRequest="30"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                                CommandParameter="{Binding Id}"/>
 
-                                    <Label Text="Vacinas" Style="{StaticResource BodyMuted}" FontSize="12" HorizontalTextAlignment="Center"/>
-                                </VerticalStackLayout>
+                            <Grid
+                                ColumnDefinitions="*,*"
+                                Grid.ColumnSpan="2"
+                                Grid.Row="1"
+                                ColumnSpacing="10">
+
+                                <Button
+                                    Grid.Column="0"
+                                    Text="Editar"
+                                    Style="{StaticResource PrimaryOutlineButton}"
+                                    MaximumHeightRequest="40"
+                                    ImageSource="pencil.png"
+                                    ToolTipProperties.Text="Editar"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding .}"/>
+
+                                <Button
+                                    Grid.Column="1"
+                                    Text="Excluir"
+                                    Style="{StaticResource DangerOutlineButton}"
+                                    MaximumHeightRequest="40"
+                                    ImageSource="bin.png"
+                                    ToolTipProperties.Text="Excluir"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding Id}"/>
                             </Grid>
-                        </SwipeView>
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

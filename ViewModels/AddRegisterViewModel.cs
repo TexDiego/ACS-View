@@ -1,5 +1,6 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
+using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
@@ -28,6 +29,12 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private Patient currentPatient = new();
         [ObservableProperty] private ObservableCollection<HealthConditions> healthCategories = [];
         [ObservableProperty] private ObservableCollection<HealthConditions> commonConditions = [];
+        [ObservableProperty] private string motherNameInput = string.Empty;
+        [ObservableProperty] private string fatherNameInput = string.Empty;
+
+        private bool _updatingParentNameInputs;
+        private string? _linkedMotherName;
+        private string? _linkedFatherName;
 
         public DateTime MinimumDate => DateTime.Today.AddYears(-120);
         public DateTime MaximumDate => DateTime.Today;
@@ -37,6 +44,50 @@ namespace ACS_View.ViewModels
         public ICommand OpenConditionsPopup => new Command(async () => await OpenCidPopup());
         public ICommand SwitchConditionCommand => new Command<HealthConditions>(async (h) => await SwitchConditionSelected(h));
         public ICommand RemoveConditionCommand => new Command<HealthConditions>(RemoveCondition);
+        public ICommand SelectMotherCommand => new Command(async () => await SelectLinkedParentAsync(isMother: true));
+        public ICommand SelectFatherCommand => new Command(async () => await SelectLinkedParentAsync(isMother: false));
+
+        partial void OnMotherNameInputChanged(string value)
+        {
+            if (CurrentPatient is null)
+            {
+                return;
+            }
+
+            CurrentPatient.MotherName = value ?? string.Empty;
+            if (_updatingParentNameInputs)
+            {
+                return;
+            }
+
+            if (CurrentPatient.MotherPatientId.HasValue &&
+                !string.Equals(value, _linkedMotherName, StringComparison.Ordinal))
+            {
+                CurrentPatient.MotherPatientId = null;
+                _linkedMotherName = null;
+            }
+        }
+
+        partial void OnFatherNameInputChanged(string value)
+        {
+            if (CurrentPatient is null)
+            {
+                return;
+            }
+
+            CurrentPatient.FatherName = value ?? string.Empty;
+            if (_updatingParentNameInputs)
+            {
+                return;
+            }
+
+            if (CurrentPatient.FatherPatientId.HasValue &&
+                !string.Equals(value, _linkedFatherName, StringComparison.Ordinal))
+            {
+                CurrentPatient.FatherPatientId = null;
+                _linkedFatherName = null;
+            }
+        }
 
         internal async Task LoadPatient(int id)
         {
@@ -50,6 +101,7 @@ namespace ACS_View.ViewModels
                 }
 
                 CurrentPatient = p;
+                SetParentNameInputs(p);
 
                 HealthCategories.Clear();
                 CommonConditions.Clear();
@@ -205,6 +257,57 @@ namespace ACS_View.ViewModels
                 foreach (HealthConditions cid in list) HealthCategories.Add(cid);
 
                 OnPropertyChanged(nameof(HealthCategories));
+            }
+        }
+
+        private async Task SelectLinkedParentAsync(bool isMother)
+        {
+            var popup = new ParentPatientPickerPopup(
+                _patientService,
+                CurrentPatient?.Id > 0 ? CurrentPatient.Id : null,
+                isMother ? "Selecionar mãe" : "Selecionar pai");
+
+            var popupResult = await _popupService.ShowAsync<PatientListItemDto>(popup);
+            if (popupResult.WasDismissed || popupResult.Result is not PatientListItemDto selectedPatient)
+            {
+                return;
+            }
+
+            _updatingParentNameInputs = true;
+            try
+            {
+                if (isMother)
+                {
+                    CurrentPatient.MotherPatientId = selectedPatient.Id;
+                    _linkedMotherName = selectedPatient.Name;
+                    MotherNameInput = selectedPatient.Name;
+                }
+                else
+                {
+                    CurrentPatient.FatherPatientId = selectedPatient.Id;
+                    _linkedFatherName = selectedPatient.Name;
+                    FatherNameInput = selectedPatient.Name;
+                }
+            }
+            finally
+            {
+                _updatingParentNameInputs = false;
+            }
+        }
+
+        private void SetParentNameInputs(Patient patient)
+        {
+            _updatingParentNameInputs = true;
+            try
+            {
+                _linkedMotherName = patient.MotherPatientId.HasValue ? patient.MotherName : null;
+                _linkedFatherName = patient.FatherPatientId.HasValue ? patient.FatherName : null;
+                MotherNameInput = patient.MotherName ?? string.Empty;
+                FatherNameInput = patient.FatherName ?? string.Empty;
+            }
+            finally
+            {
+                _updatingParentNameInputs = false;
             }
         }
 

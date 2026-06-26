@@ -1,6 +1,6 @@
+using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
-using ACS_View.Application.DTOs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -12,14 +12,30 @@ public partial class ImportDataViewModel(
     IPatientImportService patientImportService,
     IHouseImportService houseImportService) : BaseViewModel
 {
-    [ObservableProperty] private string nameColumn = "Nome";
-    [ObservableProperty] private string susNumberColumn = "SUS";
-    [ObservableProperty] private string motherNameColumn = "Mãe";
-    [ObservableProperty] private string fatherNameColumn = "Pai";
-    [ObservableProperty] private string birthDateColumn = "Data de nascimento";
-    [ObservableProperty] private string observationColumn = "Observação";
-    [ObservableProperty] private string bolsaFamiliaColumn = "Bolsa Família";
+    [ObservableProperty] private string nameColumn = "CADASTRO NOME";
+    [ObservableProperty] private string susNumberColumn = "CADASTRO CNS";
+    [ObservableProperty] private string motherNameColumn = "NOME DA MÃE";
+    [ObservableProperty] private string fatherNameColumn = "NOME DO PAI";
+    [ObservableProperty] private string sexColumn = "SEXO";
+    [ObservableProperty] private string birthDateColumn = "CADASTRO DN";
+    [ObservableProperty] private string observationColumn = "OBSERVACAO";
+    [ObservableProperty] private string bolsaFamiliaColumn = "BOLSA FAMILIA";
+    [ObservableProperty] private string patientCepColumn = "CEP";
+    [ObservableProperty] private string patientStreetTypeColumn = "TIPO LOGRADOURO";
+    [ObservableProperty] private string patientStreetColumn = "LOGRADOURO";
+    [ObservableProperty] private string patientHouseNumberColumn = "NUMERO IMOVEL";
+    [ObservableProperty] private string patientNeighborhoodColumn = "BAIRRO";
+    [ObservableProperty] private string patientCityColumn = "CIDADE";
+    [ObservableProperty] private string patientStateColumn = "ESTADO";
+    [ObservableProperty] private string patientComplementColumn = "COMPLEMENTO";
+    [ObservableProperty] private string isFamilyResponsibleColumn = "RESP. FAMILIAR?";
+    [ObservableProperty] private string familyResponsibleSusColumn = "RESP. FAMILIAR CNS";
     [ObservableProperty] private string patientImportSummary = string.Empty;
+    [ObservableProperty] private bool isImporting;
+    [ObservableProperty] private bool canStartImport = true;
+    [ObservableProperty] private bool canCancelImport;
+    [ObservableProperty] private double importProgress;
+    [ObservableProperty] private string importProgressText = string.Empty;
     [ObservableProperty] private ObservableCollection<PatientImportConditionColumnDto> healthConditionColumns = new(
         HealthConditionCatalog.Conditions.Select(condition => new PatientImportConditionColumnDto
         {
@@ -28,65 +44,89 @@ public partial class ImportDataViewModel(
         }));
 
     [ObservableProperty] private string houseCepColumn = "CEP";
-    [ObservableProperty] private string houseStreetColumn = "Rua";
-    [ObservableProperty] private string houseNumberColumn = "Número";
-    [ObservableProperty] private string houseNeighborhoodColumn = "Bairro";
-    [ObservableProperty] private string houseCityColumn = "Cidade";
-    [ObservableProperty] private string houseStateColumn = "Estado";
-    [ObservableProperty] private string houseCountryColumn = "País";
-    [ObservableProperty] private string houseComplementColumn = "Complemento";
-    [ObservableProperty] private string houseHasComplementColumn = "Possui complemento";
+    [ObservableProperty] private string houseStreetTypeColumn = "TIPO LOGRADOURO";
+    [ObservableProperty] private string houseStreetColumn = "LOGRADOURO";
+    [ObservableProperty] private string houseNumberColumn = "NUMERO IMOVEL";
+    [ObservableProperty] private string houseNeighborhoodColumn = "BAIRRO";
+    [ObservableProperty] private string houseCityColumn = "CIDADE";
+    [ObservableProperty] private string houseStateColumn = "ESTADO";
+    [ObservableProperty] private string houseCountryColumn = "PAIS";
+    [ObservableProperty] private string houseComplementColumn = "COMPLEMENTO";
     [ObservableProperty] private string houseImportSummary = string.Empty;
+    [ObservableProperty] private bool isHouseImporting;
+    [ObservableProperty] private bool canStartHouseImport = true;
+    [ObservableProperty] private bool canCancelHouseImport;
+    [ObservableProperty] private double houseImportProgress;
+    [ObservableProperty] private string houseImportProgressText = string.Empty;
 
     public ICommand ImportPatientsCommand => new Command(async () => await ImportPatientsAsync());
     public ICommand ImportHousesCommand => new Command(async () => await ImportHousesAsync());
+    public ICommand CancelImportCommand => new Command(CancelImport);
+    public ICommand CancelHouseImportCommand => new Command(CancelHouseImport);
+
+    private CancellationTokenSource? importCancellationTokenSource;
+    private CancellationTokenSource? houseImportCancellationTokenSource;
 
     private async Task ImportPatientsAsync()
     {
         try
         {
-            await ExecuteWithRunningAsync(async () =>
+            var file = await PickSpreadsheetAsync("Selecionar planilha de pacientes");
+            if (file is null)
             {
-                var file = await PickSpreadsheetAsync("Selecionar planilha de pacientes");
-                if (file is null)
-                {
-                    return;
-                }
+                return;
+            }
 
-                await using var stream = await file.OpenReadAsync();
-                var result = await patientImportService.ImportAsync(stream, new PatientImportColumnMapDto
-                {
-                    NameColumn = NameColumn,
-                    SusNumberColumn = SusNumberColumn,
-                    MotherNameColumn = MotherNameColumn,
-                    FatherNameColumn = FatherNameColumn,
-                    BirthDateColumn = BirthDateColumn,
-                    ObservationColumn = ObservationColumn,
-                    BolsaFamiliaColumn = BolsaFamiliaColumn,
-                    HealthConditionColumns = HealthConditionColumns
-                        .Select(condition => new PatientImportConditionColumnDto
-                        {
-                            ConditionName = condition.ConditionName,
-                            ColumnName = condition.ColumnName
-                        })
-                        .ToList()
-                });
+            importCancellationTokenSource?.Dispose();
+            importCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = importCancellationTokenSource.Token;
 
-                PatientImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
+            IsImporting = true;
+            CanStartImport = false;
+            CanCancelImport = true;
+            ImportProgress = 0;
+            ImportProgressText = "Preparando importação...";
 
-                if (result.Errors.Count > 0)
-                {
-                    await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
-                    return;
-                }
-
-                await DisplayAlertAsync("Importação concluída", PatientImportSummary, "Voltar");
+            var progress = new Progress<ImportProgressDto>(value =>
+            {
+                ImportProgress = value.Progress;
+                ImportProgressText = string.IsNullOrWhiteSpace(value.CurrentStep)
+                    ? $"{value.ProcessedItems}/{value.TotalItems}"
+                    : $"{value.CurrentStep} ({value.ProcessedItems}/{value.TotalItems})";
             });
+
+            await using var stream = await file.OpenReadAsync();
+            var columnMap = BuildPatientColumnMap();
+            var result = await Task.Run(
+                () => patientImportService.ImportAsync(stream, columnMap, progress, cancellationToken),
+                cancellationToken);
+
+            PatientImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
+
+            if (result.Errors.Count > 0)
+            {
+                await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
+                return;
+            }
+
+            await DisplayAlertAsync("Importação concluída", PatientImportSummary, "Voltar");
+        }
+        catch (OperationCanceledException)
+        {
+            await DisplayAlertAsync("Importação", "Importação cancelada.", "Voltar");
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            await DisplayAlertAsync("Erro", "Não foi possível importar a planilha de pacientes.", "Voltar");
+            await DisplayAlertAsync("Erro", BuildImportErrorMessage("Não foi possível importar a planilha de pacientes.", ex), "Voltar");
+        }
+        finally
+        {
+            IsImporting = false;
+            CanStartImport = true;
+            CanCancelImport = false;
+            importCancellationTokenSource?.Dispose();
+            importCancellationTokenSource = null;
         }
     }
 
@@ -94,43 +134,126 @@ public partial class ImportDataViewModel(
     {
         try
         {
-            await ExecuteWithRunningAsync(async () =>
+            var file = await PickSpreadsheetAsync("Selecionar planilha de residências");
+            if (file is null)
             {
-                var file = await PickSpreadsheetAsync("Selecionar planilha de residências");
-                if (file is null)
-                {
-                    return;
-                }
+                return;
+            }
 
-                await using var stream = await file.OpenReadAsync();
-                var result = await houseImportService.ImportAsync(stream, new HouseImportColumnMapDto
-                {
-                    CepColumn = HouseCepColumn,
-                    StreetColumn = HouseStreetColumn,
-                    NumberColumn = HouseNumberColumn,
-                    NeighborhoodColumn = HouseNeighborhoodColumn,
-                    CityColumn = HouseCityColumn,
-                    StateColumn = HouseStateColumn,
-                    CountryColumn = HouseCountryColumn,
-                    ComplementColumn = HouseComplementColumn,
-                    HasComplementColumn = HouseHasComplementColumn
-                });
+            houseImportCancellationTokenSource?.Dispose();
+            houseImportCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = houseImportCancellationTokenSource.Token;
 
-                HouseImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
+            IsHouseImporting = true;
+            CanStartHouseImport = false;
+            CanCancelHouseImport = true;
+            HouseImportProgress = 0;
+            HouseImportProgressText = "Preparando importação...";
 
-                if (result.Errors.Count > 0)
-                {
-                    await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
-                    return;
-                }
-
-                await DisplayAlertAsync("Importação concluída", HouseImportSummary, "Voltar");
+            var progress = new Progress<ImportProgressDto>(value =>
+            {
+                HouseImportProgress = value.Progress;
+                HouseImportProgressText = string.IsNullOrWhiteSpace(value.CurrentStep)
+                    ? $"{value.ProcessedItems}/{value.TotalItems}"
+                    : $"{value.CurrentStep} ({value.ProcessedItems}/{value.TotalItems})";
             });
+
+            await using var stream = await file.OpenReadAsync();
+            var columnMap = BuildHouseColumnMap();
+            var result = await Task.Run(
+                () => houseImportService.ImportAsync(stream, columnMap, progress, cancellationToken),
+                cancellationToken);
+
+            HouseImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
+
+            if (result.Errors.Count > 0)
+            {
+                await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
+                return;
+            }
+
+            await DisplayAlertAsync("Importação concluída", HouseImportSummary, "Voltar");
+        }
+        catch (OperationCanceledException)
+        {
+            await DisplayAlertAsync("Importação", "Importação cancelada.", "Voltar");
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            await DisplayAlertAsync("Erro", "Não foi possível importar a planilha de residências.", "Voltar");
+            await DisplayAlertAsync("Erro", BuildImportErrorMessage("Não foi possível importar a planilha de residencias.", ex), "Voltar");
+        }
+        finally
+        {
+            IsHouseImporting = false;
+            CanStartHouseImport = true;
+            CanCancelHouseImport = false;
+            houseImportCancellationTokenSource?.Dispose();
+            houseImportCancellationTokenSource = null;
+        }
+    }
+
+    private HouseImportColumnMapDto BuildHouseColumnMap()
+    {
+        return new HouseImportColumnMapDto
+        {
+            CepColumn = HouseCepColumn,
+            StreetTypeColumn = HouseStreetTypeColumn,
+            StreetColumn = HouseStreetColumn,
+            NumberColumn = HouseNumberColumn,
+            NeighborhoodColumn = HouseNeighborhoodColumn,
+            CityColumn = HouseCityColumn,
+            StateColumn = HouseStateColumn,
+            CountryColumn = HouseCountryColumn,
+            ComplementColumn = HouseComplementColumn
+        };
+    }
+
+    private PatientImportColumnMapDto BuildPatientColumnMap()
+    {
+        return new PatientImportColumnMapDto
+        {
+            NameColumn = NameColumn,
+            SusNumberColumn = SusNumberColumn,
+            MotherNameColumn = MotherNameColumn,
+            FatherNameColumn = FatherNameColumn,
+            SexColumn = SexColumn,
+            BirthDateColumn = BirthDateColumn,
+            ObservationColumn = ObservationColumn,
+            BolsaFamiliaColumn = BolsaFamiliaColumn,
+            PatientCepColumn = PatientCepColumn,
+            PatientStreetTypeColumn = PatientStreetTypeColumn,
+            PatientStreetColumn = PatientStreetColumn,
+            PatientHouseNumberColumn = PatientHouseNumberColumn,
+            PatientNeighborhoodColumn = PatientNeighborhoodColumn,
+            PatientCityColumn = PatientCityColumn,
+            PatientStateColumn = PatientStateColumn,
+            PatientComplementColumn = PatientComplementColumn,
+            IsFamilyResponsibleColumn = IsFamilyResponsibleColumn,
+            FamilyResponsibleSusColumn = FamilyResponsibleSusColumn,
+            HealthConditionColumns = HealthConditionColumns
+                .Select(condition => new PatientImportConditionColumnDto
+                {
+                    ConditionName = condition.ConditionName,
+                    ColumnName = condition.ColumnName
+                })
+                .ToList()
+        };
+    }
+
+    private void CancelImport()
+    {
+        if (CanCancelImport)
+        {
+            importCancellationTokenSource?.Cancel();
+        }
+    }
+
+    private void CancelHouseImport()
+    {
+        if (CanCancelHouseImport)
+        {
+            houseImportCancellationTokenSource?.Cancel();
         }
     }
 
@@ -157,5 +280,13 @@ public partial class ImportDataViewModel(
     private static string BuildSummary(int importedCount, int updatedCount, int ignoredCount)
     {
         return $"Importados: {importedCount} | Atualizados: {updatedCount} | Ignorados: {ignoredCount}";
+    }
+
+    private static string BuildImportErrorMessage(string baseMessage, Exception exception)
+    {
+        var reason = exception.GetBaseException().Message;
+        return string.IsNullOrWhiteSpace(reason)
+            ? baseMessage
+            : $"{baseMessage}\n\nMotivo: {reason}";
     }
 }

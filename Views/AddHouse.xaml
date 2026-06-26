@@ -23,7 +23,7 @@
                             Grid.Column="2"
                             Source="loupe.png"
                             MaximumHeightRequest="40"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            Style="{StaticResource SoftIconButton}"
                             Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
                     </Grid>
                 </Border>

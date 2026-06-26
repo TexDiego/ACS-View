@@ -7,6 +7,7 @@ namespace ACS_View.Domain.ValueObjects
         [ObservableProperty] private string name;
         [ObservableProperty] private string cid;
         [ObservableProperty] private string filterKey;
+        [ObservableProperty] private string summary = "Resumo geral";
         [ObservableProperty] private int total;
         [ObservableProperty] private bool isCombination;
     }

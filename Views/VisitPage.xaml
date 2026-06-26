@@ -6,7 +6,6 @@
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     x:Class="ACS_View.Views.VisitPage"
     x:TypeArguments="models:Visits"
-    BackgroundColor="Transparent"
     Padding="0">
 
     <VerticalStackLayout BackgroundColor="{x:AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}" x:Name="layoutGrid" Spacing="16" Padding="10">
@@ -16,23 +15,23 @@
         </VerticalStackLayout>
 
         <VerticalStackLayout BackgroundColor="{StaticResource PageBackground}" x:Name="Descricao" Spacing="4">
-            <RadioButton GroupName="DescricaoVisita" Content="Realizada" IsChecked="True" CheckedChanged="RadioButton_CheckedChanged"/>
-            <RadioButton GroupName="DescricaoVisita" Content="Ausente" CheckedChanged="RadioButton_CheckedChanged"/>
-            <RadioButton GroupName="DescricaoVisita" Content="Recusada" CheckedChanged="RadioButton_CheckedChanged"/>
+            <RadioButton BackgroundColor="Transparent" GroupName="DescricaoVisita" Content="Realizada" IsChecked="True" CheckedChanged="RadioButton_CheckedChanged"/>
+            <RadioButton BackgroundColor="Transparent"  GroupName="DescricaoVisita" Content="Ausente" CheckedChanged="RadioButton_CheckedChanged"/>
+            <RadioButton BackgroundColor="Transparent"  GroupName="DescricaoVisita" Content="Recusada" CheckedChanged="RadioButton_CheckedChanged"/>
         </VerticalStackLayout>
 
         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
             <Button
-            Text="Cancelar"
-            Style="{StaticResource GhostButton}"
-            Clicked="CancelButton_Clicked"/>
+                Text="Cancelar"
+                Style="{StaticResource GhostButton}"
+                Clicked="CancelButton_Clicked"/>
 
             <Button
-            Grid.Column="1"
-            x:Name="AddVisitButton"
-            Text="Registrar"
-            Style="{StaticResource PrimaryButton}"
-            Clicked="AddVisitButton_Clicked"/>
+                Grid.Column="1"
+                x:Name="AddVisitButton"
+                Text="Registrar"
+                Style="{StaticResource PrimaryButton}"
+                Clicked="AddVisitButton_Clicked"/>
         </Grid>
     </VerticalStackLayout>
 </tk:Popup>

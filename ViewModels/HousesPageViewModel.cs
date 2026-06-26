@@ -19,11 +19,15 @@ namespace ACS_View.ViewModels
         private int _loadVersion;
         private int _loadedHousesVersion = -1;
         private string _lastLoadedSearch = string.Empty;
+        private string _filterKey = DashboardFilterKeys.All;
+        private string _lastLoadedFilterKey = DashboardFilterKeys.All;
 
         [ObservableProperty] private string searchText = string.Empty;
         [ObservableProperty] private ObservableCollection<HouseListItemDto> houses = [];
         [ObservableProperty] private int totalHouses;
         [ObservableProperty] private bool isLoadingMore;
+        [ObservableProperty] private bool hasActiveFilters;
+        [ObservableProperty] private string filterSummary = string.Empty;
 
         public ObservableCollection<int> SkeletonItems { get; } = new([1, 2, 3, 4, 5, 6, 7, 8]);
 
@@ -33,18 +37,28 @@ namespace ACS_View.ViewModels
         public ICommand LoadHousesCommand => new Command<string?>(async search => await SearchHousesAsync(search));
         public ICommand LoadMoreHousesCommand => new Command(async () => await LoadMoreHousesAsync());
         public ICommand NewHouseCommand => new Command(async () => await NavigateToAsync("addhouse", new Dictionary<string, object> { { "house", new House() } }));
+        public ICommand ClearFiltersCommand => new Command(async () => await ClearFiltersAsync());
 
         public async Task LoadInitialHousesAsync()
         {
             var normalizedSearch = SearchText?.Trim() ?? string.Empty;
             if (Houses.Count > 0 &&
                 _loadedHousesVersion == DataChangeTracker.HousesVersion &&
-                string.Equals(_lastLoadedSearch, normalizedSearch, StringComparison.Ordinal))
+                string.Equals(_lastLoadedSearch, normalizedSearch, StringComparison.Ordinal) &&
+                string.Equals(_lastLoadedFilterKey, _filterKey, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
             await RefreshHousesAsync(SearchText);
+        }
+
+        public void SetFilter(string? filterKey)
+        {
+            _filterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
+            HasActiveFilters = !string.Equals(_filterKey, DashboardFilterKeys.All, StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(_filterKey, DashboardFilterKeys.Residences, StringComparison.OrdinalIgnoreCase);
+            FilterSummary = HasActiveFilters ? GetFilterTitle(_filterKey) : string.Empty;
         }
 
         private async Task SearchHousesAsync(string? search)
@@ -78,7 +92,7 @@ namespace ACS_View.ViewModels
 
             try
             {
-                var result = await _houseService.GetHouseListAsync(search, 0, PageSize);
+                var result = await _houseService.GetHouseListAsync(search, 0, PageSize, _filterKey);
                 if (loadVersion != _loadVersion)
                 {
                     return;
@@ -94,6 +108,7 @@ namespace ACS_View.ViewModels
                     _hasMoreHouses = _loadedHousesCount < TotalHouses;
                     _loadedHousesVersion = DataChangeTracker.HousesVersion;
                     _lastLoadedSearch = normalizedSearch;
+                    _lastLoadedFilterKey = _filterKey;
                 });
             }
             finally
@@ -116,7 +131,7 @@ namespace ACS_View.ViewModels
 
             try
             {
-                var result = await _houseService.GetHouseListAsync(SearchText, _loadedHousesCount, PageSize);
+                var result = await _houseService.GetHouseListAsync(SearchText, _loadedHousesCount, PageSize, _filterKey);
 
                 RunOnMainThread(() =>
                 {
@@ -159,6 +174,7 @@ namespace ACS_View.ViewModels
                     {
                         person.HouseId = -1;
                         person.FamilyId = -1;
+                        person.FamilyResponsibleSus = null;
                         await _patientService.UpdatePatient(person);
                     }
                 }
@@ -191,6 +207,21 @@ namespace ACS_View.ViewModels
             _throttleCts = new CancellationTokenSource();
 
             return _throttleCts.Token;
+        }
+
+        private async Task ClearFiltersAsync()
+        {
+            SetFilter(DashboardFilterKeys.All);
+            await RefreshHousesAsync(SearchText);
+        }
+
+        private static string GetFilterTitle(string filterKey)
+        {
+            return filterKey switch
+            {
+                DashboardFilterKeys.EmptyResidences => "Residências vazias",
+                _ => "Filtro aplicado"
+            };
         }
     }
 }

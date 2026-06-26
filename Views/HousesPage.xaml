@@ -14,7 +14,7 @@
         <ToolbarItem IconImageSource="addhouse.png" Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
-    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*">
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
 
         <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
             <SearchBar
@@ -25,8 +25,31 @@
                 TextChanged="SearchBar_TextChanged"/>
         </Border>
 
+        <Grid ColumnDefinitions="*,*" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
+            <Label
+                Grid.Column="0"
+                HorizontalOptions="Start"
+                Text="{Binding FilterSummary}"
+                Style="{StaticResource BodyMuted}"
+                IsVisible="{Binding HasActiveFilters}"/>
+
+            <Label
+                Grid.Column="1"
+                HorizontalOptions="End"
+                Text="Remover filtros"
+                Style="{StaticResource BodyMuted}"
+                TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                IsVisible="{Binding HasActiveFilters}">
+
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer
+                        Command="{Binding ClearFiltersCommand}"/>
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
         <CollectionView
-            Grid.Row="1"
+            Grid.Row="2"
             ItemsSource="{Binding Houses}"
             SelectionMode="None"
             VerticalScrollBarVisibility="Never"
@@ -36,36 +59,17 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="dto:HouseListItemDto">
                     <Border Style="{StaticResource CardBorder}" Padding="0">
-                        <SwipeView>
-                            <SwipeView.LeftItems>
-                                <SwipeItem
-                                    IconImageSource="bin.png"
-                                    Text="Excluir"
-                                    BackgroundColor="IndianRed"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding CasaId}"/>
-                            </SwipeView.LeftItems>
-
-                            <SwipeView.RightItems>
-                                <SwipeItem
-                                    IconImageSource="pencil.png"
-                                    Text="Editar"
-                                    BackgroundColor="DarkOrange"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </SwipeView.RightItems>
-
                             <Grid
-                                ColumnDefinitions="*,auto" 
+                                ColumnDefinitions="*,auto"
                                 ColumnSpacing="12"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
-                                        CommandParameter="{Binding CasaId}"/>
-                                </Grid.GestureRecognizers>
-
                                 <VerticalStackLayout Grid.Column="0" Spacing="5" Margin="10">
+                                    <VerticalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
+                                            CommandParameter="{Binding CasaId}"/>
+                                    </VerticalStackLayout.GestureRecognizers>
+
                                     <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}"/>
                                     <HorizontalStackLayout Spacing="4">
                                         <Label Text="Número" Style="{StaticResource BodyMuted}"/>
@@ -73,15 +77,37 @@
                                         <Label Text="{Binding Complemento}" Style="{StaticResource BodyMuted}"/>
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
+
+                                <HorizontalStackLayout
+                                    Grid.Column="1"
+                                    Spacing="10"
+                                    Margin="0,0,10,0"
+                                    VerticalOptions="Center">
+
+                                    <ImageButton
+                                        Source="pencil.png"
+                                        ToolTipProperties.Text="Editar"
+                                        MaximumHeightRequest="28"
+                                        MaximumWidthRequest="28"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                    <ImageButton
+                                        Source="bin.png"
+                                        ToolTipProperties.Text="Excluir"
+                                        MaximumHeightRequest="28"
+                                        MaximumWidthRequest="28"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                        CommandParameter="{Binding CasaId}"/>
+                                </HorizontalStackLayout>
                             </Grid>
-                        </SwipeView>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
         <CollectionView
-            Grid.Row="1"
+            Grid.Row="2"
             ItemsSource="{Binding SkeletonItems}"
             IsVisible="{Binding IsLoading}"
             InputTransparent="True"
@@ -94,14 +120,14 @@
         </CollectionView>
 
         <ActivityIndicator
-            Grid.Row="1"
+            Grid.Row="2"
             IsVisible="{Binding IsLoadingMore}"
             IsRunning="{Binding IsLoadingMore}"
             VerticalOptions="End"
             HorizontalOptions="Center"
             Margin="0,0,0,52"/>
 
-        <Border Grid.RowSpan="2" Style="{StaticResource CountPill}">
+        <Border Grid.RowSpan="3" Style="{StaticResource CountPill}">
             <Label
                 Text="{Binding TotalHouses, StringFormat='{0} registros encontrados'}"
                 TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"

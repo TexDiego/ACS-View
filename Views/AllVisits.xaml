@@ -6,6 +6,7 @@
              x:DataType="vm:AllVisitsViewModel"
              x:Class="ACS_View.Views.AllVisits"
              Shell.NavBarIsVisible="True"
+             Style="{StaticResource PageBackground}"
              Title="Visitas">
 
     <Grid Padding="0" RowDefinitions="*,auto" RowSpacing="14">
@@ -38,7 +39,7 @@
 
                                 <Label
                                     Text="{Binding Description}"
-                                    TextColor="{StaticResource Accent}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
                                     FontSize="13"
                                     FontAttributes="Bold"/>
                             </VerticalStackLayout>

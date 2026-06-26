@@ -1,7 +1,5 @@
 using ACS_View.Application.Interfaces;
 
-using ACS_View.Application.Interfaces;
-
 namespace ACS_View.Views
 {
     public partial class App : Microsoft.Maui.Controls.Application
@@ -21,16 +19,26 @@ namespace ACS_View.Views
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            var shell = CreateShell();
+            var shell = CreateShell(isAuthenticated: false);
 
             MainThread.BeginInvokeOnMainThread(async () =>
             {
+                await db.InitializeAsync();
                 var authService = ServiceProvider.GetRequiredService<IAuthService>();
-                var route = await authService.IsAuthenticatedAsync()
-                    ? "//overallview"
-                    : "login";
+                if (!await authService.IsAuthenticatedAsync())
+                {
+                    return;
+                }
 
-                await shell.GoToAsync(route);
+                var window = Windows.FirstOrDefault();
+                if (window is null)
+                {
+                    return;
+                }
+
+                var authenticatedShell = CreateShell(isAuthenticated: true);
+                window.Page = authenticatedShell;
+                await authenticatedShell.GoToAsync("//overallview");
             });
 
             return new Window(shell);
@@ -43,19 +51,19 @@ namespace ACS_View.Views
 
         public Task ResetToLoginShellAsync()
         {
-            return ResetShellAsync("login");
+            return ResetShellAsync("//login");
         }
 
-        private AppShell CreateShell()
+        private AppShell CreateShell(bool isAuthenticated)
         {
-            return new AppShell(db, ServiceProvider);
+            return new AppShell(db, ServiceProvider, isAuthenticated);
         }
 
         private Task ResetShellAsync(string route)
         {
             return MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                var shell = CreateShell();
+                var shell = CreateShell(route != "//login");
                 var window = Windows.FirstOrDefault();
 
                 if (window is null)
@@ -64,6 +72,11 @@ namespace ACS_View.Views
                 }
 
                 window.Page = shell;
+                if (route == "//login")
+                {
+                    return;
+                }
+
                 await shell.GoToAsync(route);
             });
         }

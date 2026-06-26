@@ -7,23 +7,27 @@ using SQLite;
 
 namespace ACS_View.Infrastructure.Data.SQLite;
 
-internal sealed class SQLitePatientRepository(IDatabaseService databaseService) : IPatientRepository
+internal sealed class SQLitePatientRepository(IDatabaseService databaseService, ICurrentUserContext currentUserContext) : IPatientRepository
 {
     private readonly SQLiteAsyncConnection _connection = databaseService.Connection;
 
     public async Task DeleteAsync(int id)
     {
+        var userId = currentUserContext.RequireCurrentUserId();
         await _connection.RunInTransactionAsync(connection =>
         {
-            connection.Execute("DELETE FROM PatientCID WHERE PatientId = ?", id);
-            connection.Execute("DELETE FROM PatientConditions WHERE PatientId = ?", id);
-            connection.Delete<Patient>(id);
+            connection.Execute("DELETE FROM PatientCID WHERE PatientId = ? AND UserId = ?", id, userId);
+            connection.Execute("DELETE FROM PatientConditions WHERE PatientId = ? AND UserId = ?", id, userId);
+            connection.Execute("DELETE FROM Vaccines WHERE Id = ? AND UserId = ?", id, userId);
+            connection.Execute("DELETE FROM Patient WHERE Id = ? AND UserId = ?", id, userId);
         });
     }
 
     public Task<List<Patient>?> GetAllAsync()
     {
+        var userId = currentUserContext.RequireCurrentUserId();
         return _connection.Table<Patient>()
+            .Where(p => p.UserId == userId)
             .OrderBy(n => n.Name)
             .ToListAsync();
     }
@@ -35,8 +39,9 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService) 
         filter ??= new PatientListFilterDto();
 
         var normalizedSearch = search?.Trim() ?? string.Empty;
-        var whereParts = new List<string>();
-        var parameters = new List<object>();
+        var userId = currentUserContext.RequireCurrentUserId();
+        var whereParts = new List<string> { "p.UserId = ?" };
+        var parameters = new List<object> { userId };
 
         if (!string.IsNullOrWhiteSpace(normalizedSearch))
         {
@@ -81,33 +86,42 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService) 
 
     public Task<List<Patient>?> GetByConditionAsync(int conditionId)
     {
-        return _connection.Table<Patient>().OrderBy(p => p.Name).ToListAsync();
+        var userId = currentUserContext.RequireCurrentUserId();
+        return _connection.Table<Patient>()
+            .Where(p => p.UserId == userId)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
     }
 
     public Task<Patient?> GetByIdAsync(int id)
     {
-        return _connection.Table<Patient>().FirstOrDefaultAsync(p => p.Id == id);
+        var userId = currentUserContext.RequireCurrentUserId();
+        return _connection.Table<Patient>().FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
     }
 
     public Task InsertAsync(Patient patient)
     {
+        patient.UserId = currentUserContext.RequireCurrentUserId();
         return _connection.InsertAsync(patient);
     }
 
     public Task UpdateAsync(Patient patient)
     {
+        patient.UserId = currentUserContext.RequireCurrentUserId();
         return _connection.UpdateAsync(patient);
     }
 
     public Task<List<Patient>?> GetByHouseIdAsync(int houseId)
     {
-        return _connection.Table<Patient>().Where(p => p.HouseId == houseId).ToListAsync();
+        var userId = currentUserContext.RequireCurrentUserId();
+        return _connection.Table<Patient>().Where(p => p.HouseId == houseId && p.UserId == userId).ToListAsync();
     }
 
     public Task<List<Patient>?> GetByFamilyAndHouseIdAsync(int familyId, int houseId)
     {
+        var userId = currentUserContext.RequireCurrentUserId();
         return _connection.Table<Patient>()
-            .Where(p => p.FamilyId == familyId && p.HouseId == houseId)
+            .Where(p => p.FamilyId == familyId && p.HouseId == houseId && p.UserId == userId)
             .ToListAsync();
     }
 

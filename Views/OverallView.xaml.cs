@@ -1,4 +1,3 @@
-using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
@@ -7,10 +6,10 @@ public partial class OverallView : ContentPage
 {
     private readonly OverallViewModel _viewModel;
 
-    public OverallView(IDashboardMetricsService dash)
+    public OverallView(OverallViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = _viewModel =  new OverallViewModel(dash);
+        BindingContext = _viewModel = viewModel;
     }
 
     protected override void OnAppearing()

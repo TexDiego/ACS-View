@@ -31,6 +31,7 @@
     <Color x:Key="DarkBorderStrong">#42606F</Color>
     <Color x:Key="DarkDisabledFill">#293946</Color>
     <Color x:Key="DarkPrimaryLight">#153E4B</Color>
+    <Color x:Key="DarkAccent">#8E2A1A</Color>
     <Color x:Key="DarkAccentLight">#44231E</Color>
     <Color x:Key="DarkOverlayScrim">#99101820</Color>
 

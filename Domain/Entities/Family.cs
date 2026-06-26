@@ -6,6 +6,7 @@ namespace ACS_View.Domain.Entities
     {
         [PrimaryKey]
         public int IdFamilia { get; set; }
+        public int UserId { get; set; }
         public int IdPessoa { get; set; }
     }
 }

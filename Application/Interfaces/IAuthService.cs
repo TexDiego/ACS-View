@@ -7,6 +7,7 @@ public interface IAuthService
     Task<bool> IsAuthenticatedAsync();
     Task LoginAsync(string username, string password);
     Task LogoutAsync();
+    Task<User?> GetCurrentUserAsync();
     Task RegisterAsync(string username, string password, string securityQuestion, string securityAnswer);
     Task<User?> GetUserForPasswordRecoveryAsync(string username);
     Task ResetPasswordAsync(string username, string securityAnswer, string newPassword);

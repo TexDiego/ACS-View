@@ -38,7 +38,7 @@
                                             Grid.Column="1"
                                             Source="add.png"
                                             MaximumHeightRequest="40"
-                                            BackgroundColor="{StaticResource PrimaryLight}"
+                                            Style="{StaticResource SoftIconButton}"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddPersonCommand}"
                                             CommandParameter="{Binding Id}"
                                             Clicked="ImageButton_Clicked"/>
@@ -48,6 +48,15 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </ScrollView>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Responsavel familiar" Style="{StaticResource SectionTitle}"/>
+                    <Picker
+                        Title="Selecione o responsavel"
+                        ItemsSource="{Binding Pessoas}"
+                        ItemDisplayBinding="{Binding Nome}"
+                        SelectedItem="{Binding ResponsiblePerson, Mode=TwoWay}"/>
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </Border>
 
@@ -61,7 +70,7 @@
                                 Grid.Column="1"
                                 Source="removeperson.png"
                                 MaximumHeightRequest="40"
-                                BackgroundColor="{StaticResource AccentLight}"
+                                Style="{StaticResource DangerSoftIconButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                 CommandParameter="{Binding Id}"/>
                         </Grid>

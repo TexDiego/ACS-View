@@ -15,6 +15,7 @@ public partial class OverallViewModel : BaseViewModel
 {
     private readonly IDashboardMetricsService dash;
     private readonly IDashboardMetricPreferencesService metricPreferences;
+    private readonly IPopupService popupService;
 
     private readonly GeneralMetrics generalMetrics = new();
     private readonly HealthMetrics healthMetrics = new();
@@ -37,15 +38,19 @@ public partial class OverallViewModel : BaseViewModel
     public ICommand GoToPageAsync => new Command<string>(async (p) => await GoToPage(p));
     public ICommand LoadSummaryCommand => new Command(async () => await LoadSummaryAsync());
     public ICommand SwitchView => new Command<string>(SwitchMetricsView);
+    public ICommand OpenMetricsMenuCommand => new Command(async () => await OpenMetricsMenuAsync());
     public ICommand AddCombinedMetricCommand => new Command(async () => await AddCombinedMetricAsync());
     public ICommand RemoveMetricCommand => new Command<Dashboard>(async metric => await RemoveMetricAsync(metric));
+    public ICommand NavigateToCIDView => new Command(async () => await NavigateToAsync("cids"));
 
     public OverallViewModel(
         IDashboardMetricsService _dash,
-        IDashboardMetricPreferencesService metricPreferencesService)
+        IDashboardMetricPreferencesService metricPreferencesService,
+        IPopupService popupService)
     {
         dash = _dash;
         metricPreferences = metricPreferencesService;
+        this.popupService = popupService;
         CurrentView = generalMetrics;
         generalMetrics.BindingContext = this;
         healthMetrics.BindingContext = this;
@@ -130,6 +135,13 @@ public partial class OverallViewModel : BaseViewModel
                     Summary = BuildModifierSummary(new MetricModifierSelection(nameof(Sexo.Feminino), 25, 64), "Resumo geral"),
                     Total = metrics.TotalMulheres25a64
                 });
+                MetricsDashboard.Add(new Dashboard()
+                {
+                    Name = "Inativos",
+                    FilterKey = DashboardFilterKeys.Inactive,
+                    Summary = "Cadastros fora das estatisticas",
+                    Total = metrics.TotalInativos
+                });
 
                 foreach (var condition in await dash.GetConditionsAsync())
                 {
@@ -206,39 +218,42 @@ public partial class OverallViewModel : BaseViewModel
         HealthTabSelected = page == "1";
     }
 
-    private async Task AddCombinedMetricAsync()
+    private async Task OpenMetricsMenuAsync()
     {
         var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
         var removedRootMetrics = GetRemovedRootMetrics();
         var candidates = GetCombinationCandidates(targetDashboard).ToList();
         var canCreateCombination = HasValidCombination(candidates);
 
-        if (removedRootMetrics.Count > 0)
+        var result = await popupService.ShowAsync<OverallMetricMenuAction>(
+            new OverallMetricMenuPopup(removedRootMetrics.Count > 0, canCreateCombination));
+
+        if (result.WasDismissed || result is null)
         {
-            if (!canCreateCombination)
-            {
-                await RestoreRemovedRootMetricAsync(targetDashboard, removedRootMetrics);
-                return;
-            }
-
-            var action = await DisplayActionSheetAsync(
-                "Adicionar métrica",
-                "Cancelar",
-                null,
-                "Combinar métricas",
-                "Restaurar métrica removida");
-
-            if (action == "Restaurar métrica removida")
-            {
-                await RestoreRemovedRootMetricAsync(targetDashboard, removedRootMetrics);
-                return;
-            }
-
-            if (action != "Combinar métricas")
-            {
-                return;
-            }
+            return;
         }
+
+        switch (result.Result)
+        {
+            case OverallMetricMenuAction.OpenCids:
+                await NavigateToAsync("cids");
+                break;
+            case OverallMetricMenuAction.RestoreHiddenMetrics:
+                await RestoreRemovedRootMetricAsync(targetDashboard, removedRootMetrics);
+                break;
+            case OverallMetricMenuAction.AddMetric:
+                await AddCombinedMetricAsync();
+                break;
+            default:
+                return;
+        }
+    }
+
+    private async Task AddCombinedMetricAsync()
+    {
+        var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
+        var candidates = GetCombinationCandidates(targetDashboard).ToList();
+        var canCreateCombination = HasValidCombination(candidates);
 
         if (!canCreateCombination)
         {
@@ -246,34 +261,34 @@ public partial class OverallViewModel : BaseViewModel
             return;
         }
 
-        var first = await PickMetricAsync("Primeira métrica", candidates);
-        if (first is null)
+        var requestResult = await popupService.ShowAsync<DashboardMetricCreateRequestDto>(new AddMetricPopup(candidates));
+        if (requestResult.WasDismissed || requestResult.Result is null)
         {
             return;
         }
 
-        var secondCandidates = candidates
-            .Where(metric => !string.Equals(metric.FilterKey, first.FilterKey, StringComparison.OrdinalIgnoreCase))
-            .Where(metric => CanCombine(first, metric))
-            .ToList();
+        var request = requestResult.Result;
+        var first = candidates.FirstOrDefault(metric =>
+            string.Equals(metric.FilterKey, request.FirstFilterKey, StringComparison.OrdinalIgnoreCase));
+        var second = candidates.FirstOrDefault(metric =>
+            string.Equals(metric.FilterKey, request.SecondFilterKey, StringComparison.OrdinalIgnoreCase));
 
-        if (secondCandidates.Count == 0)
+        if (first is null || second is null)
         {
-            await DisplayAlertAsync("Métricas", "Não há uma segunda métrica compatível com a seleção.", "Voltar");
+            await DisplayAlertAsync("Métricas", "Não foi possível localizar as métricas selecionadas.", "Voltar");
             return;
         }
 
-        var second = await PickMetricAsync("Segunda métrica", secondCandidates);
-        if (second is null)
+        if (!CanCombine(first, second))
         {
+            await DisplayAlertAsync("Métricas", "Essas métricas não podem ser combinadas.", "Voltar");
             return;
         }
 
-        var modifiers = await PickMetricModifiersAsync();
-        if (modifiers is null)
-        {
-            return;
-        }
+        var modifiers = new MetricModifierSelection(
+            request.SexModifier,
+            request.MinimumAgeModifier,
+            request.MaximumAgeModifier);
 
         var combinationKey = DashboardFilterKeys.CreateModified(
             DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey),
@@ -361,9 +376,12 @@ public partial class OverallViewModel : BaseViewModel
                                 string.Equals(second.FilterKey, DashboardFilterKeys.ChildrenUnder6, StringComparison.OrdinalIgnoreCase);
         var hasWomen25To64 = string.Equals(first.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase) ||
                              string.Equals(second.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase);
+        var hasInactive = string.Equals(first.FilterKey, DashboardFilterKeys.Inactive, StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(second.FilterKey, DashboardFilterKeys.Inactive, StringComparison.OrdinalIgnoreCase);
 
         return !(hasElderly && hasChildrenUnder6) &&
-               !(hasWomen25To64 && hasChildrenUnder6);
+               !(hasWomen25To64 && hasChildrenUnder6) &&
+               !hasInactive;
     }
 
     private async Task<MetricModifierSelection?> PickMetricModifiersAsync()

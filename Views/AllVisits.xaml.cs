@@ -17,4 +17,14 @@ public partial class AllVisits : ContentPage
         base.OnAppearing();
         _ = _viewModel.LoadVisitsAsync();
     }
+
+    private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        ScrollToTopButtonController.UpdateVisibility(BackToTopButton, e);
+    }
+
+    private void BackToTopButton_Clicked(object sender, EventArgs e)
+    {
+        ScrollToTopButtonController.ScrollToTop(VisitsCollectionView, BackToTopButton);
+    }
 }

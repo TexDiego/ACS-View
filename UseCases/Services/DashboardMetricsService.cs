@@ -9,6 +9,9 @@ namespace ACS_View.UseCases.Services
 {
     internal class DashboardMetricsService(IDatabaseService db, ICurrentUserContext currentUserContext) : IDashboardMetricsService
     {
+        private const string ActivePatientClause = "COALESCE(IsActive, 1) = 1";
+        private const string ActivePatientAliasClause = "COALESCE(p.IsActive, 1) = 1";
+
         private readonly SQLiteAsyncConnection _connection = db.Connection;
 
         public async Task<DashboardMetricsDto> GetMetricsAsync()
@@ -20,10 +23,12 @@ namespace ACS_View.UseCases.Services
 
             var metrics = new DashboardMetricsDto()
             {
-                TotalPacientes = await _connection.Table<Patient>().CountAsync(p => p.UserId == userId),
+                TotalPacientes = await _connection.ExecuteScalarAsync<int>(
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause}",
+                    userId),
                 TotalResidencias = await _connection.Table<House>().CountAsync(h => h.UserId == userId),
                 TotalResidenciasVazias = await _connection.ExecuteScalarAsync<int>(
-                    """
+                    $"""
                     SELECT COUNT(*)
                     FROM House h
                     WHERE h.UserId = ?
@@ -32,25 +37,31 @@ namespace ACS_View.UseCases.Services
                           FROM Patient p
                           WHERE p.UserId = h.UserId
                             AND p.HouseId = h.CasaId
+                            AND {ActivePatientAliasClause}
                       )
                     """,
                     userId),
-                TotalSemResidencia = await _connection.Table<Patient>().CountAsync(p => p.UserId == userId && p.HouseId == -1),
-                TotalBolsaFamilia = await _connection.Table<Patient>().CountAsync(p => p.UserId == userId && p.BolsaFamilia),
+                TotalSemResidencia = await _connection.ExecuteScalarAsync<int>(
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND HouseId = -1",
+                    userId),
+                TotalBolsaFamilia = await _connection.ExecuteScalarAsync<int>(
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BolsaFamilia = 1",
+                    userId),
                 TotalIdosos = await _connection.ExecuteScalarAsync<int>(
-                    "SELECT COUNT(*) FROM Patient WHERE UserId = ? AND BirthDate <= ?",
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BirthDate <= ?",
                     userId,
                     elderlyCutoff),
                 TotalCriancasMenoresDe6 = await _connection.ExecuteScalarAsync<int>(
-                    "SELECT COUNT(*) FROM Patient WHERE UserId = ? AND BirthDate > ?",
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BirthDate > ?",
                     userId,
                     childrenUnder6Cutoff),
                 TotalMulheres25a64 = await _connection.ExecuteScalarAsync<int>(
-                    "SELECT COUNT(*) FROM Patient WHERE UserId = ? AND Sexo = ? COLLATE NOCASE AND BirthDate <= ? AND BirthDate > ?",
+                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND Sexo = ? COLLATE NOCASE AND BirthDate <= ? AND BirthDate > ?",
                     userId,
                     "Feminino",
                     today.AddYears(-25),
-                    today.AddYears(-65))
+                    today.AddYears(-65)),
+                TotalInativos = await _connection.Table<Patient>().CountAsync(p => p.UserId == userId && !p.IsActive)
             };
             return metrics;
         }
@@ -66,6 +77,7 @@ namespace ACS_View.UseCases.Services
                 INNER JOIN CidSubcategory sc ON sc.Id = pc.CidId
                 WHERE pc.UserId = ?
                   AND p.UserId = ?
+                  AND COALESCE(p.IsActive, 1) = 1
                 GROUP BY sc.Code, sc.Description
                 ORDER BY Quantity DESC, sc.Code";
 
@@ -83,6 +95,7 @@ namespace ACS_View.UseCases.Services
                 WHERE pc.PatientId IS NOT NULL
                   AND pc.UserId = ?
                   AND p.UserId = ?
+                  AND COALESCE(p.IsActive, 1) = 1
                 GROUP BY pc.Description
                 ORDER BY Quantity DESC;";
 

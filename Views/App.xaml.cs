@@ -4,7 +4,7 @@ namespace ACS_View.Views
 {
     public partial class App : Microsoft.Maui.Controls.Application
     {
-        private readonly IDatabaseService db;
+        private readonly IAppStartupService appStartupService;
         public IServiceProvider ServiceProvider { get; private set; }
 
         public App(IServiceProvider serviceProvider)
@@ -12,41 +12,22 @@ namespace ACS_View.Views
             InitializeComponent();
             SQLitePCL.Batteries_V2.Init();
             ServiceProvider = serviceProvider;
-            db = serviceProvider.GetRequiredService<IDatabaseService>();
-
-            MainThread.BeginInvokeOnMainThread(async () => await InitializeDatabase());
+            appStartupService = serviceProvider.GetRequiredService<IAppStartupService>();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
             var shell = CreateShell(isAuthenticated: false);
+            var window = new Window(shell);
+            _ = RestoreSessionAsync(window);
 
-            MainThread.BeginInvokeOnMainThread(async () =>
-            {
-                await db.InitializeAsync();
-                var authService = ServiceProvider.GetRequiredService<IAuthService>();
-                if (!await authService.IsAuthenticatedAsync())
-                {
-                    return;
-                }
-
-                var window = Windows.FirstOrDefault();
-                if (window is null)
-                {
-                    return;
-                }
-
-                var authenticatedShell = CreateShell(isAuthenticated: true);
-                window.Page = authenticatedShell;
-                await authenticatedShell.GoToAsync("//overallview");
-            });
-
-            return new Window(shell);
+            return window;
         }
 
-        public Task ResetToAuthenticatedShellAsync()
+        public async Task ResetToAuthenticatedShellAsync()
         {
-            return ResetShellAsync("//overallview");
+            await appStartupService.InitializeAsync();
+            await ResetShellAsync("//overallview");
         }
 
         public Task ResetToLoginShellAsync()
@@ -56,7 +37,7 @@ namespace ACS_View.Views
 
         private AppShell CreateShell(bool isAuthenticated)
         {
-            return new AppShell(db, ServiceProvider, isAuthenticated);
+            return new AppShell(ServiceProvider, isAuthenticated);
         }
 
         private Task ResetShellAsync(string route)
@@ -81,15 +62,29 @@ namespace ACS_View.Views
             });
         }
 
-        private async Task InitializeDatabase()
+        private async Task RestoreSessionAsync(Window window)
         {
-            await db.InitializeAsync();
+            try
+            {
+                await appStartupService.InitializeAsync();
 
-            ICidSeeder cidSeeder = ServiceProvider.GetRequiredService<ICidSeeder>();
-            IPatientConditionSeeder patientConditionSeeder = ServiceProvider.GetRequiredService<IPatientConditionSeeder>();
+                var authService = ServiceProvider.GetRequiredService<IAuthService>();
+                if (!await authService.IsAuthenticatedAsync())
+                {
+                    return;
+                }
 
-            await cidSeeder.SeedAsync();
-            await patientConditionSeeder.SeedAsync();
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    var authenticatedShell = CreateShell(isAuthenticated: true);
+                    window.Page = authenticatedShell;
+                    await authenticatedShell.GoToAsync("//overallview");
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Nao foi possivel restaurar sessao inicial: {ex.Message}");
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 using ACS_View.Domain.Entities.Health;
 using ACS_View.Application.Interfaces;
+using ACS_View.Application.DTOs;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
 
@@ -58,6 +59,81 @@ namespace ACS_View.Infrastructure.Data.SQLite
         public async Task<List<CidSubcategory>> GetAllSubcategories()
         {
             return await _database.Table<CidSubcategory>().ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<CidSearchResultDto>> SearchCidAsync(
+            string? searchText,
+            string? codePrefix,
+            int skip,
+            int take,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, 100);
+
+            var whereParts = new List<string>();
+            var parameters = new List<object>();
+
+            if (!string.IsNullOrWhiteSpace(codePrefix) &&
+                !string.Equals(codePrefix, "Todos", StringComparison.OrdinalIgnoreCase))
+            {
+                whereParts.Add("sc.Code LIKE ? COLLATE NOCASE");
+                parameters.Add($"{codePrefix.Trim()}%");
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var search = $"%{searchText.Trim()}%";
+                whereParts.Add("""
+                    (
+                        sc.Code LIKE ? COLLATE NOCASE OR
+                        sc.Description LIKE ? COLLATE NOCASE OR
+                        c.Code LIKE ? COLLATE NOCASE OR
+                        c.Description LIKE ? COLLATE NOCASE OR
+                        g.Code LIKE ? COLLATE NOCASE OR
+                        g.Description LIKE ? COLLATE NOCASE OR
+                        ch.Description LIKE ? COLLATE NOCASE
+                    )
+                    """);
+                parameters.Add(search);
+                parameters.Add(search);
+                parameters.Add(search);
+                parameters.Add(search);
+                parameters.Add(search);
+                parameters.Add(search);
+                parameters.Add(search);
+            }
+
+            var whereClause = whereParts.Count > 0
+                ? $"WHERE {string.Join(" AND ", whereParts)}"
+                : string.Empty;
+
+            parameters.Add(take);
+            parameters.Add(skip);
+
+            return await _database.QueryAsync<CidSearchResultDto>(
+                $"""
+                SELECT
+                    sc.Id AS Id,
+                    sc.Code AS Code,
+                    sc.Description AS Description,
+                    c.Code AS CategoryCode,
+                    c.Description AS CategoryDescription,
+                    g.Code AS GroupCode,
+                    g.Description AS GroupDescription,
+                    ch.Code AS ChapterCode,
+                    ch.Description AS ChapterDescription
+                FROM CidSubcategory sc
+                LEFT JOIN CidCategory c ON c.Code = sc.CategoryCode
+                LEFT JOIN CidGroup g ON g.Code = c.GroupCode
+                LEFT JOIN CidChapter ch ON ch.Code = g.ChapterCode
+                {whereClause}
+                ORDER BY sc.Code COLLATE NOCASE, sc.Id
+                LIMIT ? OFFSET ?
+                """,
+                [.. parameters]);
         }
 
         public async Task InsertChaptersAsync(IEnumerable<CidChapter> chapters)

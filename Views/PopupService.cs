@@ -17,6 +17,11 @@ internal sealed class PopupService : IPopupService
             ? await Shell.Current.ShowPopupAsync<T>(mauiPopup, PopupConfigs.Default)
             : await Shell.Current.ShowPopupAsync<T>(mauiPopup, PopupConfigs.Default, parameters);
 
+        if (result is null || result.WasDismissedByTappingOutsideOfPopup)
+        {
+            return new PopupResultDto<T>();
+        }
+
         return new PopupResultDto<T>
         {
             WasDismissed = result.WasDismissedByTappingOutsideOfPopup,

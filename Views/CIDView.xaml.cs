@@ -2,20 +2,20 @@ using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
 
-public partial class NotesPage : ContentPage
+public partial class CIDView : ContentPage
 {
-    private readonly NotesPageViewModel _viewModel;
+    private readonly CIDViewViewModel _viewModel;
 
-    public NotesPage(NotesPageViewModel vm)
+    public CIDView(CIDViewViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = _viewModel = vm;
+        BindingContext = _viewModel = viewModel;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _ = _viewModel.LoadNotesAsync();
+        _ = _viewModel.InitializeAsync();
     }
 
     private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
@@ -25,6 +25,6 @@ public partial class NotesPage : ContentPage
 
     private void BackToTopButton_Clicked(object sender, EventArgs e)
     {
-        ScrollToTopButtonController.ScrollToTop(NotesCollectionView, BackToTopButton);
+        ScrollToTopButtonController.ScrollToTop(CidCollectionView, BackToTopButton);
     }
 }

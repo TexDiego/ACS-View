@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    xmlns:views="clr-namespace:ACS_View.Views"
+    x:Class="ACS_View.Views.OverallMetricMenuPopup"
+    x:TypeArguments="dto:OverallMetricMenuAction"
+    x:DataType="views:OverallMetricMenuPopup"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    Padding="0">
+
+    <Border
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
+        WidthRequest="320"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+        <VerticalStackLayout Spacing="10">
+            <Label
+                Text="Opções"
+                Style="{StaticResource SectionTitle}"
+                HorizontalOptions="Center"/>
+
+            <Button
+                Text="Pesquisar CIDs"
+                Style="{StaticResource GhostButton}"
+                Clicked="OpenCidsButton_Clicked"/>
+
+            <Button
+                Text="Restaurar métricas ocultadas"
+                Style="{StaticResource GhostButton}"
+                IsEnabled="{Binding HasHiddenMetrics}"
+                Clicked="RestoreHiddenMetricsButton_Clicked"/>
+
+            <Button
+                Text="Adicionar nova métrica"
+                Style="{StaticResource PrimaryButton}"
+                IsEnabled="{Binding CanAddMetric}"
+                Clicked="AddMetricButton_Clicked"/>
+        </VerticalStackLayout>
+    </Border>
+</tk:Popup>

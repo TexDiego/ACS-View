@@ -1,5 +1,6 @@
 using ACS_View.Domain.Entities.Health;
 using ACS_View.Domain.ValueObjects;
+using ACS_View.Application.DTOs;
 
 namespace ACS_View.Application.Interfaces
 {
@@ -18,6 +19,13 @@ namespace ACS_View.Application.Interfaces
         Task<CidChapter> GetChapterBySubcategoryAsync(int subcategoryId);
 
         Task<List<CidSubcategory>> GetAllSubcategories();
+
+        Task<IReadOnlyList<CidSearchResultDto>> SearchCidAsync(
+            string? searchText,
+            string? codePrefix,
+            int skip,
+            int take,
+            CancellationToken cancellationToken = default);
 
         Task InsertChaptersAsync(IEnumerable<CidChapter> chapters);
         Task InsertGroupsAsync(IEnumerable<CidGroup> groups);

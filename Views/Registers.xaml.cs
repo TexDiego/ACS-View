@@ -124,4 +124,14 @@ public partial class Registers : ContentPage, IQueryAttributable
     {
         _viewModel.SearchPatientsCommand.Execute(e.NewTextValue);
     }
+
+    private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        ScrollToTopButtonController.UpdateVisibility(BackToTopButton, e);
+    }
+
+    private void BackToTopButton_Clicked(object sender, EventArgs e)
+    {
+        ScrollToTopButtonController.ScrollToTop(collectionView, BackToTopButton);
+    }
 }

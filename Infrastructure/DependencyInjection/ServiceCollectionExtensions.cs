@@ -12,10 +12,18 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        var dialogService = new ShellDialogService();
+        var navigationService = new ShellNavigationService();
+        var mainThreadDispatcher = new MauiMainThreadDispatcher();
+
         BaseViewModel.ConfigureInfrastructure(
-            new ShellDialogService(),
-            new ShellNavigationService(),
-            new MauiMainThreadDispatcher());
+            dialogService,
+            navigationService,
+            mainThreadDispatcher);
+
+        services.AddSingleton<IDialogService>(dialogService);
+        services.AddSingleton<INavigationService>(navigationService);
+        services.AddSingleton<IMainThreadDispatcher>(mainThreadDispatcher);
 
         services.AddDomainServices();
         services.AddViewModels();
@@ -27,6 +35,7 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddSingleton<IDatabaseService, DatabaseService>();
+        services.AddSingleton<IAppStartupService, AppStartupService>();
         services.AddSingleton<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IHouseService, HouseService>();
         services.AddSingleton<IVisitsService, VisitsService>();
@@ -39,9 +48,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IUserDataCleanupService, UserDataCleanupService>();
-        services.AddSingleton<IDialogService, ShellDialogService>();
-        services.AddSingleton<INavigationService, ShellNavigationService>();
-        services.AddSingleton<IMainThreadDispatcher, MauiMainThreadDispatcher>();
         services.AddSingleton<IPopupService, PopupService>();
         services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();
         services.AddSingleton<IPatientRepository, SQLitePatientRepository>();
@@ -58,6 +64,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPersonsInfoService, PersonsInfoService>();
         services.AddTransient<INoteService, NoteService>();
         services.AddTransient<IPatientService, PatientService>();
+        services.AddTransient<ISpreadsheetReader, SpreadsheetReader>();
+        services.AddTransient<PatientFamilyLinkResolver>();
         services.AddTransient<IPatientImportService, PatientImportService>();
         services.AddTransient<IHouseImportService, HouseImportService>();
         services.AddTransient<IPatientCidRepository, PatientCidService>();
@@ -83,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RegistersViewModel>();
         services.AddSingleton<HousesPageViewModel>();
         services.AddSingleton<OverallViewModel>();
+        services.AddSingleton<CIDViewViewModel>();
 
         return services;
     }
@@ -107,6 +116,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<OverallView>();
         services.AddTransient<GeneralMetrics>();
         services.AddTransient<HealthMetrics>();
+        services.AddTransient<CIDView>();
 
         return services;
     }

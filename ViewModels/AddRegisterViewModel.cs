@@ -35,6 +35,7 @@ namespace ACS_View.ViewModels
         private bool _updatingParentNameInputs;
         private string? _linkedMotherName;
         private string? _linkedFatherName;
+        private bool _initialIsActive = true;
 
         public DateTime MinimumDate => DateTime.Today.AddYears(-120);
         public DateTime MaximumDate => DateTime.Today;
@@ -101,6 +102,7 @@ namespace ACS_View.ViewModels
                 }
 
                 CurrentPatient = p;
+                _initialIsActive = p.IsActive;
                 SetParentNameInputs(p);
 
                 HealthCategories.Clear();
@@ -187,6 +189,11 @@ namespace ACS_View.ViewModels
                         if (!update) return;
                     }
 
+                    if (CurrentPatient.IsActive != _initialIsActive)
+                    {
+                        CurrentPatient.StatusChangedAt = DateTime.UtcNow;
+                    }
+
                     if (CurrentPatient.Id > 0)
                     {
                         await _patientService.UpdatePatient(CurrentPatient);
@@ -196,6 +203,8 @@ namespace ACS_View.ViewModels
                         await _patientService.CreatePatient(CurrentPatient);
 
                     }
+
+                    _initialIsActive = CurrentPatient.IsActive;
 
                     await _patientCid.DeletePatientCIDByPatientId(CurrentPatient.Id);
                     await _conditionsRepository.DeleteConditionsByPatientIdAsync(CurrentPatient.Id);

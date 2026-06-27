@@ -8,5 +8,8 @@
 
   <ItemGroup>
     <Compile Include="..\..\Application\Security\PasswordHasher.cs" Link="Application\Security\PasswordHasher.cs" />
+    <Compile Include="..\..\Application\Querying\PatientFilterSqlBuilder.cs" Link="Application\Querying\PatientFilterSqlBuilder.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\DashboardFilterKeys.cs" Link="Domain\ValueObjects\DashboardFilterKeys.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\HealthConditionCatalog.cs" Link="Domain\ValueObjects\HealthConditionCatalog.cs" />
   </ItemGroup>
 </Project>

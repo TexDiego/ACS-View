@@ -51,4 +51,14 @@ public partial class HousesPage : ContentPage, IQueryAttributable
         _hasAppeared = true;
         _ = _viewModel.LoadInitialHousesAsync();
     }
+
+    private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        ScrollToTopButtonController.UpdateVisibility(BackToTopButton, e);
+    }
+
+    private void BackToTopButton_Clicked(object sender, EventArgs e)
+    {
+        ScrollToTopButtonController.ScrollToTop(HousesCollectionView, BackToTopButton);
+    }
 }

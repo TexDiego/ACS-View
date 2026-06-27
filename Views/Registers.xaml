@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:controls="clr-namespace:ACS_View.Controls"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
              x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.Views.Registers"
              Shell.NavBarIsVisible="True"
@@ -68,6 +69,7 @@
             BackgroundColor="Transparent"
             RemainingItemsThreshold="5"
             VerticalScrollBarVisibility="Never"
+            Scrolled="CollectionView_Scrolled"
             RemainingItemsThresholdReachedCommand="{Binding LoadMorePatientsCommand}">
 
             <CollectionView.ItemTemplate>
@@ -95,7 +97,7 @@
                                 </VerticalStackLayout.GestureRecognizers>
 
                                 <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                <Label Text="{Binding SusNumber, StringFormat='SUS {0}'}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding SusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}" Style="{StaticResource BodyMuted}"/>
                             </VerticalStackLayout>
 
                             <ImageButton
@@ -169,5 +171,11 @@
                 FontSize="13"
                 FontAttributes="Bold"/>
         </Border>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.RowSpan="3"
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked"/>
     </Grid>
 </ContentPage>

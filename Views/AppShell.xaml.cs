@@ -7,13 +7,11 @@ public partial class AppShell : Shell
     private const string LightStatusBarColorResourceKey = "Primary";
     private const string DarkStatusBarColorResourceKey = "DarkPrimaryLight";
     private static bool routesRegistered;
-    private readonly IDatabaseService _databaseService;
     private readonly IServiceProvider _serviceProvider;
     private bool isThemeChangeHandlerRegistered;
 
-    internal AppShell(IDatabaseService db, IServiceProvider serviceProvider, bool isAuthenticated)
+    internal AppShell(IServiceProvider serviceProvider, bool isAuthenticated)
     {
-        _databaseService = db;
         _serviceProvider = serviceProvider;
         InitializeComponent();
         Loaded += OnLoaded;
@@ -36,11 +34,10 @@ public partial class AppShell : Shell
         LoginContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<LoginPage>());
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
         ApplyStatusBarTheme();
-        await InitializeDb();
     }
 
     private void OnLoaded(object? sender, EventArgs e)
@@ -120,13 +117,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("vaccines", new ServiceProviderRouteFactory<VaccinesPage>(_serviceProvider));
         Routing.RegisterRoute("importdata", new ServiceProviderRouteFactory<ImportDataPage>(_serviceProvider));
         Routing.RegisterRoute("datacleanup", new ServiceProviderRouteFactory<DataCleanupPage>(_serviceProvider));
-    }
-
-    private async Task InitializeDb()
-    {
-        if (_databaseService.Connection is null)
-        {
-            await _databaseService.InitializeAsync();
-        }
+        Routing.RegisterRoute("cids", new ServiceProviderRouteFactory<CIDView>(_serviceProvider));
     }
 }

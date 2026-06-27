@@ -126,6 +126,7 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
                     FROM Patient p
                     WHERE p.UserId = House.UserId
                       AND p.HouseId = House.CasaId
+                      AND COALESCE(p.IsActive, 1) = 1
                 )
                 """);
         }

@@ -282,6 +282,33 @@
 
                 <Border Style="{StaticResource FieldBorder}">
 
+                    <Grid RowDefinitions="auto,auto" RowSpacing="8">
+                        <Grid ColumnDefinitions="*,auto">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource labels}"
+                                VerticalOptions="Center"
+                                HorizontalOptions="Start"
+                                Text="Cadastro ativo"/>
+
+                            <Switch
+                                Grid.Column="1"
+                                IsToggled="{Binding IsActive, Mode=TwoWay}"
+                                OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+                                ThumbColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"/>
+                        </Grid>
+
+                        <Editor
+                            Grid.Row="1"
+                            Placeholder="Motivo do status"
+                            MaxLength="200"
+                            AutoSize="TextChanges"
+                            Text="{Binding StatusReason, Mode=TwoWay}"/>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource FieldBorder}">
+
                     <Grid RowDefinitions="auto,*">
 
                         <Label

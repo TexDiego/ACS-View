@@ -30,7 +30,8 @@
                 Grid.Row="1"
                 x:Name="NotesCollectionView"
                 ItemsSource="{Binding Notes}"
-                VerticalScrollBarVisibility="Never">
+                VerticalScrollBarVisibility="Never"
+                Scrolled="CollectionView_Scrolled">
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="model:Note">
@@ -74,6 +75,12 @@
             </CollectionView>
 
             <Button Grid.Row="2" Text="Voltar" Style="{StaticResource GhostButton}" Command="{Binding GoBack}"/>
+
+            <ImageButton
+                x:Name="BackToTopButton"
+                Grid.RowSpan="3"
+                Style="{StaticResource FloatingBackToTopButton}"
+                Clicked="BackToTopButton_Clicked"/>
         </Grid>
     </RefreshView>
 </ContentPage>

@@ -5,22 +5,18 @@ using ACS_View.Domain.Enums;
 using ACS_View.Domain.Entities.Health;
 using ACS_View.Domain.ValueObjects;
 using System.Globalization;
-using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace ACS_View.UseCases.Services
 {
     internal class PatientImportService(
         IPatientService patientService,
-        IHouseService houseService,
-        IFamilyService familyService,
         ICepService cepService,
-        ISQLiteConditionsRepository conditionsRepository) : IPatientImportService
+        ISQLiteConditionsRepository conditionsRepository,
+        ISpreadsheetReader spreadsheetReader,
+        PatientFamilyLinkResolver familyLinkResolver) : IPatientImportService
     {
-        private static readonly XNamespace SpreadsheetNamespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
         public async Task<PatientImportResultDto> ImportAsync(
             Stream fileStream,
             PatientImportColumnMapDto columnMap,
@@ -31,7 +27,7 @@ namespace ACS_View.UseCases.Services
             Report(progress, 0, 1, "Lendo planilha");
 
             cancellationToken.ThrowIfCancellationRequested();
-            var rows = ReadWorksheetRows(fileStream);
+            var rows = spreadsheetReader.ReadWorksheetRows(fileStream);
 
             if (rows.Count == 0)
             {
@@ -249,7 +245,7 @@ namespace ACS_View.UseCases.Services
 
             if (columnMap.EnableAutomaticFamilyLinking && rowContexts.Count > 0)
             {
-                processedProgressItems = await ResolveFamilyLinksAsync(
+                processedProgressItems = await familyLinkResolver.ResolveAsync(
                     rowContexts,
                     columnMap,
                     progress,
@@ -260,394 +256,6 @@ namespace ACS_View.UseCases.Services
 
             Report(progress, totalProgressItems, totalProgressItems, "Concluindo");
             return result;
-        }
-
-        private async Task<int> ResolveFamilyLinksAsync(
-            List<PatientImportRowContext> rowContexts,
-            PatientImportColumnMapDto columnMap,
-            IProgress<ImportProgressDto>? progress,
-            int processedProgressItems,
-            int totalProgressItems,
-            CancellationToken cancellationToken)
-        {
-            Report(progress, processedProgressItems, totalProgressItems, "Resolvendo residencias");
-
-            var allPatients = await patientService.GetAllPatients() ?? [];
-            var patientsById = allPatients.ToDictionary(patient => patient.Id);
-            foreach (var context in rowContexts)
-            {
-                if (patientsById.TryGetValue(context.Patient.Id, out var reloadedPatient))
-                {
-                    context.Patient = reloadedPatient;
-                }
-            }
-
-            var houses = await houseService.GetAllHousesAsync();
-            var housesByAddressKey = houses
-                .SelectMany(house => BuildAddressKeys(house.CEP, house.TipoLogradouro, house.Rua, house.NumeroCasa, house.Complemento, house.Bairro, house.Cidade, house.Estado)
-                    .Select(key => new
-                    {
-                        Key = key,
-                        House = house
-                    }))
-                .Where(item => !string.IsNullOrWhiteSpace(item.Key))
-                .GroupBy(item => item.Key)
-                .ToDictionary(group => group.Key, group => group.Select(item => item.House).ToList());
-
-            foreach (var context in rowContexts)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (ResolveUniqueHouse(context.AddressKeys, housesByAddressKey) is { } matchedHouse &&
-                    ShouldSetLink(context.Patient.HouseId, columnMap.OverwriteExistingFamilyLinks))
-                {
-                    context.Patient.HouseId = matchedHouse.CasaId;
-                    context.ResolvedHouseId = matchedHouse.CasaId;
-                    await patientService.UpdatePatient(context.Patient);
-                }
-                else if (context.Patient.HouseId > 0)
-                {
-                    context.ResolvedHouseId = context.Patient.HouseId;
-                }
-
-                processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo residencias", context.RowNumber);
-            }
-
-            Report(progress, processedProgressItems, totalProgressItems, "Resolvendo vinculos familiares");
-            var nextFamilyIdByHouse = new Dictionary<int, int>();
-            var importedResponsibleContexts = rowContexts
-                .Where(context => context.IsFamilyResponsible && context.Patient.HouseId > 0)
-                .ToList();
-
-            foreach (var context in importedResponsibleContexts)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await EnsureResponsibleFamilyAsync(context.Patient, columnMap, nextFamilyIdByHouse);
-                processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
-            }
-
-            var importedResponsiblesBySus = rowContexts
-                .Where(context => context.Patient.HouseId > 0 && !string.IsNullOrWhiteSpace(context.Patient.SusNumber))
-                .GroupBy(context => NormalizeSus(context.Patient.SusNumber))
-                .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-                .ToDictionary(group => group.Key, group => group.Select(context => context.Patient).DistinctBy(patient => patient.Id).ToList());
-
-            var indexes = BuildPatientIndexes(allPatients, rowContexts);
-            foreach (var context in rowContexts)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var changed = await ResolveResponsibleAsync(
-                    context,
-                    columnMap,
-                    importedResponsiblesBySus,
-                    indexes,
-                    nextFamilyIdByHouse);
-
-                if (changed)
-                {
-                    await patientService.UpdatePatient(context.Patient);
-                }
-
-                processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
-            }
-
-            indexes = BuildPatientIndexes(allPatients, rowContexts);
-            var contextsByPatientId = rowContexts.ToDictionary(context => context.Patient.Id);
-
-            Report(progress, processedProgressItems, totalProgressItems, "Resolvendo mae e pai");
-            foreach (var context in rowContexts)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var changed = false;
-
-                if (ShouldSetNullableLink(context.Patient.MotherPatientId, columnMap.OverwriteExistingFamilyLinks))
-                {
-                    var mother = ResolveParent(context.Patient, context.MotherName, ParentKind.Mother, indexes, contextsByPatientId, columnMap);
-                    if (mother != null && context.Patient.MotherPatientId != mother.Id)
-                    {
-                        context.Patient.MotherPatientId = mother.Id;
-                        changed = true;
-                    }
-                }
-
-                if (ShouldSetNullableLink(context.Patient.FatherPatientId, columnMap.OverwriteExistingFamilyLinks))
-                {
-                    var father = ResolveParent(context.Patient, context.FatherName, ParentKind.Father, indexes, contextsByPatientId, columnMap);
-                    if (father != null && context.Patient.FatherPatientId != father.Id)
-                    {
-                        context.Patient.FatherPatientId = father.Id;
-                        changed = true;
-                    }
-                }
-
-                if (changed)
-                {
-                    await patientService.UpdatePatient(context.Patient);
-                }
-
-                processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo mae e pai", context.RowNumber);
-            }
-
-            return processedProgressItems;
-        }
-
-        private async Task EnsureResponsibleFamilyAsync(
-            Patient responsible,
-            PatientImportColumnMapDto columnMap,
-            Dictionary<int, int> nextFamilyIdByHouse)
-        {
-            var changed = false;
-
-            if (ShouldSetNullableLink(responsible.FamilyResponsiblePatientId, columnMap.OverwriteExistingFamilyLinks))
-            {
-                responsible.FamilyResponsiblePatientId = responsible.Id;
-                responsible.FamilyResponsibleSus = responsible.SusNumber;
-                changed = true;
-            }
-
-            if (responsible.HouseId > 0 && ShouldSetLink(responsible.FamilyId, columnMap.OverwriteExistingFamilyLinks))
-            {
-                responsible.FamilyId = await GetNextFamilyIdAsync(responsible.HouseId, nextFamilyIdByHouse);
-                changed = true;
-            }
-
-            if (changed)
-            {
-                await patientService.UpdatePatient(responsible);
-            }
-        }
-
-        private async Task<bool> ResolveResponsibleAsync(
-            PatientImportRowContext context,
-            PatientImportColumnMapDto columnMap,
-            IReadOnlyDictionary<string, List<Patient>> importedResponsiblesBySus,
-            PatientImportIndexes indexes,
-            Dictionary<int, int> nextFamilyIdByHouse)
-        {
-            if (string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) ||
-                context.Patient.HouseId <= 0)
-            {
-                return false;
-            }
-
-            var normalizedSus = NormalizeSus(context.FamilyResponsibleSus);
-            if (string.IsNullOrWhiteSpace(normalizedSus))
-            {
-                return false;
-            }
-
-            var candidates = importedResponsiblesBySus.TryGetValue(normalizedSus, out var importedCandidates)
-                ? importedCandidates
-                : [];
-
-            candidates = candidates
-                .Where(candidate => candidate.HouseId == context.Patient.HouseId)
-                .DistinctBy(candidate => candidate.Id)
-                .ToList();
-
-            if (candidates.Count == 0 && columnMap.AllowGlobalUniqueResponsibleMatch &&
-                indexes.PatientsBySus.TryGetValue(normalizedSus, out var globalCandidates))
-            {
-                candidates = globalCandidates
-                    .Where(candidate => candidate.HouseId == context.Patient.HouseId)
-                    .DistinctBy(candidate => candidate.Id)
-                    .ToList();
-            }
-
-            if (candidates.Count != 1)
-            {
-                return false;
-            }
-
-            var responsible = candidates[0];
-            var changed = false;
-
-            if (responsible.FamilyId <= 0)
-            {
-                responsible.FamilyId = await GetNextFamilyIdAsync(responsible.HouseId, nextFamilyIdByHouse);
-                responsible.FamilyResponsiblePatientId = responsible.Id;
-                responsible.FamilyResponsibleSus = responsible.SusNumber;
-                await patientService.UpdatePatient(responsible);
-            }
-
-            if (ShouldSetNullableLink(context.Patient.FamilyResponsiblePatientId, columnMap.OverwriteExistingFamilyLinks) &&
-                context.Patient.FamilyResponsiblePatientId != responsible.Id)
-            {
-                context.Patient.FamilyResponsiblePatientId = responsible.Id;
-                context.Patient.FamilyResponsibleSus = responsible.SusNumber;
-                changed = true;
-            }
-
-            if (responsible.FamilyId > 0 && ShouldSetLink(context.Patient.FamilyId, columnMap.OverwriteExistingFamilyLinks))
-            {
-                context.Patient.FamilyId = responsible.FamilyId;
-                changed = true;
-            }
-
-            return changed;
-        }
-
-        private static House? ResolveUniqueHouse(
-            IReadOnlyList<string> addressKeys,
-            IReadOnlyDictionary<string, List<House>> housesByAddressKey)
-        {
-            foreach (var key in addressKeys.Where(key => !string.IsNullOrWhiteSpace(key)).Distinct(StringComparer.OrdinalIgnoreCase))
-            {
-                if (!housesByAddressKey.TryGetValue(key, out var houses))
-                {
-                    continue;
-                }
-
-                var candidates = houses.DistinctBy(house => house.CasaId).ToList();
-                return candidates.Count == 1 ? candidates[0] : null;
-            }
-
-            return null;
-        }
-
-        private async Task<int> GetNextFamilyIdAsync(int houseId, Dictionary<int, int> nextFamilyIdByHouse)
-        {
-            if (!nextFamilyIdByHouse.TryGetValue(houseId, out var nextFamilyId))
-            {
-                nextFamilyId = await familyService.GetMaxIdAsync(houseId) + 1;
-            }
-
-            nextFamilyIdByHouse[houseId] = nextFamilyId + 1;
-            return nextFamilyId;
-        }
-
-        private static Patient? ResolveParent(
-            Patient child,
-            string parentName,
-            ParentKind parentKind,
-            PatientImportIndexes indexes,
-            IReadOnlyDictionary<int, PatientImportRowContext> contextsByPatientId,
-            PatientImportColumnMapDto columnMap)
-        {
-            var normalizedName = Normalize(parentName);
-            if (Compact(normalizedName).Length < 5)
-            {
-                return null;
-            }
-
-            if (child.HouseId > 0 &&
-                indexes.PatientsByNameAndHouse.TryGetValue((normalizedName, child.HouseId), out var sameHouseCandidates))
-            {
-                var match = SinglePlausibleParent(child, sameHouseCandidates, parentKind, columnMap);
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-
-            if (contextsByPatientId.TryGetValue(child.Id, out var childContext))
-            {
-                foreach (var addressKey in childContext.AddressKeys)
-                {
-                    if (indexes.PatientsByNameAndAddress.TryGetValue((normalizedName, addressKey), out var sameAddressCandidates))
-                    {
-                        var match = SinglePlausibleParent(child, sameAddressCandidates, parentKind, columnMap);
-                        if (match != null)
-                        {
-                            return match;
-                        }
-                    }
-                }
-            }
-
-            if (columnMap.AllowGlobalUniqueParentMatch &&
-                indexes.PatientsByName.TryGetValue(normalizedName, out var globalCandidates))
-            {
-                return SinglePlausibleParent(child, globalCandidates, parentKind, columnMap);
-            }
-
-            return null;
-        }
-
-        private static Patient? SinglePlausibleParent(
-            Patient child,
-            IEnumerable<Patient> candidates,
-            ParentKind parentKind,
-            PatientImportColumnMapDto columnMap)
-        {
-            var plausibleCandidates = candidates
-                .Where(candidate => candidate.Id != child.Id)
-                .Where(candidate => HasPlausibleAgeDifference(child, candidate, parentKind, columnMap))
-                .DistinctBy(candidate => candidate.Id)
-                .ToList();
-
-            return plausibleCandidates.Count == 1 ? plausibleCandidates[0] : null;
-        }
-
-        private static bool HasPlausibleAgeDifference(
-            Patient child,
-            Patient parent,
-            ParentKind parentKind,
-            PatientImportColumnMapDto columnMap)
-        {
-            if (!HasValidBirthDate(child.BirthDate) || !HasValidBirthDate(parent.BirthDate))
-            {
-                return false;
-            }
-
-            var difference = child.BirthDate.Year - parent.BirthDate.Year;
-            if (parent.BirthDate.Date > child.BirthDate.Date.AddYears(-difference))
-            {
-                difference--;
-            }
-
-            var maximumDifference = parentKind == ParentKind.Mother
-                ? columnMap.MaximumMotherAgeDifferenceYears
-                : columnMap.MaximumFatherAgeDifferenceYears;
-
-            return difference >= columnMap.MinimumParentAgeDifferenceYears &&
-                   difference <= maximumDifference;
-        }
-
-        private static bool HasValidBirthDate(DateTime date)
-        {
-            return date.Year > 1900 && date.Date < DateTime.Today;
-        }
-
-        private static bool ShouldSetLink(int currentValue, bool overwrite)
-        {
-            return overwrite || currentValue <= 0;
-        }
-
-        private static bool ShouldSetNullableLink(int? currentValue, bool overwrite)
-        {
-            return overwrite || currentValue is null or <= 0;
-        }
-
-        private static PatientImportIndexes BuildPatientIndexes(
-            IEnumerable<Patient> patients,
-            IEnumerable<PatientImportRowContext> rowContexts)
-        {
-            var patientList = patients.ToList();
-            var contextList = rowContexts.ToList();
-            return new PatientImportIndexes
-            {
-                PatientsBySus = patientList
-                    .Where(patient => !string.IsNullOrWhiteSpace(patient.SusNumber))
-                    .GroupBy(patient => NormalizeSus(patient.SusNumber))
-                    .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-                    .ToDictionary(group => group.Key, group => group.ToList()),
-                PatientsByName = patientList
-                    .Where(patient => !string.IsNullOrWhiteSpace(patient.Name))
-                    .GroupBy(patient => Normalize(patient.Name))
-                    .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-                    .ToDictionary(group => group.Key, group => group.ToList()),
-                PatientsByNameAndHouse = patientList
-                    .Where(patient => !string.IsNullOrWhiteSpace(patient.Name) && patient.HouseId > 0)
-                    .GroupBy(patient => (Name: Normalize(patient.Name), patient.HouseId))
-                    .ToDictionary(group => group.Key, group => group.ToList()),
-                PatientsByNameAndAddress = contextList
-                    .Where(context => !string.IsNullOrWhiteSpace(context.Patient.Name))
-                    .SelectMany(context => context.AddressKeys
-                        .Where(key => !string.IsNullOrWhiteSpace(key))
-                        .Select(key => new { Name = Normalize(context.Patient.Name), AddressKey = key, context.Patient }))
-                    .GroupBy(item => (item.Name, item.AddressKey))
-                    .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).DistinctBy(patient => patient.Id).ToList())
-            };
         }
 
         private static ImportColumns ResolveColumns(
@@ -730,124 +338,6 @@ namespace ACS_View.UseCases.Services
             return null;
         }
 
-        private static List<List<string>> ReadWorksheetRows(Stream fileStream)
-        {
-            using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: true);
-            var sharedStrings = ReadSharedStrings(archive);
-            var worksheetEntry = GetFirstWorksheetEntry(archive)
-                ?? throw new InvalidDataException("Nao foi possivel encontrar a primeira aba da planilha.");
-
-            using var worksheetStream = worksheetEntry.Open();
-            var worksheet = XDocument.Load(worksheetStream);
-            var rows = new List<List<string>>();
-
-            foreach (var rowElement in worksheet.Descendants(SpreadsheetNamespace + "row"))
-            {
-                var values = new List<string>();
-                var nextColumnIndex = 0;
-
-                foreach (var cell in rowElement.Elements(SpreadsheetNamespace + "c"))
-                {
-                    var cellReference = cell.Attribute("r")?.Value ?? string.Empty;
-                    var columnIndex = TryGetColumnIndex(cellReference) ?? nextColumnIndex;
-
-                    if (columnIndex < nextColumnIndex && HasValueAt(values, columnIndex))
-                    {
-                        columnIndex = nextColumnIndex;
-                    }
-
-                    while (values.Count <= columnIndex)
-                    {
-                        values.Add(string.Empty);
-                    }
-
-                    values[columnIndex] = ReadCellValue(cell, sharedStrings);
-                    nextColumnIndex = columnIndex + 1;
-                }
-
-                if (values.Any(value => !string.IsNullOrWhiteSpace(value)))
-                {
-                    rows.Add(values);
-                }
-            }
-
-            return rows;
-        }
-
-        private static ZipArchiveEntry? GetFirstWorksheetEntry(ZipArchive archive)
-        {
-            var workbookEntry = archive.GetEntry("xl/workbook.xml");
-            var relationshipsEntry = archive.GetEntry("xl/_rels/workbook.xml.rels");
-
-            if (workbookEntry is null || relationshipsEntry is null)
-            {
-                return archive.GetEntry("xl/worksheets/sheet1.xml");
-            }
-
-            using var workbookStream = workbookEntry.Open();
-            using var relationshipsStream = relationshipsEntry.Open();
-            var workbook = XDocument.Load(workbookStream);
-            var relationships = XDocument.Load(relationshipsStream);
-            var firstSheet = workbook.Descendants(SpreadsheetNamespace + "sheet").FirstOrDefault();
-            var relationshipId = firstSheet?.Attribute(XName.Get("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships"))?.Value;
-
-            if (string.IsNullOrWhiteSpace(relationshipId))
-            {
-                return archive.GetEntry("xl/worksheets/sheet1.xml");
-            }
-
-            var relationship = relationships.Root?
-                .Elements()
-                .FirstOrDefault(element => element.Attribute("Id")?.Value == relationshipId);
-            var target = relationship?.Attribute("Target")?.Value;
-
-            if (string.IsNullOrWhiteSpace(target))
-            {
-                return archive.GetEntry("xl/worksheets/sheet1.xml");
-            }
-
-            var normalizedTarget = target.Replace('\\', '/').TrimStart('/');
-            var worksheetPath = normalizedTarget.StartsWith("xl/", StringComparison.OrdinalIgnoreCase)
-                ? normalizedTarget
-                : $"xl/{normalizedTarget}";
-
-            return archive.GetEntry(worksheetPath) ?? archive.GetEntry("xl/worksheets/sheet1.xml");
-        }
-
-        private static List<string> ReadSharedStrings(ZipArchive archive)
-        {
-            var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
-            if (sharedStringsEntry is null)
-            {
-                return [];
-            }
-
-            using var stream = sharedStringsEntry.Open();
-            var document = XDocument.Load(stream);
-
-            return document.Descendants(SpreadsheetNamespace + "si")
-                .Select(item => string.Concat(item.Descendants(SpreadsheetNamespace + "t").Select(text => text.Value)))
-                .ToList();
-        }
-
-        private static string ReadCellValue(XElement cell, IReadOnlyList<string> sharedStrings)
-        {
-            var type = cell.Attribute("t")?.Value;
-
-            if (type == "inlineStr")
-            {
-                return string.Concat(cell.Descendants(SpreadsheetNamespace + "t").Select(text => text.Value));
-            }
-
-            var rawValue = cell.Element(SpreadsheetNamespace + "v")?.Value ?? string.Empty;
-            if (type == "s" && int.TryParse(rawValue, out var sharedStringIndex) && sharedStringIndex < sharedStrings.Count)
-            {
-                return sharedStrings[sharedStringIndex];
-            }
-
-            return rawValue;
-        }
-
         private static Dictionary<string, int> BuildHeaderMap(IReadOnlyList<string> header)
         {
             var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -900,30 +390,6 @@ namespace ACS_View.UseCases.Services
             }
 
             return row[index.Value];
-        }
-
-        private static bool HasValueAt(IReadOnlyList<string> values, int index)
-        {
-            return index >= 0 && index < values.Count && !string.IsNullOrWhiteSpace(values[index]);
-        }
-
-        private static int? TryGetColumnIndex(string cellReference)
-        {
-            var letters = Regex.Match(cellReference, "^[A-Z]+", RegexOptions.IgnoreCase).Value.ToUpperInvariant();
-            if (string.IsNullOrWhiteSpace(letters))
-            {
-                return null;
-            }
-
-            var columnIndex = 0;
-
-            foreach (var letter in letters)
-            {
-                columnIndex *= 26;
-                columnIndex += letter - 'A' + 1;
-            }
-
-            return Math.Max(0, columnIndex - 1);
         }
 
         private static DateTime? ParseDate(string value)
@@ -1147,6 +613,11 @@ namespace ACS_View.UseCases.Services
             return true;
         }
 
+        private static bool HasValidBirthDate(DateTime date)
+        {
+            return date.Year > 1900 && date.Date < DateTime.Today;
+        }
+
         private static string Normalize(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -1196,26 +667,6 @@ namespace ACS_View.UseCases.Services
             });
         }
 
-        private sealed class PatientImportRowContext
-        {
-            public int RowNumber { get; init; }
-            public Patient Patient { get; set; } = new();
-            public string MotherName { get; init; } = string.Empty;
-            public string FatherName { get; init; } = string.Empty;
-            public string FamilyResponsibleSus { get; init; } = string.Empty;
-            public bool IsFamilyResponsible { get; init; }
-            public IReadOnlyList<string> AddressKeys { get; init; } = [];
-            public int? ResolvedHouseId { get; set; }
-        }
-
-        private sealed class PatientImportIndexes
-        {
-            public Dictionary<string, List<Patient>> PatientsBySus { get; init; } = [];
-            public Dictionary<string, List<Patient>> PatientsByName { get; init; } = [];
-            public Dictionary<(string Name, int HouseId), List<Patient>> PatientsByNameAndHouse { get; init; } = [];
-            public Dictionary<(string Name, string AddressKey), List<Patient>> PatientsByNameAndAddress { get; init; } = [];
-        }
-
         private sealed class ImportColumns
         {
             public int? NameIndex { get; init; }
@@ -1243,10 +694,5 @@ namespace ACS_View.UseCases.Services
 
         private readonly record struct PatientIdentityKey(string Name, string MotherName, DateTime BirthDate);
 
-        private enum ParentKind
-        {
-            Mother,
-            Father
-        }
     }
 }

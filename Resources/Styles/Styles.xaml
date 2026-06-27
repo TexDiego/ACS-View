@@ -243,6 +243,23 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource AccentLight}, Dark={StaticResource DarkAccentLight}}"/>
     </Style>
 
+    <Style x:Key="FloatingBackToTopButton" TargetType="ImageButton" BasedOn="{StaticResource SoftIconButton}">
+        <Setter Property="Source" Value="up.png"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource BorderStrong}, Dark={StaticResource DarkBorderStrong}}"/>
+        <Setter Property="BorderWidth" Value="1"/>
+        <Setter Property="CornerRadius" Value="22"/>
+        <Setter Property="HeightRequest" Value="44"/>
+        <Setter Property="WidthRequest" Value="44"/>
+        <Setter Property="Padding" Value="11"/>
+        <Setter Property="HorizontalOptions" Value="End"/>
+        <Setter Property="VerticalOptions" Value="End"/>
+        <Setter Property="Margin" Value="0,0,8,18"/>
+        <Setter Property="IsVisible" Value="False"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="ToolTipProperties.Text" Value="Voltar ao topo"/>
+    </Style>
+
     <Style TargetType="ImageButton">
         <Setter Property="Opacity" Value="1"/>
         <Setter Property="BackgroundColor" Value="Transparent"/>

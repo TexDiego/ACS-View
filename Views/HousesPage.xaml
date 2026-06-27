@@ -49,10 +49,12 @@
         </Grid>
 
         <CollectionView
+            x:Name="HousesCollectionView"
             Grid.Row="2"
             ItemsSource="{Binding Houses}"
             SelectionMode="None"
             VerticalScrollBarVisibility="Never"
+            Scrolled="CollectionView_Scrolled"
             RemainingItemsThreshold="5"
             RemainingItemsThresholdReachedCommand="{Binding LoadMoreHousesCommand}">
 
@@ -134,5 +136,11 @@
                 FontSize="13"
                 FontAttributes="Bold"/>
         </Border>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.RowSpan="3"
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked"/>
     </Grid>
 </ContentPage>

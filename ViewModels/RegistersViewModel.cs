@@ -5,6 +5,7 @@ using ACS_View.Application.DTOs;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
@@ -99,6 +100,11 @@ namespace ACS_View.ViewModels
             catch (TaskCanceledException)
             {
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erro ao pesquisar pacientes: {ex.Message}");
+                await ClearPatientsAfterSearchFailureAsync();
+            }
         }
 
         private async Task RefreshPatientsAsync(string? search, bool useDebounce)
@@ -137,6 +143,14 @@ namespace ACS_View.ViewModels
                     _lastLoadedFilter = _filterKey;
                 });
             }
+            catch (Exception ex)
+            {
+                if (loadVersion == _loadVersion)
+                {
+                    Debug.WriteLine($"Erro ao carregar pacientes: {ex.Message}");
+                    await ClearPatientsAfterSearchFailureAsync();
+                }
+            }
             finally
             {
                 if (loadVersion == _loadVersion)
@@ -171,10 +185,28 @@ namespace ACS_View.ViewModels
                     _hasMorePatients = _loadedPatientsCount < TotalRecords;
                 });
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erro ao carregar mais pacientes: {ex.Message}");
+                _hasMorePatients = false;
+            }
             finally
             {
                 IsLoadingMore = false;
             }
+        }
+
+        private Task ClearPatientsAfterSearchFailureAsync()
+        {
+            return MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Patients = [];
+                TotalRecords = 0;
+                _loadedPatientsCount = 0;
+                _hasMorePatients = false;
+                IsLoading = false;
+                IsLoadingMore = false;
+            });
         }
 
         private async Task<string> GetAddressAsync(int id)
@@ -397,6 +429,7 @@ namespace ACS_View.ViewModels
                 DashboardFilterKeys.Elderly => "Idosos",
                 DashboardFilterKeys.ChildrenUnder6 => "Criancas menores de 6",
                 DashboardFilterKeys.Women25To64 => "Mulheres 25 a 64",
+                DashboardFilterKeys.Inactive => "Inativos",
                 _ => "Pacientes"
             };
         }

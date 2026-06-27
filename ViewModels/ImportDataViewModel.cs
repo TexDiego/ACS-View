@@ -90,9 +90,7 @@ public partial class ImportDataViewModel(
             var progress = new Progress<ImportProgressDto>(value =>
             {
                 ImportProgress = value.Progress;
-                ImportProgressText = string.IsNullOrWhiteSpace(value.CurrentStep)
-                    ? $"{value.ProcessedItems}/{value.TotalItems}"
-                    : $"{value.CurrentStep} ({value.ProcessedItems}/{value.TotalItems})";
+                ImportProgressText = BuildProgressText(value);
             });
 
             await using var stream = await file.OpenReadAsync();
@@ -153,9 +151,7 @@ public partial class ImportDataViewModel(
             var progress = new Progress<ImportProgressDto>(value =>
             {
                 HouseImportProgress = value.Progress;
-                HouseImportProgressText = string.IsNullOrWhiteSpace(value.CurrentStep)
-                    ? $"{value.ProcessedItems}/{value.TotalItems}"
-                    : $"{value.CurrentStep} ({value.ProcessedItems}/{value.TotalItems})";
+                HouseImportProgressText = BuildProgressText(value);
             });
 
             await using var stream = await file.OpenReadAsync();
@@ -280,6 +276,16 @@ public partial class ImportDataViewModel(
     private static string BuildSummary(int importedCount, int updatedCount, int ignoredCount)
     {
         return $"Importados: {importedCount} | Atualizados: {updatedCount} | Ignorados: {ignoredCount}";
+    }
+
+    private static string BuildProgressText(ImportProgressDto progress)
+    {
+        var percentage = Math.Clamp(progress.Progress, 0, 1) * 100;
+        var percentageText = $"{Math.Round(percentage):0}%";
+
+        return string.IsNullOrWhiteSpace(progress.CurrentStep)
+            ? percentageText
+            : $"{progress.CurrentStep} ({percentageText})";
     }
 
     private static string BuildImportErrorMessage(string baseMessage, Exception exception)

@@ -9,12 +9,21 @@ public static class PatientFilterSqlBuilder
         var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
         var modifiers = DashboardFilterKeys.GetModifiers(filterKey);
 
+        AddStatusClause(baseFilterKey, whereParts);
+
         if (!string.IsNullOrWhiteSpace(baseFilterKey) && baseFilterKey != DashboardFilterKeys.All)
         {
             AddBaseFilterClause(baseFilterKey, whereParts, parameters);
         }
 
         AddModifierClauses(modifiers, whereParts, parameters);
+    }
+
+    private static void AddStatusClause(string baseFilterKey, List<string> whereParts)
+    {
+        whereParts.Add(string.Equals(baseFilterKey, DashboardFilterKeys.Inactive, StringComparison.OrdinalIgnoreCase)
+            ? "p.IsActive = 0"
+            : "COALESCE(p.IsActive, 1) = 1");
     }
 
     private static void AddBaseFilterClause(string filterKey, List<string> whereParts, List<object> parameters)
@@ -63,6 +72,8 @@ public static class PatientFilterSqlBuilder
                 whereParts.Add("p.BirthDate > ?");
                 parameters.Add(today.AddYears(-65));
                 return;
+            case DashboardFilterKeys.Inactive:
+                return;
         }
 
         if (filterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase))
@@ -75,6 +86,7 @@ public static class PatientFilterSqlBuilder
                         SELECT 1
                         FROM PatientConditions pc
                         WHERE pc.PatientId = p.Id
+                          AND pc.UserId = p.UserId
                           AND pc.Description LIKE 'Diabetes%' COLLATE NOCASE
                     )
                     """);
@@ -86,6 +98,7 @@ public static class PatientFilterSqlBuilder
                     SELECT 1
                     FROM PatientConditions pc
                     WHERE pc.PatientId = p.Id
+                      AND pc.UserId = p.UserId
                       AND pc.Description = ? COLLATE NOCASE
                 )
                 """);
@@ -102,6 +115,7 @@ public static class PatientFilterSqlBuilder
                     FROM PatientCID pc
                     INNER JOIN CidSubcategory sc ON sc.Id = pc.CidId
                     WHERE pc.PatientId = p.Id
+                      AND pc.UserId = p.UserId
                       AND sc.Code = ? COLLATE NOCASE
                 )
                 """);

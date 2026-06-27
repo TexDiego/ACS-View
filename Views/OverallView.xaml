@@ -8,8 +8,8 @@
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="plus.png"
-                     Command="{Binding AddCombinedMetricCommand}"/>
+        <ToolbarItem IconImageSource="dots.png"
+                     Command="{Binding OpenMetricsMenuCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*" RowSpacing="14">

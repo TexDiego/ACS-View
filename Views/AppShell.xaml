@@ -6,7 +6,7 @@
        x:Class="ACS_View.Views.AppShell"
        Shell.TitleColor="{StaticResource White}"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
-       Shell.ForegroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+       Shell.ForegroundColor="White"
        Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
        Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
        Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"

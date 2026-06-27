@@ -25,5 +25,8 @@ namespace ACS_View.Domain.Entities
         public DateTime BirthDate { get; set; } = DateTime.Today;
         public string Observacao { get; set; } = string.Empty;
         public bool BolsaFamilia { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+        public string StatusReason { get; set; } = string.Empty;
+        public DateTime? StatusChangedAt { get; set; }
     }
 }

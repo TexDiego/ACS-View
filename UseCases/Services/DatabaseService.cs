@@ -101,6 +101,16 @@ namespace ACS_View.UseCases.Services
             await EnsureColumnAsync("Patient", nameof(Patient.MotherPatientId), "INTEGER NULL");
             await EnsureColumnAsync("Patient", nameof(Patient.FatherPatientId), "INTEGER NULL");
             await EnsureColumnAsync("Patient", nameof(Patient.FamilyResponsiblePatientId), "INTEGER NULL");
+            await EnsureColumnAsync("Patient", nameof(Patient.IsActive), "INTEGER NOT NULL DEFAULT 1");
+            await EnsureColumnAsync("Patient", nameof(Patient.StatusReason), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("Patient", nameof(Patient.StatusChangedAt), "TEXT NULL");
+            await BackfillPatientStatusAsync();
+        }
+
+        private async Task BackfillPatientStatusAsync()
+        {
+            await Connection.ExecuteAsync("UPDATE Patient SET IsActive = 1 WHERE IsActive IS NULL");
+            await Connection.ExecuteAsync("UPDATE Patient SET StatusReason = '' WHERE StatusReason IS NULL");
         }
 
         private async Task MigrateHouseTableAsync()
@@ -140,6 +150,8 @@ namespace ACS_View.UseCases.Services
         {
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Name ON Patient(Name COLLATE NOCASE)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_Name ON Patient(UserId, Name COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_IsActive ON Patient(UserId, IsActive)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_IsActive_Name ON Patient(UserId, IsActive, Name COLLATE NOCASE)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchName ON Patient(SearchName)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchMotherName ON Patient(SearchMotherName)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchFatherName ON Patient(SearchFatherName)");
@@ -164,6 +176,11 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Note_UserId_CreationDate ON Note(UserId, CreationDate)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Date ON Visits(UserId, Date)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Family_UserId_IdFamilia ON Family(UserId, IdFamilia)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Code ON CidSubcategory(Code COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Description ON CidSubcategory(Description COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidCategory_Code ON CidCategory(Code COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidGroup_Code ON CidGroup(Code COLLATE NOCASE)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidChapter_Code ON CidChapter(Code COLLATE NOCASE)");
         }
 
         private async Task BackfillSearchColumnsAsync()

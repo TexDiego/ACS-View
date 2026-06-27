@@ -4,6 +4,7 @@ using ACS_View.Application.Querying;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
+using System.Diagnostics;
 
 namespace ACS_View.Infrastructure.Data.SQLite;
 
@@ -34,63 +35,81 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
 
     public async Task<PagedResultDto<PatientListItemDto>> GetListAsync(string? search, int skip, int take, PatientListFilterDto filter)
     {
-        skip = Math.Max(skip, 0);
-        take = Math.Clamp(take, 1, 100);
-        filter ??= new PatientListFilterDto();
-
-        var normalizedSearch = search?.Trim() ?? string.Empty;
-        var userId = currentUserContext.RequireCurrentUserId();
-        var whereParts = new List<string> { "p.UserId = ?" };
-        var parameters = new List<object> { userId };
-
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        try
         {
-            var likeSearch = $"%{SearchTextNormalizer.Normalize(normalizedSearch)}%";
-            var rawLikeSearch = $"%{normalizedSearch}%";
-            whereParts.Add("(p.SearchName LIKE ? OR p.SearchMotherName LIKE ? OR p.SearchFatherName LIKE ? OR p.SusNumber LIKE ? COLLATE NOCASE)");
-            parameters.Add(likeSearch);
-            parameters.Add(likeSearch);
-            parameters.Add(likeSearch);
-            parameters.Add(rawLikeSearch);
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, 100);
+            filter ??= new PatientListFilterDto();
+
+            var normalizedSearch = search?.Trim() ?? string.Empty;
+            var userId = currentUserContext.RequireCurrentUserId();
+            var whereParts = new List<string> { "p.UserId = ?" };
+            var parameters = new List<object> { userId };
+
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            {
+                var likeSearch = $"%{SearchTextNormalizer.Normalize(normalizedSearch)}%";
+                var rawLikeSearch = $"%{normalizedSearch}%";
+                whereParts.Add("(p.SearchName LIKE ? OR p.SearchMotherName LIKE ? OR p.SearchFatherName LIKE ? OR p.SusNumber LIKE ? COLLATE NOCASE)");
+                parameters.Add(likeSearch);
+                parameters.Add(likeSearch);
+                parameters.Add(likeSearch);
+                parameters.Add(rawLikeSearch);
+            }
+
+            PatientFilterSqlBuilder.AddFilterClause(filter.FilterKey, whereParts, parameters);
+            AddAgeClause(filter, whereParts, parameters);
+
+            var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
+            var orderBy = GetOrderByClause(filter);
+
+            var totalCount = await _connection.ExecuteScalarAsync<int>(
+                $"SELECT COUNT(*) FROM Patient p {whereClause}",
+                [.. parameters]);
+
+            parameters.Add(take);
+            parameters.Add(skip);
+
+            var items = await _connection.QueryAsync<PatientListItemDto>(
+                $"""
+                SELECT p.Id, p.SusNumber, p.Name
+                FROM Patient p
+                {whereClause}
+                ORDER BY {orderBy}
+                LIMIT ? OFFSET ?
+                """,
+                [.. parameters]);
+
+            return new PagedResultDto<PatientListItemDto>
+            {
+                Items = items,
+                TotalCount = totalCount
+            };
         }
-
-        PatientFilterSqlBuilder.AddFilterClause(filter.FilterKey, whereParts, parameters);
-        AddAgeClause(filter, whereParts, parameters);
-
-        var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
-        var orderBy = GetOrderByClause(filter);
-
-        var totalCount = await _connection.ExecuteScalarAsync<int>(
-            $"SELECT COUNT(*) FROM Patient p {whereClause}",
-            [.. parameters]);
-
-        parameters.Add(take);
-        parameters.Add(skip);
-
-        var items = await _connection.QueryAsync<PatientListItemDto>(
-            $"""
-            SELECT p.Id, p.SusNumber, p.Name
-            FROM Patient p
-            {whereClause}
-            ORDER BY {orderBy}
-            LIMIT ? OFFSET ?
-            """,
-            [.. parameters]);
-
-        return new PagedResultDto<PatientListItemDto>
+        catch (Exception ex)
         {
-            Items = items,
-            TotalCount = totalCount
-        };
+            Debug.WriteLine($"Erro ao buscar pacientes paginados: {ex.Message}");
+            return new PagedResultDto<PatientListItemDto>();
+        }
     }
 
     public Task<List<Patient>?> GetByConditionAsync(int conditionId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.Table<Patient>()
-            .Where(p => p.UserId == userId)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
+        return _connection.QueryAsync<Patient>(
+            """
+            SELECT p.*
+            FROM Patient p
+            INNER JOIN PatientConditions pc ON pc.PatientId = p.Id
+            WHERE p.UserId = ?
+              AND pc.UserId = ?
+              AND pc.Id = ?
+              AND COALESCE(p.IsActive, 1) = 1
+            ORDER BY p.Name COLLATE NOCASE, p.Id
+            """,
+            userId,
+            userId,
+            conditionId);
     }
 
     public Task<Patient?> GetByIdAsync(int id)

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    x:Name="RootPopup"
+    x:Class="ACS_View.Views.AddMetricPopup"
+    x:TypeArguments="dto:DashboardMetricCreateRequestDto"
+    x:DataType="vm:AddMetricPopupViewModel"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    Padding="0">
+
+    <Border
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
+        WidthRequest="340"
+        MaximumHeightRequest="620"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+        <Grid RowDefinitions="auto,*,auto" RowSpacing="12">
+            <VerticalStackLayout Grid.Row="0" Spacing="12">
+                <Label
+                    Text="Adicionar métrica"
+                    Style="{StaticResource SectionTitle}"
+                    HorizontalOptions="Center"/>
+
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Picker
+                            ItemsSource="{Binding SexOptions}"
+                            SelectedItem="{Binding SelectedSex}"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <Entry
+                                Text="{Binding MinimumAge}"
+                                Keyboard="Numeric"
+                                MaxLength="3"
+                                Placeholder="Sem mínimo"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <Entry
+                                Text="{Binding MaximumAge}"
+                                Keyboard="Numeric"
+                                MaxLength="3"
+                                Placeholder="Sem máximo"/>
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,auto">
+                    <Label Text="Metricas" Style="{StaticResource FieldLabel}"/>
+                    <Label
+                        Grid.Column="1"
+                        Text="{Binding SelectedCountText}"
+                        Style="{StaticResource BodyMuted}"/>
+                </Grid>
+            </VerticalStackLayout>
+
+            <ScrollView Grid.Row="1">
+                <FlexLayout
+                    BindableLayout.ItemsSource="{Binding Metrics}"
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start"
+                    AlignContent="Center"
+                    JustifyContent="Center">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="dto:DashboardMetricOptionDto">
+                            <Border
+                                Padding="11,8"
+                                Margin="2"
+                                StrokeShape="RoundRectangle 18"
+                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference RootPopup}, Path=BindingContext.ToggleMetricCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+
+                                <Label
+                                    Text="{Binding Name}"
+                                    FontSize="13"
+                                    FontAttributes="Bold"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </ScrollView>
+
+            <VerticalStackLayout Grid.Row="2" Spacing="10">
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    Style="{StaticResource BodyMuted}"
+                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                    IsVisible="{Binding HasError}"/>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button
+                        Text="Cancelar"
+                        Style="{StaticResource GhostButton}"
+                        Clicked="CancelButton_Clicked"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="Adicionar"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="AddButton_Clicked"/>
+                </Grid>
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</tk:Popup>

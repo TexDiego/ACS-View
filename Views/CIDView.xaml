@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             x:DataType="vm:CIDViewViewModel"
+             x:Class="ACS_View.Views.CIDView"
+             Style="{StaticResource PageBackground}"
+             Title="Pesquisa CID">
+
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
+        <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
+            <SearchBar
+                Placeholder="Buscar por codigo ou descricao"
+                Text="{Binding SearchText, Mode=TwoWay}"
+                MaxLength="60"/>
+        </Border>
+
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding CodePrefixes}" 
+            ItemsLayout="HorizontalList"
+            HorizontalScrollBarVisibility="Never"
+            SelectionMode="None"
+            Margin="0,0,0,10">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:CidCodePrefixFilterDto">
+                    <Border
+                        Padding="12,7"
+                        Margin="0,0,8,0"
+                        StrokeShape="RoundRectangle 18"
+                        Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectPrefixCommand}"
+                                CommandParameter="{Binding .}"/>
+                        </Border.GestureRecognizers>
+
+                        <Label
+                            Text="{Binding DisplayName}"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2">
+            <CollectionView
+                x:Name="CidCollectionView"
+                ItemsSource="{Binding Items}"
+                SelectionMode="None"
+                RemainingItemsThreshold="5"
+                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+                VerticalScrollBarVisibility="Never"
+                Scrolled="CollectionView_Scrolled">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:CidSearchResultDto">
+                        <Border Style="{StaticResource CardBorder}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailsCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+
+                            <Grid RowDefinitions="auto,auto,auto" RowSpacing="5">
+                                <Label
+                                    Grid.Row="0"
+                                    Text="{Binding Code}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+                                    FontAttributes="Bold"
+                                    FontSize="18"/>
+
+                                <Label
+                                    Grid.Row="1"
+                                    Text="{Binding Description}"
+                                    MaxLines="2"
+                                    LineBreakMode="TailTruncation"
+                                    Style="{StaticResource CardTitle}"/>
+
+                                <Label
+                                    Grid.Row="2"
+                                    Text="{Binding HierarchySummary}"
+                                    MaxLines="1"
+                                    LineBreakMode="TailTruncation"
+                                    Style="{StaticResource BodyMuted}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <VerticalStackLayout
+                IsVisible="{Binding IsEmpty}"
+                Spacing="10"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                Padding="20">
+                <Label
+                    Text="{Binding EmptyMessage}"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <ActivityIndicator
+                IsVisible="{Binding IsLoading}"
+                IsRunning="{Binding IsLoading}"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"/>
+
+            <ActivityIndicator
+                IsVisible="{Binding IsLoadingMore}"
+                IsRunning="{Binding IsLoadingMore}"
+                VerticalOptions="End"
+                HorizontalOptions="Center"
+                Margin="0,0,0,24"/>
+
+            <ImageButton
+                x:Name="BackToTopButton"
+                Style="{StaticResource FloatingBackToTopButton}"
+                Clicked="BackToTopButton_Clicked"/>
+        </Grid>
+    </Grid>
+</ContentPage>

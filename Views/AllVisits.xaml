@@ -12,11 +12,13 @@
     <Grid Padding="0" RowDefinitions="*,auto" RowSpacing="14">
 
         <CollectionView
+            x:Name="VisitsCollectionView"
             Margin="{StaticResource PagePadding}"
             Grid.Row="0"
             ItemsSource="{Binding VisitsList}"
             ItemsUpdatingScrollMode="KeepLastItemInView"
-            VerticalScrollBarVisibility="Never">
+            VerticalScrollBarVisibility="Never"
+            Scrolled="CollectionView_Scrolled">
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="model:Visits">
@@ -110,5 +112,11 @@
                 </CarouselView.EmptyView>
             </CarouselView>
         </VerticalStackLayout>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.RowSpan="2"
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked"/>
     </Grid>
 </ContentPage>

@@ -11,6 +11,7 @@ public static class DashboardFilterKeys
     public const string Elderly = "ELDERLY";
     public const string ChildrenUnder6 = "CHILDREN_UNDER_6";
     public const string Women25To64 = "WOMEN_25_64";
+    public const string Inactive = "INACTIVE";
 
     public const string ConditionPrefix = "COND:";
     public const string CidPrefix = "CID:";

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    x:Class="ACS_View.Views.CidDetailsPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    x:DataType="dto:CidSearchResultDto"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
+    Padding="0">
+
+    <Border
+        Style="{StaticResource CardBorder}" Margin="0">
+        <Grid RowDefinitions="auto,auto,auto,auto,auto,auto" RowSpacing="12">
+            <VerticalStackLayout Grid.Row="0" Spacing="4">
+                <Label
+                    Text="{Binding Code}"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+                    FontSize="24"
+                    FontAttributes="Bold"/>
+                <Label
+                    Text="{Binding Description}"
+                    Style="{StaticResource SectionTitle}"
+                    LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <BoxView
+                Grid.Row="1"
+                HeightRequest="1"
+                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"/>
+
+            <VerticalStackLayout Grid.Row="2" Spacing="2">
+                <Label Text="Capitulo" Style="{StaticResource FieldLabel}"/>
+                <Label Text="{Binding ChapterCode, StringFormat='{0}'}" IsVisible="False"/>
+                <Label x:Name="ChapterLabel" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Row="3" Spacing="2">
+                <Label Text="Grupo" Style="{StaticResource FieldLabel}"/>
+                <Label x:Name="GroupLabel" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Row="4" Spacing="2">
+                <Label Text="Categoria" Style="{StaticResource FieldLabel}"/>
+                <Label x:Name="CategoryLabel" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <Button
+                Grid.Row="5"
+                Text="Fechar"
+                Style="{StaticResource GhostButton}"
+                Clicked="OnCloseClicked"/>
+        </Grid>
+    </Border>
+</tk:Popup>

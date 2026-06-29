@@ -2,7 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+             xmlns:vo="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:VaccinesPageViewModel"
              x:Class="ACS_View.Views.Vaccines.ChildVaccinesView">
 
@@ -19,7 +19,7 @@
 
     <VerticalStackLayout
         BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
-        x:DataType="model:Vaccines">
+        x:DataType="vm:VaccineSchedulePresentation">
 <!-- Vacinas infantis -->
                 <Grid
                     RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*"
@@ -64,7 +64,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="BCG_Infantil"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.BcgInfantil}"/>
                                 </Label.GestureRecognizers>
                                 
                             </Label>
@@ -79,7 +79,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="HB"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.HepatiteBNascimento}"/>
                                     
                                 </Label.GestureRecognizers>
                             </Label>
@@ -141,7 +141,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Penta1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Penta1}"/>
                                 </Label.GestureRecognizers>
                                 
                             </Label>
@@ -157,7 +157,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VIP1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vip1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -173,7 +173,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Pneumo10-1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Pneumo10_1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -189,7 +189,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VRH1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vrh1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -265,7 +265,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="MeningoC1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.MeningoC1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -320,7 +320,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Penta2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Penta2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -336,7 +336,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VIP2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vip2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -352,7 +352,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Pneumo10-2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Pneumo10_2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -368,7 +368,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VRH2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vrh2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -443,7 +443,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="MeningoC2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.MeningoC2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -498,7 +498,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Penta3"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Penta3}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -514,7 +514,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VIP3"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vip3}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -530,7 +530,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Covid1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Covid1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -599,7 +599,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Covid2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Covid2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -654,7 +654,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="FA1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.FebreAmarela1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -709,7 +709,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Pneumo10-3"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Pneumo10_3}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -725,7 +725,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="MeningoC3"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.MeningoC3}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -741,7 +741,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="TripliceViral1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.TripliceViralInfantil}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -810,7 +810,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="DTP1"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Dtp1}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -826,7 +826,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="VIP4"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Vip4}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -842,7 +842,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="HA"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.HepatiteA}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -858,7 +858,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="TetraViral"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.TetraViral}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -934,7 +934,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="DTP2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Dtp2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -950,7 +950,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="FA2"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.FebreAmarela2}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -966,7 +966,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Varicela"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Varicela}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -1035,7 +1035,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="FA3"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.FebreAmarela3}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -1051,7 +1051,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="Pneumo23"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.Pneumo23}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -1113,7 +1113,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="DT"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.DtInfantil}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>
@@ -1168,7 +1168,7 @@
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenVaccineInfo}"
-                                        CommandParameter="HPV"/>
+                                        CommandParameter="{x:Static vo:VaccineDoseKeys.HpvInfantil}"/>
                                 </Label.GestureRecognizers>
 
                             </Label>

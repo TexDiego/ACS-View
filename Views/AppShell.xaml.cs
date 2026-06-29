@@ -1,4 +1,7 @@
 using ACS_View.Application.Interfaces;
+#if !WINDOWS
+using CommunityToolkit.Maui.Behaviors;
+#endif
 
 namespace ACS_View.Views;
 
@@ -9,11 +12,17 @@ public partial class AppShell : Shell
     private static bool routesRegistered;
     private readonly IServiceProvider _serviceProvider;
     private bool isThemeChangeHandlerRegistered;
+#if !WINDOWS
+    private readonly StatusBarBehavior statusBarThemeBehavior = new();
+#endif
 
     internal AppShell(IServiceProvider serviceProvider, bool isAuthenticated)
     {
         _serviceProvider = serviceProvider;
         InitializeComponent();
+#if !WINDOWS
+        Behaviors.Add(statusBarThemeBehavior);
+#endif
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         RegisterRoutes();
@@ -80,12 +89,16 @@ public partial class AppShell : Shell
 
     private void ApplyStatusBarTheme()
     {
+#if WINDOWS
+        return;
+#else
         var theme = Microsoft.Maui.Controls.Application.Current?.RequestedTheme ?? AppTheme.Light;
         var colorKey = theme == AppTheme.Dark
             ? DarkStatusBarColorResourceKey
             : LightStatusBarColorResourceKey;
 
-        StatusBarThemeBehavior.StatusBarColor = GetThemeColor(colorKey);
+        statusBarThemeBehavior.StatusBarColor = GetThemeColor(colorKey);
+#endif
     }
 
     private static Color GetThemeColor(string resourceKey)

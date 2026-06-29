@@ -78,7 +78,7 @@ namespace ACS_View.UseCases.Services
 
         private async Task CreateDomainTablesAsync()
         {
-            await Connection.CreateTablesAsync<Patient, Vaccines>();
+            await Connection.CreateTablesAsync<Patient, Vaccines, PatientVaccineDose>();
             await Connection.CreateTablesAsync<Note, House>();
             await Connection.CreateTablesAsync<Family, User>();
             await Connection.CreateTablesAsync<CidCategory, CidChapter>();
@@ -89,6 +89,7 @@ namespace ACS_View.UseCases.Services
             await MigratePatientTableAsync();
             await MigrateHouseTableAsync();
             await MigrateUserScopedTablesAsync();
+            await MigrateLegacyVaccinesAsync();
             await MigrateUserTableAsync();
             await BackfillSearchColumnsAsync();
             await BackfillFamilyResponsibleAsync();
@@ -124,6 +125,68 @@ namespace ACS_View.UseCases.Services
             {
                 await EnsureColumnAsync(tableName, "UserId", "INTEGER NOT NULL DEFAULT 0");
             }
+        }
+
+        private async Task MigrateLegacyVaccinesAsync()
+        {
+            var legacyRecords = await Connection.Table<Vaccines>().ToListAsync();
+            var legacyProperties = typeof(Vaccines).GetProperties()
+                .ToDictionary(property => property.Name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var legacyRecord in legacyRecords)
+            {
+                if (legacyRecord.Id <= 0)
+                {
+                    continue;
+                }
+
+                foreach (var legacyColumn in VaccineDoseCatalog.LegacyBooleanColumns)
+                {
+                    if (!legacyProperties.TryGetValue(legacyColumn.Key, out var property) ||
+                        property.GetValue(legacyRecord) is not bool isApplied ||
+                        !isApplied)
+                    {
+                        continue;
+                    }
+
+                    await InsertMigratedDoseAsync(
+                        legacyRecord.UserId,
+                        legacyRecord.Id,
+                        legacyColumn.Value);
+                }
+            }
+
+            await Connection.ExecuteAsync(
+                """
+                DELETE FROM PatientVaccineDose
+                WHERE Id NOT IN (
+                    SELECT MIN(Id)
+                    FROM PatientVaccineDose
+                    GROUP BY UserId, PatientId, DoseKey
+                )
+                """);
+        }
+
+        private Task InsertMigratedDoseAsync(int userId, int patientId, string doseKey)
+        {
+            return Connection.ExecuteAsync(
+                """
+                INSERT INTO PatientVaccineDose (UserId, PatientId, DoseKey, IsApplied, AppliedAt)
+                SELECT ?, ?, ?, 1, NULL
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM PatientVaccineDose
+                    WHERE UserId = ?
+                      AND PatientId = ?
+                      AND DoseKey = ?
+                )
+                """,
+                userId,
+                patientId,
+                doseKey,
+                userId,
+                patientId,
+                doseKey);
         }
 
         private async Task MigrateUserTableAsync()
@@ -167,6 +230,8 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_PatientId ON PatientCID(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_CidId ON PatientCID(UserId, CidId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientConditions_UserId_PatientId ON PatientConditions(UserId, PatientId)");
+            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientVaccineDose_User_Patient_Dose ON PatientVaccineDose(UserId, PatientId, DoseKey)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientVaccineDose_UserId_PatientId ON PatientVaccineDose(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Tipo_Rua_Numero ON House(TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_UserId_Tipo_Rua_Numero ON House(UserId, TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Rua_Numero ON House(Rua COLLATE NOCASE, NumeroCasa)");
@@ -280,6 +345,7 @@ namespace ACS_View.UseCases.Services
             "Note",
             "Visits",
             "Vaccines",
+            "PatientVaccineDose",
             "PatientCID",
             "PatientConditions"
         ];

@@ -11,7 +11,6 @@ using System.Windows.Input;
 namespace ACS_View.ViewModels
 {
     public partial class RegistersViewModel(
-        IVaccineService _vaccineService,
         IHouseService _houseService,
         IPatientService _patientService,
         IPersonsInfoPopupService _personsInfoPopupService,
@@ -39,8 +38,6 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private bool isLoadingMore;
         [ObservableProperty] private bool hasActiveFilters;
         [ObservableProperty] private string filterSummary = string.Empty;
-
-        private Vaccines? _vaccines;
 
         public int ScrollToId { get; set; }
         public ObservableCollection<int> SkeletonItems { get; } = new([1, 2, 3, 4, 5, 6, 7, 8]);

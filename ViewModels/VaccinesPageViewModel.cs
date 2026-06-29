@@ -1,8 +1,8 @@
+using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Enums;
-using ACS_View.Application.Interfaces;
+using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
-using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -18,184 +18,52 @@ namespace ACS_View.ViewModels
         private int _loadVersion;
 
         [ObservableProperty] private Patient? healthRecord;
-        [ObservableProperty] private Vaccines? vaccines;
+        [ObservableProperty] private VaccineSchedulePresentation? vaccines;
         [ObservableProperty] private bool hasPatient;
         [ObservableProperty] private ObservableCollection<VaccineSectionType> vaccineSections = [];
 
-        public ICommand OpenVaccineInfo { get; set; }
+        public ICommand OpenVaccineInfo { get; }
 
         #region Cores por situação vacinal
 
-        #region crianças
-        public Color SituacaoRN => Vaccines?.SituacaoVacinal(
-            Vaccines.BCG_Infantil,
-            Vaccines.HepatitisBAoNascer_Infantil
-        ) ?? ThemeColors.ControlPressed;
+        public Color SituacaoRN => SituacaoVacinal(VaccineDoseKeys.BcgInfantil, VaccineDoseKeys.HepatiteBNascimento);
+        public Color Situacao2Meses => SituacaoVacinal(VaccineDoseKeys.Penta1, VaccineDoseKeys.Vip1, VaccineDoseKeys.Pneumo10_1, VaccineDoseKeys.Vrh1);
+        public Color Situacao3Meses => SituacaoVacinal(VaccineDoseKeys.MeningoC1);
+        public Color Situacao4Meses => SituacaoVacinal(VaccineDoseKeys.Penta2, VaccineDoseKeys.Vip2, VaccineDoseKeys.Pneumo10_2, VaccineDoseKeys.Vrh2);
+        public Color Situacao5Meses => SituacaoVacinal(VaccineDoseKeys.MeningoC2);
+        public Color Situacao6Meses => SituacaoVacinal(VaccineDoseKeys.Penta3, VaccineDoseKeys.Vip3, VaccineDoseKeys.Covid1);
+        public Color Situacao7Meses => SituacaoVacinal(VaccineDoseKeys.Covid2);
+        public Color Situacao9Meses => SituacaoVacinal(VaccineDoseKeys.FebreAmarela1);
+        public Color Situacao12Meses => SituacaoVacinal(VaccineDoseKeys.Pneumo10_3, VaccineDoseKeys.MeningoC3, VaccineDoseKeys.TripliceViralInfantil);
+        public Color Situacao15Meses => SituacaoVacinal(VaccineDoseKeys.Dtp1, VaccineDoseKeys.Vip4, VaccineDoseKeys.HepatiteA, VaccineDoseKeys.TetraViral);
+        public Color Situacao4Anos => SituacaoVacinal(VaccineDoseKeys.Dtp2, VaccineDoseKeys.FebreAmarela2, VaccineDoseKeys.Varicela);
+        public Color Situacao5Anos => SituacaoVacinal(VaccineDoseKeys.FebreAmarela3, VaccineDoseKeys.Pneumo23);
+        public Color Situacao7Anos => SituacaoVacinal(VaccineDoseKeys.DtInfantil);
+        public Color Situacao9Anos => SituacaoVacinal(VaccineDoseKeys.HpvInfantil);
 
-        public Color Situacao2Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.Penta1_Infantil,
-            Vaccines.VIP1_Infantil,
-            Vaccines.Pneumo10_1_Infantil,
-            Vaccines.VRH1_Infantil
-        ) ?? ThemeColors.ControlPressed;
+        public Color SituacaoHBAdolescente => SituacaoVacinal(VaccineDoseKeys.HepatiteBAdolescente);
+        public Color SituacaoDTAdolescente => SituacaoVacinal(VaccineDoseKeys.DtAdolescente);
+        public Color SituacaoFAAdolescente => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaAdolescente);
+        public Color SituacaoTripliceViralAdolescente => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdolescente);
+        public Color SituacaoHPVAdolescente => SituacaoVacinal(VaccineDoseKeys.HpvAdolescente);
+        public Color SituacaoACWYAdolescente => SituacaoVacinal(VaccineDoseKeys.Acwy);
 
-        public Color Situacao3Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.MeningoC1_Infantil
-        ) ?? ThemeColors.ControlPressed;
+        public Color SituacaoHepatiteBAdulto => SituacaoVacinal(VaccineDoseKeys.HepatiteBAdulto);
+        public Color SituacaoDTAdulto => SituacaoVacinal(VaccineDoseKeys.DtAdulto);
+        public Color SituacaoFebreAmarelaAdulto => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaAdulto);
+        public Color SituacaoHPVAdulto => SituacaoVacinal(VaccineDoseKeys.HpvAdulto);
+        public Color SituacaoTripliceViral1Adulto => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdulto20A29);
+        public Color SituacaoTripliceViral2Adulto => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdulto30A59);
+        public Color SituacaodTpaAdulto => SituacaoVacinal(VaccineDoseKeys.DtpaAdulto);
 
-        public Color Situacao4Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.Penta2_Infantil,
-            Vaccines.VIP2_Infantil,
-            Vaccines.Pneumo10_2_Infantil,
-            Vaccines.VRH2_Infantil
-        ) ?? ThemeColors.ControlPressed;
+        public Color SituacaoHepatiteBIdoso => SituacaoVacinal(VaccineDoseKeys.HepatiteBIdoso);
+        public Color SituacaodTIdoso => SituacaoVacinal(VaccineDoseKeys.DtIdoso);
+        public Color SituacaoFebreAmarelaIdoso => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaIdoso);
+        public Color SituacaodTpaIdoso => SituacaoVacinal(VaccineDoseKeys.DtpaIdoso);
 
-        public Color Situacao5Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.MeningoC2_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao6Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.Penta3_Infantil,
-            Vaccines.VIP3_Infantil,
-            Vaccines.Covid1_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao7Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.Covid2_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao9Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.FebreAmarela1_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao12Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.Pneumo10_3_Infantil,
-            Vaccines.MeningoC3_Infantil,
-            Vaccines.TripliceViral_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao15Meses => Vaccines?.SituacaoVacinal(
-            Vaccines.DTP1_Infantil,
-            Vaccines.VIP4_Infantil,
-            Vaccines.HepatiteA_Infantil,
-            Vaccines.TetraViral_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao4Anos => Vaccines?.SituacaoVacinal(
-            Vaccines.DTP2_Infantil,
-            Vaccines.FebreAmarela2_Infantil,
-            Vaccines.Varicela_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao5Anos => Vaccines?.SituacaoVacinal(
-            Vaccines.FebreAmarela3_Infantil,
-            Vaccines.Pneumo23_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao7Anos => Vaccines?.SituacaoVacinal(
-            Vaccines.DT_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color Situacao9Anos => Vaccines?.SituacaoVacinal(
-            Vaccines.HPV_Infantil
-        ) ?? ThemeColors.ControlPressed;
-
-        #endregion
-
-        #region adolescentes
-        public Color SituacaoHBAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.HepatiteB_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoDTAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.DT_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoFAAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.FebreAmarela_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoTripliceViralAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.TripliceViral_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoHPVAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.HPV_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoACWYAdolescente => Vaccines?.SituacaoVacinal(
-            Vaccines.ACWY_Adolescente
-        ) ?? ThemeColors.ControlPressed;
-
-        #endregion
-
-        #region adultos
-
-        public Color SituacaoHepatiteBAdulto => Vaccines?.SituacaoVacinal(
-            Vaccines.HepatiteB_Adulto
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoDTAdulto => Vaccines?.SituacaoVacinal(
-            Vaccines.dT_Adulto
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoFebreAmarelaAdulto => Vaccines?.SituacaoVacinal(
-            Vaccines.FebreAmarela_Adulto
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoHPVAdulto => Vaccines?.SituacaoVacinal(
-            Vaccines.HPV_Adulto
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoTripliceViral1Adulto => Vaccines?.SituacaoVacinal(
-            Vaccines.TripliceViral1_Adulto
-            ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoTripliceViral2Adulto => Vaccines?.SituacaoVacinal(
-            Vaccines.TripliceViral2_Adulto
-            ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaodTpaAdulto => Vaccines?.SituacaoVacinal(
-            Vaccines.dTpa_Adulto
-        ) ?? ThemeColors.ControlPressed;
-
-        #endregion
-
-        #region idosos
-
-        public Color SituacaoHepatiteBIdoso => Vaccines?.SituacaoVacinal(
-            Vaccines.HepatiteB_Idoso
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaodTIdoso => Vaccines?.SituacaoVacinal(
-            Vaccines.dT_Idoso
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaoFebreAmarelaIdoso => Vaccines?.SituacaoVacinal(
-            Vaccines.FebreAmarela_Idoso
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaodTpaIdoso => Vaccines?.SituacaoVacinal(
-            Vaccines.dTpa_Idoso
-        ) ?? ThemeColors.ControlPressed;
-
-        #endregion
-
-        #region gestantes
-
-        public Color SituacaoHBGestante => Vaccines?.SituacaoVacinal(
-            Vaccines.HepatiteB_Gestante
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaodTGestante => Vaccines?.SituacaoVacinal(
-            Vaccines.dT_Gestante
-        ) ?? ThemeColors.ControlPressed;
-
-        public Color SituacaodTpaGestante => Vaccines?.SituacaoVacinal(
-            Vaccines.dTpa_Gestante
-        ) ?? ThemeColors.ControlPressed;
-
-        #endregion
+        public Color SituacaoHBGestante => SituacaoVacinal(VaccineDoseKeys.HepatiteBGestante);
+        public Color SituacaodTGestante => SituacaoVacinal(VaccineDoseKeys.DtGestante);
+        public Color SituacaodTpaGestante => SituacaoVacinal(VaccineDoseKeys.DtpaGestante);
 
         #endregion
 
@@ -204,7 +72,7 @@ namespace ACS_View.ViewModels
             _patientService = patientService;
             _vaccineService = vaccineService;
             _popupService = popupService;
-            OpenVaccineInfo = new Command<string>(async (vaccine) => await OpenVaccineInfoCommand(vaccine));
+            OpenVaccineInfo = new Command<string>(async vaccine => await OpenVaccineInfoCommand(vaccine));
         }
 
         public async Task LoadPatientAsync(int patientId)
@@ -241,26 +109,21 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                var vaccinesRecord = await _vaccineService.GetVaccinesByIdAsync(patientId);
+                var schedule = await _vaccineService.GetScheduleForPatientAsync(patientId);
 
                 if (loadVersion != _loadVersion)
                 {
                     return;
                 }
 
-                if (vaccinesRecord is null)
+                if (schedule is null)
                 {
-                    vaccinesRecord = new Vaccines
-                    {
-                        Id = patient.Id,
-                        BirthDate = patient.BirthDate
-                    };
-
-                    await _vaccineService.AdicionarVacinasAsync(vaccinesRecord);
+                    await DisplayAlertAsync("Erro", "Cartão vacinal não encontrado.", "Voltar");
+                    return;
                 }
 
                 HealthRecord = patient;
-                Vaccines = vaccinesRecord;
+                Vaccines = new VaccineSchedulePresentation(schedule);
                 HasPatient = true;
                 _loadedPatientId = patientId;
             }
@@ -273,13 +136,13 @@ namespace ACS_View.ViewModels
             }
         }
 
-        partial void OnVaccinesChanged(Vaccines? value)
+        partial void OnVaccinesChanged(VaccineSchedulePresentation? value)
         {
             RefreshVaccineSections(value);
             OnPropertyChanged(string.Empty);
         }
 
-        private void RefreshVaccineSections(Vaccines? value)
+        private void RefreshVaccineSections(VaccineSchedulePresentation? value)
         {
             VaccineSections.Clear();
 
@@ -314,12 +177,33 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private bool GetVaccineStatus(string Vaccine)
+        private bool GetVaccineStatus(string vaccine)
         {
-            return Vaccines?.GetVaccineStatus(Vaccine) ?? false;
+            return Vaccines?.GetVaccineStatus(vaccine) ?? false;
         }
 
-        private async Task OpenVaccineInfoCommand(string Vaccine)
+        private Color SituacaoVacinal(params string[] doseKeys)
+        {
+            if (Vaccines is null || doseKeys.Length == 0)
+            {
+                return ThemeColors.ControlPressed;
+            }
+
+            var statuses = doseKeys.Select(GetVaccineStatus).ToArray();
+            if (statuses.All(status => status))
+            {
+                return Colors.Green;
+            }
+
+            if (statuses.All(status => !status))
+            {
+                return Colors.Red;
+            }
+
+            return Colors.Orange;
+        }
+
+        private async Task OpenVaccineInfoCommand(string vaccine)
         {
             try
             {
@@ -328,16 +212,18 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                bool vaccineChecked = GetVaccineStatus(Vaccine);
-
-                var popup = new VaccinesInfo(Vaccine, vaccineChecked);
+                var vaccineChecked = GetVaccineStatus(vaccine);
+                var popup = new VaccinesInfo(vaccine, vaccineChecked);
                 var status = await _popupService.ShowAsync<bool>(popup);
 
-                if (status.WasDismissed) return;
+                if (status.WasDismissed)
+                {
+                    return;
+                }
 
                 if (status.Result is bool vaccineStatus && vaccineStatus != vaccineChecked)
                 {
-                    await UpdateVaccine(Vaccine, vaccineStatus);
+                    await UpdateVaccine(vaccine, vaccineStatus);
                 }
             }
             catch (Exception ex)
@@ -346,7 +232,7 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private async Task UpdateVaccine(string Vaccine, bool vaccineStatus)
+        private async Task UpdateVaccine(string vaccine, bool vaccineStatus)
         {
             try
             {
@@ -355,21 +241,13 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                var vaccineProperty = await _vaccineService.GetVaccinesByIdAsync(patientId);
+                await _vaccineService.SetDoseStatusAsync(patientId, vaccine, vaccineStatus);
+                var schedule = await _vaccineService.GetScheduleForPatientAsync(patientId);
 
-                if (vaccineProperty is null)
+                if (schedule is not null)
                 {
-                    return;
+                    Vaccines = new VaccineSchedulePresentation(schedule);
                 }
-
-                if (vaccineProperty.GetVaccineStatus(Vaccine) != vaccineStatus)
-                {
-                    vaccineProperty.ChangeVaccineStatus(Vaccine);
-                }
-
-                await _vaccineService.AtualizarVacinasAsync(vaccineProperty);
-                 
-                Vaccines = vaccineProperty;
             }
             catch (Exception ex)
             {

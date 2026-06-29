@@ -5,6 +5,7 @@
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.Views.AddHouse"
+             Style="{StaticResource PageBackground}"
              Title="Adicionar Residência">
 
     <Grid Padding="{StaticResource PagePadding}">

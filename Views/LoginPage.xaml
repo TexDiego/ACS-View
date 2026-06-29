@@ -6,7 +6,7 @@
              Shell.TabBarIsVisible="False"
              Style="{StaticResource PageBackground}">
 
-    <Grid Padding="24" RowDefinitions="*,auto,*">
+    <Grid Padding="24" RowDefinitions="*,auto,*" MaximumWidthRequest="600">
         <VerticalStackLayout Grid.Row="1" Spacing="18">
             <Image
                 Source="form.png"

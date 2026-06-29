@@ -8,9 +8,14 @@
     x:Class="ACS_View.Views.VaccinesInfo"
     x:TypeArguments="system:Boolean"
     x:DataType="vm:VaccinesInfoViewModel"
+    BackgroundColor="Transparent"
+    Padding="0"
     CanBeDismissedByTappingOutsideOfPopup="True">
 
-    <VerticalStackLayout x:Name="PopupContent">
+    <VerticalStackLayout
+        x:Name="PopupContent"
+        Padding="10"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
 
         <Label
                 FontSize="24"

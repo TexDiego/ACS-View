@@ -17,8 +17,6 @@ public partial class OverallViewModel : BaseViewModel
     private readonly IDashboardMetricPreferencesService metricPreferences;
     private readonly IPopupService popupService;
 
-    private readonly GeneralMetrics generalMetrics = new();
-    private readonly HealthMetrics healthMetrics = new();
     private readonly List<MetricCombination> metricCombinations = [];
     private readonly List<Dashboard> removedGeneralRootMetrics = [];
     private readonly List<Dashboard> removedHealthRootMetrics = [];
@@ -28,8 +26,6 @@ public partial class OverallViewModel : BaseViewModel
     private int _loadedSessionVersion = -1;
     private bool hasLoadedMetricPreferences;
     private bool suppressMetricPreferencePersistence;
-
-    [ObservableProperty] private ContentView currentView;
 
     [ObservableProperty] private bool generalTabSelected = true;
     [ObservableProperty] private bool healthTabSelected;
@@ -51,9 +47,6 @@ public partial class OverallViewModel : BaseViewModel
         dash = _dash;
         metricPreferences = metricPreferencesService;
         this.popupService = popupService;
-        CurrentView = generalMetrics;
-        generalMetrics.BindingContext = this;
-        healthMetrics.BindingContext = this;
         MetricsDashboard.CollectionChanged += OnDashboardCollectionChanged;
         HealthDashboard.CollectionChanged += OnDashboardCollectionChanged;
     }
@@ -207,13 +200,6 @@ public partial class OverallViewModel : BaseViewModel
 
     private void SwitchMetricsView(string page)
     {
-        CurrentView = page switch
-        {
-            "0" => generalMetrics,
-            "1" => healthMetrics,
-            _ => healthMetrics
-        };
-
         GeneralTabSelected = page == "0";
         HealthTabSelected = page == "1";
     }

@@ -50,6 +50,7 @@ internal sealed class UserDataCleanupService(
     {
         connection.Execute("DELETE FROM PatientCID WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientConditions WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientVaccineDose WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Vaccines WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Visits WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Family WHERE UserId = ?", userId);

@@ -6,37 +6,87 @@
              xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:OverallViewModel">
 
-    <CollectionView ItemsSource="{Binding MetricsDashboard}" VerticalScrollBarVisibility="Never" CanReorderItems="True">
+    <ContentView.Resources>
+        <DataTemplate x:Key="PlainMetricTemplate" x:DataType="model:Dashboard">
+            <Border Style="{StaticResource CardBorder}" Padding="0" Margin="0,5">
+                <Grid ColumnDefinitions="*,auto,auto"
+                      ColumnSpacing="10"
+                      BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
+                            CommandParameter="{Binding FilterKey}"/>
+                    </Grid.GestureRecognizers>
+
+                    <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
+                        <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                        <Label Text="{Binding Summary}" Style="{StaticResource BodyMuted}"/>
+                    </VerticalStackLayout>
+
+                    <Label Grid.Column="1"
+                           Text="{Binding Total}"
+                           Style="{StaticResource MetricNumber}"
+                           VerticalOptions="Center"/>
+
+                    <ImageButton Grid.Column="2"
+                                 Source="bin.png"
+                                 MaximumHeightRequest="40"
+                                 MaximumWidthRequest="40"
+                                 Style="{StaticResource DangerSoftIconButton}"
+                                 Margin="0,0,10,0"
+                                 VerticalOptions="Center"
+                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
+                                 CommandParameter="{Binding .}"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SwipeMetricTemplate" x:DataType="model:Dashboard">
+            <Border Style="{StaticResource CardBorder}" Padding="0">
+                <SwipeView Margin="0">
+                    <SwipeView.LeftItems>
+                        <SwipeItem
+                            Style="{StaticResource DangerSwipeItem}"
+                            IconImageSource="bin.png"
+                            Text="Remover"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
+                            CommandParameter="{Binding .}"/>
+                    </SwipeView.LeftItems>
+
+                    <Grid ColumnDefinitions="*,auto"
+                          ColumnSpacing="16"
+                          BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
+                                CommandParameter="{Binding FilterKey}"/>
+                        </Grid.GestureRecognizers>
+
+                        <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
+                            <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                            <Label Text="{Binding Summary}" Style="{StaticResource BodyMuted}"/>
+                        </VerticalStackLayout>
+
+                        <Label Grid.Column="1"
+                               Text="{Binding Total}"
+                               Style="{StaticResource MetricNumber}"
+                               VerticalOptions="Center"
+                               Margin="0,0,10,0"/>
+                    </Grid>
+                </SwipeView>
+            </Border>
+        </DataTemplate>
+    </ContentView.Resources>
+
+    <CollectionView
+        ItemsSource="{Binding MetricsDashboard}"
+        VerticalScrollBarVisibility="{OnPlatform WinUI=Always, Default=Never}"
+        CanReorderItems="{OnPlatform WinUI=False, Default=True}">
         <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="model:Dashboard">
-                <Border Style="{StaticResource CardBorder}" Padding="0">
-                    <SwipeView>
-                        <SwipeView.LeftItems>
-                            <SwipeItem
-                                Style="{StaticResource DangerSwipeItem}"
-                                IconImageSource="bin.png"
-                                Text="Remover"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
-                                CommandParameter="{Binding .}"/>
-                        </SwipeView.LeftItems>
-
-                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="16" BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
-                                        CommandParameter="{Binding FilterKey}"/>
-                            </Grid.GestureRecognizers>
-
-                            <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
-                                <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                <Label Text="{Binding Summary}" Style="{StaticResource BodyMuted}"/>
-                            </VerticalStackLayout>
-
-                            <Label Grid.Column="1" Text="{Binding Total}" Style="{StaticResource MetricNumber}" VerticalOptions="Center" Margin="0,0,10,0"/>
-                        </Grid>
-                    </SwipeView>
-                </Border>
-            </DataTemplate>
+            <OnPlatform x:TypeArguments="DataTemplate"
+                        Default="{StaticResource SwipeMetricTemplate}">
+                <On Platform="WinUI" Value="{StaticResource PlainMetricTemplate}"/>
+            </OnPlatform>
         </CollectionView.ItemTemplate>
     </CollectionView>
 </ContentView>

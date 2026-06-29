@@ -2,7 +2,6 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:ACS_View.Views"
-       xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
        x:Class="ACS_View.Views.AppShell"
        Shell.TitleColor="{StaticResource White}"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
@@ -11,12 +10,6 @@
        Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
        Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
        Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource DarkSurface}, Dark={StaticResource DarkTextMuted}}">
-
-    <Shell.Behaviors>
-        <tk:StatusBarBehavior
-            x:Name="StatusBarThemeBehavior"
-            StatusBarColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"/>
-    </Shell.Behaviors>
 
     <ShellContent Route="login" x:Name="LoginContent"/>
 

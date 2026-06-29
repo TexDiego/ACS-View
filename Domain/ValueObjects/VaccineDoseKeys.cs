@@ -1,0 +1,56 @@
+namespace ACS_View.Domain.ValueObjects;
+
+public static class VaccineDoseKeys
+{
+    public const string BcgInfantil = "BCG_Infantil";
+    public const string HepatiteBNascimento = "HB";
+    public const string HepatiteBAdolescente = "HB2";
+    public const string Penta1 = "Penta1";
+    public const string Vip1 = "VIP1";
+    public const string Pneumo10_1 = "Pneumo10-1";
+    public const string Vrh1 = "VRH1";
+    public const string MeningoC1 = "MeningoC1";
+    public const string Penta2 = "Penta2";
+    public const string Vip2 = "VIP2";
+    public const string Pneumo10_2 = "Pneumo10-2";
+    public const string Vrh2 = "VRH2";
+    public const string MeningoC2 = "MeningoC2";
+    public const string Penta3 = "Penta3";
+    public const string Vip3 = "VIP3";
+    public const string Covid1 = "Covid1";
+    public const string Covid2 = "Covid2";
+    public const string FebreAmarela1 = "FA1";
+    public const string Pneumo10_3 = "Pneumo10-3";
+    public const string MeningoC3 = "MeningoC3";
+    public const string TripliceViralInfantil = "TripliceViral1";
+    public const string Dtp1 = "DTP1";
+    public const string Vip4 = "VIP4";
+    public const string HepatiteA = "HA";
+    public const string TetraViral = "TetraViral";
+    public const string Dtp2 = "DTP2";
+    public const string FebreAmarela2 = "FA2";
+    public const string Varicela = "Varicela";
+    public const string FebreAmarela3 = "FA3";
+    public const string Pneumo23 = "Pneumo23";
+    public const string DtInfantil = "DT";
+    public const string DtAdolescente = "DT2";
+    public const string HpvInfantil = "HPV";
+    public const string FebreAmarelaAdolescente = "FA4";
+    public const string TripliceViralAdolescente = "TripliceViral2";
+    public const string HpvAdolescente = "HPV2";
+    public const string Acwy = "ACWY";
+    public const string HepatiteBAdulto = "HB3";
+    public const string DtAdulto = "DT3";
+    public const string FebreAmarelaAdulto = "FA5";
+    public const string HpvAdulto = "HPV3";
+    public const string TripliceViralAdulto20A29 = "TripliceViral3";
+    public const string TripliceViralAdulto30A59 = "TripliceViral4";
+    public const string DtpaAdulto = "DTPA";
+    public const string HepatiteBIdoso = "HB4";
+    public const string DtIdoso = "DT4";
+    public const string FebreAmarelaIdoso = "FA6";
+    public const string DtpaIdoso = "DTPA2";
+    public const string HepatiteBGestante = "HB5";
+    public const string DtGestante = "DT5";
+    public const string DtpaGestante = "DTPA3";
+}

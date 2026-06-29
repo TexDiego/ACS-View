@@ -7,6 +7,7 @@
              xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
+             Style="{StaticResource PageBackground}"
              Title="Adicionar cadastro">
 
     <ContentPage.Resources>

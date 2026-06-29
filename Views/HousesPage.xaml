@@ -53,7 +53,7 @@
             Grid.Row="2"
             ItemsSource="{Binding Houses}"
             SelectionMode="None"
-            VerticalScrollBarVisibility="Never"
+            VerticalScrollBarVisibility="{OnPlatform WinUI=Always, Default=Never}"
             Scrolled="CollectionView_Scrolled"
             RemainingItemsThreshold="5"
             RemainingItemsThresholdReachedCommand="{Binding LoadMoreHousesCommand}">

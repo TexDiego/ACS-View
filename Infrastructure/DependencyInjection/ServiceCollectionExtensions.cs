@@ -90,8 +90,9 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<RegistersViewModel>();
         services.AddSingleton<HousesPageViewModel>();
-        services.AddSingleton<OverallViewModel>();
         services.AddSingleton<CIDViewViewModel>();
+
+        services.AddTransient<OverallViewModel>();
 
         return services;
     }

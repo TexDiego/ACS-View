@@ -1,11 +1,10 @@
-using ACS_View.Domain.Entities;
+using ACS_View.Application.DTOs;
 
 namespace ACS_View.Application.Interfaces
 {
     public interface IVaccineService
     {
-        Task<Vaccines> GetVaccinesByIdAsync(int id);
-        Task AdicionarVacinasAsync(Vaccines registro);
-        Task AtualizarVacinasAsync(Vaccines registro);
+        Task<PatientVaccineScheduleDto?> GetScheduleForPatientAsync(int patientId);
+        Task SetDoseStatusAsync(int patientId, string doseKey, bool isApplied);
     }
 }

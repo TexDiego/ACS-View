@@ -31,13 +31,15 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private ObservableCollection<HealthConditions> commonConditions = [];
         [ObservableProperty] private string motherNameInput = string.Empty;
         [ObservableProperty] private string fatherNameInput = string.Empty;
+        [ObservableProperty] private DateTime birthDateInput = DateTime.Today;
 
         private bool _updatingParentNameInputs;
+        private bool _updatingBirthDateInput;
         private string? _linkedMotherName;
         private string? _linkedFatherName;
         private bool _initialIsActive = true;
 
-        public DateTime MinimumDate => DateTime.Today.AddYears(-120);
+        public DateTime MinimumDate => new(1900, 1, 1);
         public DateTime MaximumDate => DateTime.Today;
 
         public ICommand RegisterCommand => new Command(async () => await Save());
@@ -90,6 +92,16 @@ namespace ACS_View.ViewModels
             }
         }
 
+        partial void OnBirthDateInputChanged(DateTime value)
+        {
+            if (_updatingBirthDateInput || CurrentPatient is null)
+            {
+                return;
+            }
+
+            CurrentPatient.BirthDate = CoerceBirthDate(value);
+        }
+
         internal async Task LoadPatient(int id)
         {
             try
@@ -101,9 +113,11 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
+                NormalizePatientForEditing(p);
                 CurrentPatient = p;
                 _initialIsActive = p.IsActive;
                 SetParentNameInputs(p);
+                SetBirthDateInput(p.BirthDate);
 
                 HealthCategories.Clear();
                 CommonConditions.Clear();
@@ -168,6 +182,11 @@ namespace ACS_View.ViewModels
             }
         }
 
+        internal Task ShowLoadErrorAsync()
+        {
+            return DisplayAlertAsync("Erro", "Nao foi possivel carregar o cadastro para edicao.");
+        }
+
         private async Task Save()
         {
             try
@@ -193,6 +212,8 @@ namespace ACS_View.ViewModels
                     {
                         CurrentPatient.StatusChangedAt = DateTime.UtcNow;
                     }
+
+                    CurrentPatient.BirthDate = BirthDateInput.Date;
 
                     if (CurrentPatient.Id > 0)
                     {
@@ -318,6 +339,45 @@ namespace ACS_View.ViewModels
             {
                 _updatingParentNameInputs = false;
             }
+        }
+
+        private void SetBirthDateInput(DateTime birthDate)
+        {
+            _updatingBirthDateInput = true;
+            try
+            {
+                BirthDateInput = CoerceBirthDate(birthDate);
+            }
+            finally
+            {
+                _updatingBirthDateInput = false;
+            }
+        }
+
+        private void NormalizePatientForEditing(Patient patient)
+        {
+            patient.Name ??= string.Empty;
+            patient.SusNumber ??= string.Empty;
+            patient.MotherName ??= string.Empty;
+            patient.FatherName ??= string.Empty;
+            patient.Observacao ??= string.Empty;
+            patient.StatusReason ??= string.Empty;
+
+            if (string.IsNullOrWhiteSpace(patient.Sexo))
+            {
+                patient.Sexo = "Indeterminado";
+            }
+        }
+
+        private DateTime CoerceBirthDate(DateTime birthDate)
+        {
+            var date = birthDate.Date;
+            if (date < MinimumDate.Date || date > MaximumDate.Date)
+            {
+                return DateTime.Today;
+            }
+
+            return date;
         }
 
         private async Task SwitchConditionSelected(HealthConditions condition)

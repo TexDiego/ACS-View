@@ -1,6 +1,7 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
+using System.Diagnostics;
 
 namespace ACS_View.Views;
 
@@ -62,6 +63,11 @@ public partial class AddRegister : ContentPage, IQueryAttributable
             }
 
             _loaded = true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            await _viewModel.ShowLoadErrorAsync();
         }
         finally
         {

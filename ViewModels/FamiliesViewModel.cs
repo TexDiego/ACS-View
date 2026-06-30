@@ -18,10 +18,10 @@ namespace ACS_View.ViewModels
         private readonly IFamilyService _familyService;
         private readonly IFamilyManager _familyManager;
         private readonly IPopupService _popupService;
-        private int _transientPopupDepth;
-        private bool _skipNextAppearReload;
         private int _loadedVersion = -1;
         private bool _hasLoaded;
+        private bool _skipNextAppearReload;
+        private DateTime _suppressReloadUntilUtc = DateTime.MinValue;
 
         [ObservableProperty] private ObservableCollection<Familia> families = [];
         [ObservableProperty] private string house = "";
@@ -35,6 +35,7 @@ namespace ACS_View.ViewModels
 
 
         private readonly int _idHouse = 0;
+        internal int HouseId => _idHouse;
 
         public FamiliesViewModel(
             int idHouse,
@@ -58,23 +59,13 @@ namespace ACS_View.ViewModels
 
         internal bool ShouldSkipTransientReload()
         {
-            if (!_hasLoaded)
+            if (_skipNextAppearReload || DateTime.UtcNow <= _suppressReloadUntilUtc)
             {
-                return false;
-            }
-
-            if (_transientPopupDepth > 0)
-            {
+                _skipNextAppearReload = false;
                 return true;
             }
 
-            if (!_skipNextAppearReload)
-            {
-                return false;
-            }
-
-            _skipNextAppearReload = false;
-            return true;
+            return false;
         }
 
         public async Task LoadFamiliesAsync()
@@ -250,14 +241,14 @@ namespace ACS_View.ViewModels
 
                 if (record != null)
                 {
-                    BeginTransientPopup();
+                    SuppressTransientReload();
                     try
                     {
                         await _personsInfoPopupService.ShowAsync(record);
                     }
                     finally
                     {
-                        EndTransientPopup();
+                        SuppressTransientReload();
                     }
                 }
             }
@@ -267,20 +258,10 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private void BeginTransientPopup()
+        private void SuppressTransientReload()
         {
-            _transientPopupDepth++;
             _skipNextAppearReload = true;
-        }
-
-        private void EndTransientPopup()
-        {
-            if (_transientPopupDepth > 0)
-            {
-                _transientPopupDepth--;
-            }
-
-            _skipNextAppearReload = true;
+            _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
         }
     }
 }

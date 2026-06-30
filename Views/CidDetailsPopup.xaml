@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    xmlns:converters="clr-namespace:ACS_View.Converters"
     x:DataType="dto:CidSearchResultDto"
     CanBeDismissedByTappingOutsideOfPopup="True"
     BackgroundColor="Transparent"
@@ -15,7 +16,7 @@
         <Grid RowDefinitions="auto,auto,auto,auto,auto,auto" RowSpacing="12">
             <VerticalStackLayout Grid.Row="0" Spacing="4">
                 <Label
-                    Text="{Binding Code}"
+                    Text="{Binding Code, Converter={converters:CIDFormatConverter}}"
                     TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                     FontSize="24"
                     FontAttributes="Bold"/>

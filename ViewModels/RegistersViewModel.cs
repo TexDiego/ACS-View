@@ -206,26 +206,6 @@ namespace ACS_View.ViewModels
             });
         }
 
-        private async Task<string> GetAddressAsync(int id)
-        {
-            try
-            {
-                var house = await _houseService.GetHouseByPatientIdAsync(id);
-                if (house == null) return "Sem endereço.";
-
-                string rua = house.Rua ?? "";
-                string numeroRua = house.NumeroCasa ?? "";
-                string complemento = string.IsNullOrWhiteSpace(house.Complemento) ? "" : $"- {house.Complemento}";
-
-                return $"{rua}, {numeroRua} {complemento}";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao obter endereço: {ex.Message}");
-                return "Erro ao buscar endereço.";
-            }
-        }
-
         private async Task DeleteRecordAsync(int id)
         {
             var confirm = await DisplayConfirmationAsync(
@@ -248,6 +228,11 @@ namespace ACS_View.ViewModels
 
         private async Task EditRecordAsync(PatientListItemDto patientListItem)
         {
+            if (patientListItem == null)
+            {
+                return;
+            }
+
             ScrollToId = patientListItem.Id;
             await NavigateToAsync("addregister", new Dictionary<string, object> { { "patientId", patientListItem.Id } });
         }
@@ -379,6 +364,11 @@ namespace ACS_View.ViewModels
                 parts.Add(GetAgeSummary());
             }
 
+            if (_listFilter.Sexes.Count > 0)
+            {
+                parts.Add(GetSexSummary());
+            }
+
             if (_listFilter.SortBy != PatientListSortOption.Name || _listFilter.SortDescending)
             {
                 parts.Add(_listFilter.SortBy == PatientListSortOption.Age ? "idade" : "nome desc.");
@@ -396,6 +386,16 @@ namespace ACS_View.ViewModels
                 (not null, null) => $"a partir de {_listFilter.MinimumAge} anos",
                 (null, not null) => $"até {_listFilter.MaximumAge} anos",
                 _ => string.Empty
+            };
+        }
+
+        private string GetSexSummary()
+        {
+            return _listFilter.Sexes.Count switch
+            {
+                1 => _listFilter.Sexes[0],
+                2 => string.Join(" + ", _listFilter.Sexes),
+                _ => "todos os sexos"
             };
         }
 

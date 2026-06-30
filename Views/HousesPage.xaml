@@ -19,9 +19,9 @@
         <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
             <SearchBar
                 Margin="0,0,0,-1"
-                Placeholder="Buscar rua ou número"
+                Placeholder="Buscar rua, número ou paciente"
                 Text="{Binding SearchText, Mode=TwoWay}"
-                MaxLength="30"
+                MaxLength="80"
                 TextChanged="SearchBar_TextChanged"/>
         </Border>
 
@@ -61,48 +61,48 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="dto:HouseListItemDto">
                     <Border Style="{StaticResource CardBorder}" Padding="0">
-                            <Grid
-                                ColumnDefinitions="*,auto"
-                                ColumnSpacing="12"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-                                <VerticalStackLayout Grid.Column="0" Spacing="5" Margin="10">
-                                    <VerticalStackLayout.GestureRecognizers>
-                                        <TapGestureRecognizer
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
-                                            CommandParameter="{Binding CasaId}"/>
-                                    </VerticalStackLayout.GestureRecognizers>
-
-                                    <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}"/>
-                                    <HorizontalStackLayout Spacing="4">
-                                        <Label Text="Número" Style="{StaticResource BodyMuted}"/>
-                                        <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
-                                        <Label Text="{Binding Complemento}" Style="{StaticResource BodyMuted}"/>
-                                    </HorizontalStackLayout>
-                                </VerticalStackLayout>
-
-                                <HorizontalStackLayout
-                                    Grid.Column="1"
-                                    Spacing="10"
-                                    Margin="0,0,10,0"
-                                    VerticalOptions="Center">
-
-                                    <ImageButton
-                                        Source="pencil.png"
-                                        ToolTipProperties.Text="Editar"
-                                        MaximumHeightRequest="28"
-                                        MaximumWidthRequest="28"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                        CommandParameter="{Binding .}"/>
-
-                                    <ImageButton
-                                        Source="bin.png"
-                                        ToolTipProperties.Text="Excluir"
-                                        MaximumHeightRequest="28"
-                                        MaximumWidthRequest="28"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                        <Grid
+                            ColumnDefinitions="*,auto"
+                            ColumnSpacing="12"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                            <VerticalStackLayout Grid.Column="0" Spacing="5" Margin="10">
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
                                         CommandParameter="{Binding CasaId}"/>
+                                </VerticalStackLayout.GestureRecognizers>
+
+                                <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}"/>
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="Número" Style="{StaticResource BodyMuted}"/>
+                                    <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
+                                    <Label Text="{Binding Complemento}" Style="{StaticResource BodyMuted}"/>
                                 </HorizontalStackLayout>
-                            </Grid>
+                            </VerticalStackLayout>
+
+                            <HorizontalStackLayout
+                                Grid.Column="1"
+                                Spacing="10"
+                                Margin="0,0,10,0"
+                                VerticalOptions="Center">
+
+                                <ImageButton
+                                    Source="pencil.png"
+                                    ToolTipProperties.Text="Editar"
+                                    MaximumHeightRequest="28"
+                                    MaximumWidthRequest="28"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                    CommandParameter="{Binding .}"/>
+
+                                <ImageButton
+                                    Source="bin.png"
+                                    ToolTipProperties.Text="Excluir"
+                                    MaximumHeightRequest="28"
+                                    MaximumWidthRequest="28"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding CasaId}"/>
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

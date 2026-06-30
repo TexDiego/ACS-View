@@ -8,7 +8,7 @@
              Style="{StaticResource PageBackground}"
              Title="Adicionar Residência">
 
-    <Grid Padding="{StaticResource PagePadding}">
+    <Grid Padding="16">
         <ScrollView VerticalScrollBarVisibility="Never">
             <VerticalStackLayout
                 Padding="0,0,0,76"
@@ -25,6 +25,7 @@
                             Source="loupe.png"
                             MaximumHeightRequest="40"
                             Style="{StaticResource SoftIconButton}"
+                            BackgroundColor="Transparent"
                             Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
                     </Grid>
                 </Border>
@@ -89,7 +90,7 @@
         <Button
             VerticalOptions="End"
             Text="Salvar"
-            Style="{StaticResource PrimaryButton}"
+            Style="{StaticResource Buttons}"
             Command="{Binding SalvarCommand}"/>
     </Grid>
 </ContentPage>

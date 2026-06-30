@@ -129,7 +129,7 @@
                     <Button
                         Grid.Column="1"
                         Text="Adicionar"
-                        Style="{StaticResource PrimaryButton}"
+                        Style="{StaticResource Buttons}"
                         Clicked="AddButton_Clicked"/>
                 </Grid>
             </VerticalStackLayout>

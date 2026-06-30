@@ -1,4 +1,5 @@
 using ACS_View.Domain.Entities;
+using ACS_View.Domain.Entities.Health;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -31,10 +32,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         ["Doenças do sistema osteomuscular e do tecido conjuntivo"] = "musculoesqueleticas.png",
         ["Doenças do aparelho geniturinário"] = "geniturinario.png",
         ["Gravidez, parto e puerpério"] = "gestante.png",
-        ["Algumas afecções originadas no período perinatal"] = "perinatal.png",
+        ["Algumas afecções originadas no período perinatal"] = "outras.png",
         ["Malformações congênitas, deformidades e anomalias cromossômicas"] = "geneticas.png",
-        ["Sintomas, sinais e achados anormais de exames clínicos e de laboratório, não classificados em outra parte"] = "sintomas.png",
-        ["Lesões, envenenamento e algumas outras conseqüências de causas externas"] = "lesoes.png"
+        ["Sintomas, sinais e achados anormais de exames clínicos e de laboratório, não classificados em outra parte"] = "outras.png",
+        ["Lesões, envenenamento e algumas outras conseqüências de causas externas"] = "outras.png"
     };
     private static readonly Dictionary<string, string> _conditionIconMap = new()
     {
@@ -54,6 +55,26 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         [HealthConditionCatalog.DependenteQuimico] = "dependentequimico.png",
         [HealthConditionCatalog.Imunodeficiente] = "hiv.png"
     };
+    private static readonly IReadOnlyList<CidIconRule> _specificCidIconRules =
+    [
+        new("alopecia.png", "Alopecia", cid => IsInRange(cid.Code, "L63", "L65") || HasAnyTerm(cid, "alopecia")),
+        new("arritmia.png", "Arritmia", cid => IsInRange(cid.Code, "I44", "I49") || HasAnyTerm(cid, "arritmia", "fibrilacao", "flutter", "taquicardia", "bradicardia")),
+        new("artrite.png", "Artrite", cid => IsInRange(cid.Code, "M05", "M14") || HasAnyTerm(cid, "artrite")),
+        new("artrose.png", "Artrose", cid => IsInRange(cid.Code, "M15", "M19") || HasAnyTerm(cid, "artrose", "osteoartrose")),
+        new("asma.png", "Asma", cid => IsInRange(cid.Code, "J45", "J46") || HasAnyTerm(cid, "asma", "estado de mal asmatico")),
+        new("dislipidemias.png", "Dislipidemia", cid => IsInRange(cid.Code, "E78", "E78") || HasAnyTerm(cid, "dislipidemia", "hiperlipidemia", "hipercolesterolemia")),
+        new("doencaarterialcoronaria.png", "Doença arterial coronariana", cid => IsInRange(cid.Code, "I20", "I25") || HasAnyTerm(cid, "angina", "infarto", "isquemica do coracao", "coronar")),
+        new("hepatopatas.png", "Hepatopatia", cid => IsInRange(cid.Code, "K70", "K77") || HasAnyTerm(cid, "figado", "hepatica", "hepatite", "cirrose")),
+        new("insuficienciacardiaca.png", "Insuficiência cardíaca", cid => IsInRange(cid.Code, "I50", "I50") || HasAnyTerm(cid, "insuficiencia cardiaca")),
+        new("neurodivergencias.png", "Neurodivergência", cid => IsInRange(cid.Code, "F80", "F98") || HasAnyTerm(cid, "autismo", "autista", "asperger", "hipercinetico", "deficit de atencao", "desenvolvimento psicologico")),
+        new("cadeirante.png", "Cadeirante", IsWheelchairRelatedCid),
+        new("obesidade.png", "Obesidade", cid => IsInRange(cid.Code, "E66", "E66") || HasAnyTerm(cid, "obesidade")),
+        new("pneumonia.png", "Pneumonia", cid => IsInRange(cid.Code, "J12", "J18") || HasAnyTerm(cid, "pneumonia")),
+        new("psoriase.png", "Psoríase", cid => IsInRange(cid.Code, "L40", "L40") || HasAnyTerm(cid, "psoriase")),
+        new("renais.png", "Doença renal", cid => IsInRange(cid.Code, "N00", "N19") || HasAnyTerm(cid, "renal", "rim", "rins", "nefrit", "nefros")),
+        new("rosacea.png", "Rosácea", cid => IsInRange(cid.Code, "L71", "L71") || HasAnyTerm(cid, "rosacea")),
+        new("vitiligo.png", "Vitiligo", cid => IsInRange(cid.Code, "L80", "L80") || HasAnyTerm(cid, "vitiligo"))
+    ];
 
     [ObservableProperty] private ObservableCollection<HealthIcon> icons = [];
     [ObservableProperty] private Patient personInfo;
@@ -147,6 +168,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     {
         var iconsList = new List<HealthIcon>();
         var seenSources = new HashSet<string>();
+        var patient = await _patientService.GetPatientById(patientId);
 
         var conditions = await _conditionsRepository.GetConditionsByPatientIdAsync(patientId);
         foreach (var condition in conditions)
@@ -163,27 +185,52 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             }
         }
 
+        if (patient?.BirthDate <= DateTime.Today.AddYears(-60))
+        {
+            if (seenSources.Add("idoso.png"))
+            {
+                iconsList.Add(new HealthIcon { IconSource = "idoso.png", Description = "Idoso" });
+            }
+        }
+
+        if (patient?.BirthDate > DateTime.Today.AddYears(-12))
+        {
+            if (seenSources.Add("criancas.png"))
+            {
+                iconsList.Add(new HealthIcon { IconSource = "criancas.png", Description = "Criança" });
+            }
+        }
+
         var cids = await _patientCidRepository.GetPatientCIDsByPatientId(patientId);
         if (cids == null || cids.Count == 0)
         {
             return iconsList;
         }
 
-        // buscar apenas ids distintos
         var distinctIds = cids.Select(x => x.CidId).Distinct().ToList();
-
-        // buscar capítulos em paralelo (await Task.WhenAll)
-        var chapterTasks = distinctIds
-            .Select(async id => (Id: id, Chapter: await _cidRepository.GetChapterBySubcategoryAsync(id)));
-        var results = await Task.WhenAll(chapterTasks);
-        var chaptersById = results.ToDictionary(r => r.Id, r => r.Chapter);
+        var cidInfoTasks = distinctIds.Select(async id => (
+            Id: id,
+            Subcategory: await _cidRepository.GetSubcategoryById(id),
+            Chapter: await _cidRepository.GetChapterBySubcategoryAsync(id)));
+        var cidInfos = await Task.WhenAll(cidInfoTasks);
+        var cidInfoById = cidInfos.ToDictionary(info => info.Id);
 
         foreach (var id in distinctIds)
         {
-            var chapter = chaptersById[id];
-            var desc = chapter?.Description ?? string.Empty;
-            if (!_chapterIconMap.TryGetValue(desc, out var source))
+            var cidInfo = cidInfoById[id];
+            var source = "outras.png";
+            var desc = cidInfo.Chapter?.Description ?? string.Empty;
+
+            if (cidInfo.Subcategory is not null &&
+                TryGetSpecificCidIcon(cidInfo.Subcategory, out var specificSource, out var specificDescription))
+            {
+                source = specificSource;
+                desc = specificDescription;
+            }
+            else if (!_chapterIconMap.TryGetValue(desc, out source))
+            {
                 source = "outras.png";
+            }
 
             if (seenSources.Add(source))
                 iconsList.Add(new HealthIcon { IconSource = source, Description = desc });
@@ -191,4 +238,106 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
         return iconsList;
     }
+
+    private static bool TryGetSpecificCidIcon(CidSubcategory cid, out string iconSource, out string description)
+    {
+        foreach (var rule in _specificCidIconRules)
+        {
+            if (!rule.Matches(cid))
+            {
+                continue;
+            }
+
+            iconSource = rule.IconSource;
+            description = rule.Description;
+            return true;
+        }
+
+        iconSource = string.Empty;
+        description = string.Empty;
+        return false;
+    }
+
+    private static bool HasAnyTerm(CidSubcategory cid, params string[] terms)
+    {
+        var normalizedText = SearchTextNormalizer.Normalize($"{cid.Description} {cid.Code} {cid.CategoryCode}");
+        return terms.Any(term => normalizedText.Contains(SearchTextNormalizer.Normalize(term), StringComparison.Ordinal));
+    }
+
+    private static bool IsWheelchairRelatedCid(CidSubcategory cid)
+    {
+        return IsInCategory(cid, "G82", "R26") ||
+               IsCode(cid, "M623") ||
+               IsCode(cid, "Z993") ||
+               HasAnyTerm(
+                   cid,
+                   "cadeira de rodas",
+                   "dependencia de cadeira de rodas",
+                   "paraplegia",
+                   "paraplegica",
+                   "tetraplegia",
+                   "marcha paralitica",
+                   "dificuldade para andar",
+                   "anormalidades da marcha");
+    }
+
+    private static bool IsInCategory(CidSubcategory cid, params string[] categoryCodes)
+    {
+        return categoryCodes.Any(category =>
+            string.Equals(cid.CategoryCode, category, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsCode(CidSubcategory cid, string code)
+    {
+        return string.Equals(NormalizeCidCode(cid.Code), NormalizeCidCode(code), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeCidCode(string? code)
+    {
+        return string.IsNullOrWhiteSpace(code)
+            ? string.Empty
+            : code.Trim().Replace(".", string.Empty).ToUpperInvariant();
+    }
+
+    private static bool IsInRange(string? code, string start, string end)
+    {
+        if (!TryParseCidCode(code, out var parsedCode) ||
+            !TryParseCidCode(start, out var parsedStart) ||
+            !TryParseCidCode(end, out var parsedEnd))
+        {
+            return false;
+        }
+
+        return parsedCode.Letter == parsedStart.Letter &&
+               parsedCode.Letter == parsedEnd.Letter &&
+               parsedCode.Number >= parsedStart.Number &&
+               parsedCode.Number <= parsedEnd.Number;
+    }
+
+    private static bool TryParseCidCode(string? code, out (char Letter, int Number) parsed)
+    {
+        parsed = default;
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return false;
+        }
+
+        var normalized = code.Trim().ToUpperInvariant();
+        if (normalized.Length < 3 || !char.IsLetter(normalized[0]))
+        {
+            return false;
+        }
+
+        var digits = new string(normalized.Skip(1).TakeWhile(char.IsDigit).ToArray());
+        if (!int.TryParse(digits, out var number))
+        {
+            return false;
+        }
+
+        parsed = (normalized[0], number);
+        return true;
+    }
+
+    private sealed record CidIconRule(string IconSource, string Description, Func<CidSubcategory, bool> Matches);
 }

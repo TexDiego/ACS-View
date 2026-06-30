@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
              x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.Views.HealthMetrics">
 
@@ -63,7 +64,7 @@
                         </Grid.GestureRecognizers>
 
                         <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center" Margin="10">
-                            <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                            <Label Text="{Binding Name, Converter={converters:CIDFormatConverter}}" Style="{StaticResource CardTitle}"/>
                             <Label Text="{Binding Summary}" Style="{StaticResource BodyMuted}"/>
                         </VerticalStackLayout>
 

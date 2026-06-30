@@ -9,19 +9,28 @@
           WidthRequest="{Binding Width}"
           x:TypeArguments="system:Object"
           x:DataType="vm:ConditionPopupViewModel"
-          x:Class="ACS_View.Views.ConditionsPopup">
+          x:Class="ACS_View.Views.ConditionsPopup"
+          Padding="0"
+          BackgroundColor="Transparent">
 
-    <VerticalStackLayout>
+    <VerticalStackLayout 
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+        Padding="10">
 
         <Entry
             Text="{Binding SearchText, Mode=TwoWay}"
             Placeholder="Buscar CID10 por código ou descrição..."
             TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
-        <CollectionView ItemsSource="{Binding SearchedConditions}" MaximumHeightRequest="300">
+        <CollectionView 
+            VerticalScrollBarVisibility="{OnPlatform WinUI=Always, Default=Never}"
+            ItemsSource="{Binding SearchedConditions}" 
+            MaximumHeightRequest="300"
+            Margin="0,18">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:HealthConditions">
                     <Border
+                        Margin="0,2"
                         BackgroundColor="{Binding Selected, Converter={converter:BoolToColorConverter}}">
 
                         <Border.GestureRecognizers>

@@ -18,7 +18,7 @@
                     <Label Text="Area pessoal" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Acesse anotacoes e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
                     <Button Text="Abrir anotacoes"
-                            Style="{StaticResource PrimaryButton}"
+                            Style="{StaticResource Buttons}"
                             Command="{Binding OpenNotesPage}"/>
                 </VerticalStackLayout>
             </Border>
@@ -28,7 +28,7 @@
                     <Label Text="Importacao" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Importe cadastros de pacientes e residencias por planilha." Style="{StaticResource BodyMuted}"/>
                     <Button Text="Abrir importacao"
-                            Style="{StaticResource PrimaryButton}"
+                            Style="{StaticResource Buttons}"
                             Command="{Binding OpenImportDataPage}"/>
                 </VerticalStackLayout>
             </Border>
@@ -38,7 +38,7 @@
                     <Label Text="Dados" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Apague registros associados apenas a este login." Style="{StaticResource BodyMuted}"/>
                     <Button Text="Gerenciar dados"
-                            Style="{StaticResource PrimaryButton}"
+                            Style="{StaticResource Buttons}"
                             Command="{Binding OpenDataCleanupPage}"/>
                 </VerticalStackLayout>
             </Border>

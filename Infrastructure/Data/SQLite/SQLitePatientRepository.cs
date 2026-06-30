@@ -51,15 +51,31 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
             {
                 var likeSearch = $"%{SearchTextNormalizer.Normalize(normalizedSearch)}%";
                 var rawLikeSearch = $"%{normalizedSearch}%";
-                whereParts.Add("(p.SearchName LIKE ? OR p.SearchMotherName LIKE ? OR p.SearchFatherName LIKE ? OR p.SusNumber LIKE ? COLLATE NOCASE)");
+                whereParts.Add($"""
+                    (
+                        p.SearchName LIKE ?
+                        OR p.SearchMotherName LIKE ?
+                        OR p.SearchFatherName LIKE ?
+                        OR p.SusNumber LIKE ? COLLATE NOCASE
+                        OR EXISTS (
+                            SELECT 1
+                            FROM House h
+                            WHERE h.UserId = p.UserId
+                              AND h.CasaId = p.HouseId
+                              AND ({BuildHouseAddressSearchClause("h")})
+                        )
+                    )
+                    """);
                 parameters.Add(likeSearch);
                 parameters.Add(likeSearch);
                 parameters.Add(likeSearch);
                 parameters.Add(rawLikeSearch);
+                AddHouseAddressSearchParameters(parameters, SearchTextNormalizer.Normalize(normalizedSearch));
             }
 
             PatientFilterSqlBuilder.AddFilterClause(filter.FilterKey, whereParts, parameters);
             AddAgeClause(filter, whereParts, parameters);
+            AddSexClause(filter, whereParts, parameters);
 
             var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
             var orderBy = GetOrderByClause(filter);
@@ -162,6 +178,23 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
         }
     }
 
+    private static void AddSexClause(PatientListFilterDto filter, List<string> whereParts, List<object> parameters)
+    {
+        var sexes = filter.Sexes
+            .Where(sex => !string.IsNullOrWhiteSpace(sex))
+            .Select(sex => sex.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (sexes.Count == 0)
+        {
+            return;
+        }
+
+        whereParts.Add($"p.Sexo COLLATE NOCASE IN ({string.Join(", ", sexes.Select(_ => "?"))})");
+        parameters.AddRange(sexes);
+    }
+
     private static string GetOrderByClause(PatientListFilterDto filter)
     {
         if (filter.SortBy == PatientListSortOption.Age)
@@ -174,5 +207,38 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
         return filter.SortDescending
             ? "p.Name COLLATE NOCASE DESC, p.Id DESC"
             : "p.Name COLLATE NOCASE, p.Id";
+    }
+
+    private static string BuildHouseAddressSearchClause(string alias)
+    {
+        return $"""
+            {alias}.SearchRua LIKE ?
+            OR TRIM(
+                COALESCE({alias}.SearchRua, '') ||
+                CASE
+                    WHEN COALESCE(TRIM({alias}.NumeroCasa), '') <> ''
+                    THEN ', ' || TRIM({alias}.NumeroCasa)
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN COALESCE(TRIM({alias}.SearchComplemento), '') <> ''
+                    THEN ' - ' || TRIM({alias}.SearchComplemento)
+                    ELSE ''
+                END
+            ) LIKE ?
+            OR TRIM(
+                COALESCE({alias}.SearchRua, '') || ' ' ||
+                COALESCE(TRIM({alias}.NumeroCasa), '') || ' ' ||
+                COALESCE(TRIM({alias}.SearchComplemento), '')
+            ) LIKE ?
+            """;
+    }
+
+    private static void AddHouseAddressSearchParameters(List<object> parameters, string normalizedSearch)
+    {
+        var likeSearch = $"%{normalizedSearch}%";
+        parameters.Add(likeSearch);
+        parameters.Add(likeSearch);
+        parameters.Add(likeSearch);
     }
 }

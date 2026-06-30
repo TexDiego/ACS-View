@@ -11,14 +11,6 @@
              Title="Adicionar cadastro">
 
     <ContentPage.Resources>
-        <Style x:Key="buttons" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"/>
-            <Setter Property="TextColor" Value="{StaticResource White}"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="MinimumHeightRequest" Value="48"/>
-        </Style>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
@@ -249,7 +241,7 @@
                             HorizontalOptions="End"
                             FontSize="18"
                             Margin="0,0,20,0"
-                            Date="{Binding BirthDate, Mode=TwoWay}"
+                            Date="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BirthDateInput, Mode=TwoWay}"
                             Format="dd/MM/yyyy"
                             MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
                             MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MaximumDate}"/>
@@ -375,7 +367,7 @@
                 <Button
                     Text="Adicionar CID"
                     HorizontalOptions="Fill"
-                    Style="{StaticResource buttons}"
+                    Style="{StaticResource Buttons}"
                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenConditionsPopup}"/>
 
                 <CollectionView
@@ -420,7 +412,7 @@
         <Button
             Margin="10"
             VerticalOptions="End"
-            Style="{StaticResource buttons}"
+            Style="{StaticResource Buttons}"
             Text="Salvar"
             Command="{Binding RegisterCommand}"/>
 

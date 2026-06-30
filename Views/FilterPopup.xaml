@@ -5,6 +5,7 @@
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:ACS_View.ViewModels"
     xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    x:Name="RootPopup"
     x:Class="ACS_View.Views.FilterPopup"
     x:TypeArguments="dto:PatientListFilterDto"
     x:DataType="vm:FilterPopupViewModel"
@@ -41,6 +42,51 @@
             </VerticalStackLayout>
         </Grid>
 
+        <VerticalStackLayout Spacing="6">
+            <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>
+            <FlexLayout
+                BindableLayout.ItemsSource="{Binding SexOptions}"
+                Direction="Row"
+                Wrap="Wrap"
+                AlignItems="Start"
+                JustifyContent="Center">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SexFilterOption">
+                        <Border
+                            Padding="12,8"
+                            Margin="2"
+                            StrokeShape="RoundRectangle 18"
+                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference RootPopup}, Path=BindingContext.ToggleSexCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+
+                            <Label
+                                Text="{Binding Value}"
+                                FontSize="13"
+                                FontAttributes="Bold"
+                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </VerticalStackLayout>
+
         <VerticalStackLayout Spacing="4">
             <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
             <Border Style="{StaticResource FieldBorder}">
@@ -74,7 +120,7 @@
             <Button
                 Grid.Column="1"
                 Text="Aplicar"
-                Style="{StaticResource PrimaryButton}"
+                Style="{StaticResource Buttons}"
                 Clicked="ApplyButton_Clicked"/>
         </Grid>
     </VerticalStackLayout>

@@ -141,31 +141,23 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
         }
 
         var normalizedSearch = SearchTextNormalizer.Normalize(search);
-        var searchParts = normalizedSearch.Split([' '], StringSplitOptions.RemoveEmptyEntries);
-        var possibleNumber = searchParts.LastOrDefault();
-        var hasNumber = int.TryParse(possibleNumber, out _);
-        var streetSearch = string.Join(" ", searchParts.Take(searchParts.Length - (hasNumber ? 1 : 0))).Trim();
+        var likeSearch = $"%{normalizedSearch}%";
 
-        if (!string.IsNullOrWhiteSpace(streetSearch))
-        {
-            clauses.Add("SearchRua LIKE ?");
-            parameters.Add($"%{streetSearch}%");
-        }
-
-        if (hasNumber && !string.IsNullOrWhiteSpace(possibleNumber))
-        {
-            clauses.Add("NumeroCasa = ?");
-            parameters.Add(possibleNumber);
-        }
-
-        if (clauses.Count == 1)
-        {
-            clauses.Add("(SearchRua LIKE ? OR NumeroCasa LIKE ? COLLATE NOCASE OR SearchComplemento LIKE ?)");
-            var likeSearch = $"%{normalizedSearch}%";
-            parameters.Add(likeSearch);
-            parameters.Add(likeSearch);
-            parameters.Add(likeSearch);
-        }
+        clauses.Add($"""
+            (
+                {BuildHouseAddressSearchClause("House")}
+                OR EXISTS (
+                    SELECT 1
+                    FROM Patient p
+                    WHERE p.UserId = House.UserId
+                      AND p.HouseId = House.CasaId
+                      AND COALESCE(p.IsActive, 1) = 1
+                      AND p.SearchName LIKE ?
+                )
+            )
+            """);
+        AddHouseAddressSearchParameters(parameters, normalizedSearch);
+        parameters.Add(likeSearch);
 
         return new HouseSearchCriteria
         {
@@ -178,5 +170,38 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
     {
         public string WhereClause { get; init; } = string.Empty;
         public List<object> Parameters { get; init; } = [];
+    }
+
+    private static string BuildHouseAddressSearchClause(string alias)
+    {
+        return $"""
+            {alias}.SearchRua LIKE ?
+            OR TRIM(
+                COALESCE({alias}.SearchRua, '') ||
+                CASE
+                    WHEN COALESCE(TRIM({alias}.NumeroCasa), '') <> ''
+                    THEN ', ' || TRIM({alias}.NumeroCasa)
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN COALESCE(TRIM({alias}.SearchComplemento), '') <> ''
+                    THEN ' - ' || TRIM({alias}.SearchComplemento)
+                    ELSE ''
+                END
+            ) LIKE ?
+            OR TRIM(
+                COALESCE({alias}.SearchRua, '') || ' ' ||
+                COALESCE(TRIM({alias}.NumeroCasa), '') || ' ' ||
+                COALESCE(TRIM({alias}.SearchComplemento), '')
+            ) LIKE ?
+            """;
+    }
+
+    private static void AddHouseAddressSearchParameters(List<object> parameters, string normalizedSearch)
+    {
+        var likeSearch = $"%{normalizedSearch}%";
+        parameters.Add(likeSearch);
+        parameters.Add(likeSearch);
+        parameters.Add(likeSearch);
     }
 }

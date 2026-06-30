@@ -11,12 +11,14 @@ namespace ACS_View.Application.DTOs
         public string FilterKey { get; set; } = "ALL";
         public int? MinimumAge { get; set; }
         public int? MaximumAge { get; set; }
+        public List<string> Sexes { get; set; } = [];
         public PatientListSortOption SortBy { get; set; } = PatientListSortOption.Name;
         public bool SortDescending { get; set; }
 
         public bool HasListFilters =>
             MinimumAge.HasValue ||
             MaximumAge.HasValue ||
+            Sexes.Count > 0 ||
             SortBy != PatientListSortOption.Name ||
             SortDescending;
 
@@ -27,6 +29,7 @@ namespace ACS_View.Application.DTOs
                 FilterKey = FilterKey,
                 MinimumAge = MinimumAge,
                 MaximumAge = MaximumAge,
+                Sexes = [.. Sexes],
                 SortBy = SortBy,
                 SortDescending = SortDescending
             };

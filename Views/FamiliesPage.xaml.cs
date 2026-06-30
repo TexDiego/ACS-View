@@ -38,6 +38,11 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
     {
         if (TryGetHouseId(query, out var houseId))
         {
+            if (_viewModel?.HouseId == houseId)
+            {
+                return;
+            }
+
             BindingContext = _viewModel = new FamiliesViewModel(
                 houseId,
                 _houseService,

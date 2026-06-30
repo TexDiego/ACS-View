@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    x:Name="RootPopup"
+    x:Class="ACS_View.Views.AddNotificationPopup"
+    x:TypeArguments="dto:NoteNotificationRequestDto"
+    x:DataType="vm:AddNotificationPopupViewModel"
+    WidthRequest="{Binding Width}"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
+    Padding="0">
+
+    <Border
+        Style="{StaticResource CardBorder}"
+        Padding="14"
+        Margin="0"
+        StrokeShape="RoundRectangle 8">
+
+        <Grid RowDefinitions="auto,auto,auto" RowSpacing="12">
+            <VerticalStackLayout Grid.Row="0" Spacing="12">
+                <Label
+                    Text="Nova notificação"
+                    Style="{StaticResource SectionTitle}"
+                    HorizontalOptions="Center"/>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Data" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <DatePicker
+                                Date="{Binding SelectedDate, Mode=TwoWay}"
+                                MinimumDate="{Binding MinimumDate}"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Horário" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <TimePicker Time="{Binding SelectedTime, Mode=TwoWay}"/>
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <FlexLayout
+                    BindableLayout.ItemsSource="{Binding Suggestions}"
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start"
+                    JustifyContent="Center">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NotificationSuggestionOption">
+                            <Border
+                                Padding="12,8"
+                                Margin="2"
+                                StrokeShape="RoundRectangle 18"
+                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference RootPopup}, Path=BindingContext.SelectSuggestionCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+
+                                <VerticalStackLayout Spacing="1">
+                                    <Label
+                                        Text="{Binding Title}"
+                                        FontSize="13"
+                                        FontAttributes="Bold"
+                                        HorizontalTextAlignment="Center"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                    <Label
+                                        Text="{Binding Subtitle}"
+                                        Style="{StaticResource BodyMuted}"
+                                        FontSize="11"
+                                        HorizontalTextAlignment="Center"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Row="1" Spacing="4">
+                <Label Text="Mensagem" Style="{StaticResource FieldLabel}"/>
+                <Border Style="{StaticResource FieldBorder}">
+                    <Editor
+                        Text="{Binding Message, Mode=TwoWay}"
+                        Placeholder="Mensagem da notificação"
+                        MaxLength="{Binding MessageMaxLength}"
+                        MinimumHeightRequest="96"
+                        AutoSize="TextChanges"/>
+                </Border>
+                <Label
+                    Text="{Binding CharacterCountText}"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalOptions="End"/>
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    Style="{StaticResource BodyMuted}"
+                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                    IsVisible="{Binding HasError}"/>
+            </VerticalStackLayout>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button
+                    Text="Cancelar"
+                    Style="{StaticResource GhostButton}"
+                    Clicked="CancelButton_Clicked"/>
+
+                <Button
+                    Grid.Column="1"
+                    Text="Salvar"
+                    Style="{StaticResource Buttons}"
+                    Clicked="SaveButton_Clicked"/>
+            </Grid>
+        </Grid>
+    </Border>
+</tk:Popup>

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
              x:DataType="vm:CIDViewViewModel"
              x:Class="ACS_View.Views.CIDView"
              Style="{StaticResource PageBackground}"
@@ -80,7 +81,7 @@
                             <Grid RowDefinitions="auto,auto,auto" RowSpacing="5">
                                 <Label
                                     Grid.Row="0"
-                                    Text="{Binding Code}"
+                                    Text="{Binding Code, Converter={converters:CIDFormatConverter}}"
                                     TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                                     FontAttributes="Bold"
                                     FontSize="18"/>

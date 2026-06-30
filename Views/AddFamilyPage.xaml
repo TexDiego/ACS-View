@@ -5,9 +5,10 @@
              xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
              x:DataType="vm:AddFamilyViewModel"
              x:Class="ACS_View.Views.AddFamilyPage"
+             Style="{StaticResource PageBackground}"
              Title="Adicionar Família">
 
-    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*">
+    <Grid Padding="16" RowDefinitions="auto,*">
         <Border Grid.Row="0" Style="{StaticResource CardBorder}">
             <VerticalStackLayout Spacing="10">
                 <Label Text="Indivíduo" Style="{StaticResource SectionTitle}"/>
@@ -82,7 +83,7 @@
         <Button
             Grid.RowSpan="2"
             Text="Salvar"
-            Style="{StaticResource PrimaryButton}"
+            Style="{StaticResource Buttons}"
             VerticalOptions="End"
             Command="{Binding SalvarCommand}"/>
     </Grid>

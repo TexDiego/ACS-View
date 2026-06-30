@@ -22,9 +22,9 @@
                 <SearchBar
                     x:Name="SB"
                     Margin="0,0,0,-1"
-                    Placeholder="Buscar paciente"
+                    Placeholder="Buscar paciente ou endereço"
                     Text="{Binding SearchText, Mode=TwoWay}"
-                    MaxLength="30"
+                    MaxLength="80"
                     IsSpellCheckEnabled="True"
                     TextChanged="SB_TextChanged"/>
 

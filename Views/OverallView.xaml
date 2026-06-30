@@ -13,7 +13,7 @@
                      Command="{Binding OpenMetricsMenuCommand}"/>
     </ContentPage.ToolbarItems>
 
-    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,*" RowSpacing="14">
+    <Grid Padding="16,16,16,0" RowDefinitions="auto,*" RowSpacing="14">
 
         <Border Grid.Row="0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}"

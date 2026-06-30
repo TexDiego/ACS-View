@@ -9,7 +9,7 @@
              Title="Anotações">
 
     <RefreshView Command="{Binding Refresh}" IsRefreshing="{Binding IsLoading}">
-        <Grid RowDefinitions="auto,*,auto" Padding="{StaticResource PagePadding}" RowSpacing="12">
+        <Grid RowDefinitions="auto,*" Padding="{StaticResource PagePadding}" RowSpacing="12">
 
             <Border Grid.Row="0" Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="10">
@@ -22,7 +22,7 @@
                         MaxLength="500"
                         MinimumHeightRequest="110"
                         AutoSize="TextChanges"/>
-                    <Button Text="Adicionar anotação" Style="{StaticResource PrimaryButton}" Command="{Binding SalvarNota}"/>
+                    <Button Text="Adicionar anotação" Style="{StaticResource Buttons}" Command="{Binding SalvarNota}"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -35,7 +35,7 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="model:Note">
-                        <Border Style="{StaticResource CardBorder}">
+                        <Border Style="{StaticResource CardBorder}" Padding="0">
                             <SwipeView>
                                 <SwipeView.LeftItems>
                                     <SwipeItem
@@ -55,7 +55,10 @@
                                         CommandParameter="{Binding Id}"/>
                                 </SwipeView.RightItems>
 
-                                <VerticalStackLayout Spacing="9" BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                                <VerticalStackLayout 
+                                    Spacing="9" 
+                                    Padding="10,5"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
                                     <Label Text="{Binding Content}" Style="{StaticResource CardTitle}" FontSize="16"/>
 
                                     <HorizontalStackLayout Spacing="4">
@@ -73,8 +76,6 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-            <Button Grid.Row="2" Text="Voltar" Style="{StaticResource GhostButton}" Command="{Binding GoBack}"/>
 
             <ImageButton
                 x:Name="BackToTopButton"

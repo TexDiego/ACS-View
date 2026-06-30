@@ -132,7 +132,7 @@
                     </VerticalStackLayout>
 
                     <Button Text="Selecionar planilha de pacientes"
-                            Style="{StaticResource PrimaryButton}"
+                            Style="{StaticResource Buttons}"
                             IsEnabled="{Binding CanStartImport}"
                             Command="{Binding ImportPatientsCommand}"/>
 
@@ -205,7 +205,7 @@
                     </Grid>
 
                     <Button Text="Selecionar planilha de residências"
-                            Style="{StaticResource PrimaryButton}"
+                            Style="{StaticResource Buttons}"
                             IsEnabled="{Binding CanStartHouseImport}"
                             Command="{Binding ImportHousesCommand}"/>
 

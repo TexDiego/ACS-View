@@ -10,6 +10,7 @@
     x:TypeArguments="dto:DashboardMetricCreateRequestDto"
     x:DataType="vm:AddMetricPopupViewModel"
     CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
     Padding="0">
 
     <Border

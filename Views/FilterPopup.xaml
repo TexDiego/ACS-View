@@ -10,118 +10,125 @@
     x:TypeArguments="dto:PatientListFilterDto"
     x:DataType="vm:FilterPopupViewModel"
     CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
     Padding="0">
 
-    <VerticalStackLayout Padding="10" Spacing="16" Style="{StaticResource PageBackground}">
-        <Label
-            Text="Filtros"
-            Style="{StaticResource SectionTitle}"
-            HorizontalOptions="Center"/>
+    <Border
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+        
+        <VerticalStackLayout Spacing="16" BackgroundColor="Transparent">
+            <Label
+                Text="Filtros"
+                Style="{StaticResource SectionTitle}"
+                HorizontalOptions="Center"/>
 
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
-                    <Entry
-                        Text="{Binding MinimumAge}"
-                        Keyboard="Numeric"
-                        MaxLength="3"
-                        Placeholder="Sem mínimo"/>
-                </Border>
-            </VerticalStackLayout>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Entry
+                            Text="{Binding MinimumAge}"
+                            Keyboard="Numeric"
+                            MaxLength="3"
+                            Placeholder="Sem mínimo"/>
+                    </Border>
+                </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="1" Spacing="4">
-                <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
-                    <Entry
-                        Text="{Binding MaximumAge}"
-                        Keyboard="Numeric"
-                        MaxLength="3"
-                        Placeholder="Sem máximo"/>
-                </Border>
-            </VerticalStackLayout>
-        </Grid>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Entry
+                            Text="{Binding MaximumAge}"
+                            Keyboard="Numeric"
+                            MaxLength="3"
+                            Placeholder="Sem máximo"/>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
 
-        <VerticalStackLayout Spacing="6">
-            <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>
-            <FlexLayout
-                BindableLayout.ItemsSource="{Binding SexOptions}"
-                Direction="Row"
-                Wrap="Wrap"
-                AlignItems="Start"
-                JustifyContent="Center">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SexFilterOption">
-                        <Border
-                            Padding="12,8"
-                            Margin="2"
-                            StrokeShape="RoundRectangle 18"
-                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
-                            <Border.Triggers>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
-                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
-                                </DataTrigger>
-                            </Border.Triggers>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={x:Reference RootPopup}, Path=BindingContext.ToggleSexCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </Border.GestureRecognizers>
-
-                            <Label
-                                Text="{Binding Value}"
-                                FontSize="13"
-                                FontAttributes="Bold"
-                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
-                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>
+                <FlexLayout
+                    BindableLayout.ItemsSource="{Binding SexOptions}"
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start"
+                    JustifyContent="Center">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SexFilterOption">
+                            <Border
+                                Padding="12,8"
+                                Margin="2"
+                                StrokeShape="RoundRectangle 18"
+                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
                                     </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference RootPopup}, Path=BindingContext.ToggleSexCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+
+                                <Label
+                                    Text="{Binding Value}"
+                                    FontSize="13"
+                                    FontAttributes="Bold"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
+                <Border Style="{StaticResource FieldBorder}">
+                    <Picker SelectedIndex="{Binding FilterBy}">
+                        <Picker.Items>
+                            <x:String>Nome</x:String>
+                            <x:String>Idade</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
+                <Border Style="{StaticResource FieldBorder}">
+                    <Picker SelectedIndex="{Binding OrderBy}">
+                        <Picker.Items>
+                            <x:String>Crescente</x:String>
+                            <x:String>Decrescente</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </Border>
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button
+                    Text="Cancelar"
+                    Style="{StaticResource GhostButton}"
+                    Clicked="CancelButton_Clicked"/>
+
+                <Button
+                    Grid.Column="1"
+                    Text="Aplicar"
+                    Style="{StaticResource Buttons}"
+                    Clicked="ApplyButton_Clicked"/>
+            </Grid>
         </VerticalStackLayout>
-
-        <VerticalStackLayout Spacing="4">
-            <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
-            <Border Style="{StaticResource FieldBorder}">
-                <Picker SelectedIndex="{Binding FilterBy}">
-                    <Picker.Items>
-                        <x:String>Nome</x:String>
-                        <x:String>Idade</x:String>
-                    </Picker.Items>
-                </Picker>
-            </Border>
-        </VerticalStackLayout>
-
-        <VerticalStackLayout Spacing="4">
-            <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
-            <Border Style="{StaticResource FieldBorder}">
-                <Picker SelectedIndex="{Binding OrderBy}">
-                    <Picker.Items>
-                        <x:String>Crescente</x:String>
-                        <x:String>Decrescente</x:String>
-                    </Picker.Items>
-                </Picker>
-            </Border>
-        </VerticalStackLayout>
-
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-            <Button
-                Text="Cancelar"
-                Style="{StaticResource GhostButton}"
-                Clicked="CancelButton_Clicked"/>
-
-            <Button
-                Grid.Column="1"
-                Text="Aplicar"
-                Style="{StaticResource Buttons}"
-                Clicked="ApplyButton_Clicked"/>
-        </Grid>
-    </VerticalStackLayout>
+    </Border>
 </tk:Popup>

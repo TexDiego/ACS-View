@@ -9,6 +9,7 @@
     x:TypeArguments="dto:OverallMetricMenuAction"
     x:DataType="views:OverallMetricMenuPopup"
     CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
     Padding="0">
 
     <Border

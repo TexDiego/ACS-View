@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:models="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
+             x:DataType="vm:BolsaFamiliaPageViewModel"
+             x:Class="ACS_View.Views.BolsaFamiliaPage"
+             Shell.NavBarIsVisible="True"
+             Title="Bolsa Família"
+             Style="{StaticResource PageBackground}">
+
+    <RefreshView
+        RefreshColor="{AppThemeBinding Dark={StaticResource DarkPrimaryLight}, Light={StaticResource Primary}}"
+        IsRefreshing="{Binding IsRefreshing}"
+        Command="{Binding Reload}">
+        <Grid Padding="16,0">
+            <CollectionView
+                ItemsSource="{Binding Groups}"
+                VerticalScrollBarVisibility="Never">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BolsaFamiliaGroup">
+                        <Border
+                            Margin="0,5"
+                            StrokeThickness="2"
+                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                            <VerticalStackLayout>
+                                <Grid
+                                    Padding="10,8"
+                                    ColumnDefinitions="*,auto"
+                                    ColumnSpacing="10"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label
+                                            Text="Responsável"
+                                            Style="{StaticResource BodyMuted}"/>
+
+                                        <Label
+                                            Text="{Binding ResponsibleName}"
+                                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                            FontSize="17"
+                                            FontAttributes="Bold"
+                                            LineBreakMode="TailTruncation"/>
+                                    </VerticalStackLayout>
+
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding BeneficiaryCount}"
+                                        Style="{StaticResource MetricNumber}"
+                                        VerticalOptions="End"/>
+                                </Grid>
+
+                                <BoxView
+                                    HeightRequest="2"
+                                    Margin="5,0"
+                                    Color="{StaticResource TextSecondary}"/>
+
+                                <VerticalStackLayout
+                                    BindableLayout.ItemsSource="{Binding Beneficiaries}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="models:BolsaFamiliaBeneficiary">
+                                            <Grid
+                                                Padding="10,7"
+                                                RowDefinitions="auto,auto"
+                                                ColumnSpacing="10">
+
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                                        CommandParameter="{Binding PatientId}"/>
+                                                </Grid.GestureRecognizers>
+
+                                                <Label
+                                                    Grid.Row="0"
+                                                    Text="{Binding PatientName}"
+                                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                                    Opacity="0.8"
+                                                    FontSize="16"
+                                                    FontAttributes="Bold"
+                                                    LineBreakMode="TailTruncation"/>
+
+                                                <Label
+                                                    Grid.Row="1"
+                                                    Grid.ColumnSpan="2"
+                                                    Text="{Binding NisNumber, Converter={converters:NISFormatConverter}, StringFormat='NIS: {0}'}"
+                                                    Style="{StaticResource BodyMuted}">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding HasNis}" Value="False">
+                                                            <Setter Property="IsVisible" Value="False"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <VerticalStackLayout
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                Spacing="8"
+                IsVisible="{Binding IsEmpty}">
+                <Image
+                    Source="bolsafamilia.png"
+                    HeightRequest="56"
+                    WidthRequest="56"
+                    Opacity="0.65"/>
+
+                <Label
+                    Text="Nenhum beneficiario encontrado"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <Border Grid.RowSpan="3" Style="{StaticResource CountPill}">
+                <VerticalStackLayout HorizontalOptions="Center">
+                    <Label
+                        HorizontalTextAlignment="Center"
+                        Text="{Binding TotalGroups, StringFormat='{0} grupos encontrados'}"
+                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                        FontSize="13"
+                        FontAttributes="Bold"/>
+                    <Label
+                        HorizontalTextAlignment="Center"
+                        Text="{Binding TotalRecords, StringFormat='{0} registros encontrados'}"
+                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                        FontSize="13"
+                        FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </RefreshView>
+</ContentPage>

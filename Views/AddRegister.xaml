@@ -5,6 +5,7 @@
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
              xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
              Style="{StaticResource PageBackground}"
@@ -25,7 +26,6 @@
             <Border
                 Style="{StaticResource FieldBorder}"
                 Padding="5"
-                Margin="5,0"
                 StrokeThickness="2"
                 StrokeShape="RoundRectangle 10"
                 HorizontalOptions="Center"
@@ -163,7 +163,7 @@
                             Margin="0,0,10,0"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
-                            Text="Pai"/>
+                            Text="Pai:"/>
 
                         <Entry
                             Grid.Column="1"
@@ -212,6 +212,7 @@
                     RadioButtonGroup.GroupName="Sexo"
                     RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}"
                     HorizontalOptions="Center"
+                    Spacing="2"
                     Margin="0"
                     Padding="0">
 
@@ -228,7 +229,6 @@
                         <Label
                             Grid.Column="0"
                             Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
                             VerticalOptions="Center"
                             HorizontalOptions="Start"
                             Text="Data de Nascimento:"/>
@@ -240,7 +240,6 @@
                             VerticalOptions="Center"
                             HorizontalOptions="End"
                             FontSize="18"
-                            Margin="0,0,20,0"
                             Date="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BirthDateInput, Mode=TwoWay}"
                             Format="dd/MM/yyyy"
                             MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
@@ -251,24 +250,87 @@
 
                 <Border Style="{StaticResource FieldBorder}">
 
-                    <Grid ColumnDefinitions="auto,*">
+                    <Grid RowDefinitions="auto,auto,auto" RowSpacing="10">
 
-                        <Label
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            Margin="20,10,10,10"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="Bolsa Família:"/>
+                        <Grid Grid.Row="0" ColumnDefinitions="auto,*">
 
-                        <CheckBox
-                            Grid.Column="1"
-                            IsChecked="{Binding BolsaFamilia, Mode=TwoWay}"
-                            Opacity="0.7"
-                            VerticalOptions="Center"
-                            Margin="0,0,20,0">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource labels}"
+                                VerticalOptions="Center"
+                                HorizontalOptions="Start"
+                                Text="Bolsa Família:"/>
 
-                        </CheckBox>
+                            <CheckBox
+                                Grid.Column="1"
+                                IsChecked="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected, Mode=TwoWay}"
+                                Opacity="0.7"
+                                VerticalOptions="Center"/>
+
+                        </Grid>
+
+                        <Grid
+                            Grid.Row="1"
+                            ColumnDefinitions="auto,*"
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}">
+
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource labels}"
+                                VerticalOptions="Center"
+                                HorizontalOptions="Start"
+                                Text="NIS:"/>
+
+                            <Entry
+                                Grid.Column="1"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaNisInput, Mode=TwoWay, Converter={converters:NISFormatConverter}}"
+                                Placeholder="Número NIS"
+                                MaxLength="14"
+                                Keyboard="Numeric"
+                                Opacity="0.7"/>
+
+                        </Grid>
+
+                        <Grid
+                            Grid.Row="2"
+                            ColumnDefinitions="auto,*,auto,auto"
+                            ColumnSpacing="8"
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}">
+
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource labels}"
+                                VerticalOptions="Center"
+                                HorizontalOptions="Start"
+                                Text="Responsável:"/>
+
+                            <Entry
+                                Grid.Column="1"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaResponsibleNameInput}"
+                                Placeholder="Opcional"
+                                IsReadOnly="True"
+                                Opacity="0.7"/>
+
+                            <ImageButton
+                                Grid.Column="2"
+                                Style="{StaticResource SoftIconButton}"
+                                Source="loupe.png"
+                                HeightRequest="30"
+                                WidthRequest="30"
+                                Padding="9"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectBolsaFamiliaResponsibleCommand}"/>
+
+                            <ImageButton
+                                Grid.Column="3"
+                                Style="{StaticResource SoftIconButton}"
+                                Source="remove.png"
+                                HeightRequest="40"
+                                WidthRequest="40"
+                                Padding="9"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ClearBolsaFamiliaResponsibleCommand}"
+                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.HasBolsaFamiliaResponsible}"/>
+
+                        </Grid>
 
                     </Grid>
                 </Border>
@@ -337,13 +399,15 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="objects:HealthConditions">
 
-                            <Grid ColumnDefinitions="*,auto"
+                            <Grid RowDefinitions="auto,auto"
+                                  ColumnDefinitions="*,auto"
                                   ColumnSpacing="15"
                                   Padding="10"
                                   Margin="0,5"
                                   BackgroundColor="Transparent">
 
                                 <Label
+                                    Grid.Row="0"
                                     Grid.Column="0"
                                     Text="{Binding Name}"
                                     LineBreakMode="WordWrap"
@@ -352,11 +416,68 @@
                                     Opacity="0.8"/>
 
                                 <CheckBox
+                                    Grid.Row="0"
                                     Grid.Column="1"
                                     IsChecked="{Binding Selected, Mode=TwoWay}"
                                     Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SwitchConditionCommand}"
                                     CommandParameter="{Binding .}"/>
+
+                                <VerticalStackLayout
+                                    Grid.Row="1"
+                                    Grid.ColumnSpan="2"
+                                    Margin="18,4,0,0"
+                                    Spacing="6"
+                                    IsVisible="{Binding ShowDiabetesDetails}">
+
+                                    <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="10">
+                                        <Label
+                                            Grid.Column="0"
+                                            Text="Tipo"
+                                            VerticalOptions="Center"
+                                            LineBreakMode="WordWrap"
+                                            FontSize="16"
+                                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                            Opacity="0.75"/>
+
+                                        <Picker
+                                            Grid.Column="1"
+                                            Title="Nao especificar"
+                                            ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DiabetesTypeOptions}"
+                                            SelectedItem="{Binding SelectedDiabetesType, Mode=TwoWay}"
+                                            FontSize="14"
+                                            HorizontalOptions="End"
+                                            VerticalOptions="Center"
+                                            WidthRequest="190"/>
+
+                                        <ImageButton
+                                            Grid.Column="2"
+                                            Source="remove.png"
+                                            HeightRequest="22"
+                                            WidthRequest="22"
+                                            VerticalOptions="Center"
+                                            Aspect="AspectFit"
+                                            IsVisible="{Binding HasSelectedDiabetesType}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ClearDiabetesTypeCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*,auto" ColumnSpacing="15">
+                                        <Label
+                                            Grid.Column="0"
+                                            Text="Insulinodependente"
+                                            LineBreakMode="WordWrap"
+                                            FontSize="16"
+                                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                            Opacity="0.75"/>
+
+                                        <CheckBox
+                                            Grid.Column="1"
+                                            IsChecked="{Binding InsulinDependentSelected, Mode=TwoWay}"
+                                            Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                    </Grid>
+
+                                </VerticalStackLayout>
 
                             </Grid>
 

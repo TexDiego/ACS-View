@@ -19,11 +19,13 @@ public partial class Registers : ContentPage, IQueryAttributable
         ICidRepository cidRepo,
         IPatientCidRepository patientCid,
         ISQLiteConditionsRepository conditionsRepository,
+        IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
+        IPatientInsulinDependencyRepository insulinDependencyRepository,
         IPopupService popupService,
         RegistersViewModel viewModel)
     {
         InitializeComponent();
-        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, popupService);
+        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, popupService);
         BindingContext = _viewModel = viewModel;
     }
 

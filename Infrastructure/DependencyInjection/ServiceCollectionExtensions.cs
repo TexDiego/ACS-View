@@ -51,6 +51,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPopupService, PopupService>();
         services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();
         services.AddSingleton<IPatientRepository, SQLitePatientRepository>();
+        services.AddSingleton<IPatientBolsaFamiliaRepository, SQLitePatientBolsaFamiliaRepository>();
+        services.AddSingleton<IPatientInsulinDependencyRepository, SQLitePatientInsulinDependencyRepository>();
         services.AddSingleton(new HttpClient
         {
             BaseAddress = new Uri("https://viacep.com.br/"),
@@ -82,6 +84,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<VisitsViewModel>();
         services.AddTransient<VaccinesPageViewModel>();
         services.AddTransient<NotesPageViewModel>();
+        services.AddTransient<BolsaFamiliaPageViewModel>();
         services.AddTransient<PersonsInfoViewModel>();
         services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
         services.AddTransient<ImportDataViewModel>();
@@ -106,6 +109,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<RegistrationPage>();
         services.AddTransient<ForgotPassword>();
         services.AddTransient<FamiliesPage>();
+        services.AddTransient<BolsaFamiliaPage>();
         services.AddTransient<Profile>();
         services.AddTransient<VaccinesPage>();
         services.AddTransient<ImportDataPage>();

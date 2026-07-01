@@ -5,6 +5,7 @@ using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using CommunityToolkit.Maui.Extensions;
 
 namespace ACS_View.ViewModels;
 
@@ -12,7 +13,9 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                                           IPatientService _patientService,
                                           IPatientCidRepository _patientCidRepository,
                                           ICidRepository _cidRepository,
-                                          ISQLiteConditionsRepository _conditionsRepository) : BaseViewModel
+                                          ISQLiteConditionsRepository _conditionsRepository,
+                                          IPatientBolsaFamiliaRepository _bolsaFamiliaRepository,
+                                          IPatientInsulinDependencyRepository _insulinDependencyRepository) : BaseViewModel
 {
     public double Width => (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20;
     private static readonly Dictionary<string, string> _chapterIconMap = new()
@@ -52,6 +55,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         [HealthConditionCatalog.Deficiente] = "acessibilidade.png",
         [HealthConditionCatalog.PortadorCancer] = "cancer.png",
         [HealthConditionCatalog.BolsaFamilia] = "bolsafamilia.png",
+        [HealthConditionCatalog.Insulinodependente] = "insulina.png",
         [HealthConditionCatalog.DependenteQuimico] = "dependentequimico.png",
         [HealthConditionCatalog.Imunodeficiente] = "hiv.png"
     };
@@ -66,6 +70,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         new("doencaarterialcoronaria.png", "Doença arterial coronariana", cid => IsInRange(cid.Code, "I20", "I25") || HasAnyTerm(cid, "angina", "infarto", "isquemica do coracao", "coronar")),
         new("hepatopatas.png", "Hepatopatia", cid => IsInRange(cid.Code, "K70", "K77") || HasAnyTerm(cid, "figado", "hepatica", "hepatite", "cirrose")),
         new("insuficienciacardiaca.png", "Insuficiência cardíaca", cid => IsInRange(cid.Code, "I50", "I50") || HasAnyTerm(cid, "insuficiencia cardiaca")),
+        new("insulina.png", "Insulinodependente", IsInsulinDependentCid),
         new("neurodivergencias.png", "Neurodivergência", cid => IsInRange(cid.Code, "F80", "F98") || HasAnyTerm(cid, "autismo", "autista", "asperger", "hipercinetico", "deficit de atencao", "desenvolvimento psicologico")),
         new("cadeirante.png", "Cadeirante", IsWheelchairRelatedCid),
         new("obesidade.png", "Obesidade", cid => IsInRange(cid.Code, "E66", "E66") || HasAnyTerm(cid, "obesidade")),
@@ -83,9 +88,17 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
+    [ObservableProperty] private string nisNumber = string.Empty;
     private int _loadVersion;
 
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
+    public ICommand EditPerson => new Command(async () => await EditPatient());
+
+    private async Task EditPatient()
+    {
+        await Shell.Current.ClosePopupAsync();
+        await NavigateToAsync("addregister", new Dictionary<string, object> { { "patientId", PersonInfo.Id } });
+    }
 
     public void SetPatient(Patient patient)
     {
@@ -96,6 +109,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         HasFatherPatientLink = patient.FatherPatientId is > 0;
         Endereco = "Carregando endereço...";
         Complemento = string.Empty;
+        NisNumber = string.Empty;
         Icons = [];
 
         _ = LoadPatientDetailsAsync(patient.Id, loadVersion);
@@ -131,18 +145,21 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         {
             var addressTask = _infoService.GetAddressInfoAsync(patientId);
             var iconsTask = BuildHealthIconsAsync(patientId);
+            var bolsaFamiliaTask = _bolsaFamiliaRepository.GetByPatientIdAsync(patientId);
 
-            await Task.WhenAll(addressTask, iconsTask);
+            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask);
 
             if (loadVersion != _loadVersion)
             {
                 return;
             }
 
+            var benefit = bolsaFamiliaTask.Result;
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 Endereco = addressTask.Result.Endereco;
                 Complemento = addressTask.Result.Complemento ?? string.Empty;
+                NisNumber = benefit?.NisNumber?.Trim() ?? string.Empty;
                 Icons = new ObservableCollection<HealthIcon>(iconsTask.Result);
             });
         }
@@ -159,6 +176,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             {
                 Endereco = "Endereço não encontrado";
                 Complemento = string.Empty;
+                NisNumber = string.Empty;
                 Icons = [];
             });
         }
@@ -183,6 +201,26 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             {
                 iconsList.Add(new HealthIcon { IconSource = source, Description = condition.Description });
             }
+        }
+
+        if (await _bolsaFamiliaRepository.GetByPatientIdAsync(patientId) is not null &&
+            seenSources.Add("bolsafamilia.png"))
+        {
+            iconsList.Add(new HealthIcon
+            {
+                IconSource = "bolsafamilia.png",
+                Description = HealthConditionCatalog.BolsaFamilia
+            });
+        }
+
+        if (await _insulinDependencyRepository.GetByPatientIdAsync(patientId) is not null &&
+            seenSources.Add("insulina.png"))
+        {
+            iconsList.Add(new HealthIcon
+            {
+                IconSource = "insulina.png",
+                Description = HealthConditionCatalog.Insulinodependente
+            });
         }
 
         if (patient?.BirthDate <= DateTime.Today.AddYears(-60))
@@ -279,6 +317,12 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                    "marcha paralitica",
                    "dificuldade para andar",
                    "anormalidades da marcha");
+    }
+
+    private static bool IsInsulinDependentCid(CidSubcategory cid)
+    {
+        return IsInCategory(cid, "E10") ||
+               IsCode(cid, "O240");
     }
 
     private static bool IsInCategory(CidSubcategory cid, params string[] categoryCodes)

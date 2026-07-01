@@ -16,12 +16,16 @@ namespace ACS_View.ViewModels
         ICidRepository cidRepo,
         IPatientCidRepository patientCid,
         ISQLiteConditionsRepository conditionsRepository,
+        IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
+        IPatientInsulinDependencyRepository insulinDependencyRepository,
         IPopupService popupService) : BaseViewModel
     {
         private readonly IPatientService _patientService = patientService;
         private readonly ICidRepository _cidRepo = cidRepo;
         private readonly IPatientCidRepository _patientCid = patientCid;
         private readonly ISQLiteConditionsRepository _conditionsRepository = conditionsRepository;
+        private readonly IPatientBolsaFamiliaRepository _bolsaFamiliaRepository = bolsaFamiliaRepository;
+        private readonly IPatientInsulinDependencyRepository _insulinDependencyRepository = insulinDependencyRepository;
         private readonly IPopupService _popupService = popupService;
 
         internal List<CidSubcategory> Subcategories = [];
@@ -32,23 +36,35 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private string motherNameInput = string.Empty;
         [ObservableProperty] private string fatherNameInput = string.Empty;
         [ObservableProperty] private DateTime birthDateInput = DateTime.Today;
+        [ObservableProperty] private bool isBolsaFamiliaSelected;
+        [ObservableProperty] private string bolsaFamiliaNisInput = string.Empty;
+        [ObservableProperty] private string bolsaFamiliaResponsibleNameInput = string.Empty;
+        [ObservableProperty] private bool hasBolsaFamiliaResponsible;
+        [ObservableProperty] private bool isInsulinDependent;
 
         private bool _updatingParentNameInputs;
         private bool _updatingBirthDateInput;
         private string? _linkedMotherName;
         private string? _linkedFatherName;
+        private int? _bolsaFamiliaResponsiblePatientId;
         private bool _initialIsActive = true;
 
         public DateTime MinimumDate => new(1900, 1, 1);
         public DateTime MaximumDate => DateTime.Today;
+        public IReadOnlyList<string> DiabetesTypeOptions => HealthConditionCatalog.DiabetesTypes
+            .Where(type => !string.Equals(type, "Diabetes sem tipo informado", StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
         public ICommand RegisterCommand => new Command(async () => await Save());
         public ICommand GoBack => new Command(async () => await NavigateBackAsync());
         public ICommand OpenConditionsPopup => new Command(async () => await OpenCidPopup());
         public ICommand SwitchConditionCommand => new Command<HealthConditions>(async (h) => await SwitchConditionSelected(h));
+        public ICommand ClearDiabetesTypeCommand => new Command<HealthConditions>(ClearDiabetesType);
         public ICommand RemoveConditionCommand => new Command<HealthConditions>(RemoveCondition);
         public ICommand SelectMotherCommand => new Command(async () => await SelectLinkedParentAsync(isMother: true));
         public ICommand SelectFatherCommand => new Command(async () => await SelectLinkedParentAsync(isMother: false));
+        public ICommand SelectBolsaFamiliaResponsibleCommand => new Command(async () => await SelectBolsaFamiliaResponsibleAsync());
+        public ICommand ClearBolsaFamiliaResponsibleCommand => new Command(ClearBolsaFamiliaResponsible);
 
         partial void OnMotherNameInputChanged(string value)
         {
@@ -102,6 +118,17 @@ namespace ACS_View.ViewModels
             CurrentPatient.BirthDate = CoerceBirthDate(value);
         }
 
+        partial void OnIsBolsaFamiliaSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                return;
+            }
+
+            BolsaFamiliaNisInput = string.Empty;
+            ClearBolsaFamiliaResponsible();
+        }
+
         internal async Task LoadPatient(int id)
         {
             try
@@ -118,6 +145,8 @@ namespace ACS_View.ViewModels
                 _initialIsActive = p.IsActive;
                 SetParentNameInputs(p);
                 SetBirthDateInput(p.BirthDate);
+                await LoadBolsaFamiliaAsync(p);
+                await LoadInsulinDependencyAsync(p.Id);
 
                 HealthCategories.Clear();
                 CommonConditions.Clear();
@@ -127,19 +156,34 @@ namespace ACS_View.ViewModels
                 foreach (var patientCondition in patientConditions.Where(c => !string.IsNullOrWhiteSpace(c.Description)))
                 {
                     var key = HealthConditionCatalog.GetKey(patientCondition.Description);
+                    if (string.Equals(key, HealthConditionCatalog.Insulinodependente, StringComparison.OrdinalIgnoreCase))
+                    {
+                        IsInsulinDependent = true;
+                        continue;
+                    }
+
                     var fixedCondition = CommonConditions.FirstOrDefault(c => string.Equals(c.ConditionKey, key, StringComparison.OrdinalIgnoreCase));
                     if (fixedCondition == null) continue;
 
                     fixedCondition.Selected = true;
-                    fixedCondition.Name = patientCondition.Description;
+                    if (string.Equals(key, HealthConditionCatalog.Diabetes, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fixedCondition.Name = HealthConditionCatalog.Diabetes;
+                        fixedCondition.SelectedDiabetesType = GetPersistedDiabetesType(patientCondition.Description);
+                    }
+                    else
+                    {
+                        fixedCondition.Name = patientCondition.Description;
+                    }
                 }
 
-                if (CurrentPatient.BolsaFamilia)
+                if (IsInsulinDependent)
                 {
-                    var bolsaFamilia = CommonConditions.FirstOrDefault(c => c.ConditionKey == HealthConditionCatalog.BolsaFamilia);
-                    if (bolsaFamilia != null)
+                    var diabetesCondition = CommonConditions.FirstOrDefault(IsDiabetesCondition);
+                    if (diabetesCondition is not null)
                     {
-                        bolsaFamilia.Selected = true;
+                        diabetesCondition.Selected = true;
+                        diabetesCondition.InsulinDependentSelected = true;
                     }
                 }
 
@@ -213,6 +257,11 @@ namespace ACS_View.ViewModels
                         CurrentPatient.StatusChangedAt = DateTime.UtcNow;
                     }
 
+                    if (!await ValidateBolsaFamiliaNisAsync())
+                    {
+                        return;
+                    }
+
                     CurrentPatient.BirthDate = BirthDateInput.Date;
 
                     if (CurrentPatient.Id > 0)
@@ -231,15 +280,16 @@ namespace ACS_View.ViewModels
                     await _conditionsRepository.DeleteConditionsByPatientIdAsync(CurrentPatient.Id);
 
                     var selectedConditions = CommonConditions.Where(condition => condition.Selected).ToList();
-                    CurrentPatient.BolsaFamilia = selectedConditions.Any(condition => condition.ConditionKey == HealthConditionCatalog.BolsaFamilia);
-                    await _patientService.UpdatePatient(CurrentPatient);
+                    var diabetesCondition = selectedConditions.FirstOrDefault(IsDiabetesCondition);
+                    await SyncBolsaFamiliaAsync();
+                    await SyncInsulinDependencyAsync(diabetesCondition?.InsulinDependentSelected == true);
 
                     foreach (var condition in selectedConditions)
                     {
                         await _conditionsRepository.InsertConditionAsync(new PatientConditions
                         {
                             PatientId = CurrentPatient.Id,
-                            Description = condition.Name
+                            Description = GetPersistedConditionDescription(condition)
                         });
                     }
 
@@ -290,6 +340,91 @@ namespace ACS_View.ViewModels
             }
         }
 
+        private async Task LoadBolsaFamiliaAsync(Patient patient)
+        {
+            var benefit = await _bolsaFamiliaRepository.GetByPatientIdAsync(patient.Id);
+            if (benefit is null)
+            {
+                IsBolsaFamiliaSelected = false;
+                BolsaFamiliaNisInput = string.Empty;
+                ClearBolsaFamiliaResponsible();
+                return;
+            }
+
+            IsBolsaFamiliaSelected = true;
+            BolsaFamiliaNisInput = benefit.NisNumber ?? string.Empty;
+
+            if (benefit.ResponsiblePatientId > 0 && benefit.ResponsiblePatientId != patient.Id)
+            {
+                var responsible = await _patientService.GetPatientById(benefit.ResponsiblePatientId);
+                _bolsaFamiliaResponsiblePatientId = responsible?.Id;
+                BolsaFamiliaResponsibleNameInput = responsible?.Name ?? string.Empty;
+                HasBolsaFamiliaResponsible = responsible is not null;
+                return;
+            }
+
+            ClearBolsaFamiliaResponsible();
+        }
+
+        private async Task SyncBolsaFamiliaAsync()
+        {
+            if (!IsBolsaFamiliaSelected)
+            {
+                await _bolsaFamiliaRepository.DeleteByPatientIdAsync(CurrentPatient.Id);
+                return;
+            }
+
+            await _bolsaFamiliaRepository.UpsertAsync(new PatientBolsaFamilia
+            {
+                PatientId = CurrentPatient.Id,
+                ResponsiblePatientId = _bolsaFamiliaResponsiblePatientId ?? CurrentPatient.Id,
+                NisNumber = NisNumberRules.Normalize(BolsaFamiliaNisInput)
+            });
+        }
+
+        private async Task<bool> ValidateBolsaFamiliaNisAsync()
+        {
+            if (!IsBolsaFamiliaSelected)
+            {
+                BolsaFamiliaNisInput = string.Empty;
+                return true;
+            }
+
+            var normalizedNis = NisNumberRules.Normalize(BolsaFamiliaNisInput);
+            BolsaFamiliaNisInput = normalizedNis;
+
+            if (string.IsNullOrWhiteSpace(normalizedNis))
+            {
+                return true;
+            }
+
+            if (NisNumberRules.IsValid(normalizedNis))
+            {
+                return true;
+            }
+
+            await DisplayAlertAsync("Aviso", "O numero NIS informado e invalido.");
+            return false;
+        }
+
+        private async Task LoadInsulinDependencyAsync(int patientId)
+        {
+            IsInsulinDependent = await _insulinDependencyRepository.GetByPatientIdAsync(patientId) is not null;
+        }
+
+        private async Task SyncInsulinDependencyAsync(bool shouldPersist)
+        {
+            if (!shouldPersist)
+            {
+                await _insulinDependencyRepository.DeleteByPatientIdAsync(CurrentPatient.Id);
+                IsInsulinDependent = false;
+                return;
+            }
+
+            await _insulinDependencyRepository.UpsertAsync(CurrentPatient.Id);
+            IsInsulinDependent = true;
+        }
+
         private async Task SelectLinkedParentAsync(bool isMother)
         {
             var popup = new ParentPatientPickerPopup(
@@ -323,6 +458,31 @@ namespace ACS_View.ViewModels
             {
                 _updatingParentNameInputs = false;
             }
+        }
+
+        private async Task SelectBolsaFamiliaResponsibleAsync()
+        {
+            var popup = new ParentPatientPickerPopup(
+                _patientService,
+                CurrentPatient?.Id > 0 ? CurrentPatient.Id : null,
+                "Selecionar responsavel");
+
+            var popupResult = await _popupService.ShowAsync<PatientListItemDto>(popup);
+            if (popupResult.WasDismissed || popupResult.Result is not PatientListItemDto selectedPatient)
+            {
+                return;
+            }
+
+            _bolsaFamiliaResponsiblePatientId = selectedPatient.Id;
+            BolsaFamiliaResponsibleNameInput = selectedPatient.Name;
+            HasBolsaFamiliaResponsible = true;
+        }
+
+        private void ClearBolsaFamiliaResponsible()
+        {
+            _bolsaFamiliaResponsiblePatientId = null;
+            BolsaFamiliaResponsibleNameInput = string.Empty;
+            HasBolsaFamiliaResponsible = false;
         }
 
         private void SetParentNameInputs(Patient patient)
@@ -384,14 +544,30 @@ namespace ACS_View.ViewModels
         {
             if (condition == null) return;
 
-            if (condition.ConditionKey == HealthConditionCatalog.Diabetes)
-            {
-                await HandleDiabetesSelectionAsync(condition);
-            }
-
             if (!condition.Selected)
             {
                 condition.Name = condition.ConditionKey;
+                if (condition.ConditionKey == HealthConditionCatalog.Diabetes)
+                {
+                    IsInsulinDependent = false;
+                    condition.SelectedDiabetesType = string.Empty;
+                    condition.InsulinDependentSelected = false;
+                }
+            }
+
+            await Task.CompletedTask;
+        }
+
+        private static bool IsDiabetesCondition(HealthConditions condition)
+        {
+            return string.Equals(condition.ConditionKey, HealthConditionCatalog.Diabetes, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void ClearDiabetesType(HealthConditions condition)
+        {
+            if (condition is not null)
+            {
+                condition.SelectedDiabetesType = string.Empty;
             }
         }
 
@@ -412,6 +588,11 @@ namespace ACS_View.ViewModels
 
             foreach (var condition in HealthConditionCatalog.Conditions)
             {
+                if (string.Equals(condition, HealthConditionCatalog.BolsaFamilia, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 CommonConditions.Add(new HealthConditions
                 {
                     Name = condition,
@@ -420,28 +601,29 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private async Task HandleDiabetesSelectionAsync(HealthConditions condition)
+        private static string GetPersistedConditionDescription(HealthConditions condition)
         {
-            if (!condition.Selected)
+            if (!IsDiabetesCondition(condition))
             {
-                condition.Name = HealthConditionCatalog.Diabetes;
-                return;
+                return condition.Name;
             }
 
-            var selectedType = await DisplayActionSheetAsync(
-                "Tipo de diabetes",
-                "Cancelar",
-                null,
-                [.. HealthConditionCatalog.DiabetesTypes]);
+            return string.IsNullOrWhiteSpace(condition.SelectedDiabetesType)
+                ? HealthConditionCatalog.Diabetes
+                : condition.SelectedDiabetesType.Trim();
+        }
 
-            if (string.IsNullOrWhiteSpace(selectedType) || selectedType == "Cancelar")
+        private static string GetPersistedDiabetesType(string description)
+        {
+            if (string.IsNullOrWhiteSpace(description) ||
+                string.Equals(description, HealthConditionCatalog.Diabetes, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(description, "Diabetes sem tipo informado", StringComparison.OrdinalIgnoreCase))
             {
-                condition.Selected = false;
-                condition.Name = HealthConditionCatalog.Diabetes;
-                return;
+                return string.Empty;
             }
 
-            condition.Name = selectedType;
+            return HealthConditionCatalog.DiabetesTypes.FirstOrDefault(type =>
+                string.Equals(type, description, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
         }
     }
 }

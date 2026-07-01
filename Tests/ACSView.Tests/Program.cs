@@ -29,7 +29,20 @@ PatientFilterSqlBuilder.AddFilterClause(DashboardFilterKeys.Inactive, inactiveWh
 Assert(inactiveWhereParts.Contains("p.IsActive = 0"), "Filtro de inativos deve listar apenas pacientes inativos.");
 Assert(!inactiveWhereParts.Contains("p.IsActive = 1"), "Filtro de inativos nao deve incluir ativos.");
 
+var insulinWhereParts = new List<string> { "p.UserId = ?" };
+var insulinParameters = new List<object> { 1 };
+PatientFilterSqlBuilder.AddFilterClause($"{DashboardFilterKeys.ConditionPrefix}{HealthConditionCatalog.Insulinodependente}", insulinWhereParts, insulinParameters);
+Assert(insulinWhereParts.Any(part => part.Contains("PatientInsulinDependency")), "Filtro de insulinodependente deve consultar a tabela relacional.");
+
 Console.WriteLine("PatientFilterSqlBuilder tests passed.");
+
+Assert(NisNumberRules.Normalize("123.45678.90-0") == "12345678900", "Normalizacao do NIS deve manter apenas digitos.");
+Assert(NisNumberRules.Format("12345678900") == "123.45678.90-0", "Mascara do NIS deve usar o formato 000.00000.00-0.");
+Assert(NisNumberRules.IsValid("12345678900"), "NIS com digito verificador correto deve validar.");
+Assert(!NisNumberRules.IsValid("12345678901"), "NIS com digito verificador incorreto deve falhar.");
+Assert(!NisNumberRules.IsValid("11111111111"), "NIS repetido nao deve validar.");
+
+Console.WriteLine("NisNumberRules tests passed.");
 
 static void Assert(bool condition, string message)
 {

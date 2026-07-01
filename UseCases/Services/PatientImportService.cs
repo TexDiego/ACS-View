@@ -14,6 +14,7 @@ namespace ACS_View.UseCases.Services
         IPatientService patientService,
         ICepService cepService,
         ISQLiteConditionsRepository conditionsRepository,
+        IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         ISpreadsheetReader spreadsheetReader,
         PatientFamilyLinkResolver familyLinkResolver) : IPatientImportService
     {
@@ -145,9 +146,18 @@ namespace ACS_View.UseCases.Services
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                patient.BolsaFamilia = ParseBoolean(GetCell(row, columns.BolsaFamiliaIndex)) ||
-                                       importedConditions.Any(condition =>
-                                           HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.BolsaFamilia);
+                var importedBolsaFamilia = ParseBoolean(GetCell(row, columns.BolsaFamiliaIndex)) ||
+                                           importedConditions.Any(condition =>
+                                               HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.BolsaFamilia);
+
+                importedConditions = importedConditions
+                    .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
+                    .ToList();
+
+                var mappedHealthConditions = columns.ConditionColumnIndexes
+                    .Select(map => map.ConditionName)
+                    .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
+                    .ToList();
 
                 if (birthDate is not null)
                 {
@@ -185,7 +195,8 @@ namespace ACS_View.UseCases.Services
                         importedPatientKeys.Add(importKey);
                     }
 
-                    await SyncImportedConditionsAsync(patient.Id, columns.ConditionColumnIndexes.Select(map => map.ConditionName), importedConditions);
+                    await SyncImportedConditionsAsync(patient.Id, mappedHealthConditions, importedConditions);
+                    await SyncImportedBolsaFamiliaAsync(patient.Id, importedBolsaFamilia);
 
                     var importedStreet = GetCell(row, columns.PatientStreetIndex);
                     var importedNeighborhood = GetCell(row, columns.PatientNeighborhoodIndex);
@@ -318,6 +329,22 @@ namespace ACS_View.UseCases.Services
                     Description = conditionName
                 });
             }
+        }
+
+        private async Task SyncImportedBolsaFamiliaAsync(int patientId, bool isBeneficiary)
+        {
+            if (!isBeneficiary)
+            {
+                await bolsaFamiliaRepository.DeleteByPatientIdAsync(patientId);
+                return;
+            }
+
+            await bolsaFamiliaRepository.UpsertAsync(new PatientBolsaFamilia
+            {
+                PatientId = patientId,
+                ResponsiblePatientId = patientId,
+                NisNumber = string.Empty
+            });
         }
 
         private static (int RowIndex, Dictionary<string, int> HeaderMap)? FindHeaderRow(

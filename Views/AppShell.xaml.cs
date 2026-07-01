@@ -127,6 +127,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("addregister", new ServiceProviderRouteFactory<AddRegister>(_serviceProvider));
         Routing.RegisterRoute("addhouse", new ServiceProviderRouteFactory<AddHouse>(_serviceProvider));
         Routing.RegisterRoute("notes", new ServiceProviderRouteFactory<NotesPage>(_serviceProvider));
+        Routing.RegisterRoute("bolsafamilia", new ServiceProviderRouteFactory<BolsaFamiliaPage>(_serviceProvider));
         Routing.RegisterRoute("vaccines", new ServiceProviderRouteFactory<VaccinesPage>(_serviceProvider));
         Routing.RegisterRoute("importdata", new ServiceProviderRouteFactory<ImportDataPage>(_serviceProvider));
         Routing.RegisterRoute("datacleanup", new ServiceProviderRouteFactory<DataCleanupPage>(_serviceProvider));

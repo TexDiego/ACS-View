@@ -132,6 +132,9 @@
 	  <MauiXaml Update="Views\AppShell.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\BolsaFamiliaPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\CIDView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

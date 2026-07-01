@@ -45,7 +45,13 @@ namespace ACS_View.UseCases.Services
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND HouseId = -1",
                     userId),
                 TotalBolsaFamilia = await _connection.ExecuteScalarAsync<int>(
-                    $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BolsaFamilia = 1",
+                    $"""
+                    SELECT COUNT(DISTINCT p.Id)
+                    FROM Patient p
+                    INNER JOIN PatientBolsaFamilia bf ON bf.UserId = p.UserId AND bf.PatientId = p.Id
+                    WHERE p.UserId = ?
+                      AND {ActivePatientAliasClause}
+                    """,
                     userId),
                 TotalIdosos = await _connection.ExecuteScalarAsync<int>(
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BirthDate <= ?",
@@ -109,7 +115,7 @@ namespace ACS_View.UseCases.Services
                     group => group.Sum(condition => condition.Quantity),
                     StringComparer.OrdinalIgnoreCase);
 
-            return HealthConditionCatalog.Conditions
+            var conditions = HealthConditionCatalog.Conditions
                 .Where(condition => !string.Equals(
                     condition,
                     HealthConditionCatalog.BolsaFamilia,
@@ -120,6 +126,22 @@ namespace ACS_View.UseCases.Services
                     Quantity = groupedConditions.TryGetValue(condition, out var quantity) ? quantity : 0
                 })
                 .ToList();
+
+            conditions.Add(new ConditionsDTO
+            {
+                Description = HealthConditionCatalog.Insulinodependente,
+                Quantity = await _connection.ExecuteScalarAsync<int>(
+                    $"""
+                    SELECT COUNT(DISTINCT p.Id)
+                    FROM Patient p
+                    INNER JOIN PatientInsulinDependency pid ON pid.UserId = p.UserId AND pid.PatientId = p.Id
+                    WHERE p.UserId = ?
+                      AND {ActivePatientAliasClause}
+                    """,
+                    userId)
+            });
+
+            return conditions;
         }
 
         public async Task<int> CountPatientsByFilterAsync(string filterKey)

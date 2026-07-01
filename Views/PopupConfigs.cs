@@ -11,10 +11,10 @@ namespace ACS_View.Views
             PageOverlayColor = ThemeColors.PopupOverlay,
             Shape = new RoundRectangle
             {
-                CornerRadius = new CornerRadius(15),
-                StrokeThickness = 2,
-                Stroke = ThemeColors.BorderSoft,
-                BackgroundColor = ThemeColors.Surface
+                CornerRadius = new CornerRadius(0),
+                StrokeThickness = 0,
+                Stroke = Colors.Transparent,
+                BackgroundColor = Colors.Transparent
             },
             Shadow = null
         };

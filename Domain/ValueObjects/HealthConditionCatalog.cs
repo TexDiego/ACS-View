@@ -4,6 +4,7 @@ namespace ACS_View.Domain.ValueObjects
     {
         public const string Gestante = "Gestante";
         public const string Diabetes = "Diabetes";
+        public const string Insulinodependente = "Insulinodependente";
         public const string Hipertensao = "Hipertensão";
         public const string Tuberculose = "Tuberculose";
         public const string Hanseniase = "Hanseníase";
@@ -55,6 +56,11 @@ namespace ACS_View.Domain.ValueObjects
             if (description.StartsWith(Diabetes, StringComparison.OrdinalIgnoreCase))
             {
                 return Diabetes;
+            }
+
+            if (string.Equals(description, Insulinodependente, StringComparison.OrdinalIgnoreCase))
+            {
+                return Insulinodependente;
             }
 
             return Conditions.FirstOrDefault(condition =>

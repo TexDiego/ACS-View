@@ -78,7 +78,8 @@ namespace ACS_View.UseCases.Services
 
         private async Task CreateDomainTablesAsync()
         {
-            await Connection.CreateTablesAsync<Patient, Vaccines, PatientVaccineDose>();
+            await Connection.CreateTablesAsync<Patient, PatientBolsaFamilia, Vaccines, PatientVaccineDose>();
+            await Connection.CreateTableAsync<PatientInsulinDependency>();
             await Connection.CreateTablesAsync<Note, House>();
             await Connection.CreateTablesAsync<Family, User>();
             await Connection.CreateTablesAsync<CidCategory, CidChapter>();
@@ -89,6 +90,8 @@ namespace ACS_View.UseCases.Services
             await MigratePatientTableAsync();
             await MigrateHouseTableAsync();
             await MigrateUserScopedTablesAsync();
+            await MigrateBolsaFamiliaTableAsync();
+            await MigrateInsulinDependencyTableAsync();
             await MigrateLegacyVaccinesAsync();
             await MigrateUserTableAsync();
             await BackfillSearchColumnsAsync();
@@ -125,6 +128,47 @@ namespace ACS_View.UseCases.Services
             {
                 await EnsureColumnAsync(tableName, "UserId", "INTEGER NOT NULL DEFAULT 0");
             }
+        }
+
+        private async Task MigrateBolsaFamiliaTableAsync()
+        {
+            if (!await ColumnExistsAsync("Patient", "BolsaFamilia"))
+            {
+                return;
+            }
+
+            await Connection.ExecuteAsync(
+                """
+                INSERT INTO PatientBolsaFamilia (UserId, PatientId, ResponsiblePatientId, NisNumber)
+                SELECT p.UserId, p.Id, p.Id, ''
+                FROM Patient p
+                WHERE COALESCE(p.BolsaFamilia, 0) = 1
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM PatientBolsaFamilia bf
+                      WHERE bf.UserId = p.UserId
+                        AND bf.PatientId = p.Id
+                  )
+                """);
+        }
+
+        private async Task MigrateInsulinDependencyTableAsync()
+        {
+            await Connection.ExecuteAsync(
+                """
+                INSERT INTO PatientInsulinDependency (UserId, PatientId)
+                SELECT pc.UserId, pc.PatientId
+                FROM PatientConditions pc
+                INNER JOIN Patient p ON p.UserId = pc.UserId AND p.Id = pc.PatientId
+                WHERE pc.Description = ? COLLATE NOCASE
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM PatientInsulinDependency pid
+                      WHERE pid.UserId = pc.UserId
+                        AND pid.PatientId = pc.PatientId
+                  )
+                """,
+                HealthConditionCatalog.Insulinodependente);
         }
 
         private async Task MigrateLegacyVaccinesAsync()
@@ -200,13 +244,18 @@ namespace ACS_View.UseCases.Services
 
         private async Task EnsureColumnAsync(string tableName, string columnName, string definition)
         {
-            var columns = await Connection.QueryAsync<TableColumnInfo>($"PRAGMA table_info([{tableName}])");
-            if (columns.Any(column => string.Equals(column.Name, columnName, StringComparison.OrdinalIgnoreCase)))
+            if (await ColumnExistsAsync(tableName, columnName))
             {
                 return;
             }
 
             await Connection.ExecuteAsync($"ALTER TABLE [{tableName}] ADD COLUMN {columnName} {definition}");
+        }
+
+        private async Task<bool> ColumnExistsAsync(string tableName, string columnName)
+        {
+            var columns = await Connection.QueryAsync<TableColumnInfo>($"PRAGMA table_info([{tableName}])");
+            return columns.Any(column => string.Equals(column.Name, columnName, StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task CreateIndexesAsync()
@@ -227,6 +276,9 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_HouseId ON Patient(UserId, HouseId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Family_House ON Patient(FamilyId, HouseId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_Family_House ON Patient(UserId, FamilyId, HouseId)");
+            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientBolsaFamilia_User_Patient ON PatientBolsaFamilia(UserId, PatientId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientBolsaFamilia_User_Responsible ON PatientBolsaFamilia(UserId, ResponsiblePatientId)");
+            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientInsulinDependency_User_Patient ON PatientInsulinDependency(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_PatientId ON PatientCID(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_CidId ON PatientCID(UserId, CidId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientConditions_UserId_PatientId ON PatientConditions(UserId, PatientId)");
@@ -340,6 +392,8 @@ namespace ACS_View.UseCases.Services
         private static readonly string[] UserScopedTables =
         [
             "Patient",
+            "PatientBolsaFamilia",
+            "PatientInsulinDependency",
             "House",
             "Family",
             "Note",

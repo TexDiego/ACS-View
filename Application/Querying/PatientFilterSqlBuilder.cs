@@ -54,7 +54,14 @@ public static class PatientFilterSqlBuilder
                 whereParts.Add("p.FamilyId = -1");
                 return;
             case DashboardFilterKeys.BolsaFamilia:
-                whereParts.Add("p.BolsaFamilia = 1");
+                whereParts.Add("""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientBolsaFamilia bf
+                        WHERE bf.PatientId = p.Id
+                          AND bf.UserId = p.UserId
+                    )
+                    """);
                 return;
             case DashboardFilterKeys.Elderly:
                 whereParts.Add("p.BirthDate <= ?");
@@ -79,6 +86,19 @@ public static class PatientFilterSqlBuilder
         if (filterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase))
         {
             var condition = filterKey[DashboardFilterKeys.ConditionPrefix.Length..];
+            if (HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.Insulinodependente)
+            {
+                whereParts.Add("""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientInsulinDependency pid
+                        WHERE pid.PatientId = p.Id
+                          AND pid.UserId = p.UserId
+                    )
+                    """);
+                return;
+            }
+
             if (HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.Diabetes)
             {
                 whereParts.Add("""

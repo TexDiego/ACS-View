@@ -191,6 +191,12 @@ public partial class OverallViewModel : BaseViewModel
             return;
         }
 
+        if (condition == DashboardFilterKeys.BolsaFamilia)
+        {
+            await NavigateToAsync("bolsafamilia");
+            return;
+        }
+
         await NavigateToAsync("//registers", new Dictionary<string, object>
         {
             { "condition", condition },

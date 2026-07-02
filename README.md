@@ -9,11 +9,55 @@
 - Visualização rápida de pacientes cadastrados
 - Acompanhamento de dados importantes como condições de saúde e informações demográficas
 - Acompanhamento de situação vacinal
+- Acompanhamento de pacientes cadastrados como beneficiários no Programa Bolsa Família
 - Registro prático de anotações
+- Criação de notificações personalizadas
 - Consulta automática de endereço via CEP com integração à API pública [ViaCEP](https://viacep.com.br)
 - Interface intuitiva e adaptada para uso em campo
-- Armazenamento local e online de dados
+- Armazenamento local de dados
 - Registro de famílias visitadas com filtro de período
+- Sugestões de visitas
+- Consulta de CIDs com catálogo completo
+- Criação de métricas personalizadas por unificação de condições (por exemplo: Hipertensos + Diabéticos)
+- Filtrar registros de pacientes de forma personalizada
+- Importação de dados
+- Exclusão de dados em massa
+- Persistência de dados por login
+
+---
+
+## Métricas Disponíveis
+
+### Métricas Gerais
+
+- Quantidade de pacientes
+- Quantidade de residências
+- Quantidade de famílias
+- Idosos (60 anos ou mais)
+- Crianças menores de 6 anos
+- Mulheres de 25 a 64 anos
+- Beneficiários do Bolsa Família
+- Pacientes sem residência
+- Residências vazias
+- Pacientes inativos
+
+### Métricas de Saúde
+
+- Gestante
+- Diabetes
+- Hipertensão
+- Dependentes de insulina
+- Tuberculose
+- Acamado
+- Domiciliado
+- Condição mental
+- Fumante
+- Usuário de álcool
+- Portadores de deficiência
+- Dependentes químicos
+- CIDs específicos quando houver registro em algum paciente
+
+> NOTA: é possível unir 2 condições para cruzar dados automaticamente. Está disponível para todas as condições de saúde e para algumas métricas gerais, evitando unificações que sempre resultam em 0 registros como idosos + crianças
 
 ---
 
@@ -27,18 +71,8 @@
 
 ---
 
-## Arquiteturas e Estratégias
-
-- SOLID
-- MVVM (Model-View-ViewModel)
-
----
-
 ## Planos Futuros
 
-- Refatoração completa do aplicativo, tornando mais robusto, escalável e melhor escrito para se adequar à Arquiteturas e Design Patterns
-- Reformulação do modelo de dados de condições de saúde dos cadastros. Atualmente o modelo possui alguns itens criados por mim. Meu objetivo é migrar para o modelo fornecido pelo DataSus, que possui um catálogo completo de condições de saúde no formato CID-10. Veja mais sobre o modelo aqui: [DataSus](http://www2.datasus.gov.br/cid10/V2008/descrcsv.htm)
-- Implementação de autenticação do usuário para login, inclusive com biometria
 - Implementação de persistencia em nuvem. Banco de dados futuro ainda não definido
 
 

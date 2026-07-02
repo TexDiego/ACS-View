@@ -10,6 +10,7 @@ namespace ACS_View.ViewModels;
 public partial class AddMetricPopupViewModel : BaseViewModel
 {
     private const string AllSexesOption = "Todos";
+    private readonly Func<DashboardMetricCreateRequestDto, string?>? validateRequest;
 
     [ObservableProperty] private ObservableCollection<DashboardMetricOptionDto> metrics = [];
     [ObservableProperty] private string selectedSex = AllSexesOption;
@@ -19,8 +20,11 @@ public partial class AddMetricPopupViewModel : BaseViewModel
     [ObservableProperty] private bool hasError;
     [ObservableProperty] private string selectedCountText = "0 de 2 selecionadas";
 
-    public AddMetricPopupViewModel(IEnumerable<Dashboard> candidates)
+    public AddMetricPopupViewModel(
+        IEnumerable<Dashboard> candidates,
+        Func<DashboardMetricCreateRequestDto, string?>? validateRequest = null)
     {
+        this.validateRequest = validateRequest;
         Metrics = new ObservableCollection<DashboardMetricOptionDto>(
             candidates.Select(metric => new DashboardMetricOptionDto { Metric = metric }));
 
@@ -72,6 +76,14 @@ public partial class AddMetricPopupViewModel : BaseViewModel
             MinimumAgeModifier = minimumAge,
             MaximumAgeModifier = maximumAge
         };
+
+        var validationError = validateRequest?.Invoke(request);
+        if (!string.IsNullOrWhiteSpace(validationError))
+        {
+            errorMessage = validationError;
+            SetError(errorMessage);
+            return false;
+        }
 
         ClearError();
         return true;

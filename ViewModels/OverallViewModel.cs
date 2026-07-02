@@ -225,8 +225,8 @@ public partial class OverallViewModel : BaseViewModel
     {
         var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
         var removedRootMetrics = GetRemovedRootMetrics();
-        var candidates = GetCombinationCandidates(targetDashboard).ToList();
-        var canCreateCombination = HasValidCombination(candidates);
+        var candidates = GetCombinationCandidates().ToList();
+        var canCreateCombination = HasValidCombination(candidates, HealthTabSelected);
 
         var result = await popupService.ShowAsync<OverallMetricMenuAction>(
             new OverallMetricMenuPopup(removedRootMetrics.Count > 0, canCreateCombination));
@@ -255,8 +255,8 @@ public partial class OverallViewModel : BaseViewModel
     private async Task AddCombinedMetricAsync()
     {
         var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
-        var candidates = GetCombinationCandidates(targetDashboard).ToList();
-        var canCreateCombination = HasValidCombination(candidates);
+        var candidates = GetCombinationCandidates().ToList();
+        var canCreateCombination = HasValidCombination(candidates, HealthTabSelected);
 
         if (!canCreateCombination)
         {
@@ -264,7 +264,8 @@ public partial class OverallViewModel : BaseViewModel
             return;
         }
 
-        var requestResult = await popupService.ShowAsync<DashboardMetricCreateRequestDto>(new AddMetricPopup(candidates));
+        var requestResult = await popupService.ShowAsync<DashboardMetricCreateRequestDto>(
+            new AddMetricPopup(candidates, request => GetCombinationValidationError(request, HealthTabSelected)));
         if (requestResult.WasDismissed || requestResult.Result is null)
         {
             return;
@@ -279,6 +280,13 @@ public partial class OverallViewModel : BaseViewModel
         if (first is null || second is null)
         {
             await DisplayAlertAsync("Métricas", "Não foi possível localizar as métricas selecionadas.", "Voltar");
+            return;
+        }
+
+        var validationError = GetCombinationValidationError(request, HealthTabSelected);
+        if (!string.IsNullOrWhiteSpace(validationError))
+        {
+            await DisplayAlertAsync("MÃ©tricas", validationError, "Voltar");
             return;
         }
 
@@ -334,34 +342,29 @@ public partial class OverallViewModel : BaseViewModel
         await SaveMetricPreferencesAsync();
     }
 
-    private IEnumerable<Dashboard> GetCombinationCandidates(IEnumerable<Dashboard> dashboard)
+    private IEnumerable<Dashboard> GetCombinationCandidates()
     {
-        var candidates = dashboard.Where(metric => !metric.IsCombination);
-
         if (HealthTabSelected)
         {
-            return candidates;
+            return HealthDashboard
+                .Concat(MetricsDashboard)
+                .Where(metric => !metric.IsCombination &&
+                                 DashboardMetricCombinationRules.IsCombinableRootMetric(metric.FilterKey));
         }
 
-        var allowedGeneralFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            DashboardFilterKeys.Elderly,
-            DashboardFilterKeys.BolsaFamilia,
-            DashboardFilterKeys.ChildrenUnder6,
-            DashboardFilterKeys.Women25To64,
-            DashboardFilterKeys.NoHouse
-        };
-
-        return candidates.Where(metric => allowedGeneralFilters.Contains(metric.FilterKey));
+        return MetricsDashboard
+            .Where(metric => !metric.IsCombination &&
+                             DashboardMetricCombinationRules.IsCombinableRootMetric(metric.FilterKey) &&
+                             !DashboardMetricCombinationRules.IsHealthMetric(metric.FilterKey));
     }
 
-    private static bool HasValidCombination(IReadOnlyList<Dashboard> candidates)
+    private static bool HasValidCombination(IReadOnlyList<Dashboard> candidates, bool targetIsHealth)
     {
         for (var firstIndex = 0; firstIndex < candidates.Count; firstIndex++)
         {
             for (var secondIndex = firstIndex + 1; secondIndex < candidates.Count; secondIndex++)
             {
-                if (CanCombine(candidates[firstIndex], candidates[secondIndex]))
+                if (CanCombine(candidates[firstIndex], candidates[secondIndex], targetIsHealth))
                 {
                     return true;
                 }
@@ -371,20 +374,28 @@ public partial class OverallViewModel : BaseViewModel
         return false;
     }
 
+    private static bool CanCombine(Dashboard first, Dashboard second, bool targetIsHealth)
+    {
+        return DashboardMetricCombinationRules.CanCombine(first.FilterKey, second.FilterKey, targetIsHealth);
+    }
+
     private static bool CanCombine(Dashboard first, Dashboard second)
     {
-        var hasElderly = string.Equals(first.FilterKey, DashboardFilterKeys.Elderly, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(second.FilterKey, DashboardFilterKeys.Elderly, StringComparison.OrdinalIgnoreCase);
-        var hasChildrenUnder6 = string.Equals(first.FilterKey, DashboardFilterKeys.ChildrenUnder6, StringComparison.OrdinalIgnoreCase) ||
-                                string.Equals(second.FilterKey, DashboardFilterKeys.ChildrenUnder6, StringComparison.OrdinalIgnoreCase);
-        var hasWomen25To64 = string.Equals(first.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(second.FilterKey, DashboardFilterKeys.Women25To64, StringComparison.OrdinalIgnoreCase);
-        var hasInactive = string.Equals(first.FilterKey, DashboardFilterKeys.Inactive, StringComparison.OrdinalIgnoreCase) ||
-                          string.Equals(second.FilterKey, DashboardFilterKeys.Inactive, StringComparison.OrdinalIgnoreCase);
+        return DashboardMetricCombinationRules.CanCombine(first.FilterKey, second.FilterKey, targetIsHealth: false) ||
+               DashboardMetricCombinationRules.CanCombine(first.FilterKey, second.FilterKey, targetIsHealth: true);
+    }
 
-        return !(hasElderly && hasChildrenUnder6) &&
-               !(hasWomen25To64 && hasChildrenUnder6) &&
-               !hasInactive;
+    private static string? GetCombinationValidationError(
+        DashboardMetricCreateRequestDto request,
+        bool targetIsHealth)
+    {
+        return DashboardMetricCombinationRules.GetValidationError(
+            request.FirstFilterKey,
+            request.SecondFilterKey,
+            targetIsHealth,
+            request.SexModifier,
+            request.MinimumAgeModifier,
+            request.MaximumAgeModifier);
     }
 
     private async Task<MetricModifierSelection?> PickMetricModifiersAsync()
@@ -603,6 +614,11 @@ public partial class OverallViewModel : BaseViewModel
                 removedRootMetrics.Add(metric);
                 removedRootFilterKeys.Add(metric.FilterKey);
                 RemoveDependentCombinations(targetDashboard, isHealthMetric, metric.FilterKey);
+
+                if (!isHealthMetric)
+                {
+                    RemoveDependentCombinations(HealthDashboard, isHealthMetric: true, metric.FilterKey);
+                }
             }
         }
         finally
@@ -695,10 +711,14 @@ public partial class OverallViewModel : BaseViewModel
         foreach (var combination in metricCombinations)
         {
             var targetDashboard = combination.IsHealth ? HealthDashboard : MetricsDashboard;
-            var first = targetDashboard.FirstOrDefault(metric =>
+            var rootMetrics = combination.IsHealth
+                ? HealthDashboard.Concat(MetricsDashboard)
+                : MetricsDashboard;
+
+            var first = rootMetrics.FirstOrDefault(metric =>
                 !metric.IsCombination &&
                 string.Equals(metric.FilterKey, combination.FirstFilterKey, StringComparison.OrdinalIgnoreCase));
-            var second = targetDashboard.FirstOrDefault(metric =>
+            var second = rootMetrics.FirstOrDefault(metric =>
                 !metric.IsCombination &&
                 string.Equals(metric.FilterKey, combination.SecondFilterKey, StringComparison.OrdinalIgnoreCase));
 
@@ -711,11 +731,29 @@ public partial class OverallViewModel : BaseViewModel
                 combination.SexModifier,
                 combination.MinimumAgeModifier,
                 combination.MaximumAgeModifier);
+
+            if (!DashboardMetricCombinationRules.CanCombine(
+                    first.FilterKey,
+                    second.FilterKey,
+                    combination.IsHealth,
+                    modifiers.Sex,
+                    modifiers.MinimumAge,
+                    modifiers.MaximumAge))
+            {
+                continue;
+            }
+
             var combinationKey = DashboardFilterKeys.CreateModified(
                 DashboardFilterKeys.CreateCombination(first.FilterKey, second.FilterKey),
                 modifiers.Sex,
                 modifiers.MinimumAge,
                 modifiers.MaximumAge);
+
+            if (targetDashboard.Any(metric => string.Equals(metric.FilterKey, combinationKey, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
             var total = await dash.CountPatientsByFilterAsync(combinationKey);
             targetDashboard.Add(CreateCombinedDashboard(
                 first,
@@ -820,6 +858,17 @@ public partial class OverallViewModel : BaseViewModel
         {
             if (string.IsNullOrWhiteSpace(combination.FirstFilterKey) ||
                 string.IsNullOrWhiteSpace(combination.SecondFilterKey))
+            {
+                continue;
+            }
+
+            if (!DashboardMetricCombinationRules.CanCombine(
+                    combination.FirstFilterKey,
+                    combination.SecondFilterKey,
+                    combination.IsHealth,
+                    combination.SexModifier,
+                    combination.MinimumAgeModifier,
+                    combination.MaximumAgeModifier))
             {
                 continue;
             }

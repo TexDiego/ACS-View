@@ -62,6 +62,17 @@ Assert(semTipoParts.StreetName == "Quinze de Novembro", "Logradouro sem tipo dev
 
 Console.WriteLine("StreetAddressParser tests passed.");
 
+Assert(!DashboardMetricCombinationRules.IsCombinableRootMetric(DashboardFilterKeys.Families), "Familias nao devem entrar em unioes.");
+Assert(!DashboardMetricCombinationRules.IsCombinableRootMetric(DashboardFilterKeys.Residences), "Residencias nao devem entrar em unioes.");
+Assert(!DashboardMetricCombinationRules.IsCombinableRootMetric(DashboardFilterKeys.EmptyResidences), "Residencias vazias nao devem entrar em unioes.");
+Assert(!DashboardMetricCombinationRules.CanCombine(DashboardFilterKeys.Elderly, DashboardFilterKeys.ChildrenUnder6, targetIsHealth: false), "Idosos e criancas menores de 6 nao devem combinar.");
+Assert(!DashboardMetricCombinationRules.CanCombine(DashboardFilterKeys.Women25To64, $"{DashboardFilterKeys.ConditionPrefix}Diabetes", targetIsHealth: true, sexModifier: "Masculino"), "Mulheres 25 a 64 nao deve aceitar modificador masculino.");
+Assert(DashboardMetricCombinationRules.CanCombine(DashboardFilterKeys.Women25To64, $"{DashboardFilterKeys.ConditionPrefix}Diabetes", targetIsHealth: true), "Metrica geral compativel deve combinar com saude na aba de saude.");
+Assert(!DashboardMetricCombinationRules.CanCombine(DashboardFilterKeys.BolsaFamilia, DashboardFilterKeys.NoHouse, targetIsHealth: true), "Uniao geral sem saude nao deve ser criada na aba de saude.");
+Assert(DashboardMetricCombinationRules.CanCombine(DashboardFilterKeys.BolsaFamilia, DashboardFilterKeys.NoHouse, targetIsHealth: false), "Uniao geral compativel deve continuar disponivel na aba geral.");
+
+Console.WriteLine("DashboardMetricCombinationRules tests passed.");
+
 static void Assert(bool condition, string message)
 {
     if (!condition)

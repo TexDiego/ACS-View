@@ -9,10 +9,12 @@ public partial class AddMetricPopup : Popup<DashboardMetricCreateRequestDto>
 {
     private readonly AddMetricPopupViewModel _viewModel;
 
-    public AddMetricPopup(IEnumerable<Dashboard> candidates)
+    public AddMetricPopup(
+        IEnumerable<Dashboard> candidates,
+        Func<DashboardMetricCreateRequestDto, string?>? validateRequest = null)
     {
         InitializeComponent();
-        BindingContext = _viewModel = new AddMetricPopupViewModel(candidates);
+        BindingContext = _viewModel = new AddMetricPopupViewModel(candidates, validateRequest);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

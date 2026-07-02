@@ -17,14 +17,12 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                                           IPatientBolsaFamiliaRepository _bolsaFamiliaRepository,
                                           IPatientInsulinDependencyRepository _insulinDependencyRepository) : BaseViewModel
 {
-    public double Width => (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20;
     private static readonly Dictionary<string, string> _chapterIconMap = new()
     {
         ["Algumas doenças infecciosas e parasitárias"] = "infeccoes.png",
         ["Neoplasias [tumores]"] = "cancer.png",
         ["Doenças do sangue e dos órgãos hematopoéticos e alguns transtornos imunitários"] = "hematologicas.png",
         ["Doenças endócrinas, nutricionais e metabólicas"] = "endocrinas.png",
-        ["Transtornos mentais e comportamentais"] = "mental.png",
         ["Doenças do sistema nervoso"] = "nervoso.png",
         ["Doenças do olho e anexos"] = "oftalmologicas.png",
         ["Doenças do ouvido e da apófise mastóide"] = "ouvido.png",
@@ -39,6 +37,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         ["Malformações congênitas, deformidades e anomalias cromossômicas"] = "geneticas.png",
         ["Sintomas, sinais e achados anormais de exames clínicos e de laboratório, não classificados em outra parte"] = "outras.png",
         ["Lesões, envenenamento e algumas outras conseqüências de causas externas"] = "outras.png"
+    };
+    private static readonly Dictionary<string, string> _chapterConditionMap = new()
+    {
+        ["Transtornos mentais e comportamentais"] = HealthConditionCatalog.CondicaoMental
     };
     private static readonly Dictionary<string, string> _conditionIconMap = new()
     {
@@ -267,7 +269,16 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             }
             else if (!_chapterIconMap.TryGetValue(desc, out source))
             {
-                source = "outras.png";
+                if (_chapterConditionMap.TryGetValue(desc, out var condition) &&
+                    _conditionIconMap.TryGetValue(HealthConditionCatalog.GetKey(condition), out var conditionSource))
+                {
+                    source = conditionSource;
+                    desc = condition;
+                }
+                else
+                {
+                    source = "outras.png";
+                }
             }
 
             if (seenSources.Add(source))

@@ -1,17 +1,20 @@
+using ACS_View.Application.Interfaces;
 using ACS_View.ViewModels;
 
 namespace ACS_View.Views;
 
 public partial class VaccinesPage : ContentPage, IQueryAttributable
 {
+    private readonly IDialogService _dialogService;
     private readonly VaccinesPageViewModel _viewModel;
     private int? _patientId;
     private bool _isVisible;
     private int _navigationVersion;
 
-    public VaccinesPage(VaccinesPageViewModel viewModel)
+    public VaccinesPage(VaccinesPageViewModel viewModel, IDialogService dialogService)
     {
         InitializeComponent();
+        _dialogService = dialogService;
         BindingContext = _viewModel = viewModel;
     }
 
@@ -66,7 +69,7 @@ public partial class VaccinesPage : ContentPage, IQueryAttributable
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
+                await _dialogService.ShowAlertAsync("Erro", ex.Message, "Voltar");
                 Console.WriteLine(ex);
             }
         });

@@ -15,9 +15,9 @@
         <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Area pessoal" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Acesse anotacoes e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir anotacoes"
+                    <Label Text="Área pessoal" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Acesse anotações e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Abrir anotações"
                             Style="{StaticResource Buttons}"
                             Command="{Binding OpenNotesPage}"/>
                 </VerticalStackLayout>
@@ -25,9 +25,9 @@
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Importacao" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Importe cadastros de pacientes e residencias por planilha." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir importacao"
+                    <Label Text="Importação" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Importe cadastros de pacientes e residências por planilha." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Abrir importação"
                             Style="{StaticResource Buttons}"
                             Command="{Binding OpenImportDataPage}"/>
                 </VerticalStackLayout>

@@ -4,6 +4,7 @@ namespace ACS_View.Application.DTOs
     {
         public int TotalPacientes { get; set; }
         public int TotalResidencias { get; set; }
+        public int TotalFamilias { get; set; }
         public int TotalResidenciasVazias { get; set; }
         public int TotalSemResidencia { get; set; }
         public int TotalVisitas { get; set; }

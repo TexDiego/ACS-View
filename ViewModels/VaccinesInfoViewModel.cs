@@ -2,7 +2,7 @@ using ACS_View.Domain.ValueObjects;
 
 namespace ACS_View.ViewModels
 {
-    public class VaccinesInfoViewModel
+    public class VaccinesInfoViewModel : BaseViewModel
     {
         private const string NotAvailable = "Informação não disponível";
 

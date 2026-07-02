@@ -9,6 +9,7 @@
     x:Class="ACS_View.Views.AddMetricPopup"
     x:TypeArguments="dto:DashboardMetricCreateRequestDto"
     x:DataType="vm:AddMetricPopupViewModel"
+    WidthRequest="{Binding PopupWidth}"
     CanBeDismissedByTappingOutsideOfPopup="True"
     BackgroundColor="Transparent"
     Padding="0">
@@ -16,7 +17,6 @@
     <Border
         Padding="14"
         StrokeShape="RoundRectangle 8"
-        WidthRequest="340"
         MaximumHeightRequest="620"
         BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
 

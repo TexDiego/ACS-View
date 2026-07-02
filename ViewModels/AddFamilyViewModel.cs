@@ -120,36 +120,42 @@ namespace ACS_View.ViewModels
             _debounceTimer = new CancellationTokenSource();
             var token = _debounceTimer.Token;
 
-            var normalizedTerm = termo?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(normalizedTerm))
+            try
             {
-                PessoasPesquisadas.Clear();
-                HasSearchResults = false;
-                return;
+                var normalizedTerm = termo?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(normalizedTerm))
+                {
+                    PessoasPesquisadas.Clear();
+                    HasSearchResults = false;
+                    return;
+                }
+
+                await Task.Delay(300, token);
+                token.ThrowIfCancellationRequested();
+
+                var parcial = await _patientService.GetAllPatients() ?? [];
+                token.ThrowIfCancellationRequested();
+
+                var resultados = parcial
+                    .Where(n => ContainsTerm(n.Name, normalizedTerm) ||
+                                ContainsTerm(n.SusNumber, normalizedTerm) ||
+                                ContainsTerm(n.MotherName, normalizedTerm) ||
+                                ContainsTerm(n.FatherName, normalizedTerm))
+                    .Where(n => !Pessoas.Any(p => p.Id == n.Id))
+                    .OrderBy(n => n.Name)
+                    .Take(20)
+                    .Select(p => new Pessoa { Nome = p.Name, Id = p.Id, SusNumber = p.SusNumber })
+                    .ToList();
+
+                RunOnMainThread(() =>
+                {
+                    PessoasPesquisadas = new ObservableCollection<Pessoa>(resultados);
+                    HasSearchResults = PessoasPesquisadas.Count > 0;
+                });
             }
-
-            await Task.Delay(300, token);
-            token.ThrowIfCancellationRequested();
-
-            var parcial = await _patientService.GetAllPatients() ?? [];
-            token.ThrowIfCancellationRequested();
-
-            var resultados = parcial
-                .Where(n => ContainsTerm(n.Name, normalizedTerm) ||
-                            ContainsTerm(n.SusNumber, normalizedTerm) ||
-                            ContainsTerm(n.MotherName, normalizedTerm) ||
-                            ContainsTerm(n.FatherName, normalizedTerm))
-                .Where(n => !Pessoas.Any(p => p.Id == n.Id))
-                .OrderBy(n => n.Name)
-                .Take(20)
-                .Select(p => new Pessoa { Nome = p.Name, Id = p.Id, SusNumber = p.SusNumber })
-                .ToList();
-
-            RunOnMainThread(() =>
+            catch (OperationCanceledException)
             {
-                PessoasPesquisadas = new ObservableCollection<Pessoa>(resultados);
-                HasSearchResults = PessoasPesquisadas.Count > 0;
-            });
+            }
         }
 
         private async Task AddPerson(int id)

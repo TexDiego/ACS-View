@@ -49,6 +49,8 @@ internal sealed class SQLitePatientBolsaFamiliaRepository(
             .Select(group =>
             {
                 var beneficiaries = group
+                    .OrderBy(row => row.PatientName ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenBy(row => row.PatientId)
                     .Select(row => new BolsaFamiliaBeneficiary
                     {
                         PatientId = row.PatientId,

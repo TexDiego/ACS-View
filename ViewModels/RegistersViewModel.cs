@@ -14,7 +14,8 @@ namespace ACS_View.ViewModels
         IHouseService _houseService,
         IPatientService _patientService,
         IPersonsInfoPopupService _personsInfoPopupService,
-        IPopupService _popupService) : BaseViewModel
+        IPopupService _popupService,
+        IDialogService _dialogService) : BaseViewModel
     {
         private const int PageSize = 30;
         private const int SearchDebounceMilliseconds = 300;
@@ -268,7 +269,7 @@ namespace ACS_View.ViewModels
 
         private async Task ShowFilterPopupAsync()
         {
-            var popup = new FilterPopup(_listFilter.Clone());
+            var popup = new FilterPopup(_listFilter.Clone(), _dialogService);
             var popupResult = await _popupService.ShowAsync<PatientListFilterDto>(popup);
 
             if (popupResult.WasDismissed ||
@@ -362,6 +363,11 @@ namespace ACS_View.ViewModels
             if (_listFilter.MinimumAge.HasValue || _listFilter.MaximumAge.HasValue)
             {
                 parts.Add(GetAgeSummary());
+            }
+
+            if (_listFilter.OnlyBolsaFamilia)
+            {
+                parts.Add("Bolsa Familia");
             }
 
             if (_listFilter.Sexes.Count > 0)

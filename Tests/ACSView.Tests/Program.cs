@@ -44,6 +44,24 @@ Assert(!NisNumberRules.IsValid("11111111111"), "NIS repetido nao deve validar.")
 
 Console.WriteLine("NisNumberRules tests passed.");
 
+var ruaParts = StreetAddressParser.SplitStreetType("Rua das Flores");
+Assert(ruaParts.StreetType == "Rua", "Tipo de logradouro deve ser extraido de Rua.");
+Assert(ruaParts.StreetName == "das Flores", "Nome da rua nao deve exibir o tipo de logradouro.");
+
+var avenidaParts = StreetAddressParser.SplitStreetType("Avenida Brasil");
+Assert(avenidaParts.StreetType == "Avenida", "Tipo de logradouro deve ser extraido de Avenida.");
+Assert(avenidaParts.StreetName == "Brasil", "Nome da avenida nao deve exibir o tipo de logradouro.");
+
+var travessaParts = StreetAddressParser.SplitStreetType("Tv. Santa Luzia");
+Assert(travessaParts.StreetType == "Travessa", "Abreviacao de tipo de logradouro deve ser normalizada.");
+Assert(travessaParts.StreetName == "Santa Luzia", "Nome de logradouro com abreviacao nao deve exibir o tipo.");
+
+var semTipoParts = StreetAddressParser.SplitStreetType("Quinze de Novembro");
+Assert(semTipoParts.StreetType == string.Empty, "Logradouro sem tipo deve manter tipo vazio.");
+Assert(semTipoParts.StreetName == "Quinze de Novembro", "Logradouro sem tipo deve manter o nome original.");
+
+Console.WriteLine("StreetAddressParser tests passed.");
+
 static void Assert(bool condition, string message)
 {
     if (!condition)

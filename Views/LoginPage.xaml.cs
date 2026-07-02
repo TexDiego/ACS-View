@@ -5,11 +5,13 @@ namespace ACS_View.Views;
 public partial class LoginPage : ContentPage
 {
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogService;
 
-    public LoginPage(IAuthService authService)
+    public LoginPage(IAuthService authService, IDialogService dialogService)
     {
         InitializeComponent();
         _authService = authService;
+        _dialogService = dialogService;
     }
 
     private async void Btn_Login_Clicked(object sender, EventArgs e)
@@ -25,7 +27,7 @@ public partial class LoginPage : ContentPage
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
+            await _dialogService.ShowAlertAsync("Erro", ex.Message, "Voltar");
         }
     }
 

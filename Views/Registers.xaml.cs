@@ -6,6 +6,7 @@ namespace ACS_View.Views;
 public partial class Registers : ContentPage, IQueryAttributable
 {
     private readonly AddRegisterViewModel _addRegisterViewModel;
+    private readonly IDialogService _dialogService;
     private readonly RegistersViewModel _viewModel;
 
     private string _condition = "ALL";
@@ -22,9 +23,11 @@ public partial class Registers : ContentPage, IQueryAttributable
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         IPatientInsulinDependencyRepository insulinDependencyRepository,
         IPopupService popupService,
+        IDialogService dialogService,
         RegistersViewModel viewModel)
     {
         InitializeComponent();
+        _dialogService = dialogService;
         _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, popupService);
         BindingContext = _viewModel = viewModel;
     }
@@ -97,7 +100,7 @@ public partial class Registers : ContentPage, IQueryAttributable
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
+            await _dialogService.ShowAlertAsync("Erro", ex.Message, "Voltar");
         }
         finally
         {

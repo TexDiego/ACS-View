@@ -1,4 +1,5 @@
 using ACS_View.Application.DTOs;
+using ACS_View.ViewModels;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
@@ -8,13 +9,8 @@ public partial class OverallMetricMenuPopup : Popup<OverallMetricMenuAction>
     public OverallMetricMenuPopup(bool hasHiddenMetrics, bool canAddMetric)
     {
         InitializeComponent();
-        HasHiddenMetrics = hasHiddenMetrics;
-        CanAddMetric = canAddMetric;
-        BindingContext = this;
+        BindingContext = new OverallMetricMenuPopupViewModel(hasHiddenMetrics, canAddMetric);
     }
-
-    public bool HasHiddenMetrics { get; }
-    public bool CanAddMetric { get; }
 
     private async void OpenCidsButton_Clicked(object sender, EventArgs e)
     {

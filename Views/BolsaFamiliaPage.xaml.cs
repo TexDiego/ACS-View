@@ -23,4 +23,14 @@ public partial class BolsaFamiliaPage : ContentPage
 
         _ = _viewModel.LoadGroupsAsync();
     }
+
+    private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        ScrollToTopButtonController.UpdateVisibility(BackToTopButton, e);
+    }
+
+    private void BackToTopButton_Clicked(object sender, EventArgs e)
+    {
+        ScrollToTopButtonController.ScrollToTop(BolsaFamiliaCollectionView, BackToTopButton);
+    }
 }

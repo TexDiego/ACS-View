@@ -9,7 +9,7 @@
     x:Class="ACS_View.Views.AddNotificationPopup"
     x:TypeArguments="dto:NoteNotificationRequestDto"
     x:DataType="vm:AddNotificationPopupViewModel"
-    WidthRequest="{Binding Width}"
+    WidthRequest="{Binding PopupWidth}"
     CanBeDismissedByTappingOutsideOfPopup="True"
     BackgroundColor="Transparent"
     Padding="0">

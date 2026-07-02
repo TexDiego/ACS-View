@@ -4,6 +4,7 @@ public static class DashboardFilterKeys
 {
     public const string All = "ALL";
     public const string Residences = "RESIDENCES";
+    public const string Families = "FAMILIES";
     public const string EmptyResidences = "EMPTY_RESIDENCES";
     public const string NoHouse = "NO_HOUSE";
     public const string NoFamily = "NO_FAMILY";

@@ -12,6 +12,7 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
     private readonly IFamilyService _familyService;
     private readonly IFamilyManager _familyManager;
     private readonly IPopupService _popupService;
+    private readonly IDialogService _dialogService;
     private FamiliesViewModel? _viewModel;
     private bool _hasAppeared;
 
@@ -22,7 +23,8 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
         IPersonsInfoPopupService personsInfoPopupService,
         IFamilyService familyService,
         IFamilyManager familyManager,
-        IPopupService popupService)
+        IPopupService popupService,
+        IDialogService dialogService)
     {
         InitializeComponent();
         _houseService = houseService;
@@ -32,6 +34,7 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
         _familyService = familyService;
         _familyManager = familyManager;
         _popupService = popupService;
+        _dialogService = dialogService;
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -51,7 +54,8 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
                 _personsInfoPopupService,
                 _familyService,
                 _familyManager,
-                _popupService);
+                _popupService,
+                _dialogService);
 
             if (_hasAppeared)
             {

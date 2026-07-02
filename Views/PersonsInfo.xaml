@@ -9,7 +9,7 @@
     xmlns:converters="clr-namespace:ACS_View.Converters"
     x:DataType="vm:PersonsInfoViewModel"
     x:Class="ACS_View.Views.PersonsInfo"
-    WidthRequest="{Binding Width}"
+    WidthRequest="{Binding PopupWidth}"
     CanBeDismissedByTappingOutsideOfPopup="true"
     BackgroundColor="Transparent"
     Padding="0">

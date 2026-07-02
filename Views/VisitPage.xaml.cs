@@ -1,24 +1,25 @@
-using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
+using ACS_View.Domain.Entities;
 using CommunityToolkit.Maui.Views;
 
 namespace ACS_View.Views;
 
 public partial class VisitPage : Popup<Visits>
 {
+    private readonly IDialogService _dialogService;
     private readonly IHouseService _houseService;
     private readonly int _houseId;
     private readonly int _familyId;
 
-    public VisitPage(IHouseService houseService, int houseId, int familyId)
+    public VisitPage(IHouseService houseService, IDialogService dialogService, int houseId, int familyId)
     {
         InitializeComponent();
 
         _houseService = houseService;
+        _dialogService = dialogService;
         _houseId = houseId;
         _familyId = familyId;
 
-        layoutGrid.WidthRequest = (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 50;
         UpdateOutcomeColors();
     }
 
@@ -28,7 +29,7 @@ public partial class VisitPage : Popup<Visits>
 
         if (string.IsNullOrWhiteSpace(descricaoSelecionada))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Selecione o desfecho da visita.", "OK");
+            await _dialogService.ShowAlertAsync("Erro", "Selecione o desfecho da visita.", "OK");
             return;
         }
 
@@ -67,10 +68,10 @@ public partial class VisitPage : Popup<Visits>
 
             if (house is null)
             {
-                return "Endereço não encontrado.";
+                return "Endereco nao encontrado.";
             }
 
-            var street = string.IsNullOrWhiteSpace(house.Rua) ? "Endereço sem rua" : house.Rua.Trim();
+            var street = string.IsNullOrWhiteSpace(house.Rua) ? "Endereco sem rua" : house.Rua.Trim();
             var number = string.IsNullOrWhiteSpace(house.NumeroCasa) ? "S/N" : house.NumeroCasa.Trim();
 
             return house.PossuiComplemento && !string.IsNullOrWhiteSpace(house.Complemento)
@@ -79,8 +80,8 @@ public partial class VisitPage : Popup<Visits>
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao obter endereço: {ex.Message}");
-            return "Erro ao obter endereço.";
+            Console.WriteLine($"Erro ao obter endereco: {ex.Message}");
+            return "Erro ao obter endereco.";
         }
     }
 

@@ -106,6 +106,10 @@
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
+
+            <CollectionView.Footer>
+                <BoxView HeightRequest="80" BackgroundColor="Transparent"/>
+            </CollectionView.Footer>
         </CollectionView>
 
         <CollectionView
@@ -113,7 +117,7 @@
             ItemsSource="{Binding SkeletonItems}"
             IsVisible="{Binding IsLoading}"
             InputTransparent="True"
-            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource DarkPageBackground}}">
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <controls:ShimmerSkeletonRow ShowTrailingBlock="False" ShowSecondaryLine="True"/>

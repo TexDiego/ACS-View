@@ -93,6 +93,12 @@ public partial class OverallViewModel : BaseViewModel
                 });
                 MetricsDashboard.Add(new Dashboard()
                 {
+                    Name = "Famílias",
+                    FilterKey = DashboardFilterKeys.Families,
+                    Total = metrics.TotalFamilias
+                });
+                MetricsDashboard.Add(new Dashboard()
+                {
                     Name = "Residências vazias",
                     FilterKey = DashboardFilterKeys.EmptyResidences,
                     Total = metrics.TotalResidenciasVazias
@@ -180,6 +186,11 @@ public partial class OverallViewModel : BaseViewModel
 
     private async Task GoToPage(string condition)
     {
+        if (string.Equals(condition, DashboardFilterKeys.Families, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         if (condition == DashboardFilterKeys.Residences ||
             condition == DashboardFilterKeys.EmptyResidences)
         {

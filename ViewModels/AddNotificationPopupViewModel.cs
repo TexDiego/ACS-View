@@ -36,10 +36,6 @@ public partial class AddNotificationPopupViewModel : BaseViewModel
         SelectSuggestion(Suggestions[0]);
     }
 
-    public double Width => Math.Min(
-        (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 24,
-        380);
-
     public int MessageMaxLength => MaxMessageLength;
     public ObservableCollection<NotificationSuggestionOption> Suggestions { get; }
     public ICommand SelectSuggestionCommand { get; }

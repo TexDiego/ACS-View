@@ -9,6 +9,7 @@
     x:Class="ACS_View.Views.FilterPopup"
     x:TypeArguments="dto:PatientListFilterDto"
     x:DataType="vm:FilterPopupViewModel"
+    WidthRequest="{Binding PopupWidth}"
     CanBeDismissedByTappingOutsideOfPopup="True"
     BackgroundColor="Transparent"
     Padding="0">
@@ -47,6 +48,14 @@
                     </Border>
                 </VerticalStackLayout>
             </Grid>
+
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <CheckBox IsChecked="{Binding OnlyBolsaFamilia, Mode=TwoWay}"/>
+                <Label
+                    Text="Mostrar apenas pacientes do Bolsa Famí­lia"
+                    Style="{StaticResource FieldLabel}"
+                    VerticalOptions="Center"/>
+            </HorizontalStackLayout>
 
             <VerticalStackLayout Spacing="6">
                 <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>

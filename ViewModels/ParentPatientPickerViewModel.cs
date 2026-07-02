@@ -20,7 +20,6 @@ internal partial class ParentPatientPickerViewModel(
     [ObservableProperty] private string emptyMessage = "Digite para buscar um cadastro.";
 
     public string Title { get; } = title;
-    public double Width => (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 24;
 
     public async Task LoadAsync()
     {

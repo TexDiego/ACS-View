@@ -6,7 +6,7 @@
           xmlns:system="clr-namespace:System;assembly=mscorlib"
           xmlns:models="clr-namespace:ACS_View.Domain.ValueObjects"
           xmlns:converter="clr-namespace:ACS_View.Converters"
-          WidthRequest="{Binding Width}"
+          WidthRequest="{Binding PopupWidth}"
           x:TypeArguments="system:Object"
           x:DataType="vm:ConditionPopupViewModel"
           x:Class="ACS_View.Views.ConditionsPopup"

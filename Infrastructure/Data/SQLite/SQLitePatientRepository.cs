@@ -77,6 +77,7 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
 
             PatientFilterSqlBuilder.AddFilterClause(filter.FilterKey, whereParts, parameters);
             AddAgeClause(filter, whereParts, parameters);
+            AddBolsaFamiliaClause(filter, whereParts);
             AddSexClause(filter, whereParts, parameters);
 
             var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
@@ -195,6 +196,23 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
 
         whereParts.Add($"p.Sexo COLLATE NOCASE IN ({string.Join(", ", sexes.Select(_ => "?"))})");
         parameters.AddRange(sexes);
+    }
+
+    private static void AddBolsaFamiliaClause(PatientListFilterDto filter, List<string> whereParts)
+    {
+        if (!filter.OnlyBolsaFamilia)
+        {
+            return;
+        }
+
+        whereParts.Add("""
+            EXISTS (
+                SELECT 1
+                FROM PatientBolsaFamilia bf
+                WHERE bf.PatientId = p.Id
+                  AND bf.UserId = p.UserId
+            )
+            """);
     }
 
     private static string GetOrderByClause(PatientListFilterDto filter)

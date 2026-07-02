@@ -27,6 +27,20 @@ namespace ACS_View.UseCases.Services
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause}",
                     userId),
                 TotalResidencias = await _connection.Table<House>().CountAsync(h => h.UserId == userId),
+                TotalFamilias = await _connection.ExecuteScalarAsync<int>(
+                    $"""
+                    SELECT COUNT(*)
+                    FROM (
+                        SELECT p.HouseId, p.FamilyId
+                        FROM Patient p
+                        WHERE p.UserId = ?
+                          AND {ActivePatientAliasClause}
+                          AND p.HouseId > 0
+                          AND p.FamilyId > 0
+                        GROUP BY p.HouseId, p.FamilyId
+                    ) families
+                    """,
+                    userId),
                 TotalResidenciasVazias = await _connection.ExecuteScalarAsync<int>(
                     $"""
                     SELECT COUNT(*)

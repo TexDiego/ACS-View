@@ -1,25 +1,30 @@
 using ACS_View.Application.Interfaces;
+using ACS_View.ViewModels;
+using ACS_View.Views;
+using CommunityToolkit.Maui.Extensions;
 
 namespace ACS_View.Infrastructure.Services;
 
 internal sealed class ShellDialogService : IDialogService
 {
-    public Task ShowAlertAsync(string title, string message, string cancel = "OK")
+    public async Task ShowAlertAsync(string title, string message, string cancel = "OK")
     {
-        return Shell.Current.DisplayAlertAsync(title, message, cancel);
+        await ShowDialogAsync(DialogPopupViewModel.Alert(title, message, cancel));
     }
 
-    public Task<bool> ShowConfirmationAsync(string title, string message, string accept, string cancel = "Cancelar")
+    public async Task<bool> ShowConfirmationAsync(string title, string message, string accept, string cancel = "Cancelar")
     {
-        return Shell.Current.DisplayAlertAsync(title, message, accept, cancel);
+        var result = await ShowDialogAsync(DialogPopupViewModel.Confirmation(title, message, accept, cancel));
+        return result is true;
     }
 
-    public Task<string> ShowActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons)
+    public async Task<string> ShowActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons)
     {
-        return Shell.Current.DisplayActionSheetAsync(title, cancel, destruction, buttons);
+        var result = await ShowDialogAsync(DialogPopupViewModel.ActionSheet(title, cancel, destruction, buttons));
+        return result?.ToString() ?? cancel;
     }
 
-    public Task<string?> ShowPromptAsync(
+    public async Task<string?> ShowPromptAsync(
         string title,
         string message,
         string accept = "OK",
@@ -29,6 +34,26 @@ internal sealed class ShellDialogService : IDialogService
         Keyboard? keyboard = null,
         string initialValue = "")
     {
-        return Shell.Current.DisplayPromptAsync(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue);
+        var result = await ShowDialogAsync(DialogPopupViewModel.Prompt(
+            title,
+            message,
+            accept,
+            cancel,
+            placeholder,
+            maxLength,
+            keyboard,
+            initialValue));
+
+        return result?.ToString();
+    }
+
+    private static async Task<object?> ShowDialogAsync(DialogPopupViewModel viewModel)
+    {
+        var popup = new DialogPopup(viewModel);
+        var result = await Shell.Current.ShowPopupAsync<object>(popup, PopupConfigs.Default);
+
+        return result is null || result.WasDismissedByTappingOutsideOfPopup
+            ? viewModel.SecondaryResult
+            : result.Result;
     }
 }

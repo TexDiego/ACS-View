@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace ACS_View.ViewModels;
 
-public partial class AddMetricPopupViewModel : ObservableObject
+public partial class AddMetricPopupViewModel : BaseViewModel
 {
     private const string AllSexesOption = "Todos";
 

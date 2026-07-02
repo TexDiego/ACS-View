@@ -8,72 +8,73 @@
     x:Class="ACS_View.Views.VaccinesInfo"
     x:TypeArguments="system:Boolean"
     x:DataType="vm:VaccinesInfoViewModel"
+    WidthRequest="{Binding PopupWidth}"
     BackgroundColor="Transparent"
     Padding="0"
     CanBeDismissedByTappingOutsideOfPopup="True">
 
-    <VerticalStackLayout
-        x:Name="PopupContent"
-        Padding="10"
+    <Border
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
         BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-
-        <Label
-                FontSize="24"
-                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                FontAttributes="Bold"
-                Text="{Binding VaccineName}"/>
-
-        <BoxView
-                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                HeightRequest="2"/>
-
-        <Label
-                Text="Doenças evitadas:"
-                Margin="0,5,0,5"
-                FontSize="18"
-                FontAttributes="Bold"
-                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
-
-        <Label
-                x:Name="DiseasesAvoided"
-                FontSize="16"
-                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                Margin="0,0,0,5"
-                FontAttributes="Italic"
-                Text="{Binding DiseaseDescription}"/>
-
-        <BoxView
-                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                HeightRequest="2"/>
-
-        <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
-
-            <CheckBox
-                    x:Name="VaccineChecked"
-                    VerticalOptions="Center"
-                    CheckedChanged="VaccineChecked_CheckedChanged"/>
+        <VerticalStackLayout x:Name="PopupContent" Spacing="3">
 
             <Label
-                    VerticalOptions="Center"
-                    Text="Vacina aplicada"
+                    FontSize="24"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontAttributes="Bold"
+                    Text="{Binding VaccineName}"/>
+
+            <BoxView
+                    Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                    HeightRequest="2"/>
+
+            <Label
+                    Text="Doenças evitadas:"
+                    Margin="0,5,0,5"
+                    FontSize="18"
+                    FontAttributes="Bold"
                     TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
-        </HorizontalStackLayout>
+            <Label
+                    x:Name="DiseasesAvoided"
+                    FontSize="16"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    Margin="0,0,0,5"
+                    FontAttributes="Italic"
+                    Text="{Binding DiseaseDescription}"/>
 
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,12,0,0">
-            <Button
-                    Text="Cancelar"
-                    Style="{StaticResource GhostButton}"
-                    Clicked="CancelButton_Clicked"/>
+            <BoxView
+                    Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                    HeightRequest="2"/>
 
-            <Button
-                    Grid.Column="1"
-                    Text="Salvar"
-                    Style="{StaticResource PrimaryButton}"
-                    Clicked="SaveButton_Clicked"/>
-        </Grid>
+            <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
 
-    </VerticalStackLayout>
+                <CheckBox
+                        x:Name="VaccineChecked"
+                        VerticalOptions="Center"
+                        CheckedChanged="VaccineChecked_CheckedChanged"/>
 
+                <Label
+                        VerticalOptions="Center"
+                        Text="Vacina aplicada"
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
 
+            </HorizontalStackLayout>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,12,0,0">
+                <Button
+                        Text="Cancelar"
+                        Style="{StaticResource GhostButton}"
+                        Clicked="CancelButton_Clicked"/>
+
+                <Button
+                        Grid.Column="1"
+                        Text="Salvar"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="SaveButton_Clicked"/>
+            </Grid>
+
+        </VerticalStackLayout>
+    </Border>
 </tk:Popup>

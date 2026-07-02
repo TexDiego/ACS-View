@@ -5,6 +5,7 @@ namespace ACS_View.Views;
 
 public partial class AddFamilyPage : ContentPage
 {
+    private readonly IDialogService _dialogService;
     private readonly AddFamilyViewModel viewModel;
 
     public AddFamilyPage(
@@ -13,9 +14,11 @@ public partial class AddFamilyPage : ContentPage
         int? idFamily,
         IFamilyService familyService,
         IFamilyManager familyManager,
-        IPatientService patientService)
+        IPatientService patientService,
+        IDialogService dialogService)
     {
         InitializeComponent();
+        _dialogService = dialogService;
         BindingContext = viewModel = new AddFamilyViewModel(
             idHouse,
             isEdit,
@@ -37,12 +40,12 @@ public partial class AddFamilyPage : ContentPage
         {
             await viewModel.SearchAsync(e.NewTextValue);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", ex.Message, "Voltar");
+            await _dialogService.ShowAlertAsync("Erro", ex.Message, "Voltar");
         }
     }
 

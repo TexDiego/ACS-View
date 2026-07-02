@@ -13,6 +13,26 @@ namespace ACS_View.ViewModels
         private static INavigationService navigationService = new UnconfiguredNavigationService();
         private static IMainThreadDispatcher mainThreadDispatcher = new UnconfiguredMainThreadDispatcher();
 
+        public double PopupWidth => DefaultPopupWidth;
+
+        public static double DefaultPopupWidth
+        {
+            get
+            {
+                try
+                {
+                    var info = DeviceDisplay.MainDisplayInfo;
+                    var density = info.Density <= 0 ? 1 : info.Density;
+                    var availableWidth = Math.Max(0, (info.Width / density) - 24);
+                    return Math.Min(availableWidth, 380);
+                }
+                catch
+                {
+                    return 380;
+                }
+            }
+        }
+
         internal static void ConfigureInfrastructure(
             IDialogService dialogs,
             INavigationService navigation,

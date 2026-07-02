@@ -5,6 +5,7 @@
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              x:DataType="vm:ImportDataViewModel"
              x:Class="ACS_View.Views.ImportDataPage"
+             Style="{StaticResource PageBackground}"
              Title="Importar dados">
 
     <ScrollView>

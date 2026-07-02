@@ -6,6 +6,7 @@
              xmlns:converter="clr-namespace:ACS_View.Converters"
              x:DataType="vm:NotesPageViewModel"
              x:Class="ACS_View.Views.NotesPage"
+             Style="{StaticResource PageBackground}"
              Title="Anotações">
 
     <RefreshView Command="{Binding Refresh}" IsRefreshing="{Binding IsLoading}">
@@ -75,6 +76,10 @@
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="80" BackgroundColor="Transparent"/>
+                </CollectionView.Footer>
             </CollectionView>
 
             <ImageButton

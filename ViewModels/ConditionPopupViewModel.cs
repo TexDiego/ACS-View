@@ -10,8 +10,6 @@ namespace ACS_View.ViewModels
 {
     internal partial class ConditionPopupViewModel(ICidRepository _cidRepo) : BaseViewModel
     {
-        public double Width => (DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20;
-
         private List<CidSubcategory> AllConditions = [];
 
         [ObservableProperty] private List<HealthConditions> healthCategories = [];

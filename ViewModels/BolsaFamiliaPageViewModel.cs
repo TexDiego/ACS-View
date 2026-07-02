@@ -33,6 +33,14 @@ public partial class BolsaFamiliaPageViewModel(
 
     internal bool ShouldSkipTransientReload()
     {
+        var currentVersion = GetReloadVersion();
+        if (_hasLoaded && _loadedVersion != currentVersion)
+        {
+            _skipNextAppearReload = false;
+            _suppressReloadUntilUtc = DateTime.MinValue;
+            return false;
+        }
+
         if (_skipNextAppearReload || DateTime.UtcNow <= _suppressReloadUntilUtc)
         {
             _skipNextAppearReload = false;
@@ -44,7 +52,7 @@ public partial class BolsaFamiliaPageViewModel(
 
     public async Task LoadGroupsAsync()
     {
-        var currentVersion = DataChangeTracker.PatientsVersion;
+        var currentVersion = GetReloadVersion();
         if (_hasLoaded && _loadedVersion == currentVersion)
         {
             return;
@@ -107,5 +115,10 @@ public partial class BolsaFamiliaPageViewModel(
     {
         _skipNextAppearReload = true;
         _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
+    }
+
+    private static int GetReloadVersion()
+    {
+        return DataChangeTracker.PatientsVersion;
     }
 }

@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              x:DataType="vm:DataCleanupViewModel"
              x:Class="ACS_View.Views.DataCleanupPage"
+             Style="{StaticResource PageBackground}"
              Title="Apagar dados">
 
     <Grid RowDefinitions="*,auto">
@@ -71,11 +72,5 @@
                                    HorizontalOptions="Center"/>
             </VerticalStackLayout>
         </ScrollView>
-
-        <Button Grid.Row="1"
-                Text="Voltar"
-                Style="{StaticResource GhostButton}"
-                Margin="{StaticResource PagePadding}"
-                Command="{Binding GoBackCommand}"/>
     </Grid>
 </ContentPage>

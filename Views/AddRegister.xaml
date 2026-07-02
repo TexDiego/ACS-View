@@ -283,9 +283,9 @@
 
                             <Entry
                                 Grid.Column="1"
-                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaNisInput, Mode=TwoWay, Converter={converters:NISFormatConverter}}"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaNisInput, Mode=TwoWay}"
                                 Placeholder="Número NIS"
-                                MaxLength="14"
+                                MaxLength="11"
                                 Keyboard="Numeric"
                                 Opacity="0.7"/>
 
@@ -442,7 +442,7 @@
 
                                         <Picker
                                             Grid.Column="1"
-                                            Title="Nao especificar"
+                                            Title="Não especificar"
                                             ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DiabetesTypeOptions}"
                                             SelectedItem="{Binding SelectedDiabetesType, Mode=TwoWay}"
                                             FontSize="14"

@@ -18,6 +18,7 @@ namespace ACS_View.ViewModels
         private readonly IFamilyService _familyService;
         private readonly IFamilyManager _familyManager;
         private readonly IPopupService _popupService;
+        private readonly IDialogService _dialogService;
         private int _loadedVersion = -1;
         private bool _hasLoaded;
         private bool _skipNextAppearReload;
@@ -45,7 +46,8 @@ namespace ACS_View.ViewModels
             IPersonsInfoPopupService personsInfoPopupService,
             IFamilyService familyService,
             IFamilyManager familyManager,
-            IPopupService popupService)
+            IPopupService popupService,
+            IDialogService dialogService)
         {
             _idHouse = idHouse;
             _houseService = houseService;
@@ -55,10 +57,19 @@ namespace ACS_View.ViewModels
             _familyService = familyService;
             _familyManager = familyManager;
             _popupService = popupService;
+            _dialogService = dialogService;
         }
 
         internal bool ShouldSkipTransientReload()
         {
+            var currentVersion = GetReloadVersion();
+            if (_hasLoaded && _loadedVersion != currentVersion)
+            {
+                _skipNextAppearReload = false;
+                _suppressReloadUntilUtc = DateTime.MinValue;
+                return false;
+            }
+
             if (_skipNextAppearReload || DateTime.UtcNow <= _suppressReloadUntilUtc)
             {
                 _skipNextAppearReload = false;
@@ -70,7 +81,7 @@ namespace ACS_View.ViewModels
 
         public async Task LoadFamiliesAsync()
         {
-            var currentVersion = DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
+            var currentVersion = GetReloadVersion();
             if (_hasLoaded && _loadedVersion == currentVersion)
             {
                 return;
@@ -101,7 +112,9 @@ namespace ACS_View.ViewModels
                         .Select(g => new Familia
                         {
                             IdFamily = g.Key,
-                            PessoasFamilia = new ObservableCollection<Patient>([.. g])
+                            PessoasFamilia = new ObservableCollection<Patient>(
+                                g.OrderBy(patient => patient.Name ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                                 .ThenBy(patient => patient.Id))
                         }).ToList();
 
                     Families.Clear();
@@ -137,7 +150,8 @@ namespace ACS_View.ViewModels
                     null,
                     _familyService,
                     _familyManager,
-                    _patientService));
+                    _patientService,
+                    _dialogService));
             }
             catch (Exception ex)
             {
@@ -197,7 +211,8 @@ namespace ACS_View.ViewModels
                     idFamily,
                     _familyService,
                     _familyManager,
-                    _patientService));
+                    _patientService,
+                    _dialogService));
             }
             catch (Exception ex)
             {
@@ -217,7 +232,7 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                var popupResult = await _popupService.ShowAsync<Visits>(new VisitPage(_houseService, _idHouse, idFamily));
+                var popupResult = await _popupService.ShowAsync<Visits>(new VisitPage(_houseService, _dialogService, _idHouse, idFamily));
 
                 if (popupResult.WasDismissed || popupResult.Result is null)
                 {
@@ -262,6 +277,11 @@ namespace ACS_View.ViewModels
         {
             _skipNextAppearReload = true;
             _suppressReloadUntilUtc = DateTime.UtcNow.AddSeconds(2);
+        }
+
+        private static int GetReloadVersion()
+        {
+            return DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
         }
     }
 }

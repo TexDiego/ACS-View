@@ -1,8 +1,6 @@
 using ACS_View.Application.DTOs;
 using ACS_View.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Maui.Devices;
-using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -10,29 +8,9 @@ namespace ACS_View.ViewModels
 {
     internal partial class FilterPopupViewModel : BaseViewModel
     {
-        // Calcula uma largura adequada para o popup com fallback para evitar exceções em plataformas onde DeviceDisplay
-        // não esteja disponível ou retorne valores inesperados.
-        public double MaxScreenWidth
-        {
-            get
-            {
-                try
-                {
-                    var info = DeviceDisplay.MainDisplayInfo;
-                    var density = info.Density <= 0 ? 1 : info.Density;
-                    var width = (info.Width / density) - 20;
-                    return Math.Min(Math.Max(width, 0), 520);
-                }
-                catch
-                {
-                    // Fallback seguro
-                    return 520;
-                }
-            }
-        }
-
         [ObservableProperty] private string minimumAge = string.Empty;
         [ObservableProperty] private string maximumAge = string.Empty;
+        [ObservableProperty] private bool onlyBolsaFamilia;
         [ObservableProperty] private int filterBy = 0;
         [ObservableProperty] private int orderBy = 0;
 
@@ -55,6 +33,7 @@ namespace ACS_View.ViewModels
         {
             MinimumAge = filter.MinimumAge?.ToString() ?? string.Empty;
             MaximumAge = filter.MaximumAge?.ToString() ?? string.Empty;
+            OnlyBolsaFamilia = filter.OnlyBolsaFamilia;
             FilterBy = (int)filter.SortBy;
             OrderBy = filter.SortDescending ? 1 : 0;
 
@@ -70,6 +49,7 @@ namespace ACS_View.ViewModels
             filter = new PatientListFilterDto
             {
                 FilterKey = string.IsNullOrWhiteSpace(filterKey) ? "ALL" : filterKey,
+                OnlyBolsaFamilia = OnlyBolsaFamilia,
                 Sexes = SexOptions
                     .Where(option => option.IsSelected)
                     .Select(option => option.Value)

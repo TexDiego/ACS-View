@@ -10,7 +10,7 @@
     xmlns:system="clr-namespace:System;assembly=mscorlib"
     x:TypeArguments="dto:PatientListItemDto"
     x:DataType="vm:ParentPatientPickerViewModel"
-    WidthRequest="{Binding Width}"
+    WidthRequest="{Binding PopupWidth}"
     CanBeDismissedByTappingOutsideOfPopup="True"
     BackgroundColor="Transparent"
     Padding="0">

@@ -16,8 +16,10 @@
         Command="{Binding Reload}">
         <Grid Padding="16,0">
             <CollectionView
+                x:Name="BolsaFamiliaCollectionView"
                 ItemsSource="{Binding Groups}"
-                VerticalScrollBarVisibility="Never">
+                VerticalScrollBarVisibility="Never"
+                Scrolled="CollectionView_Scrolled">
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:BolsaFamiliaGroup">
@@ -104,6 +106,10 @@
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="80" BackgroundColor="Transparent"/>
+                </CollectionView.Footer>
             </CollectionView>
 
             <VerticalStackLayout
@@ -139,6 +145,11 @@
                         FontAttributes="Bold"/>
                 </VerticalStackLayout>
             </Border>
+
+            <ImageButton
+                x:Name="BackToTopButton"
+                Style="{StaticResource FloatingBackToTopButton}"
+                Clicked="BackToTopButton_Clicked"/>
         </Grid>
     </RefreshView>
 </ContentPage>

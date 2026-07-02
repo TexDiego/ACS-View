@@ -71,7 +71,8 @@
                 IsSwipeEnabled="{Binding CanSwipe}"
                 Loop="True"
                 HeightRequest="112"
-                Margin="0,5">
+                Margin="0,5"
+                HorizontalScrollBarVisibility="Never">
 
                 <CarouselView.ItemTemplate>
                     <DataTemplate x:DataType="model:House">

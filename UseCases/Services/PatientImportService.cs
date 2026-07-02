@@ -92,7 +92,10 @@ namespace ACS_View.UseCases.Services
                 var susNumber = GetCell(row, columns.SusIndex);
                 var normalizedSus = NormalizeSus(susNumber);
                 var motherName = GetCell(row, columns.MotherIndex).Trim();
+                var fatherName = GetCell(row, columns.FatherIndex).Trim();
+                var observation = GetCell(row, columns.ObservationIndex).Trim();
                 var birthDate = ParseDate(GetCell(row, columns.BirthDateIndex));
+                var importedSex = ParseSex(GetCell(row, columns.SexIndex));
                 Patient? existingPatient = null;
                 PatientIdentityKey identityKey = default;
                 string? importKey;
@@ -123,22 +126,10 @@ namespace ACS_View.UseCases.Services
                 }
 
                 var patient = existingPatient ?? new Patient();
-
-                patient.Name = name.Trim();
-                if (!string.IsNullOrWhiteSpace(susNumber) || patient.Id == 0)
-                {
-                    patient.SusNumber = susNumber.Trim();
-                }
-
-                patient.MotherName = motherName;
-                patient.FatherName = GetCell(row, columns.FatherIndex).Trim();
-                patient.Observacao = GetCell(row, columns.ObservationIndex).Trim();
-
-                var importedSex = ParseSex(GetCell(row, columns.SexIndex));
-                if (!string.IsNullOrWhiteSpace(importedSex))
-                {
-                    patient.Sexo = importedSex;
-                }
+                var isExistingPatient = patient.Id > 0;
+                var patientChanged = isExistingPatient
+                    ? FillMissingPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate)
+                    : SetImportedPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate);
 
                 var importedConditions = columns.ConditionColumnIndexes
                     .Where(map => ParseBoolean(GetCell(row, map.ColumnIndex)))
@@ -159,18 +150,14 @@ namespace ACS_View.UseCases.Services
                     .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
                     .ToList();
 
-                if (birthDate is not null)
-                {
-                    patient.BirthDate = birthDate.Value;
-                }
-
-                var isExistingPatient = patient.Id > 0;
-
                 try
                 {
                     if (isExistingPatient)
                     {
-                        await patientService.UpdatePatient(patient);
+                        if (patientChanged)
+                        {
+                            await patientService.UpdatePatient(patient);
+                        }
                     }
                     else
                     {
@@ -195,8 +182,10 @@ namespace ACS_View.UseCases.Services
                         importedPatientKeys.Add(importKey);
                     }
 
-                    await SyncImportedConditionsAsync(patient.Id, mappedHealthConditions, importedConditions);
-                    await SyncImportedBolsaFamiliaAsync(patient.Id, importedBolsaFamilia);
+                    var conditionsChanged = isExistingPatient
+                        ? await AddMissingImportedConditionsAsync(patient.Id, importedConditions)
+                        : await SyncImportedConditionsAsync(patient.Id, mappedHealthConditions, importedConditions);
+                    var bolsaFamiliaChanged = await AddMissingImportedBolsaFamiliaAsync(patient.Id, importedBolsaFamilia);
 
                     var importedStreet = GetCell(row, columns.PatientStreetIndex);
                     var importedNeighborhood = GetCell(row, columns.PatientNeighborhoodIndex);
@@ -233,7 +222,14 @@ namespace ACS_View.UseCases.Services
 
                     if (isExistingPatient)
                     {
-                        result.UpdatedCount++;
+                        if (patientChanged || conditionsChanged || bolsaFamiliaChanged)
+                        {
+                            result.UpdatedCount++;
+                        }
+                        else
+                        {
+                            result.IgnoredCount++;
+                        }
                     }
                     else
                     {
@@ -269,6 +265,92 @@ namespace ACS_View.UseCases.Services
             return result;
         }
 
+        private static bool SetImportedPatientFields(
+            Patient patient,
+            string name,
+            string susNumber,
+            string motherName,
+            string fatherName,
+            string observation,
+            string? importedSex,
+            DateTime? birthDate)
+        {
+            patient.Name = name.Trim();
+            patient.SusNumber = susNumber.Trim();
+            patient.MotherName = motherName.Trim();
+            patient.FatherName = fatherName.Trim();
+            patient.Observacao = observation.Trim();
+
+            if (!string.IsNullOrWhiteSpace(importedSex))
+            {
+                patient.Sexo = importedSex;
+            }
+
+            if (birthDate is not null)
+            {
+                patient.BirthDate = birthDate.Value;
+            }
+
+            return true;
+        }
+
+        private static bool FillMissingPatientFields(
+            Patient patient,
+            string name,
+            string susNumber,
+            string motherName,
+            string fatherName,
+            string observation,
+            string? importedSex,
+            DateTime? birthDate)
+        {
+            var changed = false;
+
+            if (string.IsNullOrWhiteSpace(patient.Name) && !string.IsNullOrWhiteSpace(name))
+            {
+                patient.Name = name.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(patient.SusNumber) && !string.IsNullOrWhiteSpace(susNumber))
+            {
+                patient.SusNumber = susNumber.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(patient.MotherName) && !string.IsNullOrWhiteSpace(motherName))
+            {
+                patient.MotherName = motherName.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(patient.FatherName) && !string.IsNullOrWhiteSpace(fatherName))
+            {
+                patient.FatherName = fatherName.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(patient.Observacao) && !string.IsNullOrWhiteSpace(observation))
+            {
+                patient.Observacao = observation.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(patient.Sexo) && !string.IsNullOrWhiteSpace(importedSex))
+            {
+                patient.Sexo = importedSex;
+                changed = true;
+            }
+
+            if (birthDate is not null && !HasValidBirthDate(patient.BirthDate))
+            {
+                patient.BirthDate = birthDate.Value;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         private static ImportColumns ResolveColumns(
             IReadOnlyDictionary<string, int> headerMap,
             PatientImportColumnMapDto columnMap)
@@ -301,7 +383,7 @@ namespace ACS_View.UseCases.Services
             };
         }
 
-        private async Task SyncImportedConditionsAsync(
+        private async Task<bool> SyncImportedConditionsAsync(
             int patientId,
             IEnumerable<string> mappedConditionNames,
             IEnumerable<string> selectedConditionNames)
@@ -312,13 +394,15 @@ namespace ACS_View.UseCases.Services
 
             if (mappedKeys.Count == 0)
             {
-                return;
+                return false;
             }
 
+            var changed = false;
             var currentConditions = await conditionsRepository.GetConditionsByPatientIdAsync(patientId);
             foreach (var condition in currentConditions.Where(condition => mappedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description))))
             {
                 await conditionsRepository.DeleteConditionAsync(condition.Id);
+                changed = true;
             }
 
             foreach (var conditionName in selectedConditionNames)
@@ -328,15 +412,62 @@ namespace ACS_View.UseCases.Services
                     PatientId = patientId,
                     Description = conditionName
                 });
+                changed = true;
             }
+
+            return changed;
         }
 
-        private async Task SyncImportedBolsaFamiliaAsync(int patientId, bool isBeneficiary)
+        private async Task<bool> AddMissingImportedConditionsAsync(
+            int patientId,
+            IEnumerable<string> selectedConditionNames)
+        {
+            var selectedConditions = selectedConditionNames
+                .Where(condition => !string.IsNullOrWhiteSpace(condition))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (selectedConditions.Count == 0)
+            {
+                return false;
+            }
+
+            var currentConditions = await conditionsRepository.GetConditionsByPatientIdAsync(patientId);
+            var currentKeys = currentConditions
+                .Select(condition => HealthConditionCatalog.GetKey(condition.Description))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var changed = false;
+            foreach (var conditionName in selectedConditions)
+            {
+                var conditionKey = HealthConditionCatalog.GetKey(conditionName);
+                if (currentKeys.Contains(conditionKey))
+                {
+                    continue;
+                }
+
+                await conditionsRepository.InsertConditionAsync(new PatientConditions
+                {
+                    PatientId = patientId,
+                    Description = conditionName
+                });
+                currentKeys.Add(conditionKey);
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private async Task<bool> AddMissingImportedBolsaFamiliaAsync(int patientId, bool isBeneficiary)
         {
             if (!isBeneficiary)
             {
-                await bolsaFamiliaRepository.DeleteByPatientIdAsync(patientId);
-                return;
+                return false;
+            }
+
+            if (await bolsaFamiliaRepository.GetByPatientIdAsync(patientId) is not null)
+            {
+                return false;
             }
 
             await bolsaFamiliaRepository.UpsertAsync(new PatientBolsaFamilia
@@ -345,6 +476,7 @@ namespace ACS_View.UseCases.Services
                 ResponsiblePatientId = patientId,
                 NisNumber = string.Empty
             });
+            return true;
         }
 
         private static (int RowIndex, Dictionary<string, int> HeaderMap)? FindHeaderRow(

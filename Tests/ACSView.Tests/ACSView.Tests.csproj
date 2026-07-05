@@ -12,6 +12,13 @@
     <Compile Include="..\..\Domain\ValueObjects\DashboardFilterKeys.cs" Link="Domain\ValueObjects\DashboardFilterKeys.cs" />
     <Compile Include="..\..\Domain\ValueObjects\DashboardMetricCombinationRules.cs" Link="Domain\ValueObjects\DashboardMetricCombinationRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\HealthConditionCatalog.cs" Link="Domain\ValueObjects\HealthConditionCatalog.cs" />
+    <Compile Include="..\..\Domain\Enums\VaccineSectionType.cs" Link="Domain\Enums\VaccineSectionType.cs" />
+    <Compile Include="..\..\Domain\Enums\VaccineStatus.cs" Link="Domain\Enums\VaccineStatus.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VaccineDoseCatalog.cs" Link="Domain\ValueObjects\VaccineDoseCatalog.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VaccineDoseDefinition.cs" Link="Domain\ValueObjects\VaccineDoseDefinition.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VaccineDoseKeys.cs" Link="Domain\ValueObjects\VaccineDoseKeys.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VaccineStatusCalculator.cs" Link="Domain\ValueObjects\VaccineStatusCalculator.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\CepNumberRules.cs" Link="Domain\ValueObjects\CepNumberRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\NisNumberRules.cs" Link="Domain\ValueObjects\NisNumberRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\StreetAddressParser.cs" Link="Domain\ValueObjects\StreetAddressParser.cs" />
   </ItemGroup>

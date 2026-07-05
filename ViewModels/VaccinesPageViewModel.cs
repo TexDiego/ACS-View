@@ -1,3 +1,4 @@
+using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Enums;
@@ -18,81 +19,56 @@ namespace ACS_View.ViewModels
         private int _loadVersion;
 
         [ObservableProperty] private Patient? healthRecord;
-        [ObservableProperty] private VaccineSchedulePresentation? vaccines;
         [ObservableProperty] private bool hasPatient;
-        [ObservableProperty] private ObservableCollection<VaccineSectionType> vaccineSections = [];
+        [ObservableProperty] private bool showOnlyLate;
+        [ObservableProperty] private int appliedCount;
+        [ObservableProperty] private int pendingCount;
+        [ObservableProperty] private int lateCount;
 
-        public ICommand OpenVaccineInfo { get; }
+        public ObservableCollection<VaccineDoseCardViewModel> Doses { get; } = [];
+        public ObservableCollection<VaccineDoseCardViewModel> FilteredDoses { get; } = [];
 
-        #region Cores por situação vacinal
+        public ICommand RegisterApplicationCommand { get; }
+        public ICommand EditApplicationCommand { get; }
+        public ICommand RemoveApplicationCommand { get; }
+        public ICommand OpenVaccineInfoCommand { get; }
+        public ICommand ToggleLateFilterCommand { get; }
 
-        public Color SituacaoRN => SituacaoVacinal(VaccineDoseKeys.BcgInfantil, VaccineDoseKeys.HepatiteBNascimento);
-        public Color Situacao2Meses => SituacaoVacinal(VaccineDoseKeys.Penta1, VaccineDoseKeys.Vip1, VaccineDoseKeys.Pneumo10_1, VaccineDoseKeys.Vrh1);
-        public Color Situacao3Meses => SituacaoVacinal(VaccineDoseKeys.MeningoC1);
-        public Color Situacao4Meses => SituacaoVacinal(VaccineDoseKeys.Penta2, VaccineDoseKeys.Vip2, VaccineDoseKeys.Pneumo10_2, VaccineDoseKeys.Vrh2);
-        public Color Situacao5Meses => SituacaoVacinal(VaccineDoseKeys.MeningoC2);
-        public Color Situacao6Meses => SituacaoVacinal(VaccineDoseKeys.Penta3, VaccineDoseKeys.Vip3, VaccineDoseKeys.Covid1);
-        public Color Situacao7Meses => SituacaoVacinal(VaccineDoseKeys.Covid2);
-        public Color Situacao9Meses => SituacaoVacinal(VaccineDoseKeys.FebreAmarela1);
-        public Color Situacao12Meses => SituacaoVacinal(VaccineDoseKeys.Pneumo10_3, VaccineDoseKeys.MeningoC3, VaccineDoseKeys.TripliceViralInfantil);
-        public Color Situacao15Meses => SituacaoVacinal(VaccineDoseKeys.Dtp1, VaccineDoseKeys.Vip4, VaccineDoseKeys.HepatiteA, VaccineDoseKeys.TetraViral);
-        public Color Situacao4Anos => SituacaoVacinal(VaccineDoseKeys.Dtp2, VaccineDoseKeys.FebreAmarela2, VaccineDoseKeys.Varicela);
-        public Color Situacao5Anos => SituacaoVacinal(VaccineDoseKeys.FebreAmarela3, VaccineDoseKeys.Pneumo23);
-        public Color Situacao7Anos => SituacaoVacinal(VaccineDoseKeys.DtInfantil);
-        public Color Situacao9Anos => SituacaoVacinal(VaccineDoseKeys.HpvInfantil);
-
-        public Color SituacaoHBAdolescente => SituacaoVacinal(VaccineDoseKeys.HepatiteBAdolescente);
-        public Color SituacaoDTAdolescente => SituacaoVacinal(VaccineDoseKeys.DtAdolescente);
-        public Color SituacaoFAAdolescente => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaAdolescente);
-        public Color SituacaoTripliceViralAdolescente => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdolescente);
-        public Color SituacaoHPVAdolescente => SituacaoVacinal(VaccineDoseKeys.HpvAdolescente);
-        public Color SituacaoACWYAdolescente => SituacaoVacinal(VaccineDoseKeys.Acwy);
-
-        public Color SituacaoHepatiteBAdulto => SituacaoVacinal(VaccineDoseKeys.HepatiteBAdulto);
-        public Color SituacaoDTAdulto => SituacaoVacinal(VaccineDoseKeys.DtAdulto);
-        public Color SituacaoFebreAmarelaAdulto => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaAdulto);
-        public Color SituacaoHPVAdulto => SituacaoVacinal(VaccineDoseKeys.HpvAdulto);
-        public Color SituacaoTripliceViral1Adulto => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdulto20A29);
-        public Color SituacaoTripliceViral2Adulto => SituacaoVacinal(VaccineDoseKeys.TripliceViralAdulto30A59);
-        public Color SituacaodTpaAdulto => SituacaoVacinal(VaccineDoseKeys.DtpaAdulto);
-
-        public Color SituacaoHepatiteBIdoso => SituacaoVacinal(VaccineDoseKeys.HepatiteBIdoso);
-        public Color SituacaodTIdoso => SituacaoVacinal(VaccineDoseKeys.DtIdoso);
-        public Color SituacaoFebreAmarelaIdoso => SituacaoVacinal(VaccineDoseKeys.FebreAmarelaIdoso);
-        public Color SituacaodTpaIdoso => SituacaoVacinal(VaccineDoseKeys.DtpaIdoso);
-
-        public Color SituacaoHBGestante => SituacaoVacinal(VaccineDoseKeys.HepatiteBGestante);
-        public Color SituacaodTGestante => SituacaoVacinal(VaccineDoseKeys.DtGestante);
-        public Color SituacaodTpaGestante => SituacaoVacinal(VaccineDoseKeys.DtpaGestante);
-
-        #endregion
+        public string LateFilterText => ShowOnlyLate ? "Mostrar todas" : "Apenas atrasadas";
 
         public VaccinesPageViewModel(IPatientService patientService, IVaccineService vaccineService, IPopupService popupService)
         {
             _patientService = patientService;
             _vaccineService = vaccineService;
             _popupService = popupService;
-            OpenVaccineInfo = new Command<string>(async vaccine => await OpenVaccineInfoCommand(vaccine));
+
+            RegisterApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenApplicationPopupAsync(dose));
+            EditApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenApplicationPopupAsync(dose));
+            RemoveApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await RemoveApplicationAsync(dose));
+            OpenVaccineInfoCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenVaccineInfoAsync(dose));
+            ToggleLateFilterCommand = new Command(() => ShowOnlyLate = !ShowOnlyLate);
         }
 
         public async Task LoadPatientAsync(int patientId)
         {
             if (patientId < 0)
             {
-                await DisplayAlertAsync("Erro", "Paciente inválido.", "Voltar");
+                await DisplayAlertAsync("Erro", "Paciente invalido.", "Voltar");
                 return;
             }
 
-            if (_loadedPatientId == patientId && HealthRecord is not null && Vaccines is not null)
+            if (_loadedPatientId == patientId && HealthRecord is not null && Doses.Count > 0)
             {
                 return;
             }
 
             var loadVersion = Interlocked.Increment(ref _loadVersion);
             HealthRecord = null;
-            Vaccines = null;
             HasPatient = false;
             IsLoading = true;
+            Doses.Clear();
+            FilteredDoses.Clear();
+            RefreshSummaries();
 
             try
             {
@@ -105,7 +81,7 @@ namespace ACS_View.ViewModels
 
                 if (patient is null)
                 {
-                    await DisplayAlertAsync("Erro", "Paciente não encontrado.", "Voltar");
+                    await DisplayAlertAsync("Erro", "Paciente nao encontrado.", "Voltar");
                     return;
                 }
 
@@ -118,14 +94,20 @@ namespace ACS_View.ViewModels
 
                 if (schedule is null)
                 {
-                    await DisplayAlertAsync("Erro", "Cartão vacinal não encontrado.", "Voltar");
+                    await DisplayAlertAsync("Erro", "Cartao vacinal nao encontrado.", "Voltar");
                     return;
                 }
 
                 HealthRecord = patient;
-                Vaccines = new VaccineSchedulePresentation(schedule);
+                foreach (var dose in SortDoses(schedule.Doses))
+                {
+                    Doses.Add(new VaccineDoseCardViewModel(dose));
+                }
+
                 HasPatient = true;
                 _loadedPatientId = patientId;
+                RefreshSummaries();
+                RefreshFilteredDoses();
             }
             finally
             {
@@ -136,123 +118,246 @@ namespace ACS_View.ViewModels
             }
         }
 
-        partial void OnVaccinesChanged(VaccineSchedulePresentation? value)
+        partial void OnShowOnlyLateChanged(bool value)
         {
-            RefreshVaccineSections(value);
-            OnPropertyChanged(string.Empty);
+            OnPropertyChanged(nameof(LateFilterText));
+            RefreshFilteredDoses();
         }
 
-        private void RefreshVaccineSections(VaccineSchedulePresentation? value)
+        private async Task OpenApplicationPopupAsync(VaccineDoseCardViewModel? card)
         {
-            VaccineSections.Clear();
-
-            if (value is null)
+            if (card is null || _loadedPatientId is not int patientId || HealthRecord is null)
             {
                 return;
             }
 
-            if (value.IsChild)
+            var result = await _popupService.ShowAsync<VaccineApplicationRequestDto>(
+                new VaccineApplicationPopup(patientId, card.Dose));
+
+            if (result.WasDismissed || result.Result is not VaccineApplicationRequestDto request)
             {
-                VaccineSections.Add(VaccineSectionType.Child);
+                return;
             }
 
-            if (value.IsYoung)
-            {
-                VaccineSections.Add(VaccineSectionType.Teen);
-            }
-
-            if (value.IsAdult)
-            {
-                VaccineSections.Add(VaccineSectionType.Adult);
-            }
-
-            if (value.IsElderly)
-            {
-                VaccineSections.Add(VaccineSectionType.Elderly);
-            }
-
-            if (value.IsPregnant)
-            {
-                VaccineSections.Add(VaccineSectionType.Pregnant);
-            }
+            await ApplyApplicationOptimisticallyAsync(card, request);
         }
 
-        private bool GetVaccineStatus(string vaccine)
+        private async Task OpenVaccineInfoAsync(VaccineDoseCardViewModel? card)
         {
-            return Vaccines?.GetVaccineStatus(vaccine) ?? false;
+            if (card is null)
+            {
+                return;
+            }
+
+            await _popupService.ShowAsync(new VaccinesInfo(card.Dose));
         }
 
-        private Color SituacaoVacinal(params string[] doseKeys)
+        private async Task ApplyApplicationOptimisticallyAsync(VaccineDoseCardViewModel card, VaccineApplicationRequestDto request)
         {
-            if (Vaccines is null || doseKeys.Length == 0)
+            if (HealthRecord is null)
             {
-                return ThemeColors.ControlPressed;
+                return;
             }
 
-            var statuses = doseKeys.Select(GetVaccineStatus).ToArray();
-            if (statuses.All(status => status))
-            {
-                return Colors.Green;
-            }
+            var previous = card.Dose;
+            var optimistic = CreateDoseDto(previous, request.ApplicationDate, request.LotNumber, request.Notes);
+            UpdateCard(card, optimistic);
 
-            if (statuses.All(status => !status))
-            {
-                return Colors.Red;
-            }
-
-            return Colors.Orange;
-        }
-
-        private async Task OpenVaccineInfoCommand(string vaccine)
-        {
             try
             {
-                if (Vaccines is null)
-                {
-                    return;
-                }
-
-                var vaccineChecked = GetVaccineStatus(vaccine);
-                var popup = new VaccinesInfo(vaccine, vaccineChecked);
-                var status = await _popupService.ShowAsync<bool>(popup);
-
-                if (status.WasDismissed)
-                {
-                    return;
-                }
-
-                if (status.Result is bool vaccineStatus && vaccineStatus != vaccineChecked)
-                {
-                    await UpdateVaccine(vaccine, vaccineStatus);
-                }
+                await _vaccineService.ApplyDoseAsync(request);
             }
             catch (Exception ex)
             {
+                UpdateCard(card, previous);
                 await DisplayAlertAsync("Erro", ex.Message, "Voltar");
             }
         }
 
-        private async Task UpdateVaccine(string vaccine, bool vaccineStatus)
+        private async Task RemoveApplicationAsync(VaccineDoseCardViewModel? card)
         {
+            if (card is null || _loadedPatientId is not int patientId || !card.IsApplied)
+            {
+                return;
+            }
+
+            var shouldRemove = await DisplayConfirmationAsync(
+                "Remover registro",
+                "Deseja remover a aplicacao registrada para esta dose?",
+                "Remover");
+
+            if (!shouldRemove)
+            {
+                return;
+            }
+
+            var previous = card.Dose;
+            var optimistic = CreateDoseDto(previous, null, string.Empty, string.Empty);
+            UpdateCard(card, optimistic);
+
             try
             {
-                if (_loadedPatientId is not int patientId)
-                {
-                    return;
-                }
-
-                await _vaccineService.SetDoseStatusAsync(patientId, vaccine, vaccineStatus);
-                var schedule = await _vaccineService.GetScheduleForPatientAsync(patientId);
-
-                if (schedule is not null)
-                {
-                    Vaccines = new VaccineSchedulePresentation(schedule);
-                }
+                await _vaccineService.RemoveDoseApplicationAsync(patientId, previous.Definition.DoseKey);
             }
             catch (Exception ex)
             {
+                UpdateCard(card, previous);
                 await DisplayAlertAsync("Erro", ex.Message, "Voltar");
             }
+        }
+
+        private PatientVaccineDoseDto CreateDoseDto(
+            PatientVaccineDoseDto previous,
+            DateTime? applicationDate,
+            string lotNumber,
+            string notes)
+        {
+            var status = VaccineStatusCalculator.Calculate(
+                HealthRecord!.BirthDate,
+                DateTime.Today,
+                previous.Definition,
+                applicationDate);
+
+            return previous with
+            {
+                ApplicationDate = applicationDate?.Date,
+                LotNumber = lotNumber.Trim(),
+                Notes = notes.Trim(),
+                Status = status
+            };
+        }
+
+        private void UpdateCard(VaccineDoseCardViewModel card, PatientVaccineDoseDto dose)
+        {
+            card.Dose = dose;
+            RefreshSummaries();
+            RefreshFilteredDoses();
+        }
+
+        private void RefreshSummaries()
+        {
+            AppliedCount = Doses.Count(dose => dose.Status is VaccineStatus.Applied or VaccineStatus.AppliedLate);
+            LateCount = Doses.Count(dose => dose.Status == VaccineStatus.Late);
+            PendingCount = Doses.Count(dose => dose.Status == VaccineStatus.Due);
+        }
+
+        private void RefreshFilteredDoses()
+        {
+            FilteredDoses.Clear();
+            var source = ShowOnlyLate
+                ? Doses.Where(dose => dose.Status == VaccineStatus.Late)
+                : Doses;
+
+            foreach (var dose in source.OrderBy(dose => GetStatusSort(dose.Status)).ThenBy(dose => dose.RecommendedDate))
+            {
+                FilteredDoses.Add(dose);
+            }
+        }
+
+        private static IEnumerable<PatientVaccineDoseDto> SortDoses(IEnumerable<PatientVaccineDoseDto> doses)
+        {
+            return doses
+                .OrderBy(dose => GetStatusSort(dose.Status))
+                .ThenBy(dose => dose.RecommendedDate)
+                .ThenBy(dose => dose.Definition.VaccineName)
+                .ThenBy(dose => dose.Definition.DoseLabel);
+        }
+
+        private static int GetStatusSort(VaccineStatus status)
+        {
+            return status switch
+            {
+                VaccineStatus.Late => 0,
+                VaccineStatus.Due => 1,
+                VaccineStatus.NotYetDue => 2,
+                VaccineStatus.AppliedLate => 3,
+                VaccineStatus.Applied => 4,
+                _ => 5
+            };
+        }
+    }
+
+    public partial class VaccineDoseCardViewModel : ObservableObject
+    {
+        [ObservableProperty] private PatientVaccineDoseDto dose;
+
+        public VaccineDoseCardViewModel(PatientVaccineDoseDto dose)
+        {
+            this.dose = dose;
+        }
+
+        public VaccineStatus Status => Dose.Status;
+        public string VaccineName => Dose.Definition.VaccineName;
+        public string DoseName => Dose.Definition.DoseLabel;
+        public string AgeLabel => Dose.Definition.AgeLabel ?? FormatRecommendedAge(Dose.Definition.MinAgeMonths);
+        public DateTime RecommendedDate => Dose.RecommendedDate;
+        public bool IsApplied => Dose.IsApplied;
+        public bool CanRemove => Dose.IsApplied;
+        public string PrimaryActionText => Dose.IsApplied ? "Editar aplicacao" : "Registrar aplicacao";
+        public string StatusText => Dose.Status switch
+        {
+            VaccineStatus.NotYetDue => "Ainda nao indicada",
+            VaccineStatus.Due => "Pendente",
+            VaccineStatus.Late => "Atrasada",
+            VaccineStatus.Applied => "Aplicada",
+            VaccineStatus.AppliedLate => "Aplicada com atraso",
+            _ => "Indefinida"
+        };
+        public string ApplicationDateText => Dose.ApplicationDate.HasValue
+            ? $"Aplicada em {Dose.ApplicationDate.Value:dd/MM/yyyy}"
+            : "Sem registro de aplicacao";
+        public string DeadlineText => Dose.MaximumDate.HasValue
+            ? $"Prazo maximo: {Dose.MaximumDate.Value:dd/MM/yyyy}"
+            : $"Recomendada em: {Dose.RecommendedDate:dd/MM/yyyy}";
+        public string NotesText => string.IsNullOrWhiteSpace(Dose.Notes) ? string.Empty : Dose.Notes;
+        public bool HasNotes => !string.IsNullOrWhiteSpace(Dose.Notes);
+        public Color StatusColor => Dose.Status switch
+        {
+            VaccineStatus.Late => Colors.Red,
+            VaccineStatus.AppliedLate => Colors.Orange,
+            VaccineStatus.Applied => Colors.Green,
+            VaccineStatus.Due => Colors.Goldenrod,
+            _ => Colors.Gray
+        };
+
+        partial void OnDoseChanged(PatientVaccineDoseDto value)
+        {
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(VaccineName));
+            OnPropertyChanged(nameof(DoseName));
+            OnPropertyChanged(nameof(AgeLabel));
+            OnPropertyChanged(nameof(RecommendedDate));
+            OnPropertyChanged(nameof(IsApplied));
+            OnPropertyChanged(nameof(CanRemove));
+            OnPropertyChanged(nameof(PrimaryActionText));
+            OnPropertyChanged(nameof(StatusText));
+            OnPropertyChanged(nameof(ApplicationDateText));
+            OnPropertyChanged(nameof(DeadlineText));
+            OnPropertyChanged(nameof(NotesText));
+            OnPropertyChanged(nameof(HasNotes));
+            OnPropertyChanged(nameof(StatusColor));
+        }
+
+        private static string FormatRecommendedAge(int? months)
+        {
+            if (!months.HasValue)
+            {
+                return "Qualquer idade";
+            }
+
+            if (months.Value == 0)
+            {
+                return "Ao nascer";
+            }
+
+            if (months.Value < 12)
+            {
+                return $"{months.Value} meses";
+            }
+
+            return months.Value % 12 == 0
+                ? $"{months.Value / 12} anos"
+                : $"{months.Value} meses";
         }
     }
 }

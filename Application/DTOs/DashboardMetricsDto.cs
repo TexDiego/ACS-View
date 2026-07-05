@@ -11,6 +11,7 @@ namespace ACS_View.Application.DTOs
         public int TotalBolsaFamilia { get; set; }
         public int TotalIdosos { get; set; }
         public int TotalCriancasMenoresDe6 { get; set; }
+        public int TotalCriancasVacinacaoAtrasada { get; set; }
         public int TotalMulheres25a64 { get; set; }
         public int TotalInativos { get; set; }
     }

@@ -1,9 +1,23 @@
 using ACS_View.Domain.ValueObjects;
+using System.Globalization;
 
 namespace ACS_View.Application.Querying;
 
 public static class PatientFilterSqlBuilder
 {
+    private const string PatientBirthDateSql = """
+        CASE
+            WHEN p.BirthDate IS NULL
+                THEN NULL
+            WHEN typeof(p.BirthDate) IN ('integer', 'real')
+                 OR CAST(p.BirthDate AS INTEGER) > 100000000000
+                THEN date((CAST(p.BirthDate AS INTEGER) / 10000000) - 62135596800, 'unixepoch')
+            WHEN CAST(p.BirthDate AS TEXT) GLOB '??/??/????*'
+                THEN date(substr(CAST(p.BirthDate AS TEXT), 7, 4) || '-' || substr(CAST(p.BirthDate AS TEXT), 4, 2) || '-' || substr(CAST(p.BirthDate AS TEXT), 1, 2))
+            ELSE date(p.BirthDate)
+        END
+        """;
+
     public static void AddFilterClause(string? filterKey, List<string> whereParts, List<object> parameters)
     {
         var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
@@ -70,6 +84,9 @@ public static class PatientFilterSqlBuilder
             case DashboardFilterKeys.ChildrenUnder6:
                 whereParts.Add("p.BirthDate > ?");
                 parameters.Add(today.AddYears(-6));
+                return;
+            case DashboardFilterKeys.ChildrenOverdueVaccines:
+                AddChildrenOverdueVaccinesClause(whereParts, parameters);
                 return;
             case DashboardFilterKeys.Women25To64:
                 whereParts.Add("p.Sexo = ? COLLATE NOCASE");
@@ -141,6 +158,43 @@ public static class PatientFilterSqlBuilder
                 """);
             parameters.Add(cid);
         }
+    }
+
+    private static void AddChildrenOverdueVaccinesClause(List<string> whereParts, List<object> parameters)
+    {
+        var overdueClauses = new List<string>();
+
+        foreach (var definition in VaccineDoseCatalog.GetRequiredChildDefinitions().Where(definition => definition.MaxAgeMonths.HasValue))
+        {
+            overdueClauses.Add("""
+                (
+                    date({0}, '+{1} months') < date('now', 'localtime')
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM PatientVaccineDose pvd
+                        WHERE pvd.UserId = p.UserId
+                          AND pvd.PatientId = p.Id
+                          AND pvd.DoseKey = ? COLLATE NOCASE
+                          AND COALESCE(pvd.IsApplied, 0) = 1
+                    )
+                )
+                """);
+            overdueClauses[^1] = string.Format(
+                CultureInfo.InvariantCulture,
+                overdueClauses[^1],
+                PatientBirthDateSql,
+                definition.MaxAgeMonths!.Value);
+            parameters.Add(definition.DoseKey);
+        }
+
+        if (overdueClauses.Count == 0)
+        {
+            whereParts.Add("1 = 0");
+            return;
+        }
+
+        whereParts.Add($"date({PatientBirthDateSql}, '+121 months') > date('now', 'localtime')");
+        whereParts.Add($"({string.Join(" OR ", overdueClauses)})");
     }
 
     private static void AddModifierClauses(

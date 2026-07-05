@@ -2,121 +2,112 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+             xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              x:DataType="vm:AllVisitsViewModel"
              x:Class="ACS_View.Views.AllVisits"
              Shell.NavBarIsVisible="True"
              Style="{StaticResource PageBackground}"
              Title="Visitas">
 
-    <Grid Padding="0" RowDefinitions="*,auto" RowSpacing="14">
-
+    <Grid RowDefinitions="*" Padding="{StaticResource PagePadding}">
         <CollectionView
             x:Name="VisitsCollectionView"
-            Margin="{StaticResource PagePadding}"
-            Grid.Row="0"
-            ItemsSource="{Binding VisitsList}"
-            ItemsUpdatingScrollMode="KeepLastItemInView"
+            ItemsSource="{Binding SuggestionsPreview}"
             VerticalScrollBarVisibility="Never"
             Scrolled="CollectionView_Scrolled">
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="model:Visits">
+            <CollectionView.Header>
+                <VerticalStackLayout Spacing="14" Margin="0,0,0,12">
                     <Border Style="{StaticResource CardBorder}">
+                        <Grid RowDefinitions="auto,auto" RowSpacing="12">
+                            <Label
+                                Grid.Row="0"
+                                Text="Resumo do mês"
+                                Style="{StaticResource SectionTitle}"/>
+
+                            <FlexLayout
+                                Grid.Row="1"
+                                BindableLayout.ItemsSource="{Binding Metrics}"
+                                Direction="Row"
+                                Wrap="Wrap"
+                                AlignItems="Stretch"
+                                AlignContent="Stretch"
+                                JustifyContent="SpaceEvenly">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:VisitOverviewMetricCard">
+                                        <Border
+                                            WidthRequest="140"
+                                            Margin="5"
+                                            Padding="10"
+                                            StrokeShape="RoundRectangle 8"
+                                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="{Binding Value}" Style="{StaticResource MetricNumber}" FontSize="22"/>
+                                                <Label Text="{Binding Title}" Style="{StaticResource BodyMuted}" FontSize="12" HorizontalTextAlignment="Center"/>
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button
+                            Text="Registros"
+                            Style="{StaticResource Buttons}"
+                            Command="{Binding OpenRecordsCommand}"/>
+                        <Button
+                            Grid.Column="1"
+                            Text="Sugestões"
+                            Style="{StaticResource PrimaryOutlineButton}"
+                            Command="{Binding OpenSuggestionsCommand}"/>
+                    </Grid>
+
+                    <Label
+                        Text="Prioridades de visita"
+                        Style="{StaticResource SectionTitle}"/>
+                </VerticalStackLayout>
+            </CollectionView.Header>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:VisitSuggestionDto">
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                CommandParameter="{Binding Id}" />
+                                CommandParameter="{Binding HouseId}" />
                         </Border.GestureRecognizers>
 
-                        <Grid ColumnDefinitions="*,44" ColumnSpacing="12">
-                            <VerticalStackLayout Grid.Column="0" Spacing="6">
-                                <Label
-                                    Text="{Binding Date, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
-                                    Style="{StaticResource CardTitle}"/>
-
-                                <Label
-                                    Text="{Binding Address}"
-                                    Style="{StaticResource BodyMuted}"/>
-
-                                <Label
-                                    Text="{Binding Description}"
-                                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
-                                    FontSize="13"
-                                    FontAttributes="Bold"/>
+                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}"/>
+                                <Label Text="{Binding Reason}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding PriorityLabel}" Style="{StaticResource BodyMuted}" FontSize="12"/>
                             </VerticalStackLayout>
 
-                            <ImageButton
-                                Grid.Column="1"
-                                Source="bin"
-                                HeightRequest="25"
-                                WidthRequest="25"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisit}"
-                                CommandParameter="{Binding Id}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End">
+                                <Label Text="{Binding MissingVisits}" Style="{StaticResource MetricNumber}" HorizontalTextAlignment="End"/>
+                                <Label Text="faltam" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                            </VerticalStackLayout>
                         </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
-        </CollectionView>
 
-        <VerticalStackLayout
-            Spacing="10"
-            Grid.Row="1">
-
-            <Label Text="Sugestões de visitas" Style="{StaticResource SectionTitle}" HorizontalOptions="Center" Margin="10,5,10,0"/>
-
-            <CarouselView
-                ItemsSource="{Binding HouseList}"
-                IsBounceEnabled="True"
-                IsSwipeEnabled="{Binding CanSwipe}"
-                Loop="True"
-                HeightRequest="112"
-                Margin="0,5"
-                HorizontalScrollBarVisibility="Never">
-
-                <CarouselView.ItemTemplate>
-                    <DataTemplate x:DataType="model:House">
-                        <Border
-                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}"
-                            StrokeShape="RoundRectangle 8"
-                            Padding="12"
-                            Margin="4,0">
-
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                    CommandParameter="{Binding CasaId}" />
-                            </Border.GestureRecognizers>
-
-                            <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                                <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}" FontSize="15"/>
-                                <HorizontalStackLayout Spacing="4">
-                                    <Label Text="Número" Style="{StaticResource BodyMuted}"/>
-                                    <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
-                                </HorizontalStackLayout>
-                                <Label
-                                    Text="{Binding Complemento}"
-                                    IsVisible="{Binding PossuiComplemento}"
-                                    Style="{StaticResource BodyMuted}"/>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CarouselView.ItemTemplate>
-
-                <CarouselView.EmptyView>
+            <CollectionView.EmptyView>
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
                     <Label
-                        Style="{StaticResource FieldLabel}"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center"
-                        Text="Todas as residências foram visitadas este mês!"/>
-                </CarouselView.EmptyView>
-            </CarouselView>
-        </VerticalStackLayout>
+                        Text="Nenhuma prioridade pendente para o mês atual."
+                        Style="{StaticResource BodyMuted}"
+                        HorizontalTextAlignment="Center"/>
+                </Border>
+            </CollectionView.EmptyView>
+        </CollectionView>
 
         <ImageButton
             x:Name="BackToTopButton"
-            Grid.RowSpan="2"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

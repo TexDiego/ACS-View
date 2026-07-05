@@ -26,36 +26,36 @@ public static class VaccineDoseCatalog
 
     public static readonly IReadOnlyList<VaccineDoseDefinition> Definitions =
     [
-        Dose(VaccineDoseKeys.BcgInfantil, "BCG", "Única", VaccineSectionType.Child, 0, 120, "Ao nascer", BcgDescription),
-        Dose(VaccineDoseKeys.HepatiteBNascimento, "Hepatite B", "Única", VaccineSectionType.Child, 0, 120, "Ao nascer", HepatitisBDescription),
-        Dose(VaccineDoseKeys.Penta1, "Penta", "1ª dose", VaccineSectionType.Child, 2, 120, "2 meses", PentaDescription),
-        Dose(VaccineDoseKeys.Vip1, "VIP", "1ª dose", VaccineSectionType.Child, 2, 120, "2 meses", VipDescription),
-        Dose(VaccineDoseKeys.Pneumo10_1, "Pneumo 10", "1ª dose", VaccineSectionType.Child, 2, 120, "2 meses", Pneumo10Description),
-        Dose(VaccineDoseKeys.Vrh1, "VRH", "1ª dose", VaccineSectionType.Child, 2, 120, "2 meses", VrhDescription),
-        Dose(VaccineDoseKeys.MeningoC1, "Meningo C", "1ª dose", VaccineSectionType.Child, 3, 120, "3 meses", MeningoCDescription),
-        Dose(VaccineDoseKeys.Penta2, "Penta", "2ª dose", VaccineSectionType.Child, 4, 120, "4 meses", PentaDescription),
-        Dose(VaccineDoseKeys.Vip2, "VIP", "2ª dose", VaccineSectionType.Child, 4, 120, "4 meses", VipDescription),
-        Dose(VaccineDoseKeys.Pneumo10_2, "Pneumo 10", "2ª dose", VaccineSectionType.Child, 4, 120, "4 meses", Pneumo10Description),
-        Dose(VaccineDoseKeys.Vrh2, "VRH", "2ª dose", VaccineSectionType.Child, 4, 120, "4 meses", VrhDescription),
-        Dose(VaccineDoseKeys.MeningoC2, "Meningo C", "2ª dose", VaccineSectionType.Child, 5, 120, "5 meses", MeningoCDescription),
-        Dose(VaccineDoseKeys.Penta3, "Penta", "3ª dose", VaccineSectionType.Child, 6, 120, "6 meses", PentaDescription),
-        Dose(VaccineDoseKeys.Vip3, "VIP", "3ª dose", VaccineSectionType.Child, 6, 120, "6 meses", VipDescription),
-        Dose(VaccineDoseKeys.Covid1, "Covid 19", "1ª dose", VaccineSectionType.Child, 6, 120, "6 meses", CovidDescription),
-        Dose(VaccineDoseKeys.Covid2, "Covid 19", "2ª dose", VaccineSectionType.Child, 7, 120, "7 meses", CovidDescription),
-        Dose(VaccineDoseKeys.FebreAmarela1, "Febre Amarela", "1ª dose", VaccineSectionType.Child, 9, 120, "9 meses", YellowFeverDescription),
-        Dose(VaccineDoseKeys.Pneumo10_3, "Pneumo 10", "Reforço", VaccineSectionType.Child, 12, 120, "1 ano", Pneumo10Description),
-        Dose(VaccineDoseKeys.MeningoC3, "Meningo C", "Reforço", VaccineSectionType.Child, 12, 120, "1 ano", MeningoCDescription),
-        Dose(VaccineDoseKeys.TripliceViralInfantil, "Tríplice Viral", "1ª dose", VaccineSectionType.Child, 12, 120, "1 ano", TripliceViralDescription),
-        Dose(VaccineDoseKeys.Dtp1, "DTP", "1º reforço", VaccineSectionType.Child, 15, 120, "15 meses", DtpDescription),
-        Dose(VaccineDoseKeys.Vip4, "VIP", "Reforço", VaccineSectionType.Child, 15, 120, "15 meses", VipDescription),
-        Dose(VaccineDoseKeys.HepatiteA, "Hepatite A", "Uma dose", VaccineSectionType.Child, 15, 120, "15 meses", HepatitisADescription),
-        Dose(VaccineDoseKeys.TetraViral, "Tetra Viral", "Uma dose", VaccineSectionType.Child, 15, 120, "15 meses", TetraViralDescription),
-        Dose(VaccineDoseKeys.Dtp2, "DTP", "2ª reforço", VaccineSectionType.Child, 48, 120, "4 anos", DtpDescription),
-        Dose(VaccineDoseKeys.FebreAmarela2, "Febre Amarela", "Reforço", VaccineSectionType.Child, 48, 120, "4 anos", YellowFeverDescription),
-        Dose(VaccineDoseKeys.Varicela, "Varicela", "Uma dose", VaccineSectionType.Child, 48, 120, "4 anos", VaricelaDescription),
-        Dose(VaccineDoseKeys.FebreAmarela3, "Febre Amarela", "Uma dose", VaccineSectionType.Child, 60, 120, "5 anos", YellowFeverDescription),
-        Dose(VaccineDoseKeys.Pneumo23, "Pneumo 23", "Duas doses", VaccineSectionType.Child, 60, 120, "5 anos", Pneumo23Description),
-        Dose(VaccineDoseKeys.DtInfantil, "DT", "Três doses", VaccineSectionType.Child, 72, 120, "7 anos", DtDescription),
+        Dose(VaccineDoseKeys.BcgInfantil, "BCG", "Única", VaccineSectionType.Child, 0, 1, "Ao nascer", BcgDescription),
+        Dose(VaccineDoseKeys.HepatiteBNascimento, "Hepatite B", "Única", VaccineSectionType.Child, 0, 1, "Ao nascer", HepatitisBDescription),
+        Dose(VaccineDoseKeys.Penta1, "Penta", "1ª dose", VaccineSectionType.Child, 2, 3, "2 meses", PentaDescription),
+        Dose(VaccineDoseKeys.Vip1, "VIP", "1ª dose", VaccineSectionType.Child, 2, 3, "2 meses", VipDescription),
+        Dose(VaccineDoseKeys.Pneumo10_1, "Pneumo 10", "1ª dose", VaccineSectionType.Child, 2, 3, "2 meses", Pneumo10Description),
+        Dose(VaccineDoseKeys.Vrh1, "VRH", "1ª dose", VaccineSectionType.Child, 2, 3, "2 meses", VrhDescription),
+        Dose(VaccineDoseKeys.MeningoC1, "Meningo C", "1ª dose", VaccineSectionType.Child, 3, 4, "3 meses", MeningoCDescription),
+        Dose(VaccineDoseKeys.Penta2, "Penta", "2ª dose", VaccineSectionType.Child, 4, 5, "4 meses", PentaDescription),
+        Dose(VaccineDoseKeys.Vip2, "VIP", "2ª dose", VaccineSectionType.Child, 4, 5, "4 meses", VipDescription),
+        Dose(VaccineDoseKeys.Pneumo10_2, "Pneumo 10", "2ª dose", VaccineSectionType.Child, 4, 5, "4 meses", Pneumo10Description),
+        Dose(VaccineDoseKeys.Vrh2, "VRH", "2ª dose", VaccineSectionType.Child, 4, 5, "4 meses", VrhDescription),
+        Dose(VaccineDoseKeys.MeningoC2, "Meningo C", "2ª dose", VaccineSectionType.Child, 5, 6, "5 meses", MeningoCDescription),
+        Dose(VaccineDoseKeys.Penta3, "Penta", "3ª dose", VaccineSectionType.Child, 6, 7, "6 meses", PentaDescription),
+        Dose(VaccineDoseKeys.Vip3, "VIP", "3ª dose", VaccineSectionType.Child, 6, 7, "6 meses", VipDescription),
+        Dose(VaccineDoseKeys.Covid1, "Covid 19", "1ª dose", VaccineSectionType.Child, 6, 7, "6 meses", CovidDescription),
+        Dose(VaccineDoseKeys.Covid2, "Covid 19", "2ª dose", VaccineSectionType.Child, 7, 8, "7 meses", CovidDescription),
+        Dose(VaccineDoseKeys.FebreAmarela1, "Febre Amarela", "1ª dose", VaccineSectionType.Child, 9, 11, "9 meses", YellowFeverDescription),
+        Dose(VaccineDoseKeys.Pneumo10_3, "Pneumo 10", "Reforço", VaccineSectionType.Child, 12, 14, "1 ano", Pneumo10Description),
+        Dose(VaccineDoseKeys.MeningoC3, "Meningo C", "Reforço", VaccineSectionType.Child, 12, 14, "1 ano", MeningoCDescription),
+        Dose(VaccineDoseKeys.TripliceViralInfantil, "Tríplice Viral", "1ª dose", VaccineSectionType.Child, 12, 14, "1 ano", TripliceViralDescription),
+        Dose(VaccineDoseKeys.Dtp1, "DTP", "1º reforço", VaccineSectionType.Child, 15, 23, "15 meses", DtpDescription),
+        Dose(VaccineDoseKeys.Vip4, "VIP", "Reforço", VaccineSectionType.Child, 15, 23, "15 meses", VipDescription),
+        Dose(VaccineDoseKeys.HepatiteA, "Hepatite A", "Uma dose", VaccineSectionType.Child, 15, 23, "15 meses", HepatitisADescription),
+        Dose(VaccineDoseKeys.TetraViral, "Tetra Viral", "Uma dose", VaccineSectionType.Child, 15, 23, "15 meses", TetraViralDescription),
+        Dose(VaccineDoseKeys.Dtp2, "DTP", "2ª reforço", VaccineSectionType.Child, 48, 59, "4 anos", DtpDescription),
+        Dose(VaccineDoseKeys.FebreAmarela2, "Febre Amarela", "Reforço", VaccineSectionType.Child, 48, 59, "4 anos", YellowFeverDescription),
+        Dose(VaccineDoseKeys.Varicela, "Varicela", "Uma dose", VaccineSectionType.Child, 48, 59, "4 anos", VaricelaDescription),
+        Dose(VaccineDoseKeys.FebreAmarela3, "Febre Amarela", "Uma dose", VaccineSectionType.Child, 60, 71, "5 anos", YellowFeverDescription),
+        Dose(VaccineDoseKeys.Pneumo23, "Pneumo 23", "Duas doses", VaccineSectionType.Child, 60, 71, "5 anos", Pneumo23Description),
+        Dose(VaccineDoseKeys.DtInfantil, "DT", "Três doses", VaccineSectionType.Child, 72, 107, "7 anos", DtDescription),
         Dose(VaccineDoseKeys.HpvInfantil, "HPV", "Uma dose", VaccineSectionType.Child, 108, 120, "9 anos", HpvDescription),
 
         Dose(VaccineDoseKeys.HepatiteBAdolescente, "Hepatite B", "Única", VaccineSectionType.Teen, 121, 180, "Qualquer", HepatitisBDescription),
@@ -154,6 +154,30 @@ public static class VaccineDoseCatalog
             (!definition.MaxAgeMonths.HasValue || ageMonths <= definition.MaxAgeMonths.Value));
     }
 
+    public static IEnumerable<VaccineDoseDefinition> GetExpectedDefinitions(int ageMonths, bool isPregnant)
+    {
+        var definitions = ageMonths <= 120
+            ? Definitions.Where(definition => definition.Section == VaccineSectionType.Child)
+            : GetApplicableDefinitions(ageMonths, isPregnant);
+
+        if (isPregnant && ageMonths <= 120)
+        {
+            definitions = definitions.Concat(Definitions.Where(definition => definition.RequiresPregnancy));
+        }
+
+        return definitions
+            .Where(definition => !definition.RequiresPregnancy || isPregnant)
+            .OrderBy(definition => definition.MinAgeMonths ?? int.MaxValue)
+            .ThenBy(definition => definition.MaxAgeMonths ?? int.MaxValue)
+            .ThenBy(definition => definition.VaccineName)
+            .ThenBy(definition => definition.DoseLabel);
+    }
+
+    public static IEnumerable<VaccineDoseDefinition> GetRequiredChildDefinitions()
+    {
+        return Definitions.Where(definition => definition.IsRequiredForChildMetric);
+    }
+
     private static VaccineDoseDefinition Dose(
         string doseKey,
         string vaccineName,
@@ -172,6 +196,7 @@ public static class VaccineDoseCatalog
             section,
             minAgeMonths,
             maxAgeMonths,
+            section == VaccineSectionType.Child,
             requiresPregnancy,
             ageLabel,
             diseaseDescription);

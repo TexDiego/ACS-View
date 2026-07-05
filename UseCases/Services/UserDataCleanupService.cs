@@ -54,6 +54,8 @@ internal sealed class UserDataCleanupService(
         connection.Execute("DELETE FROM PatientInsulinDependency WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientVaccineDose WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Vaccines WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM VisitCareLine WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM VisitBatch WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Visits WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Family WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Patient WHERE UserId = ?", userId);
@@ -61,6 +63,8 @@ internal sealed class UserDataCleanupService(
 
     private static void DeleteHouses(SQLiteConnection connection, int userId)
     {
+        connection.Execute("DELETE FROM VisitCareLine WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM VisitBatch WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Visits WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Family WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM House WHERE UserId = ?", userId);

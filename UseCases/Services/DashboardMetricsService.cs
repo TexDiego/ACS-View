@@ -75,6 +75,7 @@ namespace ACS_View.UseCases.Services
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BirthDate > ?",
                     userId,
                     childrenUnder6Cutoff),
+                TotalCriancasVacinacaoAtrasada = await CountPatientsByFilterAsync(DashboardFilterKeys.ChildrenOverdueVaccines),
                 TotalMulheres25a64 = await _connection.ExecuteScalarAsync<int>(
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND Sexo = ? COLLATE NOCASE AND BirthDate <= ? AND BirthDate > ?",
                     userId,
@@ -168,7 +169,7 @@ namespace ACS_View.UseCases.Services
             var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
 
             return await _connection.ExecuteScalarAsync<int>(
-                $"SELECT COUNT(*) FROM Patient p {whereClause}",
+                $"SELECT COUNT(DISTINCT p.Id) FROM Patient p {whereClause}",
                 [.. parameters]);
         }
     }

@@ -431,6 +431,7 @@ namespace ACS_View.ViewModels
                 DashboardFilterKeys.BolsaFamilia => "Bolsa Familia",
                 DashboardFilterKeys.Elderly => "Idosos",
                 DashboardFilterKeys.ChildrenUnder6 => "Criancas menores de 6",
+                DashboardFilterKeys.ChildrenOverdueVaccines => "Criancas com vacinacao atrasada",
                 DashboardFilterKeys.Women25To64 => "Mulheres 25 a 64",
                 DashboardFilterKeys.Inactive => "Inativos",
                 _ => "Pacientes"

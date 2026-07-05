@@ -9,6 +9,7 @@ namespace ACS_View.ViewModels;
 
 public partial class AddMetricPopupViewModel : BaseViewModel
 {
+    private const int MaxSelectedMetrics = 3;
     private const string AllSexesOption = "Todos";
     private readonly Func<DashboardMetricCreateRequestDto, string?>? validateRequest;
 
@@ -18,7 +19,7 @@ public partial class AddMetricPopupViewModel : BaseViewModel
     [ObservableProperty] private string maximumAge = string.Empty;
     [ObservableProperty] private string errorMessage = string.Empty;
     [ObservableProperty] private bool hasError;
-    [ObservableProperty] private string selectedCountText = "0 de 2 selecionadas";
+    [ObservableProperty] private string selectedCountText = $"0 de {MaxSelectedMetrics} selecionadas";
 
     public AddMetricPopupViewModel(
         IEnumerable<Dashboard> candidates,
@@ -47,15 +48,22 @@ public partial class AddMetricPopupViewModel : BaseViewModel
         errorMessage = string.Empty;
 
         var selectedMetrics = Metrics.Where(metric => metric.IsSelected).ToList();
-        if (selectedMetrics.Count != 2)
+        if (selectedMetrics.Count == 0)
         {
-            errorMessage = "Selecione exatamente duas métricas.";
+            errorMessage = "Selecione ao menos uma metrica.";
             SetError(errorMessage);
             return false;
         }
 
-        if (!TryParseAge(MinimumAge, "idade mínima", out var minimumAge, out errorMessage) ||
-            !TryParseAge(MaximumAge, "idade máxima", out var maximumAge, out errorMessage))
+        if (selectedMetrics.Count > MaxSelectedMetrics)
+        {
+            errorMessage = $"Selecione no maximo {MaxSelectedMetrics} metricas.";
+            SetError(errorMessage);
+            return false;
+        }
+
+        if (!TryParseAge(MinimumAge, "idade minima", out var minimumAge, out errorMessage) ||
+            !TryParseAge(MaximumAge, "idade maxima", out var maximumAge, out errorMessage))
         {
             SetError(errorMessage);
             return false;
@@ -63,15 +71,33 @@ public partial class AddMetricPopupViewModel : BaseViewModel
 
         if (minimumAge.HasValue && maximumAge.HasValue && minimumAge > maximumAge)
         {
-            errorMessage = "A idade mínima não pode ser maior que a idade máxima.";
+            errorMessage = "A idade minima nao pode ser maior que a idade maxima.";
             SetError(errorMessage);
             return false;
         }
 
+        var hasModifier =
+            SelectedSex != AllSexesOption ||
+            minimumAge.HasValue ||
+            maximumAge.HasValue;
+
+        if (selectedMetrics.Count == 1 && !hasModifier)
+        {
+            errorMessage = "Adicione ao menos um modificador para criar uma metrica com um unico indicador.";
+            SetError(errorMessage);
+            return false;
+        }
+
+        var filterKeys = selectedMetrics
+            .Select(metric => metric.FilterKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         request = new DashboardMetricCreateRequestDto
         {
-            FirstFilterKey = selectedMetrics[0].FilterKey,
-            SecondFilterKey = selectedMetrics[1].FilterKey,
+            FilterKeys = filterKeys,
+            FirstFilterKey = filterKeys.ElementAtOrDefault(0) ?? string.Empty,
+            SecondFilterKey = filterKeys.ElementAtOrDefault(1) ?? string.Empty,
             SexModifier = SelectedSex == AllSexesOption ? null : SelectedSex,
             MinimumAgeModifier = minimumAge,
             MaximumAgeModifier = maximumAge
@@ -105,9 +131,9 @@ public partial class AddMetricPopupViewModel : BaseViewModel
             return;
         }
 
-        if (Metrics.Count(metric => metric.IsSelected) >= 2)
+        if (Metrics.Count(metric => metric.IsSelected) >= MaxSelectedMetrics)
         {
-            SetError("Remova uma métrica para selecionar outra.");
+            SetError("Remova uma metrica para selecionar outra.");
             return;
         }
 
@@ -127,7 +153,7 @@ public partial class AddMetricPopupViewModel : BaseViewModel
 
         if (!int.TryParse(value.Trim(), out var parsedAge) || parsedAge < 0 || parsedAge > 120)
         {
-            errorMessage = $"Informe uma {fieldName} válida entre 0 e 120.";
+            errorMessage = $"Informe uma {fieldName} valida entre 0 e 120.";
             return false;
         }
 
@@ -137,7 +163,7 @@ public partial class AddMetricPopupViewModel : BaseViewModel
 
     private void UpdateSelectedCountText()
     {
-        SelectedCountText = $"{Metrics.Count(metric => metric.IsSelected)} de 2 selecionadas";
+        SelectedCountText = $"{Metrics.Count(metric => metric.IsSelected)} de {MaxSelectedMetrics} selecionadas";
     }
 
     private void SetError(string message)

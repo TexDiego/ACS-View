@@ -1,6 +1,6 @@
 using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
-using ACS_View.Application.Interfaces;
+using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 
@@ -87,8 +87,7 @@ namespace ACS_View.ViewModels
 
                     if (endereco != null && !string.IsNullOrEmpty(endereco.Rua))
                     {
-                        endereco.CEP = endereco.CEP.Replace("-", "");
-                        HouseModel = endereco;
+                        HouseModel = MergeCepAddress(HouseModel, endereco);
                         return;
                     }
 
@@ -107,7 +106,43 @@ namespace ACS_View.ViewModels
 
         private static bool ValidarCep(string cep)
         {
-            return !string.IsNullOrWhiteSpace(cep) && cep.Length == 8 && cep.All(char.IsDigit);
+            return CepNumberRules.IsValid(cep);
+        }
+
+        private static House MergeCepAddress(House current, House address)
+        {
+            return new House
+            {
+                CasaId = current.CasaId,
+                UserId = current.UserId,
+                CEP = CepNumberRules.Normalize(address.CEP),
+                Rua = CoalesceAddressValue(address.Rua, current.Rua),
+                TipoLogradouro = CoalesceAddressValue(address.TipoLogradouro, current.TipoLogradouro),
+                NumeroCasa = current.NumeroCasa,
+                SearchRua = current.SearchRua,
+                SearchComplemento = current.SearchComplemento,
+                Bairro = CoalesceAddressValue(address.Bairro, current.Bairro),
+                Cidade = IsSuspiciousCity(address.Cidade)
+                    ? current.Cidade
+                    : CoalesceAddressValue(address.Cidade, current.Cidade),
+                Estado = CoalesceAddressValue(address.Estado, current.Estado),
+                Pais = CoalesceAddressValue(address.Pais, current.Pais),
+                Complemento = current.Complemento,
+                PossuiComplemento = current.PossuiComplemento || !string.IsNullOrWhiteSpace(current.Complemento)
+            };
+        }
+
+        private static string CoalesceAddressValue(string? preferred, string? fallback)
+        {
+            return string.IsNullOrWhiteSpace(preferred)
+                ? fallback?.Trim() ?? string.Empty
+                : preferred.Trim();
+        }
+
+        private static bool IsSuspiciousCity(string? value)
+        {
+            var normalized = value?.Trim();
+            return !string.IsNullOrWhiteSpace(normalized) && normalized.All(char.IsDigit);
         }
     }
 }

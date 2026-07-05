@@ -40,7 +40,8 @@ public static class DashboardMetricCombinationRules
     public static bool IsHealthMetric(string? filterKey)
     {
         var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
-        return baseFilterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase) ||
+        return string.Equals(baseFilterKey, DashboardFilterKeys.ChildrenOverdueVaccines, StringComparison.OrdinalIgnoreCase) ||
+               baseFilterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase) ||
                baseFilterKey.StartsWith(DashboardFilterKeys.CidPrefix, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -52,9 +53,23 @@ public static class DashboardMetricCombinationRules
         int? minimumAgeModifier = null,
         int? maximumAgeModifier = null)
     {
+        return CanCombine(
+            [firstFilterKey ?? string.Empty, secondFilterKey ?? string.Empty],
+            targetIsHealth,
+            sexModifier,
+            minimumAgeModifier,
+            maximumAgeModifier);
+    }
+
+    public static bool CanCombine(
+        IReadOnlyList<string> filterKeys,
+        bool targetIsHealth,
+        string? sexModifier = null,
+        int? minimumAgeModifier = null,
+        int? maximumAgeModifier = null)
+    {
         return GetValidationError(
-            firstFilterKey,
-            secondFilterKey,
+            filterKeys,
             targetIsHealth,
             sexModifier,
             minimumAgeModifier,
@@ -69,38 +84,76 @@ public static class DashboardMetricCombinationRules
         int? minimumAgeModifier = null,
         int? maximumAgeModifier = null)
     {
-        var firstBaseFilterKey = DashboardFilterKeys.GetBaseFilterKey(firstFilterKey);
-        var secondBaseFilterKey = DashboardFilterKeys.GetBaseFilterKey(secondFilterKey);
+        return GetValidationError(
+            [firstFilterKey ?? string.Empty, secondFilterKey ?? string.Empty],
+            targetIsHealth,
+            sexModifier,
+            minimumAgeModifier,
+            maximumAgeModifier);
+    }
 
-        if (string.Equals(firstBaseFilterKey, secondBaseFilterKey, StringComparison.OrdinalIgnoreCase))
+    public static string? GetValidationError(
+        IReadOnlyList<string> filterKeys,
+        bool targetIsHealth,
+        string? sexModifier = null,
+        int? minimumAgeModifier = null,
+        int? maximumAgeModifier = null)
+    {
+        var baseFilterKeys = filterKeys
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(DashboardFilterKeys.GetBaseFilterKey)
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (baseFilterKeys.Count == 0)
         {
-            return "Selecione duas métricas diferentes.";
+            return "Selecione ao menos uma metrica.";
         }
 
-        if (!IsCombinableRootMetric(firstBaseFilterKey) || !IsCombinableRootMetric(secondBaseFilterKey))
+        if (baseFilterKeys.Count > 3)
         {
-            return "Essa métrica não pode fazer parte de uniões.";
+            return "Selecione no maximo tres metricas.";
         }
 
-        var firstIsHealth = IsHealthMetric(firstBaseFilterKey);
-        var secondIsHealth = IsHealthMetric(secondBaseFilterKey);
+        var hasModifier =
+            !string.IsNullOrWhiteSpace(sexModifier) ||
+            minimumAgeModifier.HasValue ||
+            maximumAgeModifier.HasValue;
 
-        if (targetIsHealth && !firstIsHealth && !secondIsHealth)
+        if (baseFilterKeys.Count == 1 && !hasModifier)
         {
-            return "Uniões na aba de saúde precisam ter ao menos uma métrica de saúde.";
+            return "Adicione ao menos um modificador para criar uma metrica com um unico indicador.";
         }
 
-        if (!targetIsHealth && (firstIsHealth || secondIsHealth))
+        if (baseFilterKeys.Any(key => !IsCombinableRootMetric(key)))
         {
-            return "Uniões com métricas de saúde devem ficar na aba de saúde.";
+            return "Essa metrica nao pode fazer parte de unioes.";
+        }
+
+        var hasHealthMetric = baseFilterKeys.Any(IsHealthMetric);
+        if (targetIsHealth && !hasHealthMetric)
+        {
+            return "Unioes na aba de saude precisam ter ao menos uma metrica de saude.";
+        }
+
+        if (!targetIsHealth && hasHealthMetric)
+        {
+            return "Unioes com metricas de saude devem ficar na aba de saude.";
         }
 
         var constraints = new MetricConstraints();
-        if (!TryApplyMetricConstraints(firstBaseFilterKey, ref constraints) ||
-            !TryApplyMetricConstraints(secondBaseFilterKey, ref constraints) ||
-            !TryApplyModifierConstraints(sexModifier, minimumAgeModifier, maximumAgeModifier, ref constraints))
+        foreach (var key in baseFilterKeys)
         {
-            return "Essa união não é compatível com a lógica das métricas selecionadas.";
+            if (!TryApplyMetricConstraints(key, ref constraints))
+            {
+                return "Essa uniao nao e compativel com a logica das metricas selecionadas.";
+            }
+        }
+
+        if (!TryApplyModifierConstraints(sexModifier, minimumAgeModifier, maximumAgeModifier, ref constraints))
+        {
+            return "Essa uniao nao e compativel com a logica das metricas selecionadas.";
         }
 
         return null;
@@ -114,6 +167,8 @@ public static class DashboardMetricCombinationRules
                 return constraints.ApplyAge(minimumAge: 60, maximumAge: null);
             case DashboardFilterKeys.ChildrenUnder6:
                 return constraints.ApplyAge(minimumAge: null, maximumAge: 5);
+            case DashboardFilterKeys.ChildrenOverdueVaccines:
+                return constraints.ApplyAge(minimumAge: null, maximumAge: 10);
             case DashboardFilterKeys.Women25To64:
                 return constraints.ApplySex(Female) &&
                        constraints.ApplyAge(minimumAge: 25, maximumAge: 64);

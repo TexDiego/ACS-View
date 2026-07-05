@@ -18,4 +18,7 @@ public class PatientVaccineDose
 
     public bool IsApplied { get; set; }
     public DateTime? AppliedAt { get; set; }
+    public string LotNumber { get; set; } = string.Empty;
+    public string Notes { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

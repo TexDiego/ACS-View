@@ -1,146 +1,89 @@
-using ACS_View.Domain.Entities;
+using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace ACS_View.ViewModels
+namespace ACS_View.ViewModels;
+
+public partial class AllVisitsViewModel : BaseViewModel
 {
-    public partial class AllVisitsViewModel : BaseViewModel
+    private readonly IVisitsService visitsService;
+    private int loadedVersion = -1;
+    private bool hasLoaded;
+
+    [ObservableProperty] private ObservableCollection<VisitOverviewMetricCard> metrics = [];
+    [ObservableProperty] private ObservableCollection<VisitSuggestionDto> suggestionsPreview = [];
+    [ObservableProperty] private bool hasSuggestions;
+
+    public ICommand OpenRecordsCommand { get; }
+    public ICommand OpenSuggestionsCommand { get; }
+    public ICommand GoToHouseCommand { get; }
+
+    public AllVisitsViewModel(IVisitsService visitsService)
     {
-        private readonly IHouseService _houseService;
-        private readonly IVisitsService _visitsService;
-        private readonly IPatientService _patientService;
-        private int _loadedVersion = -1;
-        private bool _hasLoaded;
+        this.visitsService = visitsService;
+        OpenRecordsCommand = new Command(async () => await NavigateToAsync("visitrecords"));
+        OpenSuggestionsCommand = new Command(async () => await NavigateToAsync("visitsuggestions"));
+        GoToHouseCommand = new Command<int>(async id => await GoToHouse(id));
+    }
 
-        [ObservableProperty] private List<Visits> visitsList = [];
-        [ObservableProperty] private List<House> houseList = [];
-        [ObservableProperty] private bool canSwipe = true;
-
-        public ICommand DeleteVisit => new Command<int>(async id => await DeleteVisitCommand(id));
-        public ICommand GoToHouseCommand => new Command<int>(async id => await GoToHouse(id));
-
-        public AllVisitsViewModel(IHouseService houseService, IVisitsService visitsService, IPatientService patientService)
+    internal async Task LoadVisitsAsync(bool force = false)
+    {
+        var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
+        if (!force && hasLoaded && loadedVersion == currentVersion)
         {
-            _houseService = houseService;
-            _visitsService = visitsService;
-            _patientService = patientService;
+            return;
         }
 
-        private async Task DeleteVisitCommand(int id)
+        try
         {
-            try
+            await ExecuteWithLoadingAsync(async () =>
             {
-                if (id <= 0)
-                {
-                    throw new ArgumentException("O ID da visita deve ser maior que zero.");
-                }
+                await visitsService.PurgeExpiredVisitsAsync(DateTime.Today);
+                var overview = await visitsService.GetMonthlyOverviewAsync(DateTime.Today);
+                Metrics = new ObservableCollection<VisitOverviewMetricCard>(BuildMetrics(overview));
 
-                var visit = VisitsList.FirstOrDefault(v => v.Id == id);
+                var suggestions = await visitsService.GetVisitSuggestionsAsync(DateTime.Today);
+                SuggestionsPreview = new ObservableCollection<VisitSuggestionDto>(suggestions.Take(5));
+                HasSuggestions = SuggestionsPreview.Count > 0;
 
-                Debug.WriteLine($"Visita: {visit}");
+                loadedVersion = currentVersion;
+                hasLoaded = true;
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Erro ao carregar visitas: {ex.Message}");
+            await DisplayAlertAsync("Erro", "Não foi possível carregar as visitas.");
+        }
+    }
 
-                if (visit != null)
-                {
-                    await _visitsService.DeleteVisitAsync(id);
-                    VisitsList.Remove(visit);
-                    await LoadVisitsAsync();
-                    return;
-                }
-
-                Debug.WriteLine($"Nenhuma visita encontrada com o ID {id}.");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Erro ao excluir visita: {ex.Message}");
-            }
+    private async Task GoToHouse(int id)
+    {
+        if (id <= 0)
+        {
+            return;
         }
 
-        internal async Task LoadVisitsAsync()
-        {
-            var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
-            if (_hasLoaded && _loadedVersion == currentVersion)
-            {
-                return;
-            }
+        await NavigateToAsync("families", new Dictionary<string, object> { { "id", id } });
+    }
 
-            try
-            {
-                VisitsList = await _visitsService.GetAllVisitsAsync();
-                HouseList = await GetHousesWithoutVisits();
-                _loadedVersion = currentVersion;
-                _hasLoaded = true;
-                CanSwipe = HouseList.Count > 1;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Erro ao carregar visitas: {ex.Message}");
-                await DisplayAlertAsync("Erro", "Não foi possível carregar as visitas.");
-            }
-        }
-
-        private async Task GoToHouse(int id)
-        {
-            if (id < 0) return;
-
-            try
-            {
-                await NavigateToAsync("families", new Dictionary<string, object> { { "id", id } });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Erro ao navegar para a casa: {ex.Message}");
-                await DisplayAlertAsync("Erro", "Não foi possível navegar para a casa.");
-            }
-        }
-
-        public async Task<List<House>> GetHousesWithoutVisits()
-        {
-            try
-            {
-                var allHouses = await _houseService.GetAllHousesAsync();
-                var allPeople = await _patientService.GetAllPatients();
-
-                var allFamilies = allPeople
-                    .Where(p => p.HouseId > 0 && p.FamilyId > 0)
-                    .Select(p => new { p.HouseId, p.FamilyId })
-                    .Distinct()
-                    .ToList();
-
-                var currentMonth = DateTime.Now.Month;
-                var currentYear = DateTime.Now.Year;
-
-                var visitedFamilies = VisitsList
-                    .Where(v => v.Date.Month == currentMonth && v.Date.Year == currentYear)
-                    .Select(v => new { v.HouseId, v.FamilyId })
-                    .Distinct()
-                    .ToHashSet();
-
-                var familiesWithoutVisit = allFamilies
-                    .Where(f => !visitedFamilies.Contains(f))
-                    .ToList();
-
-                var houseIdsWithoutVisit = familiesWithoutVisit
-                    .Select(f => f.HouseId)
-                    .Distinct()
-                    .ToHashSet();
-
-                var result = allHouses
-                    .Where(h => houseIdsWithoutVisit.Contains(h.CasaId))
-                    .ToList();
-
-                Console.WriteLine(result.Count);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Erro ao buscar casas com famílias sem visita: {ex.Message}");
-                return [];
-            }
-        }
+    private static IEnumerable<VisitOverviewMetricCard> BuildMetrics(VisitMonthlyOverviewDto overview)
+    {
+        yield return new("Total", overview.TotalVisits.ToString());
+        yield return new("Realizadas", overview.CompletedVisits.ToString());
+        yield return new("Ausentes", overview.AbsentVisits.ToString());
+        yield return new("Recusadas", overview.RefusedVisits.ToString());
+        yield return new("Crianças", overview.ChildVisits.ToString());
+        yield return new("Gestantes/puerperas", overview.PregnancyPostpartumVisits.ToString());
+        yield return new("Hipertensão", overview.HypertensionVisits.ToString());
+        yield return new("Diabetes", overview.DiabetesVisits.ToString());
+        yield return new("Idosos", overview.ElderlyVisits.ToString());
+        yield return new("Benefícios", overview.BenefitVisits.ToString());
     }
 }
 
+public sealed record VisitOverviewMetricCard(string Title, string Value);

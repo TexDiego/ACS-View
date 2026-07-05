@@ -11,6 +11,7 @@ public static class DashboardFilterKeys
     public const string BolsaFamilia = "BOLSA_FAMILIA";
     public const string Elderly = "ELDERLY";
     public const string ChildrenUnder6 = "CHILDREN_UNDER_6";
+    public const string ChildrenOverdueVaccines = "CHILDREN_OVERDUE_VACCINES";
     public const string Women25To64 = "WOMEN_25_64";
     public const string Inactive = "INACTIVE";
 
@@ -23,9 +24,14 @@ public static class DashboardFilterKeys
     private const string MinAgeModifierPrefix = "MINAGE:";
     private const string MaxAgeModifierPrefix = "MAXAGE:";
 
-    public static string CreateCombination(string firstFilterKey, string secondFilterKey)
+    public static string CreateCombination(params string[] filterKeys)
     {
-        var parts = new[] { firstFilterKey, secondFilterKey }
+        return CreateCombination((IEnumerable<string>)filterKeys);
+    }
+
+    public static string CreateCombination(IEnumerable<string> filterKeys)
+    {
+        var parts = filterKeys
             .Where(key => !string.IsNullOrWhiteSpace(key))
             .Select(key => key.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -116,7 +122,7 @@ public static class DashboardFilterKeys
             .Split(CombinationDelimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(key => !IsCombination(key))
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(2)
+            .Take(3)
             .ToList();
     }
 }

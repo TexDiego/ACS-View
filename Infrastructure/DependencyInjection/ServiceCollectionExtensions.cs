@@ -58,7 +58,8 @@ public static class ServiceCollectionExtensions
             BaseAddress = new Uri("https://viacep.com.br/"),
             Timeout = TimeSpan.FromSeconds(10)
         });
-        services.AddSingleton<ICepService, ViaCepService>();
+        services.AddSingleton<ViaCepService>();
+        services.AddSingleton<ICepService, CachedCepService>();
 
         services.AddTransient<IVaccineService, VaccineService>();
         services.AddTransient<IFamilyService, FamilyService>();
@@ -81,6 +82,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ProfileViewModel>();
         services.AddTransient<AddHouseViewModel>();
         services.AddTransient<AllVisitsViewModel>();
+        services.AddTransient<VisitRecordsViewModel>();
+        services.AddTransient<VisitSuggestionsViewModel>();
         services.AddTransient<VisitsViewModel>();
         services.AddTransient<VaccinesPageViewModel>();
         services.AddTransient<NotesPageViewModel>();
@@ -105,6 +108,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddRegister>();
         services.AddTransient<AddHouse>();
         services.AddTransient<AllVisits>();
+        services.AddTransient<VisitRecordsPage>();
+        services.AddTransient<VisitSuggestionsPage>();
         services.AddTransient<LoginPage>();
         services.AddTransient<RegistrationPage>();
         services.AddTransient<ForgotPassword>();

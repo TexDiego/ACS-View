@@ -1,3 +1,4 @@
+using ACS_View.Application.DTOs;
 using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
@@ -232,15 +233,30 @@ namespace ACS_View.ViewModels
                     return;
                 }
 
-                var popupResult = await _popupService.ShowAsync<Visits>(new VisitPage(_houseService, _dialogService, _idHouse, idFamily));
+                var people = await _visitsService.GetFamilyVisitOptionsAsync(_idHouse, idFamily, DateTime.Now);
+                if (people.Count == 0)
+                {
+                    await DisplayAlertAsync("Aviso", "Nenhuma pessoa ativa encontrada nesta familia.");
+                    return;
+                }
+
+                var popupResult = await _popupService.ShowAsync<VisitBatchRequestDto>(new VisitPage(_idHouse, idFamily, people));
 
                 if (popupResult.WasDismissed || popupResult.Result is null)
                 {
                     return;
                 }
 
-                await _visitsService.RegisterVisitAsync(popupResult.Result);
-                await DisplayAlertAsync("Sucesso", $"Visita registrada como {popupResult.Result.Description}.");
+                var savedCount = await _visitsService.RegisterFamilyVisitBatchAsync(popupResult.Result);
+                if (savedCount <= 0)
+                {
+                    return;
+                }
+
+                var message = savedCount == 1
+                    ? "1 visita registrada."
+                    : $"{savedCount} visitas registradas.";
+                await DisplayAlertAsync("Sucesso", message);
             }
             catch (Exception ex)
             {

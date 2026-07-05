@@ -5,14 +5,14 @@ namespace ACS_View.ViewModels;
 
 public sealed class VaccineSchedulePresentation
 {
-    private readonly IReadOnlyDictionary<string, bool> _appliedDoses;
+    private readonly IReadOnlyDictionary<string, PatientVaccineDoseDto> _applicationsByDose;
 
     public VaccineSchedulePresentation(PatientVaccineScheduleDto schedule)
     {
         PatientId = schedule.PatientId;
         BirthDate = schedule.BirthDate;
         IsPregnant = schedule.IsPregnant;
-        _appliedDoses = schedule.AppliedDoses;
+        _applicationsByDose = schedule.ApplicationsByDose;
     }
 
     public int PatientId { get; }
@@ -129,7 +129,7 @@ public sealed class VaccineSchedulePresentation
 
     public bool GetVaccineStatus(string doseKey)
     {
-        return _appliedDoses.TryGetValue(doseKey, out var isApplied) && isApplied;
+        return _applicationsByDose.TryGetValue(doseKey, out var application) && application.IsApplied;
     }
 
     private int AgeMonths => GetMonth(BirthDate);

@@ -5,6 +5,7 @@ namespace ACS_View.Application.Interfaces
     public interface IVaccineService
     {
         Task<PatientVaccineScheduleDto?> GetScheduleForPatientAsync(int patientId);
-        Task SetDoseStatusAsync(int patientId, string doseKey, bool isApplied);
+        Task ApplyDoseAsync(VaccineApplicationRequestDto request);
+        Task RemoveDoseApplicationAsync(int patientId, string doseKey);
     }
 }

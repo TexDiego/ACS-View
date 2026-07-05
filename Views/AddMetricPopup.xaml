@@ -61,7 +61,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="*,auto">
-                    <Label Text="Metricas" Style="{StaticResource FieldLabel}"/>
+                    <Label Text="Indicadores" Style="{StaticResource FieldLabel}"/>
                     <Label
                         Grid.Column="1"
                         Text="{Binding SelectedCountText}"

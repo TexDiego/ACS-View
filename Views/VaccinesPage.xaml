@@ -2,70 +2,147 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
-             xmlns:sections="clr-namespace:ACS_View.Views.Vaccines"
-             xmlns:views="clr-namespace:ACS_View.Views"
+             x:Name="RootPage"
              x:DataType="vm:VaccinesPageViewModel"
              x:Class="ACS_View.Views.VaccinesPage"
              NavigationPage.HasNavigationBar="False"
              Style="{StaticResource PageBackground}"
              Title="{Binding HealthRecord.Name}">
 
-    <ContentPage.Resources>
-        <DataTemplate x:Key="ChildVaccinesTemplate">
-            <sections:ChildVaccinesView/>
-        </DataTemplate>
-
-        <DataTemplate x:Key="TeenVaccinesTemplate">
-            <sections:TeenVaccinesView/>
-        </DataTemplate>
-
-        <DataTemplate x:Key="AdultVaccinesTemplate">
-            <sections:AdultVaccinesView/>
-        </DataTemplate>
-
-        <DataTemplate x:Key="ElderlyVaccinesTemplate">
-            <sections:ElderlyVaccinesView/>
-        </DataTemplate>
-
-        <DataTemplate x:Key="PregnantVaccinesTemplate">
-            <sections:PregnantVaccinesView/>
-        </DataTemplate>
-
-        <views:VaccineSectionTemplateSelector
-            x:Key="VaccineSectionTemplateSelector"
-            ChildTemplate="{StaticResource ChildVaccinesTemplate}"
-            TeenTemplate="{StaticResource TeenVaccinesTemplate}"
-            AdultTemplate="{StaticResource AdultVaccinesTemplate}"
-            ElderlyTemplate="{StaticResource ElderlyVaccinesTemplate}"
-            PregnantTemplate="{StaticResource PregnantVaccinesTemplate}"/>
-    </ContentPage.Resources>
-
-    <Grid RowDefinitions="auto, auto, *, auto" Margin="0,15">
-
-        <Grid
-            Grid.Row="1"
-            Margin="15"
-            IsVisible="{Binding HasPatient}"
-            ColumnDefinitions="*,*,*">
-
-            <Label Style="{StaticResource VaccineTitle}" Grid.Column="0" Text="Idade"/>
-            <Label Style="{StaticResource VaccineTitle}" Grid.Column="1" Text="Vacina"/>
-            <Label Style="{StaticResource VaccineTitle}" Grid.Column="2" Text="Dose"/>
-        </Grid>
-
-        <ScrollView
-            Grid.Row="2"
-            VerticalScrollBarVisibility="Never"
-            Margin="0,0,0,15"
+    <Grid RowDefinitions="auto,*" Margin="15">
+        <VerticalStackLayout
+            Grid.Row="0"
+            Spacing="12"
             IsVisible="{Binding HasPatient}">
 
-            <VerticalStackLayout
-                BindableLayout.ItemsSource="{Binding VaccineSections}"
-                BindableLayout.ItemTemplateSelector="{StaticResource VaccineSectionTemplateSelector}" />
-        </ScrollView>
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Style="{StaticResource CardBorder}" Padding="10" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding AppliedCount}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Aplicadas" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}" Padding="10" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding PendingCount}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Pendentes" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardBorder}" Padding="10" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding LateCount}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Atrasadas" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Button
+                Text="{Binding LateFilterText}"
+                Style="{StaticResource PrimaryOutlineButton}"
+                Command="{Binding ToggleLateFilterCommand}"
+                HorizontalOptions="End"/>
+        </VerticalStackLayout>
+
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding FilteredDoses}"
+            Margin="0,14,0,0"
+            IsVisible="{Binding HasPatient}"
+            VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <Label
+                    Text="Nenhuma dose encontrada"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center"
+                    VerticalTextAlignment="Center"/>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:VaccineDoseCardViewModel">
+                    <Border
+                        Style="{StaticResource CardBorder}"
+                        Stroke="{Binding StatusColor}"
+                        Padding="12"
+                        Margin="0,0,0,10">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.OpenVaccineInfoCommand}"
+                                CommandParameter="{Binding .}"/>
+                        </Border.GestureRecognizers>
+
+                        <Grid RowDefinitions="auto,auto,auto" RowSpacing="10">
+                            <Grid ColumnDefinitions="*,auto" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label
+                                        Text="{Binding VaccineName}"
+                                        Style="{StaticResource CardTitle}"/>
+
+                                    <Label
+                                        Text="{Binding DoseName}"
+                                        Style="{StaticResource BodyMuted}"/>
+                                </VerticalStackLayout>
+
+                                <Border
+                                    Grid.Column="1"
+                                    Padding="10,5"
+                                    StrokeShape="RoundRectangle 16"
+                                    Stroke="{Binding StatusColor}"
+                                    BackgroundColor="Transparent">
+                                    <Label
+                                        VerticalTextAlignment="Center"
+                                        VerticalOptions="Center"
+                                        Text="{Binding StatusText}"
+                                        Style="{StaticResource BodyMuted}"
+                                        TextColor="{Binding StatusColor}"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Idade" Style="{StaticResource FieldLabel}"/>
+                                    <Label Text="{Binding AgeLabel}" Style="{StaticResource BodyMuted}"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="Registro" Style="{StaticResource FieldLabel}"/>
+                                    <Label Text="{Binding ApplicationDateText}" Style="{StaticResource BodyMuted}"/>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <VerticalStackLayout Grid.Row="2" Spacing="8">
+                                <Label Text="{Binding DeadlineText}" Style="{StaticResource BodyMuted}"/>
+
+                                <Label
+                                    Text="{Binding NotesText}"
+                                    Style="{StaticResource BodyMuted}"
+                                    IsVisible="{Binding HasNotes}"/>
+
+                                <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
+                                    <Button
+                                        Text="{Binding PrimaryActionText}"
+                                        Style="{StaticResource Buttons}"
+                                        Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.RegisterApplicationCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                    <Button
+                                        Grid.Column="1"
+                                        Text="Remover"
+                                        Style="{StaticResource DangerOutlineButton}"
+                                        Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.RemoveApplicationCommand}"
+                                        CommandParameter="{Binding .}"
+                                        IsVisible="{Binding CanRemove}"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <Grid
-            Grid.RowSpan="4"
+            Grid.RowSpan="2"
             IsVisible="{Binding IsLoading}"
             BackgroundColor="{AppThemeBinding Light={StaticResource OverlayScrim}, Dark={StaticResource DarkOverlayScrim}}"
             InputTransparent="False">

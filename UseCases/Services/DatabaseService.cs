@@ -80,21 +80,25 @@ namespace ACS_View.UseCases.Services
         {
             await Connection.CreateTablesAsync<Patient, PatientBolsaFamilia, Vaccines, PatientVaccineDose>();
             await Connection.CreateTableAsync<PatientInsulinDependency>();
+            await Connection.CreateTableAsync<CepAddressCache>();
             await Connection.CreateTablesAsync<Note, House>();
             await Connection.CreateTablesAsync<Family, User>();
             await Connection.CreateTablesAsync<CidCategory, CidChapter>();
             await Connection.CreateTablesAsync<CidGroup, CidSubcategory>();
-            await Connection.CreateTablesAsync<Visits, PatientCID>();
+            await Connection.CreateTablesAsync<Visits, VisitBatch, VisitCareLine, PatientCID>();
             await Connection.CreateTablesAsync<CommonConditions, PatientConditions>();
 
             await MigratePatientTableAsync();
             await MigrateHouseTableAsync();
+            await MigrateVisitsTableAsync();
             await MigrateUserScopedTablesAsync();
             await MigrateBolsaFamiliaTableAsync();
             await MigrateInsulinDependencyTableAsync();
+            await MigratePatientVaccineDoseTableAsync();
             await MigrateLegacyVaccinesAsync();
             await MigrateUserTableAsync();
             await BackfillSearchColumnsAsync();
+            await BackfillCepAddressCacheAsync();
             await BackfillFamilyResponsibleAsync();
             await CreateIndexesAsync();
         }
@@ -120,6 +124,35 @@ namespace ACS_View.UseCases.Services
         private async Task MigrateHouseTableAsync()
         {
             await EnsureColumnAsync("House", nameof(House.TipoLogradouro), "TEXT NOT NULL DEFAULT ''");
+        }
+
+        private async Task MigrateVisitsTableAsync()
+        {
+            await EnsureColumnAsync("Visits", nameof(Visits.PatientId), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("Visits", nameof(Visits.BatchId), "INTEGER NULL");
+            await EnsureColumnAsync("Visits", nameof(Visits.VisitDate), "TEXT NULL");
+            await EnsureColumnAsync("Visits", nameof(Visits.Status), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("Visits", nameof(Visits.Notes), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("Visits", nameof(Visits.CreatedAt), "TEXT NULL");
+            await EnsureColumnAsync("Visits", nameof(Visits.UpdatedAt), "TEXT NULL");
+            await BackfillLegacyVisitsAsync();
+        }
+
+        private async Task BackfillLegacyVisitsAsync()
+        {
+            await Connection.ExecuteAsync("UPDATE Visits SET VisitDate = Date WHERE VisitDate IS NULL OR VisitDate = ''");
+            await Connection.ExecuteAsync("UPDATE Visits SET CreatedAt = Date WHERE CreatedAt IS NULL OR CreatedAt = ''");
+            await Connection.ExecuteAsync(
+                """
+                UPDATE Visits
+                SET Status = CASE
+                    WHEN Description = 'Realizada' COLLATE NOCASE THEN 'Completed'
+                    WHEN Description = 'Ausente' COLLATE NOCASE THEN 'Absent'
+                    WHEN Description = 'Recusada' COLLATE NOCASE THEN 'Refused'
+                    ELSE Status
+                END
+                WHERE Status IS NULL OR Status = ''
+                """);
         }
 
         private async Task MigrateUserScopedTablesAsync()
@@ -211,12 +244,21 @@ namespace ACS_View.UseCases.Services
                 """);
         }
 
+        private async Task MigratePatientVaccineDoseTableAsync()
+        {
+            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.LotNumber), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.Notes), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.CreatedAt), "TEXT NULL");
+            await Connection.ExecuteAsync("UPDATE PatientVaccineDose SET CreatedAt = COALESCE(AppliedAt, CURRENT_TIMESTAMP) WHERE CreatedAt IS NULL OR CreatedAt = ''");
+            await Connection.ExecuteAsync("UPDATE PatientVaccineDose SET AppliedAt = CreatedAt WHERE IsApplied = 1 AND (AppliedAt IS NULL OR AppliedAt = '')");
+        }
+
         private Task InsertMigratedDoseAsync(int userId, int patientId, string doseKey)
         {
             return Connection.ExecuteAsync(
                 """
-                INSERT INTO PatientVaccineDose (UserId, PatientId, DoseKey, IsApplied, AppliedAt)
-                SELECT ?, ?, ?, 1, NULL
+                INSERT INTO PatientVaccineDose (UserId, PatientId, DoseKey, IsApplied, AppliedAt, LotNumber, Notes, CreatedAt)
+                SELECT ?, ?, ?, 1, CURRENT_TIMESTAMP, '', '', CURRENT_TIMESTAMP
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM PatientVaccineDose
@@ -284,6 +326,7 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientConditions_UserId_PatientId ON PatientConditions(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientVaccineDose_User_Patient_Dose ON PatientVaccineDose(UserId, PatientId, DoseKey)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientVaccineDose_UserId_PatientId ON PatientVaccineDose(UserId, PatientId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CepAddressCache_Cep ON CepAddressCache(Cep)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Tipo_Rua_Numero ON House(TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_UserId_Tipo_Rua_Numero ON House(UserId, TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Rua_Numero ON House(Rua COLLATE NOCASE, NumeroCasa)");
@@ -292,6 +335,11 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_SearchComplemento ON House(SearchComplemento)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Note_UserId_CreationDate ON Note(UserId, CreationDate)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Date ON Visits(UserId, Date)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Patient_Date ON Visits(UserId, PatientId, VisitDate)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Status_Date ON Visits(UserId, Status, VisitDate)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitCareLine_UserId_VisitId ON VisitCareLine(UserId, VisitId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitCareLine_UserId_Type ON VisitCareLine(UserId, CareLineType)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitBatch_UserId_Family_Date ON VisitBatch(UserId, HouseId, FamilyId, VisitDate)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Family_UserId_IdFamilia ON Family(UserId, IdFamilia)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Code ON CidSubcategory(Code COLLATE NOCASE)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Description ON CidSubcategory(Description COLLATE NOCASE)");
@@ -337,6 +385,34 @@ namespace ACS_View.UseCases.Services
                 house.SearchRua = searchRua;
                 house.SearchComplemento = searchComplemento;
                 await Connection.UpdateAsync(house);
+            }
+        }
+
+        private async Task BackfillCepAddressCacheAsync()
+        {
+            var houses = await Connection.Table<House>().ToListAsync();
+            foreach (var house in houses)
+            {
+                var cep = CepNumberRules.Normalize(house.CEP);
+                if (!CepNumberRules.IsValid(cep) || !HasAddressData(house) || IsSuspiciousCity(house.Cidade))
+                {
+                    continue;
+                }
+
+                await Connection.ExecuteAsync(
+                    """
+                    INSERT OR IGNORE INTO CepAddressCache
+                        (Cep, Rua, TipoLogradouro, Bairro, Cidade, Estado, Pais, UpdatedAt)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    cep,
+                    house.Rua?.Trim() ?? string.Empty,
+                    house.TipoLogradouro?.Trim() ?? string.Empty,
+                    house.Bairro?.Trim() ?? string.Empty,
+                    house.Cidade?.Trim() ?? string.Empty,
+                    house.Estado?.Trim() ?? string.Empty,
+                    string.IsNullOrWhiteSpace(house.Pais) ? "Brasil" : house.Pais.Trim(),
+                    DateTime.UtcNow);
             }
         }
 
@@ -398,6 +474,8 @@ namespace ACS_View.UseCases.Services
             "Family",
             "Note",
             "Visits",
+            "VisitBatch",
+            "VisitCareLine",
             "Vaccines",
             "PatientVaccineDose",
             "PatientCID",
@@ -409,6 +487,20 @@ namespace ACS_View.UseCases.Services
             return string.Join(" ", new[] { streetType, street }
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .Select(value => value!.Trim()));
+        }
+
+        private static bool HasAddressData(House house)
+        {
+            return !string.IsNullOrWhiteSpace(house.Rua) ||
+                   !string.IsNullOrWhiteSpace(house.Bairro) ||
+                   !string.IsNullOrWhiteSpace(house.Cidade) ||
+                   !string.IsNullOrWhiteSpace(house.Estado);
+        }
+
+        private static bool IsSuspiciousCity(string? value)
+        {
+            var normalized = value?.Trim();
+            return !string.IsNullOrWhiteSpace(normalized) && normalized.All(char.IsDigit);
         }
     }
 }

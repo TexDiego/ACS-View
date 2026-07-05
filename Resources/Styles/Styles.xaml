@@ -85,7 +85,8 @@
         <Setter Property="FontFamily" Value="OpenSansSemibold"/>
         <Setter Property="FontSize" Value="22"/>
         <Setter Property="FontAttributes" Value="Bold"/>
-        <Setter Property="HorizontalTextAlignment" Value="End"/>
+        <Setter Property="HorizontalTextAlignment" Value="Center"/>
+        <Setter Property="HorizontalOptions" Value="Center"/>
     </Style>
 
     <Style TargetType="Border">

@@ -12,9 +12,23 @@ public sealed class DashboardMetricPreferencesDto
 public sealed class DashboardMetricCombinationPreferenceDto
 {
     public bool IsHealth { get; set; }
+    public List<string> FilterKeys { get; set; } = [];
     public string FirstFilterKey { get; set; } = string.Empty;
     public string SecondFilterKey { get; set; } = string.Empty;
     public string? SexModifier { get; set; }
     public int? MinimumAgeModifier { get; set; }
     public int? MaximumAgeModifier { get; set; }
+
+    public IReadOnlyList<string> GetSelectedFilterKeys()
+    {
+        var keys = FilterKeys.Count > 0
+            ? FilterKeys
+            : [FirstFilterKey, SecondFilterKey];
+
+        return keys
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(key => key.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
 }

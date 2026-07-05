@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             x:DataType="vm:VisitRecordsViewModel"
+             x:Class="ACS_View.Views.VisitRecordsPage"
+             Shell.NavBarIsVisible="True"
+             Style="{StaticResource PageBackground}"
+             Title="Registros de visitas">
+
+    <Grid RowDefinitions="auto,auto,*" Padding="{StaticResource PagePadding}" RowSpacing="12">
+        <Grid Grid.Row="0" ColumnDefinitions="auto,*,auto" ColumnSpacing="10">
+            <Button
+                Text="Anterior"
+                Style="{StaticResource PrimaryOutlineButton}"
+                Command="{Binding PreviousMonthCommand}"
+                IsEnabled="{Binding CanGoPreviousMonth}"/>
+
+            <Label
+                Grid.Column="1"
+                Text="{Binding MonthTitle}"
+                Style="{StaticResource SectionTitle}"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center"/>
+
+            <Button
+                Grid.Column="2"
+                Text="Próximo"
+                Style="{StaticResource PrimaryOutlineButton}"
+                Command="{Binding NextMonthCommand}"
+                IsEnabled="{Binding CanGoNextMonth}"/>
+        </Grid>
+
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding StatusFilters}"
+            ItemsLayout="HorizontalList"
+            HeightRequest="44"
+            HorizontalScrollBarVisibility="Never">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:VisitStatusFilterOption">
+                    <Border
+                        Padding="12,7"
+                        Margin="0,0,8,0"
+                        StrokeShape="RoundRectangle 8"
+                        Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectStatusCommand}"
+                                CommandParameter="{Binding .}"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="{Binding Label}" Style="{StaticResource FieldLabel}"/>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <CollectionView
+            x:Name="RecordsCollectionView"
+            Grid.Row="2"
+            ItemsSource="{Binding VisitGroups}"
+            VerticalScrollBarVisibility="Never"
+            Scrolled="CollectionView_Scrolled">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:VisitRecordFamilyGroupDto">
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
+                        <Grid RowDefinitions="auto,auto" RowSpacing="10">
+                            <Grid ColumnDefinitions="*,auto" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding FamilyName}" Style="{StaticResource CardTitle}"/>
+                                    <Label Text="{Binding Visits.Count, StringFormat='{}{0} registros'}" Style="{StaticResource BodyMuted}"/>
+                                </VerticalStackLayout>
+
+                                <Button
+                                    Grid.Column="1"
+                                    Text="Abrir"
+                                    Style="{StaticResource PrimaryOutlineButton}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToFamilyCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Grid>
+
+                            <VerticalStackLayout
+                                Grid.Row="1"
+                                Spacing="8"
+                                BindableLayout.ItemsSource="{Binding Visits}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:VisitRecordDto">
+                                        <Border
+                                            Padding="10"
+                                            StrokeShape="RoundRectangle 8"
+                                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                            <Grid ColumnDefinitions="*,38" ColumnSpacing="8">
+                                                <VerticalStackLayout Spacing="3">
+                                                    <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}" FontSize="14"/>
+                                                    <Label Text="{Binding VisitDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                    <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="12" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding CareLinesText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                    <Label Text="{Binding Notes}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                </VerticalStackLayout>
+
+                                                <ImageButton
+                                                    Grid.Column="1"
+                                                    Source="bin"
+                                                    MaximumHeightRequest="28"
+                                                    MaximumWidthRequest="28"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisitCommand}"
+                                                    CommandParameter="{Binding Id}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.Footer>
+                <BoxView HeightRequest="80" BackgroundColor="Transparent"/>
+            </CollectionView.Footer>
+
+            <CollectionView.EmptyView>
+                <Border Style="{StaticResource CardBorder}">
+                    <Label
+                        Text="Nenhum registro encontrado para o mes atual."
+                        Style="{StaticResource BodyMuted}"
+                        HorizontalTextAlignment="Center"/>
+                </Border>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <Border Grid.RowSpan="3" Style="{StaticResource CountPill}">
+            <Label
+                Text="{Binding FooterText}"
+                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                FontSize="13"
+                FontAttributes="Bold"/>
+        </Border>
+
+        <Grid
+            Grid.RowSpan="3"
+            IsVisible="{Binding IsLoading}"
+            BackgroundColor="{AppThemeBinding Light={StaticResource OverlayScrim}, Dark={StaticResource DarkOverlayScrim}}"
+            InputTransparent="False">
+
+            <VerticalStackLayout
+                Spacing="10"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+
+                <ActivityIndicator
+                    IsRunning="{Binding IsLoading}"
+                    HeightRequest="36"
+                    WidthRequest="36"/>
+
+                <Label
+                    Text="Carregando registros"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.RowSpan="3"
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked"/>
+    </Grid>
+</ContentPage>

@@ -4,9 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:ACS_View.ViewModels"
-    xmlns:system="clr-namespace:System;assembly=mscorlib"
     x:Class="ACS_View.Views.VaccinesInfo"
-    x:TypeArguments="system:Boolean"
     x:DataType="vm:VaccinesInfoViewModel"
     WidthRequest="{Binding PopupWidth}"
     BackgroundColor="Transparent"
@@ -14,67 +12,85 @@
     CanBeDismissedByTappingOutsideOfPopup="True">
 
     <Border
+        Style="{StaticResource CardBorder}"
         Padding="14"
-        StrokeShape="RoundRectangle 8"
-        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
-        <VerticalStackLayout x:Name="PopupContent" Spacing="3">
+        Margin="0"
+        StrokeShape="RoundRectangle 8">
 
-            <Label
-                    FontSize="24"
-                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                    FontAttributes="Bold"
-                    Text="{Binding VaccineName}"/>
-
-            <BoxView
-                    Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                    HeightRequest="2"/>
-
-            <Label
-                    Text="Doenças evitadas:"
-                    Margin="0,5,0,5"
-                    FontSize="18"
-                    FontAttributes="Bold"
-                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
-
-            <Label
-                    x:Name="DiseasesAvoided"
-                    FontSize="16"
-                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                    Margin="0,0,0,5"
-                    FontAttributes="Italic"
-                    Text="{Binding DiseaseDescription}"/>
-
-            <BoxView
-                    Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                    HeightRequest="2"/>
-
-            <HorizontalStackLayout VerticalOptions="Center" Margin="-5,5,0,0">
-
-                <CheckBox
-                        x:Name="VaccineChecked"
-                        VerticalOptions="Center"
-                        CheckedChanged="VaccineChecked_CheckedChanged"/>
+        <VerticalStackLayout Spacing="12">
+            <VerticalStackLayout Spacing="4">
+                <Label
+                    Text="{Binding VaccineName}"
+                    Style="{StaticResource SectionTitle}"
+                    HorizontalTextAlignment="Center"/>
 
                 <Label
-                        VerticalOptions="Center"
-                        Text="Vacina aplicada"
-                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+                    Text="{Binding DoseName}"
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center"/>
 
-            </HorizontalStackLayout>
+                <Border
+                    Padding="10,5"
+                    StrokeShape="RoundRectangle 16"
+                    Stroke="{Binding StatusColor}"
+                    BackgroundColor="Transparent"
+                    HorizontalOptions="Center">
+                    <Label
+                        Text="{Binding StatusText}"
+                        Style="{StaticResource BodyMuted}"
+                        TextColor="{Binding StatusColor}"
+                        FontAttributes="Bold"/>
+                </Border>
+            </VerticalStackLayout>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,12,0,0">
-                <Button
-                        Text="Cancelar"
-                        Style="{StaticResource GhostButton}"
-                        Clicked="CancelButton_Clicked"/>
+            <BoxView
+                Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                HeightRequest="1"/>
 
-                <Button
-                        Grid.Column="1"
-                        Text="Salvar"
-                        Style="{StaticResource PrimaryButton}"
-                        Clicked="SaveButton_Clicked"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Idade" Style="{StaticResource FieldLabel}"/>
+                    <Label Text="{Binding AgeLabel}" Style="{StaticResource BodyMuted}"/>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                    <Label Text="Registro" Style="{StaticResource FieldLabel}"/>
+                    <Label Text="{Binding ApplicationDateText}" Style="{StaticResource BodyMuted}"/>
+                </VerticalStackLayout>
             </Grid>
 
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Calendario" Style="{StaticResource FieldLabel}"/>
+                <Label Text="{Binding RecommendedText}" Style="{StaticResource BodyMuted}"/>
+                <Label Text="{Binding DeadlineText}" Style="{StaticResource BodyMuted}"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Doencas evitadas" Style="{StaticResource FieldLabel}"/>
+                <Label
+                    Text="{Binding DiseaseDescription}"
+                    Style="{StaticResource BodyMuted}"
+                    FontAttributes="Italic"
+                    LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="2" IsVisible="{Binding HasLotNumber}">
+                <Label Text="Lote" Style="{StaticResource FieldLabel}"/>
+                <Label Text="{Binding LotNumber}" Style="{StaticResource BodyMuted}"/>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="2" IsVisible="{Binding HasNotes}">
+                <Label Text="Observacao" Style="{StaticResource FieldLabel}"/>
+                <Label
+                    Text="{Binding Notes}"
+                    Style="{StaticResource BodyMuted}"
+                    LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <Button
+                Text="Fechar"
+                Style="{StaticResource GhostButton}"
+                Clicked="CloseButton_Clicked"/>
         </VerticalStackLayout>
     </Border>
 </tk:Popup>

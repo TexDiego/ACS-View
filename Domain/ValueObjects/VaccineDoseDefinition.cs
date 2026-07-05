@@ -9,6 +9,7 @@ public sealed record VaccineDoseDefinition(
     VaccineSectionType Section,
     int? MinAgeMonths,
     int? MaxAgeMonths,
+    bool IsRequiredForChildMetric = false,
     bool RequiresPregnancy = false,
     string? AgeLabel = null,
     string? DiseaseDescription = null);

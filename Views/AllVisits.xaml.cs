@@ -15,7 +15,7 @@ public partial class AllVisits : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _ = _viewModel.LoadVisitsAsync();
+        _ = _viewModel.LoadVisitsAsync(force: true);
     }
 
     private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)

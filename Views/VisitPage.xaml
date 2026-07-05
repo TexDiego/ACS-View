@@ -2,41 +2,134 @@
 <tk:Popup
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:models="clr-namespace:ACS_View.Domain.Entities"
     xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
     x:Class="ACS_View.Views.VisitPage"
-    x:TypeArguments="models:Visits"
-    WidthRequest="{x:Static vm:BaseViewModel.DefaultPopupWidth}"
+    x:TypeArguments="dto:VisitBatchRequestDto"
+    x:DataType="vm:VisitBatchPopupViewModel"
+    WidthRequest="{Binding PopupWidth}"
     BackgroundColor="Transparent"
     Padding="0">
 
-    <Border>
-        <VerticalStackLayout BackgroundColor="{x:AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}" x:Name="layoutGrid" Spacing="16" Padding="10">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Registrar visita" Style="{StaticResource PageTitle}" FontSize="22" HorizontalTextAlignment="Center"/>
-                <Label Text="Informe o desfecho da visita" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
+    <Border
+        Style="{StaticResource CardBorder}"
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
+        MaximumHeightRequest="680">
+        <Grid RowDefinitions="auto,*,auto" RowSpacing="12">
+            <VerticalStackLayout Grid.Row="0" Spacing="12">
+                <Label
+                    Text="Registrar visitas"
+                    Style="{StaticResource SectionTitle}"
+                    HorizontalTextAlignment="Center"/>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Data" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <DatePicker Date="{Binding SelectedDate, Mode=TwoWay}"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Horário" Style="{StaticResource FieldLabel}"/>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <TimePicker
+                                Time="{Binding SelectedTime, Mode=TwoWay}"
+                                TextColor="{AppThemeBinding Dark={StaticResource White}, Light={StaticResource Black}}"/>
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                    <Button
+                        Text="Todos realizados"
+                        LineBreakMode="WordWrap"
+                        Style="{StaticResource PrimaryOutlineButton}"
+                        FontSize="12"
+                        Command="{Binding MarkAllCompletedCommand}"/>
+                    <Button
+                        Grid.Column="1"
+                        Text="Todos ausentes"
+                        LineBreakMode="WordWrap"
+                        Style="{StaticResource PrimaryOutlineButton}"
+                        FontSize="12"
+                        Command="{Binding MarkAllAbsentCommand}"/>
+                    <Button
+                        Grid.Column="2"
+                        Text="Limpar"
+                        Style="{StaticResource GhostButton}"
+                        FontSize="12"
+                        Command="{Binding ClearSelectionCommand}"/>
+                </Grid>
             </VerticalStackLayout>
 
-            <VerticalStackLayout BackgroundColor="{StaticResource PageBackground}" x:Name="Descricao" Spacing="4">
-                <RadioButton BackgroundColor="Transparent" GroupName="DescricaoVisita" Content="Realizada" IsChecked="True" CheckedChanged="RadioButton_CheckedChanged"/>
-                <RadioButton BackgroundColor="Transparent"  GroupName="DescricaoVisita" Content="Ausente" CheckedChanged="RadioButton_CheckedChanged"/>
-                <RadioButton BackgroundColor="Transparent"  GroupName="DescricaoVisita" Content="Recusada" CheckedChanged="RadioButton_CheckedChanged"/>
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout
+                    Spacing="8"
+                    BindableLayout.ItemsSource="{Binding People}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:VisitBatchPersonOption">
+                            <Border
+                                Padding="10"
+                                StrokeShape="RoundRectangle 8"
+                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                <Grid ColumnDefinitions="*,150" ColumnSpacing="8">
+                                    <VerticalStackLayout Spacing="3">
+                                        <Label
+                                            Text="{Binding PatientName}"
+                                            Style="{StaticResource CardTitle}"
+                                            FontSize="14"/>
+                                        <Label
+                                            Text="{Binding CareLinesText}"
+                                            Style="{StaticResource BodyMuted}"
+                                            FontSize="12"
+                                            LineBreakMode="WordWrap"/>
+                                    </VerticalStackLayout>
+
+                                    <Border Grid.Column="1" Style="{StaticResource FieldBorder}">
+                                        <Picker
+                                            ItemsSource="{Binding StatusOptions}"
+                                            SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <VerticalStackLayout Grid.Row="2" Spacing="10">
+                <Border Style="{StaticResource FieldBorder}">
+                    <Editor
+                        Text="{Binding Notes, Mode=TwoWay}"
+                        Placeholder="Observacao opcional"
+                        AutoSize="TextChanges"
+                        MinimumHeightRequest="64"
+                        MaxLength="300"/>
+                </Border>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    Style="{StaticResource BodyMuted}"
+                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                    IsVisible="{Binding HasError}"/>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button
+                        Text="Cancelar"
+                        Style="{StaticResource GhostButton}"
+                        Clicked="CancelButton_Clicked"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="{Binding SaveButtonText}"
+                        Style="{StaticResource Buttons}"
+                        Clicked="SaveButton_Clicked"/>
+                </Grid>
             </VerticalStackLayout>
-
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Button
-                    Text="Cancelar"
-                    Style="{StaticResource GhostButton}"
-                    Clicked="CancelButton_Clicked"/>
-
-                <Button
-                    Grid.Column="1"
-                    x:Name="AddVisitButton"
-                    Text="Registrar"
-                    Style="{StaticResource PrimaryButton}"
-                    Clicked="AddVisitButton_Clicked"/>
-            </Grid>
-        </VerticalStackLayout>
+        </Grid>
     </Border>
 </tk:Popup>

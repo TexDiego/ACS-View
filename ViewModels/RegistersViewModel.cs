@@ -426,12 +426,12 @@ namespace ACS_View.ViewModels
 
             return baseFilterKey switch
             {
-                DashboardFilterKeys.NoHouse => "Pacientes Sem Residencia",
-                DashboardFilterKeys.NoFamily => "Pacientes Sem Familia",
-                DashboardFilterKeys.BolsaFamilia => "Bolsa Familia",
+                DashboardFilterKeys.NoHouse => "Pacientes Sem Residência",
+                DashboardFilterKeys.NoFamily => "Pacientes Sem Família",
+                DashboardFilterKeys.BolsaFamilia => "Bolsa Família",
                 DashboardFilterKeys.Elderly => "Idosos",
-                DashboardFilterKeys.ChildrenUnder6 => "Criancas menores de 6",
-                DashboardFilterKeys.ChildrenOverdueVaccines => "Criancas com vacinacao atrasada",
+                DashboardFilterKeys.ChildrenUnder6 => "Crianças menores de 6",
+                DashboardFilterKeys.ChildrenOverdueVaccines => "Crianças com vacinação atrasada",
                 DashboardFilterKeys.Women25To64 => "Mulheres 25 a 64",
                 DashboardFilterKeys.Inactive => "Inativos",
                 _ => "Pacientes"

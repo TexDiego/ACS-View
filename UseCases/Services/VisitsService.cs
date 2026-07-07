@@ -160,7 +160,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         var userId = currentUserContext.RequireCurrentUserId();
         await PurgeExpiredVisitsAsync(userId, referenceDate);
         var patients = await _connection.Table<Patient>()
-            .Where(patient => patient.UserId == userId && patient.IsActive && patient.HouseId > 0 && patient.FamilyId > 0)
+            .Where(patient => patient.UserId == userId && patient.IsActive)
             .ToListAsync();
 
         var suggestions = new List<VisitSuggestionDto>();
@@ -183,7 +183,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                     continue;
                 }
 
-                var completedVisits = await CountValidCompletedVisitsAsync(userId, patient.Id, careLine, referenceDate, rule);
+                var completedVisits = await CountCompletedVisitDaysInReferenceMonthAsync(userId, patient.Id, referenceDate);
                 var missingVisits = Math.Max(0, rule.RequiredVisits - completedVisits);
                 if (missingVisits <= 0)
                 {
@@ -196,7 +196,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                     HouseId = patient.HouseId,
                     FamilyId = patient.FamilyId,
                     PatientName = patient.Name,
-                    FamilyName = $"Familia {patient.FamilyId}",
+                    FamilyName = BuildSuggestionFamilyName(patient),
                     CareLineType = careLine.ToString(),
                     PriorityFactor = priority.Factor,
                     PriorityLabel = priority.Label,
@@ -205,7 +205,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                     MissingVisits = missingVisits,
                     HasNoCompletedVisitsInRecommendedPeriod = completedVisits == 0,
                     Points = rule.Points,
-                    Reason = BuildSuggestionReason(careLine, completedVisits, rule),
+                    Reason = BuildSuggestionReason(careLine),
                     LastVisitDate = lastVisit
                 });
             }
@@ -405,8 +405,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             {
                 var orderedItems = group.OrderByDescending(item => item.Points).ToList();
                 var first = orderedItems[0];
-                var careLines = string.Join(", ", orderedItems.Select(item => GetCareLineLabel(item.CareLineType)).Where(label => !string.IsNullOrWhiteSpace(label)).Distinct());
-                var reasons = string.Join(" | ", orderedItems.Select(item => item.Reason).Where(reason => !string.IsNullOrWhiteSpace(reason)).Distinct());
+                var careLines = string.Join(", ", orderedItems.Select(item => GetSuggestionReasonLabel(item.CareLineType)).Where(label => !string.IsNullOrWhiteSpace(label)).Distinct());
                 var dueDates = orderedItems.Select(item => item.DueDate).Where(date => date.HasValue).ToList();
                 var lastVisitDates = orderedItems.Select(item => item.LastVisitDate).Where(date => date.HasValue).ToList();
                 var requiredVisits = orderedItems.Max(item => item.RequiredVisits);
@@ -428,7 +427,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                     MissingVisits = missingVisits,
                     HasNoCompletedVisitsInRecommendedPeriod = completedVisits == 0,
                     Points = orderedItems.Sum(item => item.Points),
-                    Reason = reasons,
+                    Reason = careLines,
                     DueDate = dueDates.Count > 0 ? dueDates.Min() : null,
                     IsOverdue = orderedItems.Any(item => item.IsOverdue),
                     LastVisitDate = lastVisitDates.Count > 0 ? lastVisitDates.Max() : null
@@ -555,59 +554,43 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             careLines.Add(VisitCareLineType.BolsaFamilia);
         }
 
+        if (careLines.Count == 0)
+        {
+            careLines.Add(VisitCareLineType.NoVulnerability);
+        }
+
         return careLines.Distinct().ToList();
     }
 
-    private async Task<int> CountValidCompletedVisitsAsync(
+    private async Task<int> CountCompletedVisitDaysInReferenceMonthAsync(
         int userId,
         int patientId,
-        VisitCareLineType careLine,
-        DateTime referenceDate,
-        VisitCareLineRule rule)
+        DateTime referenceDate)
     {
-        var start = rule.PeriodInMonths.HasValue
-            ? referenceDate.Date.AddMonths(-rule.PeriodInMonths.Value)
-            : DateTime.MinValue;
-        var end = referenceDate.Date.AddDays(1);
+        var start = new DateTime(referenceDate.Year, referenceDate.Month, 1);
+        var end = start.AddMonths(1);
 
         var visits = await _connection.QueryAsync<VisitDateRow>(
             """
             SELECT DISTINCT v.VisitDate
             FROM Visits v
-            INNER JOIN VisitCareLine vc ON vc.UserId = v.UserId AND vc.VisitId = v.Id
             WHERE v.UserId = ?
               AND v.PatientId = ?
               AND v.Status = ?
               AND v.VisitDate >= ?
               AND v.VisitDate < ?
-              AND vc.CareLineType = ?
             ORDER BY v.VisitDate ASC
             """,
             userId,
             patientId,
             VisitStatus.Completed.ToString(),
             start,
-            end,
-            careLine.ToString());
+            end);
 
-        if (!rule.MinimumDaysBetweenVisits.HasValue)
-        {
-            return visits.Count;
-        }
-
-        var validCount = 0;
-        DateTime? lastValidDate = null;
-        foreach (var visit in visits)
-        {
-            if (lastValidDate is null ||
-                (visit.VisitDate.Date - lastValidDate.Value.Date).TotalDays >= rule.MinimumDaysBetweenVisits.Value)
-            {
-                validCount++;
-                lastValidDate = visit.VisitDate;
-            }
-        }
-
-        return validCount;
+        return visits
+            .Select(visit => visit.VisitDate.Date)
+            .Distinct()
+            .Count();
     }
 
     private Task<DateTime?> GetLastCompletedVisitDateAsync(int userId, int patientId)
@@ -670,26 +653,51 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
     {
         return careLine switch
         {
-            nameof(VisitCareLineType.Child) => "Crianca",
+            nameof(VisitCareLineType.Child) => "Criança",
             nameof(VisitCareLineType.Pregnancy) => "Gestante",
-            nameof(VisitCareLineType.Postpartum) => "Puerpera",
+            nameof(VisitCareLineType.Postpartum) => "Puérpera",
             nameof(VisitCareLineType.Hypertension) => "Hipertenso",
-            nameof(VisitCareLineType.Diabetes) => "Diabetico",
+            nameof(VisitCareLineType.Diabetes) => "Diabético",
             nameof(VisitCareLineType.Elderly) => "Idoso",
-            nameof(VisitCareLineType.BolsaFamilia) => "Bolsa Familia",
+            nameof(VisitCareLineType.BolsaFamilia) => "Bolsa Família",
             nameof(VisitCareLineType.Bpc) => "BPC",
+            nameof(VisitCareLineType.NoVulnerability) => "Sem critérios de vulnerabilidade",
             _ => string.Empty
         };
     }
 
-    private static string BuildSuggestionReason(VisitCareLineType careLine, int completedVisits, VisitCareLineRule rule)
+    private static string BuildSuggestionFamilyName(Patient patient)
+    {
+        if (patient.HouseId <= 0 && patient.FamilyId <= 0)
+        {
+            return "Sem residência/família vinculada";
+        }
+
+        if (patient.HouseId <= 0)
+        {
+            return $"Familia {patient.FamilyId} sem residência vinculada";
+        }
+
+        if (patient.FamilyId <= 0)
+        {
+            return "Sem família vinculada";
+        }
+
+        return $"Família {patient.FamilyId}";
+    }
+
+    private static string BuildSuggestionReason(VisitCareLineType careLine)
+    {
+        return GetSuggestionReasonLabel(careLine.ToString());
+    }
+
+    private static string GetSuggestionReasonLabel(string? careLine)
     {
         return careLine switch
         {
-            VisitCareLineType.Child => "Crianca ate 2 anos: acompanhe as visitas dos primeiros meses de vida",
-            VisitCareLineType.Pregnancy => "Gestante: faltam visitas de acompanhamento do pre-natal",
-            VisitCareLineType.Postpartum => "Puerpera: visita puerperal pendente",
-            _ => $"{GetCareLineLabel(careLine.ToString())}: possui {completedVisits} de {rule.RequiredVisits} visitas validas"
+            nameof(VisitCareLineType.Child) => "Criança até 2 anos",
+            nameof(VisitCareLineType.NoVulnerability) => "Sem critérios de vulnerabilidade",
+            _ => GetCareLineLabel(careLine)
         };
     }
 

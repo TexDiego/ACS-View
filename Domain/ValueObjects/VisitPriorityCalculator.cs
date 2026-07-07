@@ -14,20 +14,20 @@ public static class VisitPriorityCalculator
 
         if (hasAgePriority && hasBenefit)
         {
-            return new VisitPriorityResult(2.5m, "Prioridade 2.5: crianca/idoso e beneficiario Bolsa Familia/BPC");
+            return new VisitPriorityResult(2.5m, "Prioridade 2.5: criança/idoso e beneficiário Bolsa Família");
         }
 
         if (hasBenefit)
         {
-            return new VisitPriorityResult(1.3m, "Prioridade 1.3: beneficiario Bolsa Familia/BPC");
+            return new VisitPriorityResult(1.3m, "Prioridade 1.3: beneficiário Bolsa Família");
         }
 
         if (hasAgePriority)
         {
-            return new VisitPriorityResult(1.2m, "Prioridade 1.2: crianca ou idoso");
+            return new VisitPriorityResult(1.2m, "Prioridade 1.2: criança ou idoso");
         }
 
-        return new VisitPriorityResult(1.0m, "Prioridade 1.0: sem criterio adicional de vulnerabilidade");
+        return new VisitPriorityResult(1.0m, "Prioridade 1.0: sem critério adicional de vulnerabilidade");
     }
 }
 

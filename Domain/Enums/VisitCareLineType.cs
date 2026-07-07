@@ -9,5 +9,6 @@ public enum VisitCareLineType
     Diabetes = 5,
     Elderly = 6,
     BolsaFamilia = 7,
-    Bpc = 8
+    Bpc = 8,
+    NoVulnerability = 9
 }

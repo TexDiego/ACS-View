@@ -139,6 +139,26 @@ Assert(!DashboardMetricCombinationRules.CanCombine([DashboardFilterKeys.NoHouse,
 
 Console.WriteLine("DashboardMetricCombinationRules tests passed.");
 
+var strongVisitCareLines = new[]
+{
+    VisitCareLineType.Hypertension,
+    VisitCareLineType.Diabetes,
+    VisitCareLineType.Elderly,
+    VisitCareLineType.BolsaFamilia
+};
+Assert(strongVisitCareLines.All(careLine => VisitScoringRuleCatalog.GetRule(careLine) is not null), "Paciente com hipertensao, diabetes, idoso e Bolsa Familia deve ter regras de sugestao para todas as linhas de cuidado.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.BolsaFamilia)?.RequiredVisits == 2, "Bolsa Familia deve gerar sugestao propria de visita.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.Description.Contains("ate 2 anos", StringComparison.OrdinalIgnoreCase) == true ||
+       VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.Description.Contains("até 2 anos", StringComparison.OrdinalIgnoreCase) == true, "Sugestao infantil deve seguir a matriz de criancas ate 2 anos.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.DeadlineRule == "ChildTwoStep", "Sugestao infantil deve manter a regra infantil da matriz, nao a metrica de menores de 6 anos.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.RequiredVisits == 1, "Pacientes sem criterios de vulnerabilidade devem exigir 1 visita no mes.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.Points == 10, "Pacientes sem criterios de vulnerabilidade devem ter pontuacao generica menor.");
+Assert(VisitPriorityCalculator.Calculate([VisitCareLineType.NoVulnerability]).Factor == 1.0m, "Pacientes sem criterios devem manter prioridade base 1.0.");
+Assert(VisitPriorityCalculator.Calculate(strongVisitCareLines).Factor == 2.5m, "Idoso beneficiario deve receber fator de prioridade 2.5.");
+Assert(strongVisitCareLines.Sum(careLine => VisitScoringRuleCatalog.GetRule(careLine)?.Points ?? 0) >= 80, "Paciente com multiplos fatores fortes deve acumular pontuacao alta.");
+
+Console.WriteLine("VisitScoringRuleCatalog tests passed.");
+
 var pregnancy = new ACS_View.Domain.Entities.PatientPregnancy
 {
     PatientId = 10,

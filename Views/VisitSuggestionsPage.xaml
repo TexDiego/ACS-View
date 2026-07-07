@@ -9,92 +9,95 @@
              Style="{StaticResource PageBackground}"
              Title="Sugestões de visitas">
 
-    <Grid Padding="{StaticResource PagePadding}">
-        <CollectionView
-            x:Name="SuggestionsCollectionView"
-            ItemsSource="{Binding Suggestions}"
-            VerticalScrollBarVisibility="Never"
-            Scrolled="CollectionView_Scrolled">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:VisitSuggestionDto">
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
-                                CommandParameter="{Binding HouseId}"/>
-                        </Border.GestureRecognizers>
+    <RefreshView
+        Command="{Binding Refresh}"
+        IsRefreshing="{Binding IsLoading}"
+        RefreshColor="{StaticResource PrimaryDark}">
+        <Grid Padding="10,0">
+            <CollectionView
+                x:Name="SuggestionsCollectionView"
+                ItemsSource="{Binding Suggestions}"
+                VerticalScrollBarVisibility="Never"
+                Scrolled="CollectionView_Scrolled">
 
-                        <Grid RowDefinitions="auto,auto" RowSpacing="8">
-                            <Grid ColumnDefinitions="*,auto" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="3" VerticalOptions="Start">
-                                    <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}"/>
-                                    <Label Text="{Binding FamilyName}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                </VerticalStackLayout>
+                <CollectionView.Header>
+                    <BoxView HeightRequest="15"/>
+                </CollectionView.Header>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:VisitSuggestionDto">
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToHouseCommand}"
+                                    CommandParameter="{Binding HouseId}"/>
+                            </Border.GestureRecognizers>
 
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End" VerticalOptions="Start">
-                                    <Label Text="{Binding Points}" Style="{StaticResource MetricNumber}" HorizontalTextAlignment="End"/>
-                                    <Label Text="pontos" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                            <Grid RowDefinitions="auto,auto" RowSpacing="8">
+                                <Grid ColumnDefinitions="*,auto" ColumnSpacing="12">
+                                    <VerticalStackLayout Spacing="3" VerticalOptions="Start">
+                                        <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}"/>
+                                        <Label Text="{Binding FamilyName}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End" VerticalOptions="Start">
+                                        <Label Text="{Binding Points}" Style="{StaticResource MetricNumber}" HorizontalTextAlignment="End"/>
+                                        <Label Text="pontos" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+
+                                <VerticalStackLayout Grid.Row="1" Spacing="4">
+                                    <Label Text="{Binding Reason}" Style="{StaticResource BodyMuted}"/>
+                                    <Label Text="{Binding PriorityLabel}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label Text="Faltam" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                        <Label Text="{Binding MissingVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
+                                        <Label Text="de" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                        <Label Text="{Binding RequiredVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
 
-                            <VerticalStackLayout Grid.Row="1" Spacing="4">
-                                <Label Text="{Binding Reason}" Style="{StaticResource BodyMuted}"/>
-                                <Label Text="{Binding PriorityLabel}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                <HorizontalStackLayout Spacing="4">
-                                    <Label Text="Faltam" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                    <Label Text="{Binding MissingVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
-                                    <Label Text="de" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                    <Label Text="{Binding RequiredVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-
-            <CollectionView.Footer>
-                <Label
-                    Text="{Binding FooterText}"
-                    Style="{StaticResource BodyMuted}"
-                    HorizontalTextAlignment="Center"
-                    Margin="0,6,0,90"/>
-            </CollectionView.Footer>
-
-            <CollectionView.EmptyView>
-                <Border Style="{StaticResource CardBorder}">
+                <CollectionView.Footer>
                     <Label
-                        Text="Nenhuma sugestao pendente."
+                        Text="{Binding FooterText}"
                         Style="{StaticResource BodyMuted}"
-                        HorizontalTextAlignment="Center"/>
-                </Border>
-            </CollectionView.EmptyView>
-        </CollectionView>
+                        HorizontalTextAlignment="Center"
+                        HorizontalOptions="Center"
+                        Margin="0,15,0,30"/>
+                </CollectionView.Footer>
 
-        <Grid
-            IsVisible="{Binding IsLoading}"
-            BackgroundColor="{AppThemeBinding Light={StaticResource OverlayScrim}, Dark={StaticResource DarkOverlayScrim}}"
-            InputTransparent="False">
+                <CollectionView.EmptyView>
+                    <Border
+                        IsVisible="{Binding ShowEmptyView}"
+                        Style="{StaticResource CardBorder}">
+                        <Label
+                            Text="Nenhuma sugestão pendente."
+                            Style="{StaticResource BodyMuted}"
+                            HorizontalTextAlignment="Center"/>
+                    </Border>
+                </CollectionView.EmptyView>
+            </CollectionView>
 
-            <VerticalStackLayout
-                Spacing="10"
-                HorizontalOptions="Center"
-                VerticalOptions="Center">
-
-                <ActivityIndicator
-                    IsRunning="{Binding IsLoading}"
-                    HeightRequest="36"
-                    WidthRequest="36"/>
+            <Grid
+                Padding="0,60,0,0"
+                IsVisible="{Binding IsLoading}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource OverlayScrim}, Dark={StaticResource DarkOverlayScrim}}"
+                InputTransparent="False">
 
                 <Label
                     Text="Carregando sugestões"
                     Style="{StaticResource BodyMuted}"
                     HorizontalTextAlignment="Center"/>
-            </VerticalStackLayout>
-        </Grid>
+            </Grid>
 
-        <ImageButton
-            x:Name="BackToTopButton"
-            Style="{StaticResource FloatingBackToTopButton}"
-            Clicked="BackToTopButton_Clicked"/>
-    </Grid>
+            <ImageButton
+                x:Name="BackToTopButton"
+                Style="{StaticResource FloatingBackToTopButton}"
+                Clicked="BackToTopButton_Clicked"/>
+        </Grid>
+    </RefreshView>
 </ContentPage>

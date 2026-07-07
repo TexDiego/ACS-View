@@ -21,6 +21,7 @@
     <Compile Include="..\..\Domain\Enums\PregnancyEndType.cs" Link="Domain\Enums\PregnancyEndType.cs" />
     <Compile Include="..\..\Domain\Enums\PregnancyRisk.cs" Link="Domain\Enums\PregnancyRisk.cs" />
     <Compile Include="..\..\Domain\Enums\PregnancyStatus.cs" Link="Domain\Enums\PregnancyStatus.cs" />
+    <Compile Include="..\..\Domain\Enums\VisitCareLineType.cs" Link="Domain\Enums\VisitCareLineType.cs" />
     <Compile Include="..\..\Domain\Enums\VaccineSectionType.cs" Link="Domain\Enums\VaccineSectionType.cs" />
     <Compile Include="..\..\Domain\Enums\VaccineStatus.cs" Link="Domain\Enums\VaccineStatus.cs" />
     <Compile Include="..\..\Domain\ValueObjects\VaccineDoseCatalog.cs" Link="Domain\ValueObjects\VaccineDoseCatalog.cs" />
@@ -34,5 +35,7 @@
     <Compile Include="..\..\Domain\ValueObjects\PregnancyCalculator.cs" Link="Domain\ValueObjects\PregnancyCalculator.cs" />
     <Compile Include="..\..\Domain\ValueObjects\PregnancyRiskSuggestion.cs" Link="Domain\ValueObjects\PregnancyRiskSuggestion.cs" />
     <Compile Include="..\..\Domain\ValueObjects\PregnancyRiskSuggestionCalculator.cs" Link="Domain\ValueObjects\PregnancyRiskSuggestionCalculator.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VisitPriorityCalculator.cs" Link="Domain\ValueObjects\VisitPriorityCalculator.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\VisitScoringRuleCatalog.cs" Link="Domain\ValueObjects\VisitScoringRuleCatalog.cs" />
   </ItemGroup>
 </Project>

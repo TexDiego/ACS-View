@@ -18,20 +18,19 @@ public partial class AllVisitsViewModel : BaseViewModel
     [ObservableProperty] private ObservableCollection<VisitSuggestionDto> suggestionsPreview = [];
     [ObservableProperty] private bool hasSuggestions;
 
-    public ICommand OpenRecordsCommand { get; }
-    public ICommand OpenSuggestionsCommand { get; }
-    public ICommand GoToHouseCommand { get; }
+    public ICommand OpenRecordsCommand => new Command(async () => await NavigateToAsync("visitrecords"));
+    public ICommand OpenSuggestionsCommand => new Command(async () => await NavigateToAsync("visitsuggestions"));
+    public ICommand GoToHouseCommand => new Command<int>(async id => await GoToHouse(id));
+    public ICommand Refresh => new Command(async () => await LoadVisitsAsync());
 
     public AllVisitsViewModel(IVisitsService visitsService)
     {
         this.visitsService = visitsService;
-        OpenRecordsCommand = new Command(async () => await NavigateToAsync("visitrecords"));
-        OpenSuggestionsCommand = new Command(async () => await NavigateToAsync("visitsuggestions"));
-        GoToHouseCommand = new Command<int>(async id => await GoToHouse(id));
     }
 
     internal async Task LoadVisitsAsync(bool force = false)
     {
+        IsLoading = true;
         var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
         if (!force && hasLoaded && loadedVersion == currentVersion)
         {
@@ -58,6 +57,10 @@ public partial class AllVisitsViewModel : BaseViewModel
         {
             Debug.WriteLine($"Erro ao carregar visitas: {ex.Message}");
             await DisplayAlertAsync("Erro", "Não foi possível carregar as visitas.");
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 

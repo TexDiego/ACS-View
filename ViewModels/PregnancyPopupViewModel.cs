@@ -11,7 +11,10 @@ namespace ACS_View.ViewModels;
 public partial class PregnancyPopupViewModel : BaseViewModel
 {
     private readonly PatientPregnancy pregnancy;
+    private readonly Patient patient;
     private readonly int registeredChildrenCount;
+    private readonly IReadOnlyList<string> conditionDescriptions;
+    private PregnancyRiskSuggestion riskSuggestion = new();
 
     [ObservableProperty] private bool hasLastMenstrualPeriod;
     [ObservableProperty] private DateTime lastMenstrualPeriodDate = DateTime.Today;
@@ -33,8 +36,10 @@ public partial class PregnancyPopupViewModel : BaseViewModel
     public PregnancyPopupViewModel(PregnancyDetailsDto details)
     {
         pregnancy = Clone(details.Pregnancy);
+        patient = details.Patient;
         registeredChildrenCount = details.RegisteredChildrenCount;
-        RiskSuggestion = details.RiskSuggestion;
+        conditionDescriptions = details.ConditionDescriptions;
+        riskSuggestion = details.RiskSuggestion;
         RegisteredChildrenSuggestionText = $"Sugestão: {registeredChildrenCount} filhos cadastrados no app";
 
         HasLastMenstrualPeriod = pregnancy.LastMenstrualPeriod is not null;
@@ -82,7 +87,6 @@ public partial class PregnancyPopupViewModel : BaseViewModel
         "Outro"
     ];
 
-    public PregnancyRiskSuggestion RiskSuggestion { get; }
     public string RegisteredChildrenSuggestionText { get; }
     public double BottomSheetWidth => GetBottomSheetSize().Width;
     public double BottomSheetHeight => GetBottomSheetSize().Height;
@@ -145,6 +149,12 @@ public partial class PregnancyPopupViewModel : BaseViewModel
     partial void OnSelectedStatusChanged(string value)
     {
         ShowEndFields = ParseStatus(value) == PregnancyStatus.Ended;
+        Recalculate();
+    }
+
+    partial void OnInformedChildrenCountTextChanged(string value)
+    {
+        Recalculate();
     }
 
     private void UseChildrenSuggestion()
@@ -155,7 +165,7 @@ public partial class PregnancyPopupViewModel : BaseViewModel
 
     private void ApplyRiskSuggestion()
     {
-        SelectedRisk = GetRiskText(RiskSuggestion.Risk);
+        SelectedRisk = GetRiskText(riskSuggestion.Risk);
     }
 
     private void Recalculate()
@@ -163,11 +173,16 @@ public partial class PregnancyPopupViewModel : BaseViewModel
         var preview = ToPreviewPregnancy();
         var age = PregnancyCalculator.CalculateGestationalAge(preview);
         var trimester = PregnancyCalculator.CalculateTrimester(preview);
+        riskSuggestion = PregnancyRiskSuggestionCalculator.Calculate(
+            patient,
+            preview,
+            conditionDescriptions,
+            registeredChildrenCount);
         GestationalAgeText = age?.ToString() ?? "Sem DUM";
         TrimesterText = trimester is null ? "Trimestre não calculado" : $"{trimester}º trimestre";
-        SuggestedRiskText = GetRiskText(RiskSuggestion.Risk);
-        SuggestionReasonsText = RiskSuggestion.ReasonsText;
-        ShowRiskSuggestion = RiskSuggestion.Risk != ParseRisk(SelectedRisk);
+        SuggestedRiskText = GetRiskText(riskSuggestion.Risk);
+        SuggestionReasonsText = riskSuggestion.ReasonsText;
+        ShowRiskSuggestion = riskSuggestion.Risk != ParseRisk(SelectedRisk);
     }
 
     private PatientPregnancy ToPreviewPregnancy()

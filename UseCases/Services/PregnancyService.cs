@@ -61,8 +61,10 @@ internal sealed class PregnancyService(
 
         return new PregnancyDetailsDto
         {
+            Patient = patient,
             Pregnancy = pregnancy,
             RegisteredChildrenCount = registeredChildrenCount,
+            ConditionDescriptions = conditions.Select(condition => condition.Description ?? string.Empty).ToList(),
             RiskSuggestion = suggestion,
             GestationalAge = PregnancyCalculator.CalculateGestationalAge(pregnancy),
             Trimester = PregnancyCalculator.CalculateTrimester(pregnancy),

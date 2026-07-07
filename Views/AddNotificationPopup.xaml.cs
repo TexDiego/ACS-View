@@ -8,10 +8,10 @@ public partial class AddNotificationPopup : Popup<NoteNotificationRequestDto>
 {
     private readonly AddNotificationPopupViewModel _viewModel;
 
-    public AddNotificationPopup(string noteContent)
+    public AddNotificationPopup(string noteContent, DateTime? activeNotificationDate)
     {
         InitializeComponent();
-        BindingContext = _viewModel = new AddNotificationPopupViewModel(noteContent);
+        BindingContext = _viewModel = new AddNotificationPopupViewModel(noteContent, activeNotificationDate);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)
@@ -27,5 +27,10 @@ public partial class AddNotificationPopup : Popup<NoteNotificationRequestDto>
         }
 
         await CloseAsync(request);
+    }
+
+    private async void CancelNotificationButton_Clicked(object sender, EventArgs e)
+    {
+        await CloseAsync(new NoteNotificationRequestDto(default, string.Empty, CancelExisting: true));
     }
 }

@@ -15,7 +15,7 @@ public partial class AddNotificationPopupViewModel : BaseViewModel
     private string errorMessage = string.Empty;
     private bool hasError;
 
-    public AddNotificationPopupViewModel(string noteContent)
+    public AddNotificationPopupViewModel(string noteContent, DateTime? activeNotificationDate)
     {
         var initialDate = DateTime.Now.AddDays(1);
 
@@ -33,12 +33,18 @@ public partial class AddNotificationPopupViewModel : BaseViewModel
         ];
 
         SelectSuggestionCommand = new Command<NotificationSuggestionOption>(SelectSuggestion);
+        HasActiveNotification = activeNotificationDate is not null && activeNotificationDate.Value > DateTime.Now;
+        ActiveNotificationText = HasActiveNotification
+            ? $"Notificação ativa para {activeNotificationDate:dd/MM/yyyy HH:mm}"
+            : string.Empty;
         SelectSuggestion(Suggestions[0]);
     }
 
     public int MessageMaxLength => MaxMessageLength;
     public ObservableCollection<NotificationSuggestionOption> Suggestions { get; }
     public ICommand SelectSuggestionCommand { get; }
+    public bool HasActiveNotification { get; }
+    public string ActiveNotificationText { get; }
 
     public DateTime MinimumDate
     {

@@ -74,6 +74,9 @@ namespace ACS_View.ViewModels
             catch (TaskCanceledException)
             {
             }
+            catch (Exception ex) when (IsCancellationException(ex))
+            {
+            }
             catch (Exception ex)
             {
                 await DisplayAlertAsync("Erro", ex.Message);
@@ -110,6 +113,9 @@ namespace ACS_View.ViewModels
                     _lastLoadedSearch = normalizedSearch;
                     _lastLoadedFilterKey = _filterKey;
                 });
+            }
+            catch (Exception ex) when (IsCancellationException(ex))
+            {
             }
             finally
             {

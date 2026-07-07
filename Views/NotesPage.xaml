@@ -9,6 +9,13 @@
              Style="{StaticResource PageBackground}"
              Title="Anotações">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            Text="Notificações"
+            IconImageSource="notification.png"
+            Command="{Binding ShowActiveNotificationsCommand}"/>
+    </ContentPage.ToolbarItems>
+
     <RefreshView Command="{Binding Refresh}" IsRefreshing="{Binding IsLoading}">
         <Grid RowDefinitions="auto,*" Padding="{StaticResource PagePadding}" RowSpacing="12">
 

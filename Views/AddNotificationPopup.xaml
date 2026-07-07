@@ -27,6 +27,22 @@
                     Style="{StaticResource SectionTitle}"
                     HorizontalOptions="Center"/>
 
+                <Border
+                    Style="{StaticResource FieldBorder}"
+                    IsVisible="{Binding HasActiveNotification}">
+                    <Grid RowDefinitions="auto,auto" RowSpacing="8">
+                        <Label
+                            Text="{Binding ActiveNotificationText}"
+                            Style="{StaticResource BodyMuted}"
+                            HorizontalTextAlignment="Center"/>
+                        <Button
+                            Grid.Row="1"
+                            Text="Cancelar notificação ativa"
+                            Style="{StaticResource GhostButton}"
+                            Clicked="CancelNotificationButton_Clicked"/>
+                    </Grid>
+                </Border>
+
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Data" Style="{StaticResource FieldLabel}"/>

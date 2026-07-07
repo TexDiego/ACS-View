@@ -56,6 +56,8 @@ namespace ACS_View.ViewModels
         private PregnancyDetailsDto? _pregnancyDetails;
         private bool _initialIsActive = true;
         private bool _isOpeningPregnancyDetails;
+        private bool _isLoadingPatient;
+        private readonly Dictionary<string, bool> _conditionSelectionSnapshot = [];
 
         public DateTime MinimumDate => new(1900, 1, 1);
         public DateTime MaximumDate => DateTime.Today;
@@ -140,6 +142,7 @@ namespace ACS_View.ViewModels
 
         internal async Task LoadPatient(int id)
         {
+            _isLoadingPatient = true;
             try
             {
                 var p = await _patientService.GetPatientById(id);
@@ -207,6 +210,8 @@ namespace ACS_View.ViewModels
                     }
                 }
 
+                UpdateConditionSelectionSnapshot();
+
                 var patientCids = await _patientCid.GetPatientCIDsByPatientId(id);
 
                 if (patientCids == null) return;
@@ -229,6 +234,10 @@ namespace ACS_View.ViewModels
             {
                 Debug.WriteLine(ex);
                 await DisplayAlertAsync("Erro", "Não foi possível obter dados do paciente solicitado", "Voltar");
+            }
+            finally
+            {
+                _isLoadingPatient = false;
             }
         }
 
@@ -537,8 +546,10 @@ namespace ACS_View.ViewModels
 
             return new PregnancyDetailsDto
             {
+                Patient = CurrentPatient,
                 Pregnancy = pregnancy,
                 RegisteredChildrenCount = 0,
+                ConditionDescriptions = conditions.ToList(),
                 RiskSuggestion = suggestion,
                 GestationalAge = PregnancyCalculator.CalculateGestationalAge(pregnancy),
                 Trimester = PregnancyCalculator.CalculateTrimester(pregnancy)
@@ -706,6 +717,16 @@ namespace ACS_View.ViewModels
         {
             if (condition == null) return;
 
+            if (_isLoadingPatient)
+            {
+                return;
+            }
+
+            if (!HasConditionSelectionChanged(condition))
+            {
+                return;
+            }
+
             if (IsPregnancyCondition(condition))
             {
                 IsPregnancySelected = condition.Selected;
@@ -735,6 +756,35 @@ namespace ACS_View.ViewModels
             }
 
             await Task.CompletedTask;
+        }
+
+        private bool HasConditionSelectionChanged(HealthConditions condition)
+        {
+            var key = GetConditionSnapshotKey(condition);
+            var previous = _conditionSelectionSnapshot.TryGetValue(key, out var selected) && selected;
+            if (previous == condition.Selected)
+            {
+                return false;
+            }
+
+            _conditionSelectionSnapshot[key] = condition.Selected;
+            return true;
+        }
+
+        private void UpdateConditionSelectionSnapshot()
+        {
+            _conditionSelectionSnapshot.Clear();
+            foreach (var condition in CommonConditions)
+            {
+                _conditionSelectionSnapshot[GetConditionSnapshotKey(condition)] = condition.Selected;
+            }
+        }
+
+        private static string GetConditionSnapshotKey(HealthConditions condition)
+        {
+            return string.IsNullOrWhiteSpace(condition.ConditionKey)
+                ? condition.Name
+                : condition.ConditionKey;
         }
 
         private static bool IsDiabetesCondition(HealthConditions condition)

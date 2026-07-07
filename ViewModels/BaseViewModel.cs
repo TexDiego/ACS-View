@@ -1,6 +1,8 @@
 using ACS_View.Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 
 namespace ACS_View.ViewModels
 {
@@ -63,6 +65,13 @@ namespace ACS_View.ViewModels
 
         protected static Task DisplayAlertAsync(string title, string message, string cancel = "OK")
         {
+            if (string.Equals(title, "Erro", StringComparison.OrdinalIgnoreCase) &&
+                IsCancellationMessage(message))
+            {
+                Debug.WriteLine($"Popup de erro de cancelamento suprimido: {message}");
+                return Task.CompletedTask;
+            }
+
             return dialogService.ShowAlertAsync(title, message, cancel);
         }
 
@@ -163,11 +172,49 @@ namespace ACS_View.ViewModels
             {
                 await action();
             }
+            catch (Exception ex) when (IsCancellationException(ex))
+            {
+                Debug.WriteLine($"Operacao cancelada ignorada: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
                 await DisplayAlertAsync(errorTitle, errorMessage, cancel);
             }
+        }
+
+        protected static bool IsCancellationException(Exception ex)
+        {
+            return ex is OperationCanceledException ||
+                   IsCancellationMessage(ex.Message) ||
+                   (ex.InnerException is not null && IsCancellationException(ex.InnerException));
+        }
+
+        protected static bool IsCancellationMessage(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return false;
+            }
+
+            var normalized = NormalizeForComparison(message);
+            return normalized.Contains("operacao foi cancelada", StringComparison.Ordinal) ||
+                   normalized.Contains("operation was canceled", StringComparison.Ordinal) ||
+                   normalized.Contains("operation was cancelled", StringComparison.Ordinal) ||
+                   normalized.Contains("task was canceled", StringComparison.Ordinal) ||
+                   normalized.Contains("task was cancelled", StringComparison.Ordinal);
+        }
+
+        private static string NormalizeForComparison(string value)
+        {
+            var normalized = value.Normalize(NormalizationForm.FormD);
+            var chars = normalized
+                .Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                .ToArray();
+
+            return new string(chars)
+                .Normalize(NormalizationForm.FormC)
+                .ToLowerInvariant();
         }
 
         private static async Task ExecuteWithStateAsync(Func<Task> action, Action<bool> setState)

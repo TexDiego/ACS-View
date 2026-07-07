@@ -213,6 +213,25 @@ var highRiskSuggestion = PregnancyRiskSuggestionCalculator.Calculate(
 Assert(highRiskSuggestion.Risk == PregnancyRisk.HighRisk, "Sugestao de risco deve chegar a alto risco por pontuacao.");
 Assert(highRiskSuggestion.Reasons.Count >= 3, "Sugestao de risco deve explicar motivos.");
 
+var missingDateSuggestion = PregnancyRiskSuggestionCalculator.Calculate(
+    mother,
+    new ACS_View.Domain.Entities.PatientPregnancy(),
+    [],
+    registeredChildrenCount: 0,
+    referenceDate: new DateTime(2026, 1, 1));
+var informedDateSuggestion = PregnancyRiskSuggestionCalculator.Calculate(
+    mother,
+    new ACS_View.Domain.Entities.PatientPregnancy
+    {
+        LastMenstrualPeriod = new DateTime(2026, 1, 1),
+        ExpectedBirthDate = PregnancyCalculator.CalculateExpectedBirthDate(new DateTime(2026, 1, 1))
+    },
+    [],
+    registeredChildrenCount: 0,
+    referenceDate: new DateTime(2026, 1, 1));
+Assert(missingDateSuggestion.Reasons.Any(reason => reason.Contains("DUM", StringComparison.OrdinalIgnoreCase)), "DUM/DPP ausentes devem gerar motivo de atencao.");
+Assert(!informedDateSuggestion.Reasons.Any(reason => reason.Contains("DUM", StringComparison.OrdinalIgnoreCase)), "DUM/DPP informadas nao devem manter motivo de ausencia.");
+
 Console.WriteLine("PregnancyCalculator tests passed.");
 
 static void Assert(bool condition, string message)

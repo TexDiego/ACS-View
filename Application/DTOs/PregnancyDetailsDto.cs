@@ -6,8 +6,10 @@ namespace ACS_View.Application.DTOs;
 
 public sealed class PregnancyDetailsDto
 {
+    public Patient Patient { get; set; } = new();
     public PatientPregnancy Pregnancy { get; set; } = new();
     public int RegisteredChildrenCount { get; set; }
+    public List<string> ConditionDescriptions { get; set; } = [];
     public PregnancyRiskSuggestion RiskSuggestion { get; set; } = new();
     public GestationalAge? GestationalAge { get; set; }
     public int? Trimester { get; set; }

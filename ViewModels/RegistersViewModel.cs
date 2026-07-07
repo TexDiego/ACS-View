@@ -98,6 +98,9 @@ namespace ACS_View.ViewModels
             catch (TaskCanceledException)
             {
             }
+            catch (Exception ex) when (IsCancellationException(ex))
+            {
+            }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Erro ao pesquisar pacientes: {ex.Message}");
@@ -143,6 +146,11 @@ namespace ACS_View.ViewModels
             }
             catch (Exception ex)
             {
+                if (IsCancellationException(ex))
+                {
+                    return;
+                }
+
                 if (loadVersion == _loadVersion)
                 {
                     Debug.WriteLine($"Erro ao carregar pacientes: {ex.Message}");

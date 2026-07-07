@@ -134,6 +134,31 @@
                     HorizontalOptions="Start"
                     Margin="0,0,0,5"/>
 
+                <!-- Gestação -->
+                <Border
+                    Margin="0,8,0,0"
+                    Padding="8"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasPregnancyInfo}">
+
+                    <VerticalStackLayout Spacing="3">
+                        <Label
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.PregnancyInfo}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                            FontSize="15"
+                            LineBreakMode="WordWrap"/>
+
+                        <Label
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.PregnancyRiskSuggestionInfo}"
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasPregnancyRiskSuggestionInfo}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                            FontSize="13"
+                            FontAttributes="Bold"/>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Endereço -->
                 <Label
                     Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Endereco}"

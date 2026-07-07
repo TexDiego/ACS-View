@@ -22,13 +22,15 @@ public partial class Registers : ContentPage, IQueryAttributable
         ISQLiteConditionsRepository conditionsRepository,
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         IPatientInsulinDependencyRepository insulinDependencyRepository,
+        IPregnancyService pregnancyService,
+        ICareNotificationService careNotificationService,
         IPopupService popupService,
         IDialogService dialogService,
         RegistersViewModel viewModel)
     {
         InitializeComponent();
         _dialogService = dialogService;
-        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, popupService);
+        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService);
         BindingContext = _viewModel = viewModel;
     }
 

@@ -19,10 +19,12 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         ISQLiteConditionsRepository conditionsRepository,
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         IPatientInsulinDependencyRepository insulinDependencyRepository,
+        IPregnancyService pregnancyService,
+        ICareNotificationService careNotificationService,
         IPopupService popupService)
     {
         InitializeComponent();
-        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, popupService);
+        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService);
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)

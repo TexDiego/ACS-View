@@ -79,6 +79,7 @@ namespace ACS_View.UseCases.Services
         private async Task CreateDomainTablesAsync()
         {
             await Connection.CreateTablesAsync<Patient, PatientBolsaFamilia, Vaccines, PatientVaccineDose>();
+            await Connection.CreateTablesAsync<PatientPregnancy, CareNotification>();
             await Connection.CreateTableAsync<PatientInsulinDependency>();
             await Connection.CreateTableAsync<CepAddressCache>();
             await Connection.CreateTablesAsync<Note, House>();
@@ -94,6 +95,7 @@ namespace ACS_View.UseCases.Services
             await MigrateUserScopedTablesAsync();
             await MigrateBolsaFamiliaTableAsync();
             await MigrateInsulinDependencyTableAsync();
+            await MigratePregnancyTableAsync();
             await MigratePatientVaccineDoseTableAsync();
             await MigrateLegacyVaccinesAsync();
             await MigrateUserTableAsync();
@@ -202,6 +204,27 @@ namespace ACS_View.UseCases.Services
                   )
                 """,
                 HealthConditionCatalog.Insulinodependente);
+        }
+
+        private async Task MigratePregnancyTableAsync()
+        {
+            await Connection.ExecuteAsync(
+                """
+                INSERT INTO PatientPregnancy
+                    (UserId, PatientId, LastMenstrualPeriod, ExpectedBirthDate, Status, ManualRisk, InformedChildrenCount, CreatedAt, EndedAt, EndType, Notes)
+                SELECT pc.UserId, pc.PatientId, NULL, NULL, 1, 0, NULL, CURRENT_TIMESTAMP, NULL, NULL, ''
+                FROM PatientConditions pc
+                INNER JOIN Patient p ON p.UserId = pc.UserId AND p.Id = pc.PatientId
+                WHERE pc.Description = ? COLLATE NOCASE
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM PatientPregnancy pp
+                      WHERE pp.UserId = pc.UserId
+                        AND pp.PatientId = pc.PatientId
+                        AND pp.Status = 1
+                  )
+                """,
+                HealthConditionCatalog.Gestante);
         }
 
         private async Task MigrateLegacyVaccinesAsync()
@@ -321,6 +344,11 @@ namespace ACS_View.UseCases.Services
             await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientBolsaFamilia_User_Patient ON PatientBolsaFamilia(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientBolsaFamilia_User_Responsible ON PatientBolsaFamilia(UserId, ResponsiblePatientId)");
             await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientInsulinDependency_User_Patient ON PatientInsulinDependency(UserId, PatientId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientPregnancy_User_Patient ON PatientPregnancy(UserId, PatientId)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientPregnancy_User_Status ON PatientPregnancy(UserId, Status)");
+            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_CareNotification_User_Key ON CareNotification(UserId, UniqueKey)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CareNotification_User_Status ON CareNotification(UserId, Status)");
+            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CareNotification_User_Patient ON CareNotification(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_PatientId ON PatientCID(UserId, PatientId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_CidId ON PatientCID(UserId, CidId)");
             await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientConditions_UserId_PatientId ON PatientConditions(UserId, PatientId)");
@@ -470,6 +498,8 @@ namespace ACS_View.UseCases.Services
             "Patient",
             "PatientBolsaFamilia",
             "PatientInsulinDependency",
+            "PatientPregnancy",
+            "CareNotification",
             "House",
             "Family",
             "Note",

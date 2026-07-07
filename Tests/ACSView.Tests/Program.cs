@@ -35,6 +35,14 @@ var insulinParameters = new List<object> { 1 };
 PatientFilterSqlBuilder.AddFilterClause($"{DashboardFilterKeys.ConditionPrefix}{HealthConditionCatalog.Insulinodependente}", insulinWhereParts, insulinParameters);
 Assert(insulinWhereParts.Any(part => part.Contains("PatientInsulinDependency")), "Filtro de insulinodependente deve consultar a tabela relacional.");
 
+var pregnantWhereParts = new List<string> { "p.UserId = ?" };
+var pregnantParameters = new List<object> { 1 };
+PatientFilterSqlBuilder.AddFilterClause(DashboardFilterKeys.Pregnant, pregnantWhereParts, pregnantParameters);
+Assert(pregnantWhereParts.Any(part => part.Contains("PatientPregnancy")), "Filtro de gestantes deve consultar a tabela de gestacao.");
+Assert(pregnantWhereParts.Any(part => part.Contains("pp.Status = 1")), "Filtro de gestantes deve considerar gestacao ativa.");
+Assert(pregnantWhereParts.Any(part => part.Contains("NOT EXISTS") && part.Contains("puerperal")), "Filtro de gestantes deve excluir puerperio ativo.");
+Assert(pregnantWhereParts.Any(part => part.Contains("puerperal.EndedAt") && part.Contains("62135596800")), "Filtro de gestantes deve normalizar data de parto ao excluir puerperas.");
+
 var overdueVaccineWhereParts = new List<string> { "p.UserId = ?" };
 var overdueVaccineParameters = new List<object> { 1 };
 PatientFilterSqlBuilder.AddFilterClause(DashboardFilterKeys.ChildrenOverdueVaccines, overdueVaccineWhereParts, overdueVaccineParameters);
@@ -43,6 +51,15 @@ Assert(overdueVaccineWhereParts.Any(part => part.Contains("62135596800") && part
 Assert(overdueVaccineWhereParts.Any(part => part.Contains("substr(CAST(p.BirthDate AS TEXT), 7, 4)")), "Filtro de vacinacao atrasada deve aceitar datas textuais importadas.");
 Assert(overdueVaccineWhereParts.Any(part => part.Contains("date('now', 'localtime')")), "Filtro de vacinacao atrasada deve calcular prazo vencido no SQLite.");
 Assert(overdueVaccineParameters.Any(parameter => Equals(parameter, VaccineDoseKeys.BcgInfantil)), "Filtro de vacinacao atrasada deve enviar chaves de dose obrigatoria.");
+
+var puerperalWhereParts = new List<string> { "p.UserId = ?" };
+var puerperalParameters = new List<object> { 1 };
+PatientFilterSqlBuilder.AddFilterClause(DashboardFilterKeys.ActivePuerperal, puerperalWhereParts, puerperalParameters);
+Assert(puerperalWhereParts.Any(part => part.Contains("PatientPregnancy")), "Filtro de puerperio deve consultar a tabela de gestacao.");
+Assert(puerperalWhereParts.Any(part => part.Contains("p.Sexo = 'Feminino'")), "Filtro de puerperio deve contabilizar mulheres.");
+Assert(puerperalWhereParts.Any(part => part.Contains("'+42 days'")), "Filtro de puerperio deve respeitar janela de 42 dias.");
+Assert(puerperalWhereParts.Any(part => part.Contains("pp.EndedAt")) &&
+       puerperalWhereParts.Any(part => part.Contains("62135596800")), "Filtro de puerperio deve normalizar EndedAt salvo como ticks.");
 
 Console.WriteLine("PatientFilterSqlBuilder tests passed.");
 
@@ -121,6 +138,62 @@ Assert(DashboardMetricCombinationRules.CanCombine([DashboardFilterKeys.NoHouse, 
 Assert(!DashboardMetricCombinationRules.CanCombine([DashboardFilterKeys.NoHouse, DashboardFilterKeys.NoFamily, DashboardFilterKeys.BolsaFamilia, DashboardFilterKeys.ChildrenUnder6], targetIsHealth: false), "Mais de tres indicadores nao devem ser aceitos.");
 
 Console.WriteLine("DashboardMetricCombinationRules tests passed.");
+
+var pregnancy = new ACS_View.Domain.Entities.PatientPregnancy
+{
+    PatientId = 10,
+    LastMenstrualPeriod = new DateTime(2026, 1, 1),
+    ExpectedBirthDate = null,
+    Status = PregnancyStatus.Active,
+    ManualRisk = PregnancyRisk.NotInformed
+};
+Assert(PregnancyCalculator.CalculateExpectedBirthDate(new DateTime(2026, 1, 1)) == new DateTime(2026, 10, 8), "DPP deve ser DUM mais 280 dias.");
+Assert(PregnancyCalculator.CalculateGestationalAge(pregnancy, new DateTime(2026, 2, 20)) == new GestationalAge(7, 1), "Idade gestacional deve calcular semanas e dias.");
+Assert(new GestationalAge(35, 4).ToString() == "35 semanas e 4 dias", "Idade gestacional deve exibir semanas e dias por extenso.");
+Assert(new GestationalAge(32, 0).ToString() == "32 semanas", "Idade gestacional sem dias restantes deve exibir apenas semanas.");
+Assert(PregnancyCalculator.CalculateTrimester(pregnancy, new DateTime(2026, 2, 20)) == 1, "Gestacao com 7 semanas deve estar no primeiro trimestre.");
+Assert(PregnancyCalculator.CalculateTrimester(pregnancy, new DateTime(2026, 5, 1)) == 2, "Gestacao com 17 semanas deve estar no segundo trimestre.");
+Assert(PregnancyCalculator.CalculateTrimester(pregnancy, new DateTime(2026, 8, 1)) == 3, "Gestacao com 30 semanas deve estar no terceiro trimestre.");
+
+var endedPregnancy = new ACS_View.Domain.Entities.PatientPregnancy
+{
+    PatientId = pregnancy.PatientId,
+    LastMenstrualPeriod = pregnancy.LastMenstrualPeriod,
+    ExpectedBirthDate = pregnancy.ExpectedBirthDate,
+    Status = PregnancyStatus.Ended,
+    EndType = PregnancyEndType.Birth,
+    EndedAt = new DateTime(2026, 7, 1)
+};
+Assert(PregnancyCalculator.IsPuerperal(endedPregnancy, new DateTime(2026, 7, 20)), "Parto dentro de 42 dias deve ser puerperio ativo.");
+Assert(!PregnancyCalculator.IsPuerperal(endedPregnancy, new DateTime(2026, 8, 20)), "Parto apos 42 dias nao deve ser puerperio ativo.");
+Assert(PregnancyCalculator.CalculatePostpartumDays(endedPregnancy, new DateTime(2026, 7, 20)) == 19, "Dias pos-parto devem ser calculados.");
+Assert(PregnancyCalculator.CalculatePuerperiumEndDate(endedPregnancy) == new DateTime(2026, 8, 12), "Fim do puerperio deve somar 42 dias.");
+
+var mother = new ACS_View.Domain.Entities.Patient { Id = 7, BirthDate = new DateTime(1990, 1, 1) };
+var children = new[]
+{
+    new ACS_View.Domain.Entities.Patient { Id = 8, MotherPatientId = 7 },
+    new ACS_View.Domain.Entities.Patient { Id = 9, MotherPatientId = 7 },
+    new ACS_View.Domain.Entities.Patient { Id = 10, MotherPatientId = 99 }
+};
+Assert(PregnancyCalculator.CalculateRegisteredChildrenCount(7, children) == 2, "Filhos cadastrados devem ser contados por MotherPatientId.");
+
+var highRiskSuggestion = PregnancyRiskSuggestionCalculator.Calculate(
+    mother,
+    new ACS_View.Domain.Entities.PatientPregnancy
+    {
+        LastMenstrualPeriod = pregnancy.LastMenstrualPeriod,
+        ExpectedBirthDate = pregnancy.ExpectedBirthDate,
+        Status = pregnancy.Status,
+        InformedChildrenCount = 4
+    },
+    [HealthConditionCatalog.Hipertensao, HealthConditionCatalog.Diabetes],
+    registeredChildrenCount: 2,
+    referenceDate: new DateTime(2026, 1, 1));
+Assert(highRiskSuggestion.Risk == PregnancyRisk.HighRisk, "Sugestao de risco deve chegar a alto risco por pontuacao.");
+Assert(highRiskSuggestion.Reasons.Count >= 3, "Sugestao de risco deve explicar motivos.");
+
+Console.WriteLine("PregnancyCalculator tests passed.");
 
 static void Assert(bool condition, string message)
 {

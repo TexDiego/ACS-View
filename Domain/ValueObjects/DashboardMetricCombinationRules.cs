@@ -41,6 +41,7 @@ public static class DashboardMetricCombinationRules
     {
         var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
         return string.Equals(baseFilterKey, DashboardFilterKeys.ChildrenOverdueVaccines, StringComparison.OrdinalIgnoreCase) ||
+               IsPregnancyMetric(baseFilterKey) ||
                baseFilterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase) ||
                baseFilterKey.StartsWith(DashboardFilterKeys.CidPrefix, StringComparison.OrdinalIgnoreCase);
     }
@@ -172,9 +173,32 @@ public static class DashboardMetricCombinationRules
             case DashboardFilterKeys.Women25To64:
                 return constraints.ApplySex(Female) &&
                        constraints.ApplyAge(minimumAge: 25, maximumAge: 64);
+            case DashboardFilterKeys.Pregnant:
+            case DashboardFilterKeys.PregnancyDueDateSoon:
+            case DashboardFilterKeys.PregnancyThirdTrimester:
+            case DashboardFilterKeys.PregnancyMissingDates:
+            case DashboardFilterKeys.PregnancyHighRisk:
+            case DashboardFilterKeys.PregnancySuggestedAttention:
+            case DashboardFilterKeys.PregnancySuggestedHighRisk:
+            case DashboardFilterKeys.PregnancyRiskNotInformed:
+            case DashboardFilterKeys.ActivePuerperal:
+                return constraints.ApplySex(Female);
             default:
                 return true;
         }
+    }
+
+    private static bool IsPregnancyMetric(string filterKey)
+    {
+        return string.Equals(filterKey, DashboardFilterKeys.Pregnant, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancyDueDateSoon, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancyThirdTrimester, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancyMissingDates, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancyHighRisk, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancySuggestedAttention, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancySuggestedHighRisk, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.PregnancyRiskNotInformed, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(filterKey, DashboardFilterKeys.ActivePuerperal, StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryApplyModifierConstraints(

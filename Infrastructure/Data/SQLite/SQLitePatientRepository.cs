@@ -21,6 +21,8 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
             connection.Execute("DELETE FROM PatientConditions WHERE PatientId = ? AND UserId = ?", id, userId);
             connection.Execute("DELETE FROM PatientBolsaFamilia WHERE PatientId = ? AND UserId = ?", id, userId);
             connection.Execute("DELETE FROM PatientInsulinDependency WHERE PatientId = ? AND UserId = ?", id, userId);
+            connection.Execute("DELETE FROM PatientPregnancy WHERE PatientId = ? AND UserId = ?", id, userId);
+            connection.Execute("DELETE FROM CareNotification WHERE PatientId = ? AND UserId = ?", id, userId);
             connection.Execute("DELETE FROM PatientVaccineDose WHERE PatientId = ? AND UserId = ?", id, userId);
             connection.Execute("DELETE FROM Vaccines WHERE Id = ? AND UserId = ?", id, userId);
             connection.Execute("DELETE FROM Patient WHERE Id = ? AND UserId = ?", id, userId);

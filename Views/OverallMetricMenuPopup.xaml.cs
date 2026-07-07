@@ -26,4 +26,9 @@ public partial class OverallMetricMenuPopup : Popup<OverallMetricMenuAction>
     {
         await CloseAsync(OverallMetricMenuAction.AddMetric);
     }
+
+    private async void NotificationsButton_Clicked(object sender, EventArgs e)
+    {
+        await CloseAsync(OverallMetricMenuAction.OpenNotifications);
+    }
 }

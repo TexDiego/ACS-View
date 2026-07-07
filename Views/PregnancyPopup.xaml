@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:local="clr-namespace:ACS_View.Domain.Entities"
+    x:Class="ACS_View.Views.PregnancyPopup"
+    x:TypeArguments="local:PatientPregnancy"
+    x:DataType="vm:PregnancyPopupViewModel"
+    WidthRequest="{Binding BottomSheetWidth}"
+    HeightRequest="{Binding BottomSheetHeight}"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
+    Padding="0">
+
+    <Grid RowDefinitions="*,Auto" BackgroundColor="Transparent">
+        <BoxView
+            Grid.Row="0"
+            BackgroundColor="Transparent">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="TopOverlay_Tapped"/>
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <Border
+            Grid.Row="1"
+            Padding="14,14,14,20"
+            StrokeShape="RoundRectangle 18"
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+            VerticalOptions="End">
+
+            <ScrollView MaximumHeightRequest="620">
+                <VerticalStackLayout Spacing="12">
+                    <BoxView
+                        WidthRequest="44"
+                        HeightRequest="4"
+                        CornerRadius="2"
+                        HorizontalOptions="Center"
+                        Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"/>
+
+                    <Label Text="Gestante / Puérpera" Style="{StaticResource SectionTitle}" HorizontalOptions="Center"/>
+
+                    <Grid ColumnDefinitions="*,auto" RowDefinitions="auto,auto" ColumnSpacing="10" RowSpacing="8">
+                        <Label Text="Informar DUM" Style="{StaticResource FieldLabel}" VerticalOptions="Center"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding HasLastMenstrualPeriod, Mode=TwoWay}"/>
+                        <DatePicker
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Date="{Binding LastMenstrualPeriodDate, Mode=TwoWay}"
+                            Format="dd/MM/yyyy"
+                            IsVisible="{Binding HasLastMenstrualPeriod}"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,auto" RowDefinitions="auto,auto" ColumnSpacing="10" RowSpacing="8">
+                        <Label Text="Informar DPP" Style="{StaticResource FieldLabel}" VerticalOptions="Center"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding HasExpectedBirthDate, Mode=TwoWay}"/>
+                        <DatePicker
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Date="{Binding ExpectedBirthDate, Mode=TwoWay}"
+                            Format="dd/MM/yyyy"
+                            IsVisible="{Binding HasExpectedBirthDate}"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Border Style="{StaticResource FieldBorder}">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Idade gestacional" Style="{StaticResource FieldLabel}"/>
+                                <Label Text="{Binding GestationalAgeText}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource FieldBorder}">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Trimestre" Style="{StaticResource FieldLabel}"/>
+                                <Label Text="{Binding TrimesterText}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Grid RowDefinitions="auto,auto" ColumnDefinitions="*,auto" ColumnSpacing="8" RowSpacing="8">
+                            <Label Text="Filhos informados" Style="{StaticResource FieldLabel}" VerticalOptions="Center"/>
+                            <Entry
+                                Grid.Column="1"
+                                WidthRequest="84"
+                                Keyboard="Numeric"
+                                Text="{Binding InformedChildrenCountText, Mode=TwoWay}"/>
+                            <Button
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Text="{Binding RegisteredChildrenSuggestionText}"
+                                Style="{StaticResource GhostButton}"
+                                Command="{Binding UseChildrenSuggestionCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource FieldBorder}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Risco gestacional" Style="{StaticResource FieldLabel}"/>
+                            <Picker ItemsSource="{Binding RiskOptions}" SelectedItem="{Binding SelectedRisk, Mode=TwoWay}"/>
+                            <Button
+                                Text="{Binding SuggestedRiskText, StringFormat='Sugestão: {0}'}"
+                                Style="{StaticResource GhostButton}"
+                                IsVisible="{Binding ShowRiskSuggestion}"
+                                Command="{Binding ApplyRiskSuggestionCommand}"/>
+                            <Label
+                                Text="{Binding SuggestionReasonsText}"
+                                IsVisible="{Binding ShowRiskSuggestion}"
+                                FontSize="12"
+                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource FieldBorder}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Status" Style="{StaticResource FieldLabel}"/>
+                            <Picker ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"/>
+                            <Button Text="Registrar fim da gestação" Style="{StaticResource GhostButton}" Command="{Binding MarkEndedCommand}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="10" IsVisible="{Binding ShowEndFields}">
+                        <Border Style="{StaticResource FieldBorder}">
+                            <VerticalStackLayout>
+                                <Label Text="Data do parto ou encerramento" Style="{StaticResource FieldLabel}"/>
+                                <DatePicker Date="{Binding EndedAt, Mode=TwoWay}" Format="dd/MM/yyyy"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Style="{StaticResource FieldBorder}">
+                            <VerticalStackLayout>
+                                <Label Text="Tipo de encerramento" Style="{StaticResource FieldLabel}"/>
+                                <Picker ItemsSource="{Binding EndTypeOptions}" SelectedItem="{Binding SelectedEndType, Mode=TwoWay}"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Border Style="{StaticResource FieldBorder}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Observações" Style="{StaticResource FieldLabel}"/>
+                            <Editor Text="{Binding Notes, Mode=TwoWay}" MaxLength="300" AutoSize="TextChanges"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,0,0,30">
+                        <Button Text="Cancelar" Style="{StaticResource GhostButton}" Clicked="CancelButton_Clicked"/>
+                        <Button Grid.Column="1" Text="Salvar" Style="{StaticResource Buttons}" Clicked="SaveButton_Clicked"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+</tk:Popup>

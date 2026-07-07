@@ -15,7 +15,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                                           ICidRepository _cidRepository,
                                           ISQLiteConditionsRepository _conditionsRepository,
                                           IPatientBolsaFamiliaRepository _bolsaFamiliaRepository,
-                                          IPatientInsulinDependencyRepository _insulinDependencyRepository) : BaseViewModel
+                                          IPatientInsulinDependencyRepository _insulinDependencyRepository,
+                                          IPregnancyService _pregnancyService) : BaseViewModel
 {
     private static readonly Dictionary<string, string> _chapterIconMap = new()
     {
@@ -91,6 +92,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
     [ObservableProperty] private string nisNumber = string.Empty;
+    [ObservableProperty] private string pregnancyInfo = string.Empty;
+    [ObservableProperty] private string pregnancyRiskSuggestionInfo = string.Empty;
+    [ObservableProperty] private bool hasPregnancyInfo;
+    [ObservableProperty] private bool hasPregnancyRiskSuggestionInfo;
     private int _loadVersion;
 
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
@@ -112,6 +117,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         Endereco = "Carregando endereço...";
         Complemento = string.Empty;
         NisNumber = string.Empty;
+        PregnancyInfo = string.Empty;
+        PregnancyRiskSuggestionInfo = string.Empty;
+        HasPregnancyInfo = false;
+        HasPregnancyRiskSuggestionInfo = false;
         Icons = [];
 
         _ = LoadPatientDetailsAsync(patient.Id, loadVersion);
@@ -148,8 +157,9 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             var addressTask = _infoService.GetAddressInfoAsync(patientId);
             var iconsTask = BuildHealthIconsAsync(patientId);
             var bolsaFamiliaTask = _bolsaFamiliaRepository.GetByPatientIdAsync(patientId);
+            var pregnancyTask = _pregnancyService.GetDetailsByPatientIdAsync(patientId);
 
-            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask);
+            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask, pregnancyTask);
 
             if (loadVersion != _loadVersion)
             {
@@ -162,6 +172,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                 Endereco = addressTask.Result.Endereco;
                 Complemento = addressTask.Result.Complemento ?? string.Empty;
                 NisNumber = benefit?.NisNumber?.Trim() ?? string.Empty;
+                SetPregnancyInfo(pregnancyTask.Result);
                 Icons = new ObservableCollection<HealthIcon>(iconsTask.Result);
             });
         }
@@ -179,9 +190,70 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                 Endereco = "Endereço não encontrado";
                 Complemento = string.Empty;
                 NisNumber = string.Empty;
+                PregnancyInfo = string.Empty;
+                PregnancyRiskSuggestionInfo = string.Empty;
+                HasPregnancyInfo = false;
+                HasPregnancyRiskSuggestionInfo = false;
                 Icons = [];
             });
         }
+    }
+
+    private void SetPregnancyInfo(Application.DTOs.PregnancyDetailsDto? details)
+    {
+        if (details?.Pregnancy is null)
+        {
+            PregnancyInfo = string.Empty;
+            PregnancyRiskSuggestionInfo = string.Empty;
+            HasPregnancyInfo = false;
+            HasPregnancyRiskSuggestionInfo = false;
+            return;
+        }
+
+        var pregnancy = details.Pregnancy;
+        if (PregnancyCalculator.IsPuerperal(pregnancy))
+        {
+            var days = PregnancyCalculator.CalculatePostpartumDays(pregnancy) ?? 0;
+            var endDate = PregnancyCalculator.CalculatePuerperiumEndDate(pregnancy);
+            PregnancyInfo = $"Puérpera\n{days} dias pós-parto\nAcompanhamento até {endDate:dd/MM/yyyy}";
+            PregnancyRiskSuggestionInfo = string.Empty;
+            HasPregnancyInfo = true;
+            HasPregnancyRiskSuggestionInfo = false;
+            return;
+        }
+
+        if (pregnancy.Status != Domain.Enums.PregnancyStatus.Active)
+        {
+            PregnancyInfo = string.Empty;
+            PregnancyRiskSuggestionInfo = string.Empty;
+            HasPregnancyInfo = false;
+            HasPregnancyRiskSuggestionInfo = false;
+            return;
+        }
+
+        var parts = new List<string> { "Gestante" };
+        if (details.GestationalAge is not null)
+        {
+            parts.Add($"{details.GestationalAge.Value} · {details.Trimester}º trimestre");
+        }
+
+        if (pregnancy.ExpectedBirthDate is not null)
+        {
+            parts.Add($"DPP: {pregnancy.ExpectedBirthDate:dd/MM/yyyy}");
+        }
+
+        parts.Add($"Risco: {details.RiskText}");
+        if (pregnancy.InformedChildrenCount is not null)
+        {
+            parts.Add($"Filhos: {pregnancy.InformedChildrenCount}");
+        }
+
+        PregnancyInfo = string.Join("\n", parts);
+        PregnancyRiskSuggestionInfo = details.RiskSuggestion.Risk != pregnancy.ManualRisk
+            ? $"Sugestão: {details.SuggestedRiskText}"
+            : string.Empty;
+        HasPregnancyInfo = true;
+        HasPregnancyRiskSuggestionInfo = !string.IsNullOrWhiteSpace(PregnancyRiskSuggestionInfo);
     }
 
     private async Task<List<HealthIcon>> BuildHealthIconsAsync(int patientId)
@@ -189,11 +261,30 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         var iconsList = new List<HealthIcon>();
         var seenSources = new HashSet<string>();
         var patient = await _patientService.GetPatientById(patientId);
+        var pregnancyDetails = await _pregnancyService.GetDetailsByPatientIdAsync(patientId);
+        var isPuerperal = pregnancyDetails?.Pregnancy is not null &&
+                           PregnancyCalculator.IsPuerperal(pregnancyDetails.Pregnancy);
+        var hasActivePregnancy = pregnancyDetails?.Pregnancy.Status == Domain.Enums.PregnancyStatus.Active;
+
+        if (isPuerperal && seenSources.Add("puerpera.png"))
+        {
+            iconsList.Add(new HealthIcon
+            {
+                IconSource = "puerpera.png",
+                Description = "Puérpera"
+            });
+        }
 
         var conditions = await _conditionsRepository.GetConditionsByPatientIdAsync(patientId);
         foreach (var condition in conditions)
         {
             var key = HealthConditionCatalog.GetKey(condition.Description);
+            if (string.Equals(key, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase) &&
+                (isPuerperal || !hasActivePregnancy))
+            {
+                continue;
+            }
+
             if (!_conditionIconMap.TryGetValue(key, out var source))
             {
                 source = "outras.png";
@@ -279,6 +370,11 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                 {
                     source = "outras.png";
                 }
+            }
+
+            if (isPuerperal && string.Equals(source, "gestante.png", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
             }
 
             if (seenSources.Add(source))

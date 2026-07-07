@@ -37,9 +37,14 @@
 
             <Button
                 Text="Adicionar nova métrica"
-                Style="{StaticResource PrimaryButton}"
+                Style="{StaticResource GhostButton}"
                 IsEnabled="{Binding CanAddMetric}"
                 Clicked="AddMetricButton_Clicked"/>
+
+            <Button
+                Text="Notificações"
+                Style="{StaticResource GhostButton}"
+                Clicked="NotificationsButton_Clicked"/>
         </VerticalStackLayout>
     </Border>
 </tk:Popup>

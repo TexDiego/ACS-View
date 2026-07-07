@@ -9,6 +9,15 @@ public static class DashboardFilterKeys
     public const string NoHouse = "NO_HOUSE";
     public const string NoFamily = "NO_FAMILY";
     public const string BolsaFamilia = "BOLSA_FAMILIA";
+    public const string Pregnant = "PREGNANT";
+    public const string PregnancyDueDateSoon = "PREGNANCY_DUE_DATE_SOON";
+    public const string PregnancyThirdTrimester = "PREGNANCY_THIRD_TRIMESTER";
+    public const string PregnancyMissingDates = "PREGNANCY_MISSING_DATES";
+    public const string PregnancyHighRisk = "PREGNANCY_HIGH_RISK";
+    public const string PregnancySuggestedAttention = "PREGNANCY_SUGGESTED_ATTENTION";
+    public const string PregnancySuggestedHighRisk = "PREGNANCY_SUGGESTED_HIGH_RISK";
+    public const string PregnancyRiskNotInformed = "PREGNANCY_RISK_NOT_INFORMED";
+    public const string ActivePuerperal = "ACTIVE_PUERPERAL";
     public const string Elderly = "ELDERLY";
     public const string ChildrenUnder6 = "CHILDREN_UNDER_6";
     public const string ChildrenOverdueVaccines = "CHILDREN_OVERDUE_VACCINES";

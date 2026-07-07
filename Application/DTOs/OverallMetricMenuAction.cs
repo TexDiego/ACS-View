@@ -5,5 +5,6 @@ public enum OverallMetricMenuAction
     CloseMenu,
     OpenCids,
     RestoreHiddenMetrics,
-    AddMetric
+    AddMetric,
+    OpenNotifications
 }

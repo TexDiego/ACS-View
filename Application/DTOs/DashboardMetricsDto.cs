@@ -9,6 +9,7 @@ namespace ACS_View.Application.DTOs
         public int TotalSemResidencia { get; set; }
         public int TotalVisitas { get; set; }
         public int TotalBolsaFamilia { get; set; }
+        public int TotalGestantesCadastradas { get; set; }
         public int TotalIdosos { get; set; }
         public int TotalCriancasMenoresDe6 { get; set; }
         public int TotalCriancasVacinacaoAtrasada { get; set; }

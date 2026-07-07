@@ -18,6 +18,8 @@ namespace ACS_View.ViewModels
         ISQLiteConditionsRepository conditionsRepository,
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         IPatientInsulinDependencyRepository insulinDependencyRepository,
+        IPregnancyService pregnancyService,
+        ICareNotificationService careNotificationService,
         IPopupService popupService) : BaseViewModel
     {
         private readonly IPatientService _patientService = patientService;
@@ -26,6 +28,8 @@ namespace ACS_View.ViewModels
         private readonly ISQLiteConditionsRepository _conditionsRepository = conditionsRepository;
         private readonly IPatientBolsaFamiliaRepository _bolsaFamiliaRepository = bolsaFamiliaRepository;
         private readonly IPatientInsulinDependencyRepository _insulinDependencyRepository = insulinDependencyRepository;
+        private readonly IPregnancyService _pregnancyService = pregnancyService;
+        private readonly ICareNotificationService _careNotificationService = careNotificationService;
         private readonly IPopupService _popupService = popupService;
 
         internal List<CidSubcategory> Subcategories = [];
@@ -41,13 +45,17 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private string bolsaFamiliaResponsibleNameInput = string.Empty;
         [ObservableProperty] private bool hasBolsaFamiliaResponsible;
         [ObservableProperty] private bool isInsulinDependent;
+        [ObservableProperty] private bool isPregnancySelected;
+        [ObservableProperty] private string pregnancySummary = "Detalhes gestacionais não informados";
 
         private bool _updatingParentNameInputs;
         private bool _updatingBirthDateInput;
         private string? _linkedMotherName;
         private string? _linkedFatherName;
         private int? _bolsaFamiliaResponsiblePatientId;
+        private PregnancyDetailsDto? _pregnancyDetails;
         private bool _initialIsActive = true;
+        private bool _isOpeningPregnancyDetails;
 
         public DateTime MinimumDate => new(1900, 1, 1);
         public DateTime MaximumDate => DateTime.Today;
@@ -65,6 +73,7 @@ namespace ACS_View.ViewModels
         public ICommand SelectFatherCommand => new Command(async () => await SelectLinkedParentAsync(isMother: false));
         public ICommand SelectBolsaFamiliaResponsibleCommand => new Command(async () => await SelectBolsaFamiliaResponsibleAsync());
         public ICommand ClearBolsaFamiliaResponsibleCommand => new Command(ClearBolsaFamiliaResponsible);
+        public ICommand OpenPregnancyDetailsCommand => new Command(async () => await OpenPregnancyDetailsAsync());
 
         partial void OnMotherNameInputChanged(string value)
         {
@@ -147,6 +156,7 @@ namespace ACS_View.ViewModels
                 SetBirthDateInput(p.BirthDate);
                 await LoadBolsaFamiliaAsync(p);
                 await LoadInsulinDependencyAsync(p.Id);
+                await LoadPregnancyAsync(p.Id);
 
                 HealthCategories.Clear();
                 CommonConditions.Clear();
@@ -171,10 +181,20 @@ namespace ACS_View.ViewModels
                         fixedCondition.Name = HealthConditionCatalog.Diabetes;
                         fixedCondition.SelectedDiabetesType = GetPersistedDiabetesType(patientCondition.Description);
                     }
+                    else if (string.Equals(key, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fixedCondition.Name = "Gestante / Puérpera";
+                    }
                     else
                     {
                         fixedCondition.Name = patientCondition.Description;
                     }
+                }
+
+                var pregnancyCondition = CommonConditions.FirstOrDefault(IsPregnancyCondition);
+                if (pregnancyCondition is not null && IsPregnancySelected)
+                {
+                    pregnancyCondition.Selected = true;
                 }
 
                 if (IsInsulinDependent)
@@ -281,8 +301,10 @@ namespace ACS_View.ViewModels
 
                     var selectedConditions = CommonConditions.Where(condition => condition.Selected).ToList();
                     var diabetesCondition = selectedConditions.FirstOrDefault(IsDiabetesCondition);
+                    var isPregnant = selectedConditions.Any(IsPregnancyCondition);
                     await SyncBolsaFamiliaAsync();
                     await SyncInsulinDependencyAsync(diabetesCondition?.InsulinDependentSelected == true);
+                    await SyncPregnancyAsync(isPregnant);
 
                     foreach (var condition in selectedConditions)
                     {
@@ -306,6 +328,7 @@ namespace ACS_View.ViewModels
                         });
                     }
 
+                    await _careNotificationService.RefreshPregnancyNotificationsAsync();
                     await NavigateBackAsync();
                 });
             }
@@ -412,6 +435,14 @@ namespace ACS_View.ViewModels
             IsInsulinDependent = await _insulinDependencyRepository.GetByPatientIdAsync(patientId) is not null;
         }
 
+        private async Task LoadPregnancyAsync(int patientId)
+        {
+            _pregnancyDetails = await _pregnancyService.GetDetailsByPatientIdAsync(patientId);
+            IsPregnancySelected = _pregnancyDetails?.Pregnancy is not null &&
+                                  ShouldShowPregnancySection(_pregnancyDetails.Pregnancy);
+            UpdatePregnancySummary();
+        }
+
         private async Task SyncInsulinDependencyAsync(bool shouldPersist)
         {
             if (!shouldPersist)
@@ -423,6 +454,137 @@ namespace ACS_View.ViewModels
 
             await _insulinDependencyRepository.UpsertAsync(CurrentPatient.Id);
             IsInsulinDependent = true;
+        }
+
+        private async Task SyncPregnancyAsync(bool shouldPersist)
+        {
+            IsPregnancySelected = shouldPersist;
+            if (_pregnancyDetails?.Pregnancy is not null &&
+                (shouldPersist || _pregnancyDetails.Pregnancy.Status != Domain.Enums.PregnancyStatus.Active))
+            {
+                _pregnancyDetails.Pregnancy.PatientId = CurrentPatient.Id;
+                await _pregnancyService.SaveAsync(_pregnancyDetails.Pregnancy);
+                return;
+            }
+
+            await _pregnancyService.SyncPregnancyConditionAsync(CurrentPatient.Id, shouldPersist);
+        }
+
+        private async Task OpenPregnancyDetailsAsync()
+        {
+            if (CurrentPatient is null || _isOpeningPregnancyDetails)
+            {
+                return;
+            }
+
+            _isOpeningPregnancyDetails = true;
+            try
+            {
+                var patientId = CurrentPatient.Id;
+                _pregnancyDetails ??= await BuildDraftPregnancyDetailsAsync(patientId);
+
+                var popupResult = await _popupService.ShowAsync<PatientPregnancy>(
+                    new PregnancyPopup(_pregnancyDetails));
+
+                if (popupResult.WasDismissed || popupResult.Result is null)
+                {
+                    return;
+                }
+
+                _pregnancyDetails.Pregnancy = popupResult.Result;
+                IsPregnancySelected = ShouldShowPregnancySection(_pregnancyDetails.Pregnancy);
+                var pregnancyCondition = CommonConditions.FirstOrDefault(IsPregnancyCondition);
+                if (pregnancyCondition is not null)
+                {
+                    pregnancyCondition.Selected = IsPregnancySelected;
+                }
+
+                UpdatePregnancySummary();
+            }
+            finally
+            {
+                _isOpeningPregnancyDetails = false;
+            }
+        }
+
+        private async Task<PregnancyDetailsDto> BuildDraftPregnancyDetailsAsync(int patientId)
+        {
+            var existingDetails = patientId > 0
+                ? await _pregnancyService.GetDetailsByPatientIdAsync(patientId)
+                : null;
+
+            if (existingDetails is not null)
+            {
+                return existingDetails;
+            }
+
+            var pregnancy = new PatientPregnancy
+            {
+                PatientId = patientId,
+                Status = Domain.Enums.PregnancyStatus.Active,
+                ManualRisk = Domain.Enums.PregnancyRisk.NotInformed,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var conditions = CommonConditions
+                .Where(condition => condition.Selected)
+                .Select(condition => GetPersistedConditionDescription(condition));
+            var suggestion = PregnancyRiskSuggestionCalculator.Calculate(
+                CurrentPatient,
+                pregnancy,
+                conditions,
+                registeredChildrenCount: 0);
+
+            return new PregnancyDetailsDto
+            {
+                Pregnancy = pregnancy,
+                RegisteredChildrenCount = 0,
+                RiskSuggestion = suggestion,
+                GestationalAge = PregnancyCalculator.CalculateGestationalAge(pregnancy),
+                Trimester = PregnancyCalculator.CalculateTrimester(pregnancy)
+            };
+        }
+
+        private void UpdatePregnancySummary()
+        {
+            var details = _pregnancyDetails;
+            if (details?.Pregnancy is null)
+            {
+                PregnancySummary = "Detalhes gestacionais não informados";
+                return;
+            }
+
+            var pregnancy = details.Pregnancy;
+            if (PregnancyCalculator.IsPuerperal(pregnancy))
+            {
+                var days = PregnancyCalculator.CalculatePostpartumDays(pregnancy) ?? 0;
+                var endDate = PregnancyCalculator.CalculatePuerperiumEndDate(pregnancy);
+                PregnancySummary = $"Puérpera · {days} dias pós-parto · ate {endDate:dd/MM/yyyy}";
+                return;
+            }
+
+            var parts = new List<string>();
+            var gestationalAge = PregnancyCalculator.CalculateGestationalAge(pregnancy);
+            var trimester = PregnancyCalculator.CalculateTrimester(pregnancy);
+            if (gestationalAge is not null)
+            {
+                parts.Add(gestationalAge.Value.ToString());
+            }
+
+            if (trimester is not null)
+            {
+                parts.Add($"{trimester}º trimestre");
+            }
+
+            if (pregnancy.ExpectedBirthDate is not null)
+            {
+                parts.Add($"DPP: {pregnancy.ExpectedBirthDate:dd/MM/yyyy}");
+            }
+
+            parts.Add($"Risco: {details.RiskText}");
+            PregnancySummary = parts.Count == 0
+                ? "Detalhes gestacionais não informados"
+                : string.Join(" · ", parts);
         }
 
         private async Task SelectLinkedParentAsync(bool isMother)
@@ -465,7 +627,7 @@ namespace ACS_View.ViewModels
             var popup = new ParentPatientPickerPopup(
                 _patientService,
                 CurrentPatient?.Id > 0 ? CurrentPatient.Id : null,
-                "Selecionar responsavel");
+                "Selecionar responsável");
 
             var popupResult = await _popupService.ShowAsync<PatientListItemDto>(popup);
             if (popupResult.WasDismissed || popupResult.Result is not PatientListItemDto selectedPatient)
@@ -544,6 +706,23 @@ namespace ACS_View.ViewModels
         {
             if (condition == null) return;
 
+            if (IsPregnancyCondition(condition))
+            {
+                IsPregnancySelected = condition.Selected;
+                if (condition.Selected)
+                {
+                    _pregnancyDetails ??= await BuildDraftPregnancyDetailsAsync(CurrentPatient?.Id ?? 0);
+                    UpdatePregnancySummary();
+                    await OpenPregnancyDetailsAsync();
+                }
+                else
+                {
+                    PregnancySummary = "Detalhes gestacionais não informados";
+                }
+
+                return;
+            }
+
             if (!condition.Selected)
             {
                 condition.Name = condition.ConditionKey;
@@ -561,6 +740,17 @@ namespace ACS_View.ViewModels
         private static bool IsDiabetesCondition(HealthConditions condition)
         {
             return string.Equals(condition.ConditionKey, HealthConditionCatalog.Diabetes, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPregnancyCondition(HealthConditions condition)
+        {
+            return string.Equals(condition.ConditionKey, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool ShouldShowPregnancySection(PatientPregnancy pregnancy)
+        {
+            return pregnancy.Status == Domain.Enums.PregnancyStatus.Active ||
+                   PregnancyCalculator.IsPuerperal(pregnancy);
         }
 
         private static void ClearDiabetesType(HealthConditions condition)
@@ -595,7 +785,9 @@ namespace ACS_View.ViewModels
 
                 CommonConditions.Add(new HealthConditions
                 {
-                    Name = condition,
+                    Name = string.Equals(condition, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase)
+                        ? "Gestante / Puérpera"
+                        : condition,
                     ConditionKey = condition
                 });
             }
@@ -603,6 +795,11 @@ namespace ACS_View.ViewModels
 
         private static string GetPersistedConditionDescription(HealthConditions condition)
         {
+            if (IsPregnancyCondition(condition))
+            {
+                return HealthConditionCatalog.Gestante;
+            }
+
             if (!IsDiabetesCondition(condition))
             {
                 return condition.Name;

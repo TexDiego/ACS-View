@@ -77,6 +77,88 @@ public static class PatientFilterSqlBuilder
                     )
                     """);
                 return;
+            case DashboardFilterKeys.Pregnant:
+                AddActivePregnancyClause(whereParts);
+                return;
+            case DashboardFilterKeys.PregnancyDueDateSoon:
+                whereParts.Add($"""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 1
+                          AND pp.ExpectedBirthDate IS NOT NULL
+                          AND {NormalizeDateSql("pp.ExpectedBirthDate")} BETWEEN date('now', 'localtime') AND date('now', 'localtime', '+7 days')
+                    )
+                    """);
+                return;
+            case DashboardFilterKeys.PregnancyThirdTrimester:
+                whereParts.Add($"""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 1
+                          AND pp.LastMenstrualPeriod IS NOT NULL
+                          AND date({NormalizeDateSql("pp.LastMenstrualPeriod")}, '+196 days') <= date('now', 'localtime')
+                    )
+                    """);
+                return;
+            case DashboardFilterKeys.PregnancyMissingDates:
+                whereParts.Add($"""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 1
+                          AND pp.LastMenstrualPeriod IS NULL
+                          AND pp.ExpectedBirthDate IS NULL
+                    )
+                    """);
+                return;
+            case DashboardFilterKeys.PregnancyHighRisk:
+                whereParts.Add("""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 1
+                          AND pp.ManualRisk = 3
+                    )
+                    """);
+                return;
+            case DashboardFilterKeys.PregnancyRiskNotInformed:
+                whereParts.Add("""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 1
+                          AND pp.ManualRisk = 0
+                    )
+                    """);
+                return;
+            case DashboardFilterKeys.ActivePuerperal:
+                whereParts.Add($"""
+                    EXISTS (
+                        SELECT 1
+                        FROM PatientPregnancy pp
+                        WHERE pp.PatientId = p.Id
+                          AND pp.UserId = p.UserId
+                          AND pp.Status = 2
+                          AND pp.EndType = 1
+                          AND pp.EndedAt IS NOT NULL
+                          AND p.Sexo = 'Feminino' COLLATE NOCASE
+                          AND {NormalizeDateSql("pp.EndedAt")} <= date('now', 'localtime')
+                          AND date({NormalizeDateSql("pp.EndedAt")}, '+42 days') >= date('now', 'localtime')
+                    )
+                    """);
+                return;
             case DashboardFilterKeys.Elderly:
                 whereParts.Add("p.BirthDate <= ?");
                 parameters.Add(today.AddYears(-60));
@@ -103,6 +185,12 @@ public static class PatientFilterSqlBuilder
         if (filterKey.StartsWith(DashboardFilterKeys.ConditionPrefix, StringComparison.OrdinalIgnoreCase))
         {
             var condition = filterKey[DashboardFilterKeys.ConditionPrefix.Length..];
+            if (HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.Gestante)
+            {
+                AddActivePregnancyClause(whereParts);
+                return;
+            }
+
             if (HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.Insulinodependente)
             {
                 whereParts.Add("""
@@ -158,6 +246,46 @@ public static class PatientFilterSqlBuilder
                 """);
             parameters.Add(cid);
         }
+    }
+
+    private static void AddActivePregnancyClause(List<string> whereParts)
+    {
+        whereParts.Add($"""
+            EXISTS (
+                SELECT 1
+                FROM PatientPregnancy pp
+                WHERE pp.PatientId = p.Id
+                  AND pp.UserId = p.UserId
+                  AND pp.Status = 1
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM PatientPregnancy puerperal
+                WHERE puerperal.PatientId = p.Id
+                  AND puerperal.UserId = p.UserId
+                  AND puerperal.Status = 2
+                  AND puerperal.EndType = 1
+                  AND puerperal.EndedAt IS NOT NULL
+                  AND {NormalizeDateSql("puerperal.EndedAt")} <= date('now', 'localtime')
+                  AND date({NormalizeDateSql("puerperal.EndedAt")}, '+42 days') >= date('now', 'localtime')
+            )
+            """);
+    }
+
+    private static string NormalizeDateSql(string columnName)
+    {
+        return $"""
+            CASE
+                WHEN {columnName} IS NULL
+                    THEN NULL
+                WHEN typeof({columnName}) IN ('integer', 'real')
+                     OR CAST({columnName} AS INTEGER) > 100000000000
+                    THEN date((CAST({columnName} AS INTEGER) / 10000000) - 62135596800, 'unixepoch')
+                WHEN CAST({columnName} AS TEXT) GLOB '??/??/????*'
+                    THEN date(substr(CAST({columnName} AS TEXT), 7, 4) || '-' || substr(CAST({columnName} AS TEXT), 4, 2) || '-' || substr(CAST({columnName} AS TEXT), 1, 2))
+                ELSE date({columnName})
+            END
+            """;
     }
 
     private static void AddChildrenOverdueVaccinesClause(List<string> whereParts, List<object> parameters)

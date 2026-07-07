@@ -7,11 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\Application\Security\PasswordHasher.cs" Link="Application\Security\PasswordHasher.cs" />
     <Compile Include="..\..\Application\Querying\PatientFilterSqlBuilder.cs" Link="Application\Querying\PatientFilterSqlBuilder.cs" />
     <Compile Include="..\..\Domain\ValueObjects\DashboardFilterKeys.cs" Link="Domain\ValueObjects\DashboardFilterKeys.cs" />
     <Compile Include="..\..\Domain\ValueObjects\DashboardMetricCombinationRules.cs" Link="Domain\ValueObjects\DashboardMetricCombinationRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\HealthConditionCatalog.cs" Link="Domain\ValueObjects\HealthConditionCatalog.cs" />
+    <Compile Include="..\..\Domain\Entities\Patient.cs" Link="Domain\Entities\Patient.cs" />
+    <Compile Include="..\..\Domain\Entities\PatientPregnancy.cs" Link="Domain\Entities\PatientPregnancy.cs" />
+    <Compile Include="..\..\Domain\Enums\PregnancyEndType.cs" Link="Domain\Enums\PregnancyEndType.cs" />
+    <Compile Include="..\..\Domain\Enums\PregnancyRisk.cs" Link="Domain\Enums\PregnancyRisk.cs" />
+    <Compile Include="..\..\Domain\Enums\PregnancyStatus.cs" Link="Domain\Enums\PregnancyStatus.cs" />
     <Compile Include="..\..\Domain\Enums\VaccineSectionType.cs" Link="Domain\Enums\VaccineSectionType.cs" />
     <Compile Include="..\..\Domain\Enums\VaccineStatus.cs" Link="Domain\Enums\VaccineStatus.cs" />
     <Compile Include="..\..\Domain\ValueObjects\VaccineDoseCatalog.cs" Link="Domain\ValueObjects\VaccineDoseCatalog.cs" />
@@ -21,5 +30,9 @@
     <Compile Include="..\..\Domain\ValueObjects\CepNumberRules.cs" Link="Domain\ValueObjects\CepNumberRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\NisNumberRules.cs" Link="Domain\ValueObjects\NisNumberRules.cs" />
     <Compile Include="..\..\Domain\ValueObjects\StreetAddressParser.cs" Link="Domain\ValueObjects\StreetAddressParser.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\GestationalAge.cs" Link="Domain\ValueObjects\GestationalAge.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\PregnancyCalculator.cs" Link="Domain\ValueObjects\PregnancyCalculator.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\PregnancyRiskSuggestion.cs" Link="Domain\ValueObjects\PregnancyRiskSuggestion.cs" />
+    <Compile Include="..\..\Domain\ValueObjects\PregnancyRiskSuggestionCalculator.cs" Link="Domain\ValueObjects\PregnancyRiskSuggestionCalculator.cs" />
   </ItemGroup>
 </Project>

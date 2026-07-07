@@ -16,6 +16,9 @@ public partial class OverallViewModel : BaseViewModel
     private readonly IDashboardMetricsService dash;
     private readonly IDashboardMetricPreferencesService metricPreferences;
     private readonly IPopupService popupService;
+    private readonly ICareNotificationService careNotificationService;
+    private readonly IPatientService patientService;
+    private readonly IPersonsInfoPopupService personsInfoPopupService;
 
     private readonly List<MetricCombination> metricCombinations = [];
     private readonly List<Dashboard> removedGeneralRootMetrics = [];
@@ -26,6 +29,14 @@ public partial class OverallViewModel : BaseViewModel
     private int _loadedSessionVersion = -1;
     private bool hasLoadedMetricPreferences;
     private bool suppressMetricPreferencePersistence;
+    private static readonly IReadOnlyDictionary<string, string> OptionalPregnancyMetricNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        [DashboardFilterKeys.PregnancyDueDateSoon] = "Gestantes com DPP proxima",
+        [DashboardFilterKeys.PregnancyThirdTrimester] = "Gestantes no 3o trimestre",
+        [DashboardFilterKeys.PregnancyMissingDates] = "Gestantes com DUM/DPP ausente",
+        [DashboardFilterKeys.PregnancyHighRisk] = "Gestantes de alto risco",
+        [DashboardFilterKeys.PregnancyRiskNotInformed] = "Gestantes com risco nao informado"
+    };
 
     [ObservableProperty] private bool generalTabSelected = true;
     [ObservableProperty] private bool healthTabSelected;
@@ -42,11 +53,17 @@ public partial class OverallViewModel : BaseViewModel
     public OverallViewModel(
         IDashboardMetricsService _dash,
         IDashboardMetricPreferencesService metricPreferencesService,
-        IPopupService popupService)
+        IPopupService popupService,
+        ICareNotificationService careNotificationService,
+        IPatientService patientService,
+        IPersonsInfoPopupService personsInfoPopupService)
     {
         dash = _dash;
         metricPreferences = metricPreferencesService;
         this.popupService = popupService;
+        this.careNotificationService = careNotificationService;
+        this.patientService = patientService;
+        this.personsInfoPopupService = personsInfoPopupService;
         MetricsDashboard.CollectionChanged += OnDashboardCollectionChanged;
         HealthDashboard.CollectionChanged += OnDashboardCollectionChanged;
     }
@@ -144,11 +161,32 @@ public partial class OverallViewModel : BaseViewModel
 
                 HealthDashboard.Add(new Dashboard()
                 {
+                    Name = "Gestantes cadastradas",
+                    FilterKey = DashboardFilterKeys.Pregnant,
+                    Summary = "Gestação e puerpério",
+                    Total = metrics.TotalGestantesCadastradas
+                });
+
+                HealthDashboard.Add(new Dashboard()
+                {
+                    Name = "Puérperas ativas",
+                    FilterKey = DashboardFilterKeys.ActivePuerperal,
+                    Summary = "Gestação e puerpério",
+                    Total = await dash.CountPatientsByFilterAsync(DashboardFilterKeys.ActivePuerperal)
+                });
+
+                HealthDashboard.Add(new Dashboard()
+                {
                     Name = "Crianças com vacinação atrasada",
                     FilterKey = DashboardFilterKeys.ChildrenOverdueVaccines,
                     Summary = "Vacinação",
                     Total = metrics.TotalCriancasVacinacaoAtrasada
                 });
+
+                foreach (var optionalMetric in await BuildOptionalPregnancyMetricsAsync())
+                {
+                    HealthDashboard.Add(optionalMetric);
+                }
 
                 foreach (var condition in await dash.GetConditionsAsync())
                 {
@@ -173,6 +211,7 @@ public partial class OverallViewModel : BaseViewModel
                     });
                 }
 
+                ApplyDefaultHiddenHealthMetrics(preferences);
                 ApplyRemovedRootMetrics(MetricsDashboard, removedGeneralRootFilterKeys, removedGeneralRootMetrics);
                 ApplyRemovedRootMetrics(HealthDashboard, removedHealthRootFilterKeys, removedHealthRootMetrics);
                 await RestoreCombinedMetricsAsync();
@@ -255,6 +294,12 @@ public partial class OverallViewModel : BaseViewModel
             case OverallMetricMenuAction.AddMetric:
                 await AddCombinedMetricAsync();
                 break;
+            case OverallMetricMenuAction.OpenNotifications:
+                await popupService.ShowAsync(new CareNotificationsPopup(
+                    careNotificationService,
+                    patientService,
+                    personsInfoPopupService));
+                break;
             default:
                 return;
         }
@@ -268,7 +313,7 @@ public partial class OverallViewModel : BaseViewModel
 
         if (!canCreateCombination)
         {
-            await DisplayAlertAsync("Metricas", "Nao ha metricas compativeis para combinar.", "Voltar");
+            await DisplayAlertAsync("Métricas", "Não há métricas compatíveis para combinar.", "Voltar");
             return;
         }
 
@@ -288,7 +333,7 @@ public partial class OverallViewModel : BaseViewModel
 
         if (selectedMetrics.Count == 0 || selectedMetrics.Any(metric => metric is null))
         {
-            await DisplayAlertAsync("Metricas", "Nao foi possivel localizar as metricas selecionadas.", "Voltar");
+            await DisplayAlertAsync("Métricas", "Não foi possível localizar as métricas selecionadas.", "Voltar");
             return;
         }
 
@@ -298,7 +343,7 @@ public partial class OverallViewModel : BaseViewModel
         var validationError = GetCombinationValidationError(request, HealthTabSelected);
         if (!string.IsNullOrWhiteSpace(validationError))
         {
-            await DisplayAlertAsync("Metricas", validationError, "Voltar");
+            await DisplayAlertAsync("Métricas", validationError, "Voltar");
             return;
         }
 
@@ -319,7 +364,7 @@ public partial class OverallViewModel : BaseViewModel
 
         if (targetDashboard.Any(metric => string.Equals(metric.FilterKey, combinationKey, StringComparison.OrdinalIgnoreCase)))
         {
-            await DisplayAlertAsync("Metricas", "Essa combinacao ja foi adicionada.", "Voltar");
+            await DisplayAlertAsync("Métricas", "Essa combinação já foi adicionada.", "Voltar");
             return;
         }
 
@@ -348,6 +393,35 @@ public partial class OverallViewModel : BaseViewModel
         }
 
         await SaveMetricPreferencesAsync();
+    }
+
+    private async Task<List<Dashboard>> BuildOptionalPregnancyMetricsAsync()
+    {
+        var metrics = new List<Dashboard>();
+        foreach (var option in OptionalPregnancyMetricNames)
+        {
+            metrics.Add(new Dashboard
+            {
+                Name = option.Value,
+                FilterKey = option.Key,
+                Summary = "Gestação e puerpério",
+                Total = await dash.CountPatientsByFilterAsync(option.Key)
+            });
+        }
+
+        return metrics;
+    }
+
+    private void ApplyDefaultHiddenHealthMetrics(DashboardMetricPreferencesDto preferences)
+    {
+        var persistedHealthOrder = preferences.HealthOrder.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var filterKey in OptionalPregnancyMetricNames.Keys)
+        {
+            if (!persistedHealthOrder.Contains(filterKey))
+            {
+                removedHealthRootFilterKeys.Add(filterKey);
+            }
+        }
     }
     private IEnumerable<Dashboard> GetCombinationCandidates()
     {

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+    x:Class="ACS_View.Views.CareNotificationsPopup"
+    x:DataType="vm:CareNotificationsPopupViewModel"
+    WidthRequest="{Binding PopupWidth}"
+    CanBeDismissedByTappingOutsideOfPopup="True"
+    BackgroundColor="Transparent"
+    Padding="0">
+
+    <Border
+        Padding="14"
+        StrokeShape="RoundRectangle 8"
+        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+        <VerticalStackLayout Spacing="12">
+            <Grid ColumnDefinitions="*,auto">
+                <Label Text="Notificações" Style="{StaticResource SectionTitle}"/>
+            </Grid>
+
+            <Label
+                Text="Nenhuma notificação ativa."
+                IsVisible="{Binding IsEmpty}"
+                HorizontalTextAlignment="Center"
+                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
+            <CollectionView
+                ItemsSource="{Binding Notifications}"
+                MaximumHeightRequest="520"
+                IsVisible="{Binding HasNotifications}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:CareNotificationDto">
+                        <Border
+                            Margin="0,0,0,10"
+                            Padding="10"
+                            StrokeShape="RoundRectangle 8"
+                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}">
+
+                            <VerticalStackLayout Spacing="7">
+                                <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="8">
+                                    <Label
+                                        Grid.Column="0"
+                                        Text="{Binding PriorityText}"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding Notification.Title}"
+                                        FontAttributes="Bold"
+                                        LineBreakMode="TailTruncation"/>
+                                    <Label
+                                        Grid.Column="2"
+                                        Text="{Binding CategoryText}"
+                                        FontSize="12"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+                                </Grid>
+
+                                <Label
+                                    Text="{Binding Notification.Message}"
+                                    LineBreakMode="WordWrap"
+                                    FontSize="14"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button
+                                        Text="Ver"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.OpenPersonCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                    <Button
+                                        Text="Adiar"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.SnoozeCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                    <Button
+                                        Text="Resolver"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.ResolveCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </Border>
+</tk:Popup>

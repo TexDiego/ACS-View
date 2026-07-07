@@ -60,6 +60,8 @@ public static class ServiceCollectionExtensions
         });
         services.AddSingleton<ViaCepService>();
         services.AddSingleton<ICepService, CachedCepService>();
+        services.AddSingleton<IPregnancyService, PregnancyService>();
+        services.AddSingleton<ICareNotificationService, CareNotificationService>();
 
         services.AddTransient<IVaccineService, VaccineService>();
         services.AddTransient<IFamilyService, FamilyService>();

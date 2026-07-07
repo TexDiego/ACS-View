@@ -67,6 +67,7 @@ namespace ACS_View.UseCases.Services
                       AND {ActivePatientAliasClause}
                     """,
                     userId),
+                TotalGestantesCadastradas = await CountPatientsByFilterAsync(DashboardFilterKeys.Pregnant),
                 TotalIdosos = await _connection.ExecuteScalarAsync<int>(
                     $"SELECT COUNT(*) FROM Patient WHERE UserId = ? AND {ActivePatientClause} AND BirthDate <= ?",
                     userId,
@@ -131,10 +132,9 @@ namespace ACS_View.UseCases.Services
                     StringComparer.OrdinalIgnoreCase);
 
             var conditions = HealthConditionCatalog.Conditions
-                .Where(condition => !string.Equals(
-                    condition,
-                    HealthConditionCatalog.BolsaFamilia,
-                    StringComparison.OrdinalIgnoreCase))
+                .Where(condition =>
+                    !string.Equals(condition, HealthConditionCatalog.BolsaFamilia, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(condition, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase))
                 .Select(condition => new ConditionsDTO
                 {
                     Description = condition,

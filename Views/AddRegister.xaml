@@ -526,6 +526,34 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
+                <Border
+                    Style="{StaticResource FieldBorder}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsPregnancySelected}">
+
+                    <Grid RowDefinitions="auto,auto" RowSpacing="8">
+                        <Label
+                            Grid.Row="0"
+                            Text="Gestante / Puérpera"
+                            Style="{StaticResource labels}"/>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,auto" ColumnSpacing="10">
+                            <Label
+                                Grid.Column="0"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PregnancySummary}"
+                                LineBreakMode="WordWrap"
+                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                FontSize="16"
+                                Opacity="0.8"/>
+
+                            <Button
+                                Grid.Column="1"
+                                Text="Ver detalhes"
+                                Style="{StaticResource GhostButton}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenPregnancyDetailsCommand}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
             </VerticalStackLayout>
 
         </ScrollView>

@@ -57,7 +57,7 @@
 - Dependentes químicos
 - CIDs específicos quando houver registro em algum paciente
 
-> NOTA: é possível unir 2 condições para cruzar dados automaticamente. Está disponível para todas as condições de saúde e para algumas métricas gerais, evitando unificações que sempre resultam em 0 registros como idosos + crianças
+> NOTA: é possível unir 3 condições para cruzar dados automaticamente. Está disponível para todas as condições de saúde e para algumas métricas gerais, evitando unificações que sempre resultam em 0 registros como idosos + crianças
 
 ---
 

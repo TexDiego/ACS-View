@@ -4,12 +4,18 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing stable tag to build and publish
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-release-${{ github.ref }}
+  group: android-release-${{ inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -18,9 +24,11 @@ jobs:
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || github.ref }}
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -121,8 +129,11 @@ jobs:
                   raise SystemExit(f'Missing recovery receiver action: {action}')
           signature = open(os.path.join(os.environ['RUNNER_TEMP'], 'apk-signature.txt')).read()
           expected_cert = 'aa6753d2d7763ed69a7dc7453cc19584c2a69604d524615956c72737fc5f09bd'
-          if f'Signer #1 certificate SHA-256 digest: {expected_cert}' not in signature:
+          certificate_digests = re.findall(r'(?m)^.*\bcertificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$', signature)
+          if {digest.lower() for digest in certificate_digests} != {expected_cert}:
               raise SystemExit('APK must use the definitive ACS View release certificate')
+          if not re.search(r'(?m)^Number of signers: 1\s*$', signature):
+              raise SystemExit('APK must have exactly one definitive signer')
           if 'Android Debug' in signature:
               raise SystemExit('Debug signing certificate is forbidden')
           with zipfile.ZipFile(f"release/ACSView-{os.environ['RELEASE_TAG']}.apk") as apk:

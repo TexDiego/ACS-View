@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:AddFamilyViewModel"
              x:Class="ACS_View.Views.AddFamilyPage"
              Style="{StaticResource PageBackground}"
@@ -10,15 +11,12 @@
 
     <Grid Padding="16" RowDefinitions="auto,*">
         <Border Grid.Row="0" Style="{StaticResource CardBorder}">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Indivíduo" Style="{StaticResource SectionTitle}"/>
-                <Border Style="{StaticResource SearchPanel}" Margin="0">
-                    <Entry
-                        x:Name="Entry_Search"
-                        Placeholder="Buscar pessoa"
-                        HorizontalTextAlignment="Center"
-                        TextChanged="Entry_Search_TextChanged"/>
-                </Border>
+            <VerticalStackLayout Spacing="20">
+                <Entry
+                    x:Name="Entry_Search"
+                    Placeholder="Buscar indivíduo"
+                    HorizontalTextAlignment="Center"
+                    TextChanged="Entry_Search_TextChanged"/>
 
                 <ScrollView
                     x:Name="Scroll_View_Search"
@@ -37,9 +35,12 @@
                                         <Label Grid.Column="0" Text="{Binding Nome}" Style="{StaticResource CardTitle}" FontSize="15" VerticalOptions="Center"/>
                                         <ImageButton
                                             Grid.Column="1"
-                                            Source="add.png"
-                                            MaximumHeightRequest="40"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=PersonAdd24}"
+                                            HeightRequest="40"
+                                            WidthRequest="40"
+                                            Padding="2"
                                             Style="{StaticResource SoftIconButton}"
+                                            CornerRadius="10"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddPersonCommand}"
                                             CommandParameter="{Binding Id}"
                                             Clicked="ImageButton_Clicked"/>
@@ -69,8 +70,11 @@
                             <Label Grid.Column="0" Text="{Binding Nome}" Style="{StaticResource CardTitle}" FontSize="15" VerticalOptions="Center"/>
                             <ImageButton
                                 Grid.Column="1"
-                                Source="removeperson.png"
-                                MaximumHeightRequest="40"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=PersonDelete24}"
+                                HeightRequest="40"
+                                WidthRequest="40"
+                                CornerRadius="10"
+                                Padding="2"
                                 Style="{StaticResource DangerSoftIconButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                 CommandParameter="{Binding Id}"/>

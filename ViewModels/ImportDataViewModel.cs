@@ -1,8 +1,6 @@
 using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
-using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
@@ -10,54 +8,23 @@ namespace ACS_View.ViewModels;
 
 public partial class ImportDataViewModel(
     IPatientImportService patientImportService,
-    IHouseImportService houseImportService) : BaseViewModel
+    IHouseImportService houseImportService,
+    IImportHistoryService historyService) : BaseViewModel
 {
-    [ObservableProperty] private string nameColumn = "CADASTRO NOME";
-    [ObservableProperty] private string susNumberColumn = "CADASTRO CNS";
-    [ObservableProperty] private string motherNameColumn = "NOME DA MÃE";
-    [ObservableProperty] private string fatherNameColumn = "NOME DO PAI";
-    [ObservableProperty] private string sexColumn = "SEXO";
-    [ObservableProperty] private string birthDateColumn = "CADASTRO DN";
-    [ObservableProperty] private string observationColumn = "OBSERVACAO";
-    [ObservableProperty] private string bolsaFamiliaColumn = "BOLSA FAMILIA";
-    [ObservableProperty] private string patientCepColumn = "CEP";
-    [ObservableProperty] private string patientStreetTypeColumn = "TIPO LOGRADOURO";
-    [ObservableProperty] private string patientStreetColumn = "LOGRADOURO";
-    [ObservableProperty] private string patientHouseNumberColumn = "NUMERO IMOVEL";
-    [ObservableProperty] private string patientNeighborhoodColumn = "BAIRRO";
-    [ObservableProperty] private string patientCityColumn = "CIDADE";
-    [ObservableProperty] private string patientStateColumn = "ESTADO";
-    [ObservableProperty] private string patientComplementColumn = "COMPLEMENTO";
-    [ObservableProperty] private string isFamilyResponsibleColumn = "RESP. FAMILIAR?";
-    [ObservableProperty] private string familyResponsibleSusColumn = "RESP. FAMILIAR CNS";
     [ObservableProperty] private string patientImportSummary = string.Empty;
     [ObservableProperty] private bool isImporting;
     [ObservableProperty] private bool canStartImport = true;
     [ObservableProperty] private bool canCancelImport;
     [ObservableProperty] private double importProgress;
     [ObservableProperty] private string importProgressText = string.Empty;
-    [ObservableProperty] private ObservableCollection<PatientImportConditionColumnDto> healthConditionColumns = new(
-        HealthConditionCatalog.Conditions.Select(condition => new PatientImportConditionColumnDto
-        {
-            ConditionName = condition,
-            ColumnName = condition
-        }));
-
-    [ObservableProperty] private string houseCepColumn = "CEP";
-    [ObservableProperty] private string houseStreetTypeColumn = "TIPO LOGRADOURO";
-    [ObservableProperty] private string houseStreetColumn = "LOGRADOURO";
-    [ObservableProperty] private string houseNumberColumn = "NUMERO IMOVEL";
-    [ObservableProperty] private string houseNeighborhoodColumn = "BAIRRO";
-    [ObservableProperty] private string houseCityColumn = "CIDADE";
-    [ObservableProperty] private string houseStateColumn = "ESTADO";
-    [ObservableProperty] private string houseCountryColumn = "PAIS";
-    [ObservableProperty] private string houseComplementColumn = "COMPLEMENTO";
     [ObservableProperty] private string houseImportSummary = string.Empty;
     [ObservableProperty] private bool isHouseImporting;
     [ObservableProperty] private bool canStartHouseImport = true;
     [ObservableProperty] private bool canCancelHouseImport;
     [ObservableProperty] private double houseImportProgress;
     [ObservableProperty] private string houseImportProgressText = string.Empty;
+
+    public ICommand OpenImportHistoryCommand => new Command(async () => await Shell.Current.Navigation.PushAsync(new ACS_View.Views.ImportHistoryPage(historyService)));
 
     public ICommand ImportPatientsCommand => new Command(async () => await ImportPatientsAsync());
     public ICommand ImportHousesCommand => new Command(async () => await ImportHousesAsync());
@@ -95,15 +62,16 @@ public partial class ImportDataViewModel(
 
             await using var stream = await file.OpenReadAsync();
             var columnMap = BuildPatientColumnMap();
+            columnMap.SourceFileName = file.FileName;
             var result = await Task.Run(
                 () => patientImportService.ImportAsync(stream, columnMap, progress, cancellationToken),
                 cancellationToken);
 
-            PatientImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
+            PatientImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount) + $" | Mesclados: {result.MergedCount}. Consulte o histórico para detalhes.";
 
             if (result.Errors.Count > 0)
             {
-                await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
+                await DisplayAlertAsync("Importação", $"{PatientImportSummary}\nPendências: {result.Errors.Count}. Abra o histórico para conferir cada linha.", "Voltar");
                 return;
             }
 
@@ -156,6 +124,7 @@ public partial class ImportDataViewModel(
 
             await using var stream = await file.OpenReadAsync();
             var columnMap = BuildHouseColumnMap();
+            columnMap.SourceFileName = file.FileName;
             var result = await Task.Run(
                 () => houseImportService.ImportAsync(stream, columnMap, progress, cancellationToken),
                 cancellationToken);
@@ -164,7 +133,7 @@ public partial class ImportDataViewModel(
 
             if (result.Errors.Count > 0)
             {
-                await DisplayAlertAsync("Importação", string.Join(Environment.NewLine, result.Errors), "Voltar");
+                await DisplayAlertAsync("Importação", $"{HouseImportSummary}\nPendências: {result.Errors.Count}. Abra o histórico para conferir cada linha.", "Voltar");
                 return;
             }
 
@@ -189,53 +158,9 @@ public partial class ImportDataViewModel(
         }
     }
 
-    private HouseImportColumnMapDto BuildHouseColumnMap()
-    {
-        return new HouseImportColumnMapDto
-        {
-            CepColumn = HouseCepColumn,
-            StreetTypeColumn = HouseStreetTypeColumn,
-            StreetColumn = HouseStreetColumn,
-            NumberColumn = HouseNumberColumn,
-            NeighborhoodColumn = HouseNeighborhoodColumn,
-            CityColumn = HouseCityColumn,
-            StateColumn = HouseStateColumn,
-            CountryColumn = HouseCountryColumn,
-            ComplementColumn = HouseComplementColumn
-        };
-    }
+    private static HouseImportColumnMapDto BuildHouseColumnMap() => new();
 
-    private PatientImportColumnMapDto BuildPatientColumnMap()
-    {
-        return new PatientImportColumnMapDto
-        {
-            NameColumn = NameColumn,
-            SusNumberColumn = SusNumberColumn,
-            MotherNameColumn = MotherNameColumn,
-            FatherNameColumn = FatherNameColumn,
-            SexColumn = SexColumn,
-            BirthDateColumn = BirthDateColumn,
-            ObservationColumn = ObservationColumn,
-            BolsaFamiliaColumn = BolsaFamiliaColumn,
-            PatientCepColumn = PatientCepColumn,
-            PatientStreetTypeColumn = PatientStreetTypeColumn,
-            PatientStreetColumn = PatientStreetColumn,
-            PatientHouseNumberColumn = PatientHouseNumberColumn,
-            PatientNeighborhoodColumn = PatientNeighborhoodColumn,
-            PatientCityColumn = PatientCityColumn,
-            PatientStateColumn = PatientStateColumn,
-            PatientComplementColumn = PatientComplementColumn,
-            IsFamilyResponsibleColumn = IsFamilyResponsibleColumn,
-            FamilyResponsibleSusColumn = FamilyResponsibleSusColumn,
-            HealthConditionColumns = HealthConditionColumns
-                .Select(condition => new PatientImportConditionColumnDto
-                {
-                    ConditionName = condition.ConditionName,
-                    ColumnName = condition.ColumnName
-                })
-                .ToList()
-        };
-    }
+    private static PatientImportColumnMapDto BuildPatientColumnMap() => new();
 
     private void CancelImport()
     {
@@ -253,9 +178,12 @@ public partial class ImportDataViewModel(
         }
     }
 
-    private static Task<FileResult?> PickSpreadsheetAsync(string title)
+    private static async Task<FileResult?> PickSpreadsheetAsync(string title)
     {
-        return FilePicker.Default.PickAsync(new PickOptions
+        // Opening the system picker is part of this screen's workflow, not an app exit.
+        using var interaction = (Microsoft.Maui.Controls.Application.Current as ACS_View.Views.App)
+            ?.BeginExternalInteraction();
+        return await FilePicker.Default.PickAsync(new PickOptions
         {
             PickerTitle = title,
             FileTypes = GetExcelFileTypes()
@@ -268,7 +196,7 @@ public partial class ImportDataViewModel(
         {
             { DevicePlatform.Android, ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel.sheet.macroEnabled.12"] },
             { DevicePlatform.iOS, ["org.openxmlformats.spreadsheetml.sheet"] },
-            { DevicePlatform.WinUI, [".xlsx", ".xlsm", ".xlns"] },
+            { DevicePlatform.WinUI, [".xlsx", ".xlsm"] },
             { DevicePlatform.macOS, ["org.openxmlformats.spreadsheetml.sheet"] }
         });
     }

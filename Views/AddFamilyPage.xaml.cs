@@ -31,7 +31,14 @@ public partial class AddFamilyPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
         _ = viewModel.LoadDataAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
     }
 
     private async void Entry_Search_TextChanged(object sender, TextChangedEventArgs e)

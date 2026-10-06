@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:models="clr-namespace:ACS_View.Domain.ValueObjects"
              xmlns:converters="clr-namespace:ACS_View.Converters"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:BolsaFamiliaPageViewModel"
              x:Class="ACS_View.Views.BolsaFamiliaPage"
              Shell.NavBarIsVisible="True"
@@ -148,6 +149,7 @@
 
             <ImageButton
                 x:Name="BackToTopButton"
+                mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
                 Style="{StaticResource FloatingBackToTopButton}"
                 Clicked="BackToTopButton_Clicked"/>
         </Grid>

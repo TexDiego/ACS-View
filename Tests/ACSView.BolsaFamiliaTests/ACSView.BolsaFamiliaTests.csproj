@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <Compile Include="../../Application/Security/*.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
+    <Compile Include="../../Application/Interfaces/ICurrentUserContext.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseService.cs" />
+    <Compile Include="../../Domain/Entities/**/*.cs" />
+    <Compile Include="../../Domain/Enums/*.cs" />
+    <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />
+    <Compile Include="../../Domain/ValueObjects/SearchTextNormalizer.cs" />
+    <Compile Include="../../Domain/ValueObjects/HealthConditionCatalog.cs" />
+    <Compile Include="../../Domain/ValueObjects/CommonConditions.cs" />
+    <Compile Include="../../Domain/ValueObjects/CepNumberRules.cs" />
+    <Compile Include="../../Domain/ValueObjects/SusNumberSet.cs" />
+    <Compile Include="../../Domain/ValueObjects/VaccineDoseCatalog.cs" />
+    <Compile Include="../../Domain/ValueObjects/VaccineDoseDefinition.cs" />
+    <Compile Include="../../Domain/ValueObjects/VaccineDoseKeys.cs" />
+    <Compile Include="../../Domain/ValueObjects/BolsaFamiliaGroup.cs" />
+    <Compile Include="../../Domain/ValueObjects/BolsaFamiliaBeneficiary.cs" />
+  </ItemGroup>
+</Project>

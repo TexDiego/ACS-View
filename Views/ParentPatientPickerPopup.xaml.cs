@@ -13,6 +13,7 @@ public partial class ParentPatientPickerPopup : Popup<PatientListItemDto>
     {
         InitializeComponent();
         BindingContext = _viewModel = new ParentPatientPickerViewModel(patientService, excludedPatientId, title);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
         _ = _viewModel.LoadAsync();
     }
 

@@ -2,7 +2,8 @@ namespace ACS_View.Application.DTOs;
 
 public class HouseImportColumnMapDto
 {
-    public string CepColumn { get; set; } = "CEP";
+    public string SourceFileName { get; set; } = string.Empty;
+        public string CepColumn { get; set; } = "CEP";
     public string StreetTypeColumn { get; set; } = "Tipo de logradouro";
     public string StreetColumn { get; set; } = "Rua";
     public string NumberColumn { get; set; } = "Numero";

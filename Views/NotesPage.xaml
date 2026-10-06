@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              xmlns:converter="clr-namespace:ACS_View.Converters"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:NotesPageViewModel"
              x:Class="ACS_View.Views.NotesPage"
              Style="{StaticResource PageBackground}"
@@ -12,7 +13,7 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem
             Text="Notificações"
-            IconImageSource="notification.png"
+            IconImageSource="{mi:Fluent Icon=Alert24}"
             Command="{Binding ShowActiveNotificationsCommand}"/>
     </ContentPage.ToolbarItems>
 
@@ -49,7 +50,7 @@
                                     <SwipeItem
                                         Style="{StaticResource DangerSwipeItem}"
                                         Text="Excluir"
-                                        IconImageSource="bin.png"
+                                        IconImageSource="{mi:Fluent Icon=Delete48}"
                                         Command="{Binding Source={x:Reference NotesCollectionView}, Path=BindingContext.DeleteCommand}"
                                         CommandParameter="{Binding Id}"/>
                                 </SwipeView.LeftItems>
@@ -57,7 +58,7 @@
                                 <SwipeView.RightItems>
                                     <SwipeItem
                                         Text="Notificação"
-                                        IconImageSource="notification.png"
+                                        IconImageSource="{mi:Fluent Icon=Alert24}"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
                                         Command="{Binding Source={x:Reference NotesCollectionView}, Path=BindingContext.AddNotification}"
                                         CommandParameter="{Binding Id}"/>
@@ -92,6 +93,7 @@
             <ImageButton
                 x:Name="BackToTopButton"
                 Grid.RowSpan="3"
+                mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
                 Style="{StaticResource FloatingBackToTopButton}"
                 Clicked="BackToTopButton_Clicked"/>
         </Grid>

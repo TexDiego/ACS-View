@@ -16,6 +16,8 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
     private FamiliesViewModel? _viewModel;
     private bool _hasAppeared;
 
+    internal int HouseId => _viewModel?.HouseId ?? 0;
+
     public FamiliesPage(
         IHouseService houseService,
         IVisitsService visitsService,

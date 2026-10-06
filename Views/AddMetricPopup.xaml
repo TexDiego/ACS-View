@@ -38,25 +38,19 @@
 
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
-                            <Entry
-                                Text="{Binding MinimumAge}"
-                                Keyboard="Numeric"
-                                MaxLength="3"
-                                Placeholder="Sem mínimo"/>
-                        </Border>
+                        <Entry
+                            Text="{Binding MinimumAge}"
+                            Keyboard="Numeric"
+                            MaxLength="3"
+                            Placeholder="Idade mínima"/>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Grid.Column="1" Spacing="4">
-                        <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
-                            <Entry
-                                Text="{Binding MaximumAge}"
-                                Keyboard="Numeric"
-                                MaxLength="3"
-                                Placeholder="Sem máximo"/>
-                        </Border>
+                        <Entry
+                            Text="{Binding MaximumAge}"
+                            Keyboard="Numeric"
+                            MaxLength="3"
+                            Placeholder="Idade máxima"/>
                     </VerticalStackLayout>
                 </Grid>
 

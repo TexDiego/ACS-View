@@ -17,6 +17,7 @@
 		<RootNamespace>ACS_View</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
+		<UseMaterial3>true</UseMaterial3>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<DefaultItemExcludes>$(DefaultItemExcludes);tmp\**;Tests\**</DefaultItemExcludes>
@@ -37,6 +38,11 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.18362.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 		<NuGetAuditMode>All</NuGetAuditMode>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<!-- Install and debug only in the owner profile, excluding Dual Messenger profiles. -->
+		<AndroidDeviceUserId>0</AndroidDeviceUserId>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
@@ -97,8 +103,9 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="14.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="CsvHelper" Version="33.1.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.41" />
+		<PackageReference Include="AathifMahir.Maui.MauiIcons.Fluent" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="*" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="*" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
 		<PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
 		<PackageReference Include="sqlite-net-base" Version="1.9.172" />

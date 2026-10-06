@@ -3,6 +3,7 @@ using ACS_View.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Xamarin.Google.Crypto.Tink.Shaded.Protobuf;
 
 namespace ACS_View.ViewModels
 {
@@ -22,10 +23,17 @@ namespace ACS_View.ViewModels
         ];
 
         public ICommand ToggleSexCommand { get; }
+        public ICommand ToggleBolsaFamiliaCommand { get; }
 
         public FilterPopupViewModel()
         {
             ToggleSexCommand = new Command<SexFilterOption>(ToggleSex);
+            ToggleBolsaFamiliaCommand = new Command(ToggleBolsaFamilia);
+        }
+
+        private void ToggleBolsaFamilia()
+        {
+            OnlyBolsaFamilia = !OnlyBolsaFamilia;
         }
 
         public FilterPopupViewModel(PatientListFilterDto filter)

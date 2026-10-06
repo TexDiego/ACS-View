@@ -16,6 +16,7 @@ internal sealed class PatientFamilyLinkResolver(
     public async Task<int> ResolveAsync(
         List<PatientImportRowContext> rowContexts,
         PatientImportColumnMapDto columnMap,
+        PatientImportResultDto result,
         IProgress<ImportProgressDto>? progress,
         int processedProgressItems,
         int totalProgressItems,
@@ -23,7 +24,23 @@ internal sealed class PatientFamilyLinkResolver(
     {
         Report(progress, processedProgressItems, totalProgressItems, "Resolvendo residencias");
 
+        rowContexts = rowContexts.GroupBy(c => c.Patient.Id).Select(g => new PatientImportRowContext
+        {
+            Patient = g.Last().Patient, RowNumber = g.Last().RowNumber,
+            MotherName = g.Last().Patient.MotherName, FatherName = g.Last().Patient.FatherName,
+            FamilyResponsibleSus = g.Last().Patient.FamilyResponsibleSus ?? "",
+            IsFamilyResponsible = g.Any(c => c.IsFamilyResponsible),
+            AddressKeys = g.SelectMany(c => c.AddressKeys).Distinct().ToList(),
+            ImportedHouse = g.LastOrDefault(c => c.AddressKeys.Count > 0)?.ImportedHouse ?? g.Last().ImportedHouse
+        }).ToList();
         var allPatients = await patientService.GetAllPatients() ?? [];
+        // Revisit pending links when a parent or responsible arrives in a later spreadsheet.
+        var importedIds = rowContexts.Select(c => c.Patient.Id).ToHashSet();
+        rowContexts.AddRange(allPatients.Where(p => !importedIds.Contains(p.Id)).Select(p => new PatientImportRowContext
+        {
+            Patient = p, MotherName = p.MotherName, FatherName = p.FatherName,
+            FamilyResponsibleSus = p.FamilyResponsibleSus ?? "", IsFamilyResponsible = p.FamilyResponsiblePatientId == p.Id
+        }));
         var patientsById = allPatients.ToDictionary(patient => patient.Id);
         foreach (var context in rowContexts)
         {
@@ -48,7 +65,32 @@ internal sealed class PatientFamilyLinkResolver(
         foreach (var context in rowContexts)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (ResolveUniqueHouse(context.AddressKeys, housesByAddressKey) is { } matchedHouse &&
+            if (context.Patient.HouseId <= 0 && context.ImportedHouse is { } importedHouse &&
+                context.AddressKeys.Count > 0 && ResolveUniqueHouse(context.AddressKeys, housesByAddressKey, context.ImportedHouse) is null)
+            {
+                var ambiguous = context.AddressKeys.Any(k => housesByAddressKey.ContainsKey(k));
+                if (!ambiguous && !string.IsNullOrWhiteSpace(importedHouse.Rua) && !string.IsNullOrWhiteSpace(importedHouse.Bairro) &&
+                    !string.IsNullOrWhiteSpace(importedHouse.Cidade) && !string.IsNullOrWhiteSpace(importedHouse.Estado) &&
+                    !string.IsNullOrWhiteSpace(importedHouse.NumeroCasa))
+                {
+                    try
+                    {
+                        importedHouse.PossuiComplemento = !string.IsNullOrWhiteSpace(importedHouse.Complemento);
+                        await houseService.SaveHouseAsync(importedHouse);
+                        houses.Add(importedHouse);
+                        foreach (var key in BuildAddressKeys(importedHouse.CEP, importedHouse.TipoLogradouro, importedHouse.Rua,
+                            importedHouse.NumeroCasa, importedHouse.Complemento, importedHouse.Bairro, importedHouse.Cidade, importedHouse.Estado))
+                        {
+                            if (!housesByAddressKey.TryGetValue(key, out var matches)) housesByAddressKey[key] = matches = [];
+                            matches.Add(importedHouse);
+                        }
+                        result.Details.Add($"Linha {context.RowNumber}: residência #{importedHouse.CasaId} criada.");
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex) { result.Errors.Add($"Linha {context.RowNumber}: residência não criada: {ex.Message}"); }
+                }
+            }
+            if (ResolveUniqueHouse(context.AddressKeys, housesByAddressKey, context.ImportedHouse) is { } matchedHouse &&
                 ShouldSetLink(context.Patient.HouseId, columnMap.OverwriteExistingFamilyLinks))
             {
                 context.Patient.HouseId = matchedHouse.CasaId;
@@ -60,13 +102,16 @@ internal sealed class PatientFamilyLinkResolver(
                 context.ResolvedHouseId = context.Patient.HouseId;
             }
 
+            if (context.RowNumber > 0 && context.Patient.HouseId <= 0 && context.ImportedHouse is { } pendingHouse &&
+                (!string.IsNullOrWhiteSpace(pendingHouse.CEP) || !string.IsNullOrWhiteSpace(pendingHouse.NumeroCasa)))
+                result.Errors.Add($"Linha {context.RowNumber}: endereço não associado: CEP '{pendingHouse.CEP}', número '{pendingHouse.NumeroCasa}', complemento '{pendingHouse.Complemento}'. Residência incompleta ou ambígua; confira o CEP e complete o endereço.");
             processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo residencias", context.RowNumber);
         }
 
         Report(progress, processedProgressItems, totalProgressItems, "Resolvendo vinculos familiares");
         var nextFamilyIdByHouse = new Dictionary<int, int>();
         var importedResponsibleContexts = rowContexts
-            .Where(context => context.IsFamilyResponsible && context.Patient.HouseId > 0)
+            .Where(context => context.IsFamilyResponsible)
             .ToList();
 
         foreach (var context in importedResponsibleContexts)
@@ -77,10 +122,10 @@ internal sealed class PatientFamilyLinkResolver(
         }
 
         var importedResponsiblesBySus = rowContexts
-            .Where(context => context.Patient.HouseId > 0 && !string.IsNullOrWhiteSpace(context.Patient.SusNumber))
-            .GroupBy(context => NormalizeSus(context.Patient.SusNumber))
-            .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-            .ToDictionary(group => group.Key, group => group.Select(context => context.Patient).DistinctBy(patient => patient.Id).ToList());
+            .Where(context => context.Patient.HouseId > 0)
+            .SelectMany(context => context.Patient.SusNumbers.Select(sus => new { Sus = sus, context.Patient }))
+            .GroupBy(item => item.Sus)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).DistinctBy(patient => patient.Id).ToList());
 
         var indexes = BuildPatientIndexes(allPatients, rowContexts);
         foreach (var context in rowContexts)
@@ -96,7 +141,16 @@ internal sealed class PatientFamilyLinkResolver(
             if (changed)
             {
                 await patientService.UpdatePatient(context.Patient);
+                result.Details.Add($"{RowLabel(context)}: {context.Patient.Name}: família {context.Patient.FamilyId}, responsável #{context.Patient.FamilyResponsiblePatientId} associados.");
             }
+            if (!string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) && context.Patient.FamilyResponsiblePatientId is null or <= 0)
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável CNS '{context.FamilyResponsibleSus}' não associado (não encontrado, ambíguo ou residência divergente).");
+            if (!string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) && context.Patient.FamilyResponsiblePatientId is > 0 &&
+                patientsById.TryGetValue(context.Patient.FamilyResponsiblePatientId.Value, out var currentResponsible) &&
+                !currentResponsible.HasSusNumber(context.FamilyResponsibleSus))
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: CNS do responsável informado '{context.FamilyResponsibleSus}' diverge do vínculo existente #{currentResponsible.Id}; vínculo preservado para revisão manual.");
+            if (context.IsFamilyResponsible && context.Patient.FamilyId <= 0)
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável identificado, família pendente de residência.");
 
             processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
         }
@@ -133,7 +187,12 @@ internal sealed class PatientFamilyLinkResolver(
             if (changed)
             {
                 await patientService.UpdatePatient(context.Patient);
+                result.Details.Add($"{RowLabel(context)}: {context.Patient.Name}: mãe #{context.Patient.MotherPatientId}, pai #{context.Patient.FatherPatientId} associados.");
             }
+            if (!string.IsNullOrWhiteSpace(context.MotherName) && context.Patient.MotherPatientId is null or <= 0)
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: mãe '{context.MotherName}' não associada; cadastro ausente, ambíguo ou idade incompatível.");
+            if (!string.IsNullOrWhiteSpace(context.FatherName) && context.Patient.FatherPatientId is null or <= 0)
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: pai '{context.FatherName}' não associado; cadastro ausente, ambíguo ou idade incompatível.");
 
             processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo mae e pai", context.RowNumber);
         }
@@ -151,7 +210,7 @@ internal sealed class PatientFamilyLinkResolver(
         if (ShouldSetNullableLink(responsible.FamilyResponsiblePatientId, columnMap.OverwriteExistingFamilyLinks))
         {
             responsible.FamilyResponsiblePatientId = responsible.Id;
-            responsible.FamilyResponsibleSus = responsible.SusNumber;
+            responsible.FamilyResponsibleSus = responsible.PrimarySusNumber;
             changed = true;
         }
 
@@ -174,8 +233,7 @@ internal sealed class PatientFamilyLinkResolver(
         PatientImportIndexes indexes,
         Dictionary<int, int> nextFamilyIdByHouse)
     {
-        if (string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) ||
-            context.Patient.HouseId <= 0)
+        if (string.IsNullOrWhiteSpace(context.FamilyResponsibleSus))
         {
             return false;
         }
@@ -191,7 +249,7 @@ internal sealed class PatientFamilyLinkResolver(
             : [];
 
         candidates = candidates
-            .Where(candidate => candidate.HouseId == context.Patient.HouseId)
+            .Where(candidate => context.Patient.HouseId <= 0 || candidate.HouseId == context.Patient.HouseId)
             .DistinctBy(candidate => candidate.Id)
             .ToList();
 
@@ -199,7 +257,7 @@ internal sealed class PatientFamilyLinkResolver(
             indexes.PatientsBySus.TryGetValue(normalizedSus, out var globalCandidates))
         {
             candidates = globalCandidates
-                .Where(candidate => candidate.HouseId == context.Patient.HouseId)
+                .Where(candidate => context.Patient.HouseId <= 0 || candidate.HouseId == context.Patient.HouseId)
                 .DistinctBy(candidate => candidate.Id)
                 .ToList();
         }
@@ -212,11 +270,15 @@ internal sealed class PatientFamilyLinkResolver(
         var responsible = candidates[0];
         var changed = false;
 
+        if (!columnMap.OverwriteExistingFamilyLinks && context.Patient.FamilyResponsiblePatientId is > 0 &&
+            context.Patient.FamilyResponsiblePatientId != responsible.Id) return false;
+        if (responsible.HouseId <= 0) return false;
+        if (context.Patient.HouseId <= 0) { context.Patient.HouseId = responsible.HouseId; changed = true; }
         if (responsible.FamilyId <= 0)
         {
             responsible.FamilyId = await GetNextFamilyIdAsync(responsible.HouseId, nextFamilyIdByHouse);
             responsible.FamilyResponsiblePatientId = responsible.Id;
-            responsible.FamilyResponsibleSus = responsible.SusNumber;
+            responsible.FamilyResponsibleSus = responsible.PrimarySusNumber;
             await patientService.UpdatePatient(responsible);
         }
 
@@ -224,11 +286,11 @@ internal sealed class PatientFamilyLinkResolver(
             context.Patient.FamilyResponsiblePatientId != responsible.Id)
         {
             context.Patient.FamilyResponsiblePatientId = responsible.Id;
-            context.Patient.FamilyResponsibleSus = responsible.SusNumber;
+            context.Patient.FamilyResponsibleSus = responsible.PrimarySusNumber;
             changed = true;
         }
 
-        if (responsible.FamilyId > 0 && ShouldSetLink(context.Patient.FamilyId, columnMap.OverwriteExistingFamilyLinks))
+        if (responsible.FamilyId > 0 && context.Patient.FamilyId != responsible.FamilyId && ShouldSetLink(context.Patient.FamilyId, columnMap.OverwriteExistingFamilyLinks))
         {
             context.Patient.FamilyId = responsible.FamilyId;
             changed = true;
@@ -239,7 +301,8 @@ internal sealed class PatientFamilyLinkResolver(
 
     private static House? ResolveUniqueHouse(
         IReadOnlyList<string> addressKeys,
-        IReadOnlyDictionary<string, List<House>> housesByAddressKey)
+        IReadOnlyDictionary<string, List<House>> housesByAddressKey,
+        House? expected = null)
     {
         foreach (var key in addressKeys.Where(key => !string.IsNullOrWhiteSpace(key)).Distinct(StringComparer.OrdinalIgnoreCase))
         {
@@ -248,12 +311,18 @@ internal sealed class PatientFamilyLinkResolver(
                 continue;
             }
 
-            var candidates = houses.DistinctBy(house => house.CasaId).ToList();
+            var candidates = houses.Where(h => expected is null ||
+                (CompatibleAddressValue(expected.CEP, h.CEP) && CompatibleAddressValue(expected.Cidade, h.Cidade) &&
+                 CompatibleAddressValue(expected.Estado, h.Estado))).DistinctBy(house => house.CasaId).ToList();
+            if (candidates.Count == 0) continue;
             return candidates.Count == 1 ? candidates[0] : null;
         }
 
         return null;
     }
+
+    private static bool CompatibleAddressValue(string left, string right) =>
+        string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right) || Compact(Normalize(left)) == Compact(Normalize(right));
 
     private async Task<int> GetNextFamilyIdAsync(int houseId, Dictionary<int, int> nextFamilyIdByHouse)
     {
@@ -363,10 +432,9 @@ internal sealed class PatientFamilyLinkResolver(
         return new PatientImportIndexes
         {
             PatientsBySus = patientList
-                .Where(patient => !string.IsNullOrWhiteSpace(patient.SusNumber))
-                .GroupBy(patient => NormalizeSus(patient.SusNumber))
-                .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-                .ToDictionary(group => group.Key, group => group.ToList()),
+                .SelectMany(patient => patient.SusNumbers.Select(sus => new { Sus = sus, Patient = patient }))
+                .GroupBy(item => item.Sus)
+                .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).DistinctBy(patient => patient.Id).ToList()),
             PatientsByName = patientList
                 .Where(patient => !string.IsNullOrWhiteSpace(patient.Name))
                 .GroupBy(patient => Normalize(patient.Name))
@@ -416,8 +484,6 @@ internal sealed class PatientFamilyLinkResolver(
             AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, normalizedComplement, normalizedNeighborhood, normalizedCity, normalizedState);
             AddAddressKey(keys, normalizedCep, normalizedStreet, normalizedNumber, normalizedComplement, string.Empty, string.Empty, string.Empty);
             AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, normalizedComplement, string.Empty, string.Empty, string.Empty);
-            AddAddressKey(keys, normalizedCep, normalizedStreet, normalizedNumber, string.Empty, string.Empty, string.Empty, string.Empty);
-            AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, string.Empty, string.Empty, string.Empty, string.Empty);
         }
 
         return keys.ToList();
@@ -457,7 +523,7 @@ internal sealed class PatientFamilyLinkResolver(
 
     private static bool HasValidBirthDate(DateTime date)
     {
-        return date.Year > 1900 && date.Date < DateTime.Today;
+        return date.Year >= 1900 && date.Date <= DateTime.Today;
     }
 
     private static bool ShouldSetLink(int currentValue, bool overwrite)
@@ -526,6 +592,8 @@ internal sealed class PatientFamilyLinkResolver(
         });
     }
 
+    private static string RowLabel(PatientImportRowContext context) => context.RowNumber > 0 ? $"Linha {context.RowNumber}" : $"Cadastro #{context.Patient.Id}";
+
     private sealed class PatientImportIndexes
     {
         public Dictionary<string, List<Patient>> PatientsBySus { get; init; } = [];
@@ -550,5 +618,6 @@ internal sealed class PatientImportRowContext
     public string FamilyResponsibleSus { get; init; } = string.Empty;
     public bool IsFamilyResponsible { get; init; }
     public IReadOnlyList<string> AddressKeys { get; init; } = [];
+    public House? ImportedHouse { get; init; }
     public int? ResolvedHouseId { get; set; }
 }

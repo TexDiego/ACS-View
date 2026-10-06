@@ -16,7 +16,7 @@ public static class VisitScoringRuleCatalog
         new(VisitCareLineType.Elderly, 2, 1, null, 25, "Idoso: 2 visitas no mês, em dias diferentes", "CurrentMonth", CurrentRuleVersion, true),
         new(VisitCareLineType.BolsaFamilia, 2, 1, null, 18, "Bolsa Família: 2 visitas no mês, em dias diferentes", "CurrentMonth", CurrentRuleVersion, true),
         new(VisitCareLineType.Bpc, 2, 1, null, 18, "BPC: 2 visitas no mês, em dias diferentes", "CurrentMonth", CurrentRuleVersion, true),
-        new(VisitCareLineType.NoVulnerability, 1, 1, null, 10, "Sem critérios de vulnerabilidade: 1 visita no mês", "CurrentMonth", CurrentRuleVersion, true)
+        new(VisitCareLineType.NoVulnerability, 1, 1, null, 5, "Sem critérios de vulnerabilidade: 1 visita no mês", "CurrentMonth", CurrentRuleVersion, true)
     ];
 
     public static VisitCareLineRule? GetRule(VisitCareLineType type)

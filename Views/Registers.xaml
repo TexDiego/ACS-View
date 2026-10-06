@@ -5,6 +5,7 @@
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:controls="clr-namespace:ACS_View.Controls"
              xmlns:converters="clr-namespace:ACS_View.Converters"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.Views.Registers"
              Shell.NavBarIsVisible="True"
@@ -12,28 +13,34 @@
              Title="{Binding Condition}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="addperson.png" Command="{Binding AddPerson}"/>
+        <ToolbarItem IconImageSource="{mi:Fluent Icon=PersonAdd24}" Command="{Binding AddPerson}"/>
     </ContentPage.ToolbarItems>
 
-    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
+    <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*" BackgroundColor="Transparent">
 
-        <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
-            <Grid ColumnDefinitions="*,44">
+        <Border Style="{StaticResource SearchPanel}">
+            <Grid ColumnDefinitions="*" BackgroundColor="Transparent">
                 <SearchBar
                     x:Name="SB"
                     Margin="0,0,0,-1"
                     Placeholder="Buscar paciente ou endereço"
                     Text="{Binding SearchText, Mode=TwoWay}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerHigh}, Dark={StaticResource DarkSurfaceContainerHigh}}"
                     MaxLength="80"
                     IsSpellCheckEnabled="True"
                     TextChanged="SB_TextChanged"/>
 
                 <ImageButton
-                    Grid.Column="1"
+                    Grid.Column="0"
                     ToolTipProperties.Text="Filtrar"
-                    Source="slideralt.png"
-                    MaximumHeightRequest="30"
-                    MaximumWidthRequest="30"
+                    mi:MauiIcon.Value="{mi:Fluent Icon=Filter28}"
+                    CornerRadius="10"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    HorizontalOptions="End"
+                    Margin="0,0,5,2"
+                    Padding="2"
+                    HeightRequest="34"
+                    WidthRequest="34"
                     Command="{Binding Filter}"/>
             </Grid>
         </Border>
@@ -103,8 +110,9 @@
                             <ImageButton
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Source="syringe"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Syringe24}"
                                 Margin="0,0,5,0"
+                                CornerRadius="0"
                                 ToolTipProperties.Text="Vacinas"
                                 MaximumHeightRequest="30"
                                 MaximumWidthRequest="30"
@@ -122,7 +130,7 @@
                                     Text="Editar"
                                     Style="{StaticResource PrimaryOutlineButton}"
                                     MaximumHeightRequest="40"
-                                    ImageSource="pencil.png"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
                                     ToolTipProperties.Text="Editar"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                     CommandParameter="{Binding .}"/>
@@ -130,9 +138,10 @@
                                 <Button
                                     Grid.Column="1"
                                     Text="Excluir"
-                                    Style="{StaticResource DangerOutlineButton}"
+                                    BackgroundColor="Transparent"
+                                    Style="{StaticResource GhostButton}"
                                     MaximumHeightRequest="40"
-                                    ImageSource="bin.png"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
                                     ToolTipProperties.Text="Excluir"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                     CommandParameter="{Binding Id}"/>
@@ -179,6 +188,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
+            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

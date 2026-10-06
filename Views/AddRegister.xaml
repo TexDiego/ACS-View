@@ -6,84 +6,73 @@
              xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
              xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
              xmlns:converters="clr-namespace:ACS_View.Converters"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
              Style="{StaticResource PageBackground}"
              Title="Adicionar cadastro">
 
+    <!-- TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" -->
     <ContentPage.Resources>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
             <Setter Property="FontAttributes" Value="Bold"/>
         </Style>
         <Style TargetType="CheckBox">
             <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
-            <Setter Property="HorizontalOptions" Value="End"/>
+            <Setter Property="HorizontalOptions" Value="Fill"/>
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+            <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"/>
         </Style>
 
-        <ControlTemplate x:Key="RadioButtonTemplate">
-            <Border
-                Style="{StaticResource FieldBorder}"
-                Padding="5"
-                StrokeThickness="2"
-                StrokeShape="RoundRectangle 10"
-                HorizontalOptions="Center"
-                VerticalOptions="Center">
-
+        <!-- The radio template makes the entire option the selection surface. -->
+        <ControlTemplate x:Key="SexOptionTemplate">
+            <Border Style="{StaticResource FieldBorder}"
+                    Padding="12,10"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 8"
+                    MinimumHeightRequest="48"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill">
                 <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup x:Name="CheckedStates">
-                            <VisualState x:Name="Checked">
-                                <VisualState.Setters>
-                                    <Setter Property="Stroke"
-                                        Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
-                                    <Setter TargetName="check"
-                                        Property="Opacity"
-                                        Value="1" />
-                                </VisualState.Setters>
-                            </VisualState>
-                            <VisualState x:Name="Unchecked">
-                                <VisualState.Setters>
-                                    <Setter Property="Stroke"
-                                        Value="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" />
-                                    <Setter TargetName="check"
-                                        Property="Opacity"
-                                        Value="0" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
+                    <VisualStateGroup x:Name="CheckedStates">
+                        <VisualState x:Name="Checked">
+                            <VisualState.Setters>
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                                <Setter TargetName="OptionLabel" Property="Label.TextColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"/>
+                                <Setter TargetName="OptionLabel" Property="Label.FontAttributes" Value="Bold"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Unchecked">
+                            <VisualState.Setters>
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"/>
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"/>
+                                <Setter TargetName="OptionLabel" Property="Label.TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+                                <Setter TargetName="OptionLabel" Property="Label.FontAttributes" Value="None"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-                <Grid ColumnDefinitions="auto, *" ColumnSpacing="10" BackgroundColor="Transparent" HorizontalOptions="Fill">
-
-                    <Grid
-                        Grid.Column="1"
-                        HorizontalOptions="End"
-                        VerticalOptions="Center">
-
-                        <Ellipse Stroke="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
-                                Fill="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
-                                WidthRequest="16"
-                                HeightRequest="16"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center" />
-                        <Ellipse x:Name="check"
-                                Fill="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
-                                WidthRequest="8"
-                                HeightRequest="8"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center" />
-                    </Grid>
-
-                    <ContentPresenter Grid.Column="0"/>
-                </Grid>
+                <Label x:Name="OptionLabel"
+                       Text="{TemplateBinding Content}"
+                       FontSize="14"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"
+                       LineBreakMode="WordWrap"
+                       InputTransparent="True"/>
             </Border>
         </ControlTemplate>
-
-        <Style TargetType="RadioButton">
-            <Setter Property="ControlTemplate"
-                Value="{StaticResource RadioButtonTemplate}" />
+        <Style x:Key="SexOption" TargetType="RadioButton">
+            <Setter Property="ControlTemplate" Value="{StaticResource SexOptionTemplate}"/>
+            <Setter Property="HorizontalOptions" Value="Fill"/>
+            <Setter Property="VerticalOptions" Value="Fill"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
         </Style>
     </ContentPage.Resources>
     <Grid>
@@ -98,159 +87,114 @@
                 BindingContext="{Binding CurrentPatient}"
                 x:DataType="model:Patient">
 
-                <Border Style="{StaticResource FieldBorder}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Grid.Row="0"
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            Margin="0,0,10,0"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="Nome"/>
-
-                        <Entry
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            VerticalOptions="Center"
-                            Margin="0"
-                            MaxLength="70"
-                            Keyboard="Text"
-                            Text="{Binding Name, Mode=TwoWay}"/>
-
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource FieldBorder}">
-
-                    <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="8">
-                        <Label
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            Margin="0,0,10,0"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="Mãe:"/>
-
-                        <Entry
-                            Grid.Column="1"
-                            VerticalOptions="Center"
-                            Margin="0"
-                            MaxLength="70"
-                            Keyboard="Text"
-                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MotherNameInput, Mode=TwoWay}"/>
-
-                        <ImageButton
-                            Grid.Column="2"
-                            Source="loupe.png"
-                            Style="{StaticResource SoftIconButton}"
-                            HeightRequest="40"
-                            WidthRequest="40"
-                            Padding="9"
-                            ToolTipProperties.Text="Selecionar cadastro da mãe"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectMotherCommand}"/>
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource FieldBorder}">
-
-                    <Grid ColumnDefinitions="auto,*,auto" ColumnSpacing="8">
-                        <Label
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            Margin="0,0,10,0"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="Pai:"/>
-
-                        <Entry
-                            Grid.Column="1"
-                            VerticalOptions="Center"
-                            Margin="0"
-                            MaxLength="70"
-                            Keyboard="Text"
-                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FatherNameInput, Mode=TwoWay}"/>
-
-                        <ImageButton
-                            Grid.Column="2"
-                            Source="loupe.png"
-                            Style="{StaticResource SoftIconButton}"
-                            HeightRequest="40"
-                            WidthRequest="40"
-                            Padding="9"
-                            ToolTipProperties.Text="Selecionar cadastro do pai"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectFatherCommand}"/>
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource FieldBorder}">
-
-                    <Grid ColumnDefinitions="auto,*">
-
-                        <Label
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            Margin="0,0,10,0"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="SUS"/>
-
-                        <Entry
-                            Grid.Column="1"
-                            VerticalOptions="Center"
-                            Margin="0"
-                            MaxLength="15"
-                            Keyboard="Numeric"
-                            Text="{Binding SusNumber, Mode=TwoWay}"/>
-
-                    </Grid>
-                </Border>
-
-                <HorizontalStackLayout
-                    RadioButtonGroup.GroupName="Sexo"
-                    RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}"
-                    HorizontalOptions="Center"
-                    Spacing="2"
+                <!-- Nome -->
+                <Entry
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    VerticalOptions="Center"
                     Margin="0"
-                    Padding="0">
+                    MaxLength="70"
+                    Placeholder="Nome"
+                    Keyboard="Text"
+                    Text="{Binding Name, Mode=TwoWay}"/>
 
-                    <RadioButton Content="Masculino" Value="Masculino"/>
-                    <RadioButton Content="Feminino" Value="Feminino"/>
-                    <RadioButton Content="Indeterminado" Value="Indeterminado"/>
+                <!-- Nome da mãe -->
+                <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
 
-                </HorizontalStackLayout>
+                    <Entry
+                        Grid.Column="0"
+                        VerticalOptions="Center"
+                        Margin="0"
+                        MaxLength="70"
+                        Keyboard="Text"
+                        Placeholder="Nome da mãe"
+                        Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MotherNameInput, Mode=TwoWay}"/>
 
-                <Border Style="{StaticResource FieldBorder}">
+                    <ImageButton
+                        Grid.Column="1"
+                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        Style="{StaticResource SoftIconButton}"
+                        HeightRequest="40"
+                        WidthRequest="40"
+                        CornerRadius="0"
+                        BackgroundColor="Transparent"
+                        Padding="9"
+                        ToolTipProperties.Text="Selecionar cadastro da mãe"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectMotherCommand}"/>
+                </Grid>
 
-                    <Grid ColumnDefinitions="auto,*">
+                <!-- Nome do pai -->
+                <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
 
-                        <Label
-                            Grid.Column="0"
-                            Style="{StaticResource labels}"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"
-                            Text="Data de Nascimento:"/>
+                    <Entry
+                        Grid.Column="0"
+                        VerticalOptions="Center"
+                        Margin="0"
+                        MaxLength="70"
+                        Placeholder="Nome do pai"
+                        Keyboard="Text"
+                        Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FatherNameInput, Mode=TwoWay}"/>
 
+                    <ImageButton
+                        Grid.Column="1"
+                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        Style="{StaticResource SoftIconButton}"
+                        HeightRequest="40"
+                        WidthRequest="40"
+                        Padding="9"
+                        CornerRadius="0"
+                        BackgroundColor="Transparent"
+                        ToolTipProperties.Text="Selecionar cadastro do pai"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectFatherCommand}"/>
+                </Grid>
+
+                <!-- CNS -->
+                <Entry
+                    VerticalOptions="Center"
+                    Margin="0"
+                    Keyboard="Text"
+                    Placeholder="Números CNS separados por ponto e vírgula"
+                    Text="{Binding SusNumber, Mode=TwoWay}"/>
+
+                <!-- Separate full-width fields avoid competing intrinsic sizes. -->
+                <Border Style="{StaticResource FieldBorder}" Padding="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Style="{StaticResource labels}" Text="Sexo"/>
+                        <Grid x:Name="SexOptionsGrid"
+                              RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*"
+                              RowSpacing="8"
+                              ColumnSpacing="8"
+                              SizeChanged="OnSexOptionsSizeChanged"
+                              RadioButtonGroup.GroupName="Sexo"
+                              RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}">
+                            <RadioButton Grid.Row="0" Content="Masculino" Value="Masculino" Style="{StaticResource SexOption}"/>
+                            <RadioButton Grid.Row="1" Content="Feminino" Value="Feminino" Style="{StaticResource SexOption}"/>
+                            <RadioButton Grid.Row="2" Content="Indeterminado" Value="Indeterminado" Style="{StaticResource SexOption}"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource FieldBorder}" Padding="10">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Style="{StaticResource labels}" Text="Data de nascimento"/>
                         <DatePicker
-                            Grid.Column="1"
                             TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                            Opacity="0.7"
+                            HorizontalOptions="Fill"
                             VerticalOptions="Center"
-                            HorizontalOptions="End"
-                            FontSize="18"
+                            MinimumHeightRequest="48"
+                            FontSize="16"
                             Date="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BirthDateInput, Mode=TwoWay}"
                             Format="dd/MM/yyyy"
                             MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
                             MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MaximumDate}"/>
-
-                    </Grid>
+                    </VerticalStackLayout>
                 </Border>
 
-                <Border Style="{StaticResource FieldBorder}">
+                <!-- Bolsa Família -->
+                <Border Style="{StaticResource FieldBorder}" Padding="10">
 
-                    <Grid RowDefinitions="auto,auto,auto" RowSpacing="10">
+                    <Grid RowDefinitions="*,auto,auto" RowSpacing="10" Margin="0">
 
                         <Grid Grid.Row="0" ColumnDefinitions="auto,*">
 
@@ -259,73 +203,53 @@
                                 Style="{StaticResource labels}"
                                 VerticalOptions="Center"
                                 HorizontalOptions="Start"
-                                Text="Bolsa Família:"/>
+                                Text="Bolsa Família"/>
 
-                            <CheckBox
+                            <Switch
                                 Grid.Column="1"
-                                IsChecked="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected, Mode=TwoWay}"
-                                Opacity="0.7"
+                                IsToggled="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected, Mode=TwoWay}"
                                 VerticalOptions="Center"/>
 
                         </Grid>
 
-                        <Grid
+                        <Entry
                             Grid.Row="1"
-                            ColumnDefinitions="auto,*"
-                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}">
-
-                            <Label
-                                Grid.Column="0"
-                                Style="{StaticResource labels}"
-                                VerticalOptions="Center"
-                                HorizontalOptions="Start"
-                                Text="NIS:"/>
-
-                            <Entry
-                                Grid.Column="1"
-                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaNisInput, Mode=TwoWay}"
-                                Placeholder="Número NIS"
-                                MaxLength="11"
-                                Keyboard="Numeric"
-                                Opacity="0.7"/>
-
-                        </Grid>
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}"
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaNisInput, Mode=TwoWay}"
+                            Placeholder="Número NIS"
+                            MaxLength="11"
+                            Keyboard="Numeric"/>
 
                         <Grid
                             Grid.Row="2"
-                            ColumnDefinitions="auto,*,auto,auto"
+                            ColumnDefinitions="*,auto,auto"
                             ColumnSpacing="8"
                             IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}">
 
-                            <Label
-                                Grid.Column="0"
-                                Style="{StaticResource labels}"
-                                VerticalOptions="Center"
-                                HorizontalOptions="Start"
-                                Text="Responsável:"/>
-
                             <Entry
-                                Grid.Column="1"
+                                Grid.Column="0"
+                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}"
                                 Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BolsaFamiliaResponsibleNameInput}"
-                                Placeholder="Opcional"
+                                Placeholder="Responsável"
                                 IsReadOnly="True"
-                                Opacity="0.7"/>
+                                IsSpellCheckEnabled="False"/>
 
                             <ImageButton
-                                Grid.Column="2"
+                                Grid.Column="1"
                                 Style="{StaticResource SoftIconButton}"
-                                Source="loupe.png"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}"
                                 HeightRequest="30"
                                 WidthRequest="30"
                                 Padding="9"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectBolsaFamiliaResponsibleCommand}"/>
 
                             <ImageButton
-                                Grid.Column="3"
+                                Grid.Column="2"
                                 Style="{StaticResource SoftIconButton}"
-                                Source="remove.png"
-                                HeightRequest="40"
-                                WidthRequest="40"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
+                                HeightRequest="30"
+                                WidthRequest="30"
                                 Padding="9"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ClearBolsaFamiliaResponsibleCommand}"
                                 IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.HasBolsaFamiliaResponsible}"/>
@@ -335,7 +259,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource FieldBorder}">
+                <Border Style="{StaticResource FieldBorder}" Padding="10" Margin="0">
 
                     <Grid RowDefinitions="auto,auto" RowSpacing="8">
                         <Grid ColumnDefinitions="*,auto">
@@ -348,43 +272,36 @@
 
                             <Switch
                                 Grid.Column="1"
+                                x:Name="PatientActiveSwitch"
                                 IsToggled="{Binding IsActive, Mode=TwoWay}"
                                 OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
                                 ThumbColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"/>
                         </Grid>
 
-                        <Editor
+                        <Entry
                             Grid.Row="1"
-                            Placeholder="Motivo do status"
-                            MaxLength="200"
-                            AutoSize="TextChanges"
-                            Text="{Binding StatusReason, Mode=TwoWay}"/>
+                            IsVisible="False"
+                            Placeholder="Motivo da desativação"
+                            Keyboard="Text"
+                            MaxLength="50"
+                            Text="{Binding StatusReason, Mode=TwoWay}">
+                            <Entry.Triggers>
+                                <DataTrigger TargetType="Entry"
+                                             Binding="{Binding Source={x:Reference PatientActiveSwitch}, Path=IsToggled}"
+                                             Value="False">
+                                    <Setter Property="IsVisible" Value="True"/>
+                                </DataTrigger>
+                            </Entry.Triggers>
+                        </Entry>
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource FieldBorder}">
-
-                    <Grid RowDefinitions="auto,*">
-
-                        <Label
-                            Grid.Row="0"
-                            Style="{StaticResource labels}"
-                            Margin="20,10,0,5"
-                            Text="Observação"/>
-
-                        <Editor
-                            Grid.Row="1"
-                            Margin="20,0"
-                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                            Opacity="0.7"
-                            FontSize="18"
-                            MaxLength="200"
-                            AutoSize="TextChanges"
-                            Text="{Binding Observacao, Mode=TwoWay}"/>
-
-                    </Grid>
-
-                </Border>
+                <Entry
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    MaxLength="100"
+                    Placeholder="Observações"
+                    Margin="0"
+                    Text="{Binding Observacao, Mode=TwoWay}"/>
 
                 <Label
                     Text="Condições de saúde"
@@ -393,7 +310,7 @@
                     HorizontalOptions="Center"
                     VerticalOptions="Center"
                     FontAttributes="Bold"
-                    Opacity="0.8"/>
+                    Margin="0,15,0,0"/>
 
                 <CollectionView ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CommonConditions}">
                     <CollectionView.ItemTemplate>
@@ -452,7 +369,7 @@
 
                                         <ImageButton
                                             Grid.Column="2"
-                                            Source="remove.png"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
                                             HeightRequest="22"
                                             WidthRequest="22"
                                             VerticalOptions="Center"
@@ -512,7 +429,7 @@
 
                                 <ImageButton
                                     Grid.Column="1"
-                                    Source="remove.png"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
                                     HeightRequest="20"
                                     WidthRequest="20"
                                     Margin="0,0,5,0"

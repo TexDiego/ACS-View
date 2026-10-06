@@ -1,5 +1,7 @@
 ﻿using SQLite;
 
+using ACS_View.Domain.ValueObjects;
+
 namespace ACS_View.Domain.Entities
 {
     public class Patient
@@ -10,7 +12,31 @@ namespace ACS_View.Domain.Entities
         public int FamilyId { get; set; } = -1;
         public int HouseId { get; set; } = -1;
 
-        public string SusNumber { get; set; } = string.Empty;
+        private string susNumber = string.Empty;
+
+        // Keeps the SQLite column and text bindings compatible with old records.
+        public string SusNumber
+        {
+            get => susNumber;
+            set => susNumber = SusNumberSet.Join(SusNumberSet.Parse(value));
+        }
+
+        [Ignore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public IReadOnlyList<string> SusNumbers
+        {
+            get => SusNumberSet.Parse(susNumber);
+            set => susNumber = SusNumberSet.Join(value);
+        }
+
+        [Ignore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string PrimarySusNumber => SusNumbers.FirstOrDefault() ?? string.Empty;
+
+        public void AddSusNumbers(string? numbers) =>
+            SusNumbers = SusNumbers.Concat(SusNumberSet.Parse(numbers)).ToArray();
+
+        public bool HasSusNumber(string? number) => SusNumberSet.Overlaps(SusNumber, number);
         public string? FamilyResponsibleSus { get; set; }
         public int? MotherPatientId { get; set; }
         public int? FatherPatientId { get; set; }

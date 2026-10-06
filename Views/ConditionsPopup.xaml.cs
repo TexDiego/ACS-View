@@ -14,6 +14,7 @@ public partial class ConditionsPopup : Popup<object>, IQueryAttributable
     {
         InitializeComponent();
         BindingContext = viewModel = new ConditionPopupViewModel(repo);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)

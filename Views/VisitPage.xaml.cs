@@ -12,6 +12,7 @@ public partial class VisitPage : Popup<VisitBatchRequestDto>
     {
         InitializeComponent();
         BindingContext = viewModel = new VisitBatchPopupViewModel(houseId, familyId, people);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

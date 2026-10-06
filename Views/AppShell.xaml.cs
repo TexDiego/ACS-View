@@ -123,6 +123,7 @@ public partial class AppShell : Shell
 
         Routing.RegisterRoute("registration", new ServiceProviderRouteFactory<RegistrationPage>(_serviceProvider));
         Routing.RegisterRoute("forgotpassword", new ServiceProviderRouteFactory<ForgotPassword>(_serviceProvider));
+        Routing.RegisterRoute("accountsecurity", new ServiceProviderRouteFactory<AccountSecurityPage>(_serviceProvider));
         Routing.RegisterRoute("families", new ServiceProviderRouteFactory<FamiliesPage>(_serviceProvider));
         Routing.RegisterRoute("addregister", new ServiceProviderRouteFactory<AddRegister>(_serviceProvider));
         Routing.RegisterRoute("addhouse", new ServiceProviderRouteFactory<AddHouse>(_serviceProvider));

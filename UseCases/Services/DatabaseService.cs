@@ -4,6 +4,7 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
 using System.Diagnostics;
+using ACS_View.Application.Security;
 
 namespace ACS_View.UseCases.Services
 {
@@ -29,6 +30,7 @@ namespace ACS_View.UseCases.Services
                     return;
                 }
 
+                await Connection.ExecuteScalarAsync<int>("PRAGMA secure_delete = ON");
                 await CreateDomainTablesAsync();
                 _initialized = true;
             }
@@ -82,6 +84,7 @@ namespace ACS_View.UseCases.Services
             await Connection.CreateTablesAsync<PatientPregnancy, CareNotification>();
             await Connection.CreateTableAsync<PatientInsulinDependency>();
             await Connection.CreateTableAsync<CepAddressCache>();
+            await Connection.CreateTableAsync<ImportHistory>();
             await Connection.CreateTablesAsync<Note, House>();
             await Connection.CreateTablesAsync<Family, User>();
             await Connection.CreateTablesAsync<CidCategory, CidChapter>();
@@ -172,19 +175,26 @@ namespace ACS_View.UseCases.Services
                 return;
             }
 
-            await Connection.ExecuteAsync(
-                """
-                INSERT INTO PatientBolsaFamilia (UserId, PatientId, ResponsiblePatientId, NisNumber)
-                SELECT p.UserId, p.Id, p.Id, ''
-                FROM Patient p
-                WHERE COALESCE(p.BolsaFamilia, 0) = 1
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM PatientBolsaFamilia bf
-                      WHERE bf.UserId = p.UserId
-                        AND bf.PatientId = p.Id
-                  )
-                """);
+            await Connection.RunInTransactionAsync(connection =>
+            {
+                connection.Execute(
+                    """
+                    INSERT INTO PatientBolsaFamilia (UserId, PatientId, ResponsiblePatientId, NisNumber)
+                    SELECT p.UserId, p.Id, p.Id, ''
+                    FROM Patient p
+                    WHERE COALESCE(p.BolsaFamilia, 0) = 1
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM PatientBolsaFamilia bf
+                          WHERE bf.UserId = p.UserId
+                            AND bf.PatientId = p.Id
+                      )
+                    """);
+
+                // Consume the legacy flags atomically with the migration. PatientBolsaFamilia
+                // is now authoritative; stale flags must not restore benefits removed in registration.
+                connection.Execute("UPDATE Patient SET BolsaFamilia = 0 WHERE COALESCE(BolsaFamilia, 0) = 1");
+            });
         }
 
         private async Task MigrateInsulinDependencyTableAsync()
@@ -305,6 +315,32 @@ namespace ACS_View.UseCases.Services
             await EnsureColumnAsync("User", nameof(User.PasswordHashVersion), "INTEGER NOT NULL DEFAULT 1");
             await EnsureColumnAsync("User", nameof(User.SecurityAnswerHash), "TEXT NOT NULL DEFAULT ''");
             await EnsureColumnAsync("User", nameof(User.SecurityAnswerSalt), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("User", nameof(User.RecoveryCodeHash), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("User", nameof(User.RecoveryCodeSalt), "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("User", nameof(User.FailedLoginAttempts), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("User", nameof(User.LoginBlockedUntilUtc), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("User", nameof(User.FailedRecoveryAttempts), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("User", nameof(User.RecoveryBlockedUntilUtc), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("User", nameof(User.CredentialRevision), "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("User", nameof(User.BiometricTokenHash), "TEXT NOT NULL DEFAULT ''");
+            var removedLegacySecrets = false;
+            foreach (var user in await Connection.Table<User>().ToListAsync())
+            {
+                if (string.IsNullOrEmpty(user.Password) && string.IsNullOrEmpty(user.SecurityQuestion)
+                    && string.IsNullOrEmpty(user.SecurityAnswer) && string.IsNullOrEmpty(user.SecurityAnswerHash)
+                    && string.IsNullOrEmpty(user.SecurityAnswerSalt)) continue;
+                await Task.Run(() =>
+                {
+                    if (string.IsNullOrEmpty(user.PasswordHash) && !string.IsNullOrEmpty(user.Password))
+                        AccountSecurity.SetPassword(user, user.Password);
+                    user.Password = string.Empty;
+                    AccountSecurity.ClearSecurityQuestion(user);
+                });
+                await Connection.UpdateAsync(user);
+                removedLegacySecrets = true;
+            }
+            // Rebuild once after migration to remove old credential contents from free pages.
+            if (removedLegacySecrets) await Connection.ExecuteAsync("VACUUM");
         }
 
         private async Task EnsureColumnAsync(string tableName, string columnName, string definition)
@@ -455,19 +491,19 @@ namespace ACS_View.UseCases.Services
             {
                 var groupPatients = familyGroup.ToList();
                 var memberSusNumbers = groupPatients
-                    .Select(patient => patient.SusNumber)
+                    .SelectMany(patient => patient.SusNumbers)
                     .Where(sus => !string.IsNullOrWhiteSpace(sus))
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
                 var validResponsibleSus = groupPatients
                     .Select(patient => patient.FamilyResponsibleSus)
-                    .Where(sus => !string.IsNullOrWhiteSpace(sus) && memberSusNumbers.Contains(sus))
+                    .Where(sus => !string.IsNullOrWhiteSpace(sus) && memberSusNumbers.Contains(SusNumberSet.Parse(sus).FirstOrDefault() ?? string.Empty))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 var responsibleSus = validResponsibleSus.Count == 1
                     ? validResponsibleSus[0]
-                    : groupPatients.FirstOrDefault(patient => !string.IsNullOrWhiteSpace(patient.SusNumber))?.SusNumber;
+                    : groupPatients.FirstOrDefault(patient => patient.SusNumbers.Count > 0)?.PrimarySusNumber;
 
                 if (string.IsNullOrWhiteSpace(responsibleSus))
                 {

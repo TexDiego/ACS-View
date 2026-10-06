@@ -209,7 +209,7 @@ namespace ACS_View.ViewModels
                     .FirstOrDefault(sus => !string.IsNullOrWhiteSpace(sus));
 
                 ResponsiblePerson = Pessoas.FirstOrDefault(p =>
-                    string.Equals(p.SusNumber, responsibleSus, StringComparison.OrdinalIgnoreCase)) ??
+                    SusNumberSet.Overlaps(p.SusNumber, responsibleSus)) ??
                     Pessoas.FirstOrDefault();
 
                 _loadedVersion = DataChangeTracker.PatientsVersion;

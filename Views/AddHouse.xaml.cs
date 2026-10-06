@@ -35,12 +35,19 @@ public partial class AddHouse : ContentPage, IQueryAttributable
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
 
         if (!_loaded && _houseId is int houseId)
         {
             _loaded = true;
             _ = viewModel.LoadHouseAsync(houseId);
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
     }
 
     private void Entry_CEP_TextChanged(object sender, TextChangedEventArgs e)

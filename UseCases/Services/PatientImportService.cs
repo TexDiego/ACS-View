@@ -16,7 +16,8 @@ namespace ACS_View.UseCases.Services
         ISQLiteConditionsRepository conditionsRepository,
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         ISpreadsheetReader spreadsheetReader,
-        PatientFamilyLinkResolver familyLinkResolver) : IPatientImportService
+        PatientFamilyLinkResolver familyLinkResolver,
+        IImportHistoryService historyService) : IPatientImportService
     {
         public async Task<PatientImportResultDto> ImportAsync(
             Stream fileStream,
@@ -25,6 +26,35 @@ namespace ACS_View.UseCases.Services
             CancellationToken cancellationToken = default)
         {
             var result = new PatientImportResultDto();
+            var history = new ImportHistory { FileName = columnMap.SourceFileName, StartedAt = DateTimeOffset.Now.ToString("O"), Status = "Concluída" };
+            try
+            {
+                return await ImportCoreAsync(fileStream, columnMap, result, progress, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                history.Status = "Cancelada (dados já gravados foram mantidos)";
+                result.Errors.Add("Importação cancelada; consulte as linhas já processadas.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                history.Status = "Interrompida (pode conter dados já gravados)";
+                result.Errors.Add(ex.GetBaseException().Message);
+                throw;
+            }
+            finally
+            {
+                history.FinishedAt = DateTimeOffset.Now.ToString("O");
+                if (history.Status == "Concluída" && result.Errors.Count > 0) history.Status = "Concluída com pendências";
+                history.ReportJson = System.Text.Json.JsonSerializer.Serialize(result);
+                await historyService.SaveAsync(history);
+            }
+        }
+
+        private async Task<PatientImportResultDto> ImportCoreAsync(Stream fileStream, PatientImportColumnMapDto columnMap,
+            PatientImportResultDto result, IProgress<ImportProgressDto>? progress, CancellationToken cancellationToken)
+        {
             Report(progress, 0, 1, "Lendo planilha");
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -47,7 +77,7 @@ namespace ACS_View.UseCases.Services
                 return result;
             }
 
-            var headerMap = headerMatch.Value.HeaderMap;
+            var headerMap = ImportColumnMapper.Map(rows, headerMatch.Value.RowIndex, columnMap, result.Errors, result.Details);
             var columns = ResolveColumns(headerMap, columnMap);
             var dataRowCount = Math.Max(0, rows.Count - headerMatch.Value.RowIndex - 1);
             var totalProgressItems = Math.Max(1, dataRowCount * 3 + 5);
@@ -59,10 +89,9 @@ namespace ACS_View.UseCases.Services
             var cepCache = new Dictionary<string, House?>();
             var existingPatients = await patientService.GetAllPatients() ?? [];
             var patientsBySusForUpsert = existingPatients
-                .Where(patient => !string.IsNullOrWhiteSpace(patient.SusNumber))
-                .GroupBy(patient => NormalizeSus(patient.SusNumber))
-                .Where(group => !string.IsNullOrWhiteSpace(group.Key))
-                .ToDictionary(group => group.Key, group => group.First());
+                .SelectMany(patient => patient.SusNumbers.Select(sus => new { Sus = sus, Patient = patient }))
+                .GroupBy(item => item.Sus)
+                .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).DistinctBy(patient => patient.Id).ToList());
             var patientsByIdentityForUpsert = existingPatients
                 .Select(patient => new
                 {
@@ -72,65 +101,78 @@ namespace ACS_View.UseCases.Services
                 })
                 .Where(item => item.HasKey)
                 .GroupBy(item => item.Key)
-                .ToDictionary(group => group.Key, group => group.First().Patient);
-            var importedPatientKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).ToList());
+
 
             for (var rowIndex = headerMatch.Value.RowIndex + 1; rowIndex < rows.Count; rowIndex++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var row = rows[rowIndex];
+                if (row.All(string.IsNullOrWhiteSpace)) continue;
                 var name = GetCell(row, columns.NameIndex!.Value);
 
                 if (string.IsNullOrWhiteSpace(name))
                 {
                     result.IgnoredCount++;
+                    result.Errors.Add($"Linha {rowIndex + 1}: nome do paciente vazio; linha não importada.");
                     processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
                     continue;
                 }
 
                 var susNumber = GetCell(row, columns.SusIndex);
-                var normalizedSus = NormalizeSus(susNumber);
+                var susNumbers = SusNumberSet.Parse(susNumber);
                 var motherName = GetCell(row, columns.MotherIndex).Trim();
                 var fatherName = GetCell(row, columns.FatherIndex).Trim();
                 var observation = GetCell(row, columns.ObservationIndex).Trim();
                 var birthDate = ParseDate(GetCell(row, columns.BirthDateIndex));
                 var importedSex = ParseSex(GetCell(row, columns.SexIndex));
-                Patient? existingPatient = null;
-                PatientIdentityKey identityKey = default;
-                string? importKey;
+                if (row.All(string.IsNullOrWhiteSpace)) continue;
+                if (!string.IsNullOrWhiteSpace(GetCell(row, columns.BirthDateIndex)) && (birthDate is null || !HasValidBirthDate(birthDate.Value)))
+                {
+                    result.Errors.Add($"Linha {rowIndex + 1}: data de nascimento inválida: '{GetCell(row, columns.BirthDateIndex)}'.");
+                    birthDate = null;
+                }
+                if (!string.IsNullOrWhiteSpace(GetCell(row, columns.SexIndex)) && importedSex is null)
+                    result.Errors.Add($"Linha {rowIndex + 1}: sexo não reconhecido: '{GetCell(row, columns.SexIndex)}'.");
 
-                if (!string.IsNullOrWhiteSpace(normalizedSus))
-                {
-                    patientsBySusForUpsert.TryGetValue(normalizedSus, out existingPatient);
-                    importKey = BuildSusImportKey(normalizedSus);
-                }
-                else if (TryBuildPatientIdentityKey(name, motherName, birthDate, out identityKey))
-                {
-                    patientsByIdentityForUpsert.TryGetValue(identityKey, out existingPatient);
-                    importKey = BuildIdentityImportKey(identityKey);
-                }
-                else
+                var hasIdentity = TryBuildPatientIdentityKey(name, motherName, birthDate, out var identityKey);
+                var candidates = new List<Patient>();
+                foreach (var sus in susNumbers)
+                    if (patientsBySusForUpsert.TryGetValue(sus, out var susMatches)) candidates.AddRange(susMatches);
+                if (hasIdentity && patientsByIdentityForUpsert.TryGetValue(identityKey, out var identityMatches)) candidates.AddRange(identityMatches);
+                candidates = candidates.DistinctBy(p => p.Id).ToList();
+                if (candidates.Count > 1 || (susNumbers.Count == 0 && !hasIdentity))
                 {
                     result.IgnoredCount++;
-                    result.Errors.Add($"Linha {rowIndex + 1}: paciente sem SUS precisa ter nome, nome da mae e data de nascimento valida para evitar duplicidade.");
-                    processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
+                    result.Errors.Add($"Linha {rowIndex + 1}: {name}: identidade insuficiente ou corresponde a vários cadastros ({string.Join(", ", candidates.Select(p => p.Id))}); revisão manual necessária.");
                     continue;
                 }
-
-                if (!string.IsNullOrWhiteSpace(importKey) && importedPatientKeys.Contains(importKey))
-                {
-                    result.IgnoredCount++;
-                    processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
-                    continue;
-                }
-
+                var existingPatient = candidates.SingleOrDefault();
+                var before = existingPatient == null ? null : System.Text.Json.JsonSerializer.Serialize(existingPatient);
                 var patient = existingPatient ?? new Patient();
                 var isExistingPatient = patient.Id > 0;
                 var patientChanged = isExistingPatient
-                    ? FillMissingPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate)
+                    ? UpdateImportedPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate)
                     : SetImportedPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate);
 
+                foreach (var condition in columns.ConditionColumnIndexes)
+                {
+                    var value = GetCell(row, condition.ColumnIndex);
+                    if (!string.IsNullOrWhiteSpace(value) && ParseOptionalBoolean(value) is null)
+                        result.Errors.Add($"Linha {rowIndex + 1}: {condition.ConditionName}: valor não reconhecido '{value}', preservado o dado anterior.");
+                }
+                var responsibleValue = GetCell(row, columns.IsFamilyResponsibleIndex);
+                if (!string.IsNullOrWhiteSpace(responsibleValue) && ParseOptionalBoolean(responsibleValue) is null)
+                    result.Errors.Add($"Linha {rowIndex + 1}: responsável familiar: valor não reconhecido '{responsibleValue}'.");
+                if (ParseOptionalBoolean(responsibleValue) == false && patient.FamilyResponsiblePatientId == patient.Id && patient.Id > 0)
+                    result.Errors.Add($"Linha {rowIndex + 1}: {name}: planilha informa que não é responsável familiar, mas o cadastro é responsável de uma família; vínculo preservado para revisão manual.");
+                var responsibleSus = GetCell(row, columns.FamilyResponsibleSusIndex).Trim();
+                if (!string.IsNullOrWhiteSpace(responsibleSus) && patient.FamilyResponsibleSus != responsibleSus)
+                {
+                    patient.FamilyResponsibleSus = responsibleSus;
+                    patientChanged = true;
+                }
                 var importedConditions = columns.ConditionColumnIndexes
                     .Where(map => ParseBoolean(GetCell(row, map.ColumnIndex)))
                     .Select(map => map.ConditionName)
@@ -142,11 +184,6 @@ namespace ACS_View.UseCases.Services
                                                HealthConditionCatalog.GetKey(condition) == HealthConditionCatalog.BolsaFamilia);
 
                 importedConditions = importedConditions
-                    .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
-                    .ToList();
-
-                var mappedHealthConditions = columns.ConditionColumnIndexes
-                    .Select(map => map.ConditionName)
                     .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
                     .ToList();
 
@@ -164,27 +201,40 @@ namespace ACS_View.UseCases.Services
                         await patientService.CreatePatient(patient);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(patient.SusNumber))
+                    if (isExistingPatient)
                     {
-                        var savedSus = NormalizeSus(patient.SusNumber);
-                        patientsBySusForUpsert[savedSus] = patient;
-                        importedPatientKeys.Add(BuildSusImportKey(savedSus));
+                        result.MergedCount++;
+                        result.Details.Add($"Linha {rowIndex + 1}: {name} mesclado no cadastro #{patient.Id}. {DescribeChanges(before!, patient)}");
+                    }
+                    else result.Details.Add($"Linha {rowIndex + 1}: {name} criado como cadastro #{patient.Id}.");
+
+                    if (before != null)
+                    {
+                        var previous = System.Text.Json.JsonSerializer.Deserialize<Patient>(before)!;
+                        foreach (var oldSus in previous.SusNumbers)
+                            if (patientsBySusForUpsert.TryGetValue(oldSus, out var oldSusMatches))
+                                oldSusMatches.RemoveAll(p => p.Id == patient.Id);
+                        if (TryBuildPatientIdentityKey(previous.Name, previous.MotherName, previous.BirthDate, out var oldIdentity) &&
+                            patientsByIdentityForUpsert.TryGetValue(oldIdentity, out var oldIdentityMatches))
+                            oldIdentityMatches.RemoveAll(p => p.Id == patient.Id);
+                    }
+                    foreach (var savedSus in patient.SusNumbers)
+                    {
+                        if (!patientsBySusForUpsert.TryGetValue(savedSus, out var matches)) patientsBySusForUpsert[savedSus] = matches = [];
+                        matches.Add(patient);
                     }
 
                     if (TryBuildPatientIdentityKey(patient.Name, patient.MotherName, patient.BirthDate, out var savedIdentityKey))
                     {
-                        patientsByIdentityForUpsert[savedIdentityKey] = patient;
-                        importedPatientKeys.Add(BuildIdentityImportKey(savedIdentityKey));
+                        if (!patientsByIdentityForUpsert.TryGetValue(savedIdentityKey, out var matches)) patientsByIdentityForUpsert[savedIdentityKey] = matches = [];
+                        matches.Add(patient);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(importKey))
-                    {
-                        importedPatientKeys.Add(importKey);
-                    }
-
-                    var conditionsChanged = isExistingPatient
-                        ? await AddMissingImportedConditionsAsync(patient.Id, importedConditions)
-                        : await SyncImportedConditionsAsync(patient.Id, mappedHealthConditions, importedConditions);
+                    var explicitConditions = columns.ConditionColumnIndexes
+                        .Where(map => ParseOptionalBoolean(GetCell(row, map.ColumnIndex)) is not null)
+                        .Select(map => map.ConditionName).ToList();
+                    var conditionsChanged = await SyncImportedConditionsAsync(patient.Id, explicitConditions, importedConditions);
+                    if (conditionsChanged) result.Details.Add($"Linha {rowIndex + 1}: condições de saúde atualizadas: {string.Join(", ", explicitConditions)}.");
                     var bolsaFamiliaChanged = await AddMissingImportedBolsaFamiliaAsync(patient.Id, importedBolsaFamilia);
 
                     var importedStreet = GetCell(row, columns.PatientStreetIndex);
@@ -209,6 +259,9 @@ namespace ACS_View.UseCases.Services
                         FatherName = patient.FatherName,
                         FamilyResponsibleSus = GetCell(row, columns.FamilyResponsibleSusIndex).Trim(),
                         IsFamilyResponsible = ParseBoolean(GetCell(row, columns.IsFamilyResponsibleIndex)),
+                        ImportedHouse = new House { CEP = GetCell(row, columns.PatientCepIndex), Rua = street,
+                            NumeroCasa = GetCell(row, columns.PatientHouseNumberIndex), Complemento = GetCell(row, columns.PatientComplementIndex),
+                            Bairro = neighborhood, Cidade = city, Estado = state },
                         AddressKeys = BuildAddressKeys(
                             GetCell(row, columns.PatientCepIndex),
                             GetCell(row, columns.PatientStreetTypeIndex),
@@ -236,6 +289,7 @@ namespace ACS_View.UseCases.Services
                         result.ImportedCount++;
                     }
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (ArgumentException ex)
                 {
                     result.IgnoredCount++;
@@ -255,6 +309,7 @@ namespace ACS_View.UseCases.Services
                 processedProgressItems = await familyLinkResolver.ResolveAsync(
                     rowContexts,
                     columnMap,
+                    result,
                     progress,
                     processedProgressItems,
                     totalProgressItems,
@@ -294,61 +349,34 @@ namespace ACS_View.UseCases.Services
             return true;
         }
 
-        private static bool FillMissingPatientFields(
-            Patient patient,
-            string name,
-            string susNumber,
-            string motherName,
-            string fatherName,
-            string observation,
-            string? importedSex,
-            DateTime? birthDate)
+        private static string DescribeChanges(string beforeJson, Patient patient)
         {
-            var changed = false;
-
-            if (string.IsNullOrWhiteSpace(patient.Name) && !string.IsNullOrWhiteSpace(name))
+            var before = System.Text.Json.JsonSerializer.Deserialize<Patient>(beforeJson)!;
+            var fields = new (string Label, string Old, string New)[]
             {
-                patient.Name = name.Trim();
-                changed = true;
-            }
+                ("Nome", before.Name, patient.Name), ("CNS", before.SusNumber, patient.SusNumber),
+                ("Mãe", before.MotherName, patient.MotherName), ("Pai", before.FatherName, patient.FatherName),
+                ("Nascimento", before.BirthDate.ToString("dd/MM/yyyy"), patient.BirthDate.ToString("dd/MM/yyyy")),
+                ("Sexo", before.Sexo, patient.Sexo), ("Observação", before.Observacao, patient.Observacao),
+                ("CNS do responsável", before.FamilyResponsibleSus ?? "", patient.FamilyResponsibleSus ?? "")
+            };
+            var changes = fields.Where(f => f.Old != f.New).Select(f => $"{f.Label}: '{f.Old}' → '{f.New}'").ToList();
+            return changes.Count == 0 ? "Dados pessoais mantidos; condições e vínculos conferidos." : string.Join("; ", changes);
+        }
 
-            if (string.IsNullOrWhiteSpace(patient.SusNumber) && !string.IsNullOrWhiteSpace(susNumber))
-            {
-                patient.SusNumber = susNumber.Trim();
-                changed = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(patient.MotherName) && !string.IsNullOrWhiteSpace(motherName))
-            {
-                patient.MotherName = motherName.Trim();
-                changed = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(patient.FatherName) && !string.IsNullOrWhiteSpace(fatherName))
-            {
-                patient.FatherName = fatherName.Trim();
-                changed = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(patient.Observacao) && !string.IsNullOrWhiteSpace(observation))
-            {
-                patient.Observacao = observation.Trim();
-                changed = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(patient.Sexo) && !string.IsNullOrWhiteSpace(importedSex))
-            {
-                patient.Sexo = importedSex;
-                changed = true;
-            }
-
-            if (birthDate is not null && !HasValidBirthDate(patient.BirthDate))
-            {
-                patient.BirthDate = birthDate.Value;
-                changed = true;
-            }
-
-            return changed;
+        private static bool UpdateImportedPatientFields(Patient patient, string name, string susNumber, string motherName,
+            string fatherName, string observation, string? importedSex, DateTime? birthDate)
+        {
+            var before = System.Text.Json.JsonSerializer.Serialize(patient);
+            if (!string.IsNullOrWhiteSpace(name)) patient.Name = name.Trim();
+            patient.AddSusNumbers(susNumber);
+            if (!string.IsNullOrWhiteSpace(motherName)) patient.MotherName = motherName.Trim();
+            if (!string.IsNullOrWhiteSpace(fatherName)) patient.FatherName = fatherName.Trim();
+            if (!string.IsNullOrWhiteSpace(observation) && !patient.Observacao.Split(" | ").Contains(observation.Trim()))
+                patient.Observacao = string.IsNullOrWhiteSpace(patient.Observacao) ? observation.Trim() : patient.Observacao + " | " + observation.Trim();
+            if (importedSex != null) patient.Sexo = importedSex;
+            if (birthDate != null) patient.BirthDate = birthDate.Value;
+            return before != System.Text.Json.JsonSerializer.Serialize(patient);
         }
 
         private static ImportColumns ResolveColumns(
@@ -399,7 +427,8 @@ namespace ACS_View.UseCases.Services
 
             var changed = false;
             var currentConditions = await conditionsRepository.GetConditionsByPatientIdAsync(patientId);
-            foreach (var condition in currentConditions.Where(condition => mappedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description))))
+            var selectedKeys = selectedConditionNames.Select(HealthConditionCatalog.GetKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var condition in currentConditions.Where(condition => mappedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description)) && !selectedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description))))
             {
                 await conditionsRepository.DeleteConditionAsync(condition.Id);
                 changed = true;
@@ -407,51 +436,12 @@ namespace ACS_View.UseCases.Services
 
             foreach (var conditionName in selectedConditionNames)
             {
+                if (currentConditions.Any(c => HealthConditionCatalog.GetKey(c.Description) == HealthConditionCatalog.GetKey(conditionName))) continue;
                 await conditionsRepository.InsertConditionAsync(new PatientConditions
                 {
                     PatientId = patientId,
                     Description = conditionName
                 });
-                changed = true;
-            }
-
-            return changed;
-        }
-
-        private async Task<bool> AddMissingImportedConditionsAsync(
-            int patientId,
-            IEnumerable<string> selectedConditionNames)
-        {
-            var selectedConditions = selectedConditionNames
-                .Where(condition => !string.IsNullOrWhiteSpace(condition))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (selectedConditions.Count == 0)
-            {
-                return false;
-            }
-
-            var currentConditions = await conditionsRepository.GetConditionsByPatientIdAsync(patientId);
-            var currentKeys = currentConditions
-                .Select(condition => HealthConditionCatalog.GetKey(condition.Description))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var changed = false;
-            foreach (var conditionName in selectedConditions)
-            {
-                var conditionKey = HealthConditionCatalog.GetKey(conditionName);
-                if (currentKeys.Contains(conditionKey))
-                {
-                    continue;
-                }
-
-                await conditionsRepository.InsertConditionAsync(new PatientConditions
-                {
-                    PatientId = patientId,
-                    Description = conditionName
-                });
-                currentKeys.Add(conditionKey);
                 changed = true;
             }
 
@@ -520,23 +510,10 @@ namespace ACS_View.UseCases.Services
                 return null;
             }
 
-            var normalizedColumnName = Normalize(columnName);
-            if (headerMap.TryGetValue(normalizedColumnName, out var index))
-            {
-                return index;
-            }
-
-            var compactColumnName = Compact(normalizedColumnName);
+            if (headerMap.TryGetValue(ImportColumnAliases.Normalize(columnName), out var exact)) return exact;
+            if (headerMap.TryGetValue(Normalize(columnName), out exact)) return exact;
             foreach (var item in headerMap)
-            {
-                var compactHeader = Compact(item.Key);
-                if (compactHeader == compactColumnName ||
-                    compactHeader.Contains(compactColumnName, StringComparison.OrdinalIgnoreCase) ||
-                    compactColumnName.Contains(compactHeader, StringComparison.OrdinalIgnoreCase))
-                {
-                    return item.Value;
-                }
-            }
+                if (ImportColumnAliases.Matches(item.Key, columnName)) return item.Value;
 
             return null;
         }
@@ -576,6 +553,14 @@ namespace ACS_View.UseCases.Services
                 }
             }
 
+            return null;
+        }
+
+        private static bool? ParseOptionalBoolean(string value)
+        {
+            var key = ImportColumnAliases.Normalize(value);
+            if (key is "1" or "sim" or "s" or "true" or "verdadeiro" or "x") return true;
+            if (key is "0" or "nao" or "n" or "false" or "falso") return false;
             return null;
         }
 
@@ -692,8 +677,6 @@ namespace ACS_View.UseCases.Services
                 AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, normalizedComplement, normalizedNeighborhood, normalizedCity, normalizedState);
                 AddAddressKey(keys, normalizedCep, normalizedStreet, normalizedNumber, normalizedComplement, string.Empty, string.Empty, string.Empty);
                 AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, normalizedComplement, string.Empty, string.Empty, string.Empty);
-                AddAddressKey(keys, normalizedCep, normalizedStreet, normalizedNumber, string.Empty, string.Empty, string.Empty, string.Empty);
-                AddAddressKey(keys, string.Empty, normalizedStreet, normalizedNumber, string.Empty, string.Empty, string.Empty, string.Empty);
             }
 
             return keys.ToList();
@@ -738,16 +721,6 @@ namespace ACS_View.UseCases.Services
                 : Regex.Replace(value, @"\D", string.Empty);
         }
 
-        private static string BuildSusImportKey(string normalizedSus)
-        {
-            return $"sus:{normalizedSus}";
-        }
-
-        private static string BuildIdentityImportKey(PatientIdentityKey key)
-        {
-            return $"identity:{key.Name}|{key.MotherName}|{key.BirthDate:yyyyMMdd}";
-        }
-
         private static bool TryBuildPatientIdentityKey(
             string? name,
             string? motherName,
@@ -774,7 +747,7 @@ namespace ACS_View.UseCases.Services
 
         private static bool HasValidBirthDate(DateTime date)
         {
-            return date.Year > 1900 && date.Date < DateTime.Today;
+            return date.Year >= 1900 && date.Date <= DateTime.Today;
         }
 
         private static string Normalize(string value)

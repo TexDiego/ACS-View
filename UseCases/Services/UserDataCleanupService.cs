@@ -48,6 +48,7 @@ internal sealed class UserDataCleanupService(
 
     private static void DeletePatients(SQLiteConnection connection, int userId)
     {
+        connection.Execute("DELETE FROM ImportHistory WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientCID WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientConditions WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientBolsaFamilia WHERE UserId = ?", userId);

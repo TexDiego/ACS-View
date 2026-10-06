@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:controls="clr-namespace:ACS_View.Controls"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.Views.HousesPage"
              Shell.NavBarIsVisible="True"
@@ -11,7 +12,7 @@
              Title="Residências">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="addhouse.png" Command="{Binding NewHouseCommand}"/>
+        <ToolbarItem IconImageSource="{mi:Fluent Icon=HomeAdd24}" Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
@@ -22,6 +23,7 @@
                 Placeholder="Buscar rua, número ou paciente"
                 Text="{Binding SearchText, Mode=TwoWay}"
                 MaxLength="80"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerHigh}, Dark={StaticResource DarkSurfaceContainerHigh}}"
                 TextChanged="SearchBar_TextChanged"/>
         </Border>
 
@@ -82,23 +84,25 @@
 
                             <HorizontalStackLayout
                                 Grid.Column="1"
-                                Spacing="10"
+                                Spacing="20"
                                 Margin="0,0,10,0"
                                 VerticalOptions="Center">
 
                                 <ImageButton
-                                    Source="pencil.png"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
                                     ToolTipProperties.Text="Editar"
                                     MaximumHeightRequest="28"
                                     MaximumWidthRequest="28"
+                                    CornerRadius="0"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                     CommandParameter="{Binding .}"/>
 
                                 <ImageButton
-                                    Source="bin.png"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
                                     ToolTipProperties.Text="Excluir"
                                     MaximumHeightRequest="28"
                                     MaximumWidthRequest="28"
+                                    CornerRadius="0"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                     CommandParameter="{Binding CasaId}"/>
                             </HorizontalStackLayout>
@@ -144,6 +148,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
+            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

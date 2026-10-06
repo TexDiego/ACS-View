@@ -13,6 +13,7 @@ public partial class PregnancyPopup : Popup<PatientPregnancy>
     {
         InitializeComponent();
         BindingContext = new PregnancyPopupViewModel(details);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void SaveButton_Clicked(object sender, EventArgs e)

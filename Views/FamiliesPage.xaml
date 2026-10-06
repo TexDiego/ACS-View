@@ -3,6 +3,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:models="clr-namespace:ACS_View.Domain.Entities"
              xmlns:services="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:FamiliesViewModel"
              x:Class="ACS_View.Views.FamiliesPage"
              Shell.NavBarIsVisible="True"
@@ -11,7 +12,7 @@
 
     <ContentPage.ToolbarItems>
         <ToolbarItem
-            IconImageSource="addhouse.png"
+            IconImageSource="{mi:Fluent Icon=PeopleAdd24}"
             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}"/>
     </ContentPage.ToolbarItems>
 
@@ -63,7 +64,7 @@
                             <Button
                                 Grid.Column="0"
                                 MaximumHeightRequest="38"
-                                ImageSource="bin.png"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
                                 Text="Excluir"
                                 Style="{StaticResource DangerOutlineButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}"
@@ -72,7 +73,7 @@
                             <Button
                                 Grid.Column="1"
                                 MaximumHeightRequest="38"
-                                ImageSource="pencil.png"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
                                 Text="Editar"
                                 Style="{StaticResource PrimaryOutlineButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}"
@@ -81,7 +82,7 @@
                             <Button
                                 Grid.Column="2"
                                 MaximumHeightRequest="38"
-                                ImageSource="writing.png"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=ClipboardHeart24}"
                                 Text="Visitar"
                                 Style="{StaticResource PrimaryOutlineButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VisitFamilyCommand}"

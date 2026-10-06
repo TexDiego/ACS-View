@@ -23,6 +23,7 @@ public partial class FilterPopup : Popup<PatientListFilterDto>
         _dialogService = dialogService;
         _filterKey = filter.FilterKey;
         BindingContext = _viewModel = new FilterPopupViewModel(filter);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

@@ -9,4 +9,16 @@ public partial class ImportDataPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
+    }
 }

@@ -9,11 +9,7 @@ public partial class DialogPopup : Popup<object>
     {
         InitializeComponent();
         BindingContext = viewModel;
-
-        if (viewModel.IsTextPrompt)
-        {
-            Loaded += (_, _) => PromptEntry.Focus();
-        }
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private DialogPopupViewModel ViewModel => (DialogPopupViewModel)BindingContext;

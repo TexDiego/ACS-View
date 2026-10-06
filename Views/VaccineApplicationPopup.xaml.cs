@@ -12,6 +12,7 @@ public partial class VaccineApplicationPopup : Popup<VaccineApplicationRequestDt
     {
         InitializeComponent();
         BindingContext = viewModel = new VaccineApplicationPopupViewModel(patientId, dose);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

@@ -15,6 +15,13 @@
         <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
+                    <Label Text="Segurança da conta" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="{Binding SecurityStatus}" Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Senha, recuperação e biometria" Style="{StaticResource Buttons}" Command="{Binding OpenAccountSecurityPage}"/>
+                </VerticalStackLayout>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
                     <Label Text="Área pessoal" Style="{StaticResource SectionTitle}"/>
                     <Label Text="Acesse anotações e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
                     <Button Text="Abrir anotações"

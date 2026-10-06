@@ -3,6 +3,8 @@ using ACS_View.Application.Querying;
 using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 
+VisitRecordGroupingTests.Run();
+
 var secret = "SenhaForte123";
 var otherSecret = "SenhaErrada123";
 
@@ -154,6 +156,8 @@ Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.DeadlineRule ==
 Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.RequiredVisits == 1, "Pacientes sem criterios de vulnerabilidade devem exigir 1 visita no mes.");
 Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.Points == 10, "Pacientes sem criterios de vulnerabilidade devem ter pontuacao generica menor.");
 Assert(VisitPriorityCalculator.Calculate([VisitCareLineType.NoVulnerability]).Factor == 1.0m, "Pacientes sem criterios devem manter prioridade base 1.0.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Postpartum)?.DeadlineRule == "Postpartum", "Puerperio deve existir como regra propria da matriz de visitas.");
+Assert(VisitPriorityCalculator.Calculate([VisitCareLineType.Postpartum]).Factor == 1.0m, "Puerperio isolado nao deve aumentar o fator de vulnerabilidade.");
 Assert(VisitPriorityCalculator.Calculate(strongVisitCareLines).Factor == 2.5m, "Idoso beneficiario deve receber fator de prioridade 2.5.");
 Assert(strongVisitCareLines.Sum(careLine => VisitScoringRuleCatalog.GetRule(careLine)?.Points ?? 0) >= 80, "Paciente com multiplos fatores fortes deve acumular pontuacao alta.");
 

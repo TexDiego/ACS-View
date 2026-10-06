@@ -6,8 +6,11 @@ namespace ACS_View.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string susNumber && susNumber.Length == 15)
-                return $"{susNumber.Substring(0, 3)}.{susNumber.Substring(3, 4)}.{susNumber.Substring(7, 4)}.{susNumber.Substring(11, 4)}";
+            if (value is string susNumbers)
+                return string.Join("; ", ACS_View.Domain.ValueObjects.SusNumberSet.Parse(susNumbers)
+                    .Select(number => number.Length == 15
+                        ? $"{number[..3]}.{number.Substring(3, 4)}.{number.Substring(7, 4)}.{number.Substring(11, 4)}"
+                        : number));
             return value;
         }
 

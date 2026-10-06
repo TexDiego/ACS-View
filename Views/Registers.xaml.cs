@@ -74,6 +74,7 @@ public partial class Registers : ContentPage, IQueryAttributable
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
         _hasAppeared = true;
 
         if (_viewModel.ShouldSkipTransientReload())
@@ -82,6 +83,12 @@ public partial class Registers : ContentPage, IQueryAttributable
         }
 
         _ = LoadDataOnAppearAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
     }
 
     private async Task LoadDataOnAppearAsync()

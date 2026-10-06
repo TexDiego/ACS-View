@@ -3,13 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:views="clr-namespace:ACS_View.Views"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:OverallViewModel"
              x:Class="ACS_View.Views.OverallView"
              Title="Início"
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="dots.png"
+        <ToolbarItem IconImageSource="{mi:Fluent Icon=MoreHorizontal24}"
                      Command="{Binding OpenMetricsMenuCommand}"/>
     </ContentPage.ToolbarItems>
 

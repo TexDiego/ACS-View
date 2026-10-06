@@ -274,11 +274,11 @@ namespace ACS_View.ViewModels
 
                     var allPatients = await _patientService.GetAllPatients() ?? [];
 
-                    var duplicate = allPatients.FirstOrDefault(p => !string.IsNullOrWhiteSpace(CurrentPatient.SusNumber) && p.SusNumber == CurrentPatient.SusNumber && p.Id != CurrentPatient.Id);
+                    var duplicate = allPatients.FirstOrDefault(p => p.Id != CurrentPatient.Id && p.SusNumbers.Intersect(CurrentPatient.SusNumbers).Any());
                     if (duplicate is not null)
                     {
-                        bool update = await DisplayConfirmationAsync("Aviso", "Já existe um cadastro com este número SUS. Deseja continuar para atualizar o cadastro?", "Continuar");
-                        if (!update) return;
+                        await DisplayAlertAsync("Aviso", $"Um dos números SUS já pertence a {duplicate.Name} (cadastro #{duplicate.Id}). Edite esse cadastro para evitar duplicação.");
+                        return;
                     }
 
                     if (CurrentPatient.IsActive != _initialIsActive)

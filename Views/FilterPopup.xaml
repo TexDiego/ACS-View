@@ -27,25 +27,21 @@
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <VerticalStackLayout Spacing="4">
-                    <Label Text="Idade mínima" Style="{StaticResource FieldLabel}"/>
-                    <Border Style="{StaticResource FieldBorder}">
-                        <Entry
-                            Text="{Binding MinimumAge}"
-                            Keyboard="Numeric"
-                            MaxLength="3"
-                            Placeholder="Sem mínimo"/>
-                    </Border>
+                    <Entry
+                        Text="{Binding MinimumAge}"
+                        ClearButtonVisibility="WhileEditing"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Idade mínima"/>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Grid.Column="1" Spacing="4">
-                    <Label Text="Idade máxima" Style="{StaticResource FieldLabel}"/>
-                    <Border Style="{StaticResource FieldBorder}">
-                        <Entry
-                            Text="{Binding MaximumAge}"
-                            Keyboard="Numeric"
-                            MaxLength="3"
-                            Placeholder="Sem máximo"/>
-                    </Border>
+                    <Entry
+                        Text="{Binding MaximumAge}"
+                        ClearButtonVisibility="WhileEditing"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Idade máxima"/>
                 </VerticalStackLayout>
             </Grid>
 
@@ -54,7 +50,11 @@
                 <Label
                     Text="Mostrar apenas pacientes do Bolsa Famí­lia"
                     Style="{StaticResource FieldLabel}"
-                    VerticalOptions="Center"/>
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleBolsaFamiliaCommand}"/>
+                    </Label.GestureRecognizers>
+                </Label>
             </HorizontalStackLayout>
 
             <VerticalStackLayout Spacing="6">
@@ -102,29 +102,32 @@
                 </FlexLayout>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
-                    <Picker SelectedIndex="{Binding FilterBy}">
-                        <Picker.Items>
-                            <x:String>Nome</x:String>
-                            <x:String>Idade</x:String>
-                        </Picker.Items>
-                    </Picker>
-                </Border>
-            </VerticalStackLayout>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
 
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
-                    <Picker SelectedIndex="{Binding OrderBy}">
-                        <Picker.Items>
-                            <x:String>Crescente</x:String>
-                            <x:String>Decrescente</x:String>
-                        </Picker.Items>
-                    </Picker>
-                </Border>
-            </VerticalStackLayout>
+                <VerticalStackLayout Spacing="4" Grid.Column="0">
+                    <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Picker SelectedIndex="{Binding FilterBy}">
+                            <Picker.Items>
+                                <x:String>Nome</x:String>
+                                <x:String>Idade</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="4" Grid.Column="1">
+                    <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
+                    <Border Style="{StaticResource FieldBorder}">
+                        <Picker SelectedIndex="{Binding OrderBy}">
+                            <Picker.Items>
+                                <x:String>Crescente</x:String>
+                                <x:String>Decrescente</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                 <Button

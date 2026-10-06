@@ -2,18 +2,15 @@ using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using System.Globalization;
-using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace ACS_View.UseCases.Services;
 
 internal class HouseImportService(
     IHouseService houseService,
-    ICepService cepService) : IHouseImportService
+    ICepService cepService, ISpreadsheetReader spreadsheetReader, IImportHistoryService historyService) : IHouseImportService
 {
-    private static readonly XNamespace SpreadsheetNamespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 
     public async Task<HouseImportResultDto> ImportAsync(
         Stream fileStream,
@@ -22,10 +19,26 @@ internal class HouseImportService(
         CancellationToken cancellationToken = default)
     {
         var result = new HouseImportResultDto();
+        var history = new ImportHistory { FileName = columnMap.SourceFileName, StartedAt = DateTimeOffset.Now.ToString("O"), Status = "Concluída" };
+        try { return await ImportCoreAsync(fileStream, columnMap, result, progress, cancellationToken); }
+        catch (OperationCanceledException) { history.Status = "Cancelada (dados já gravados foram mantidos)"; result.Errors.Add("Importação cancelada."); throw; }
+        catch (Exception ex) { history.Status = "Interrompida"; result.Errors.Add(ex.Message); throw; }
+        finally
+        {
+            history.FinishedAt = DateTimeOffset.Now.ToString("O");
+            if (history.Status == "Concluída" && result.Errors.Count > 0) history.Status = "Concluída com pendências";
+            history.ReportJson = System.Text.Json.JsonSerializer.Serialize(result);
+            await historyService.SaveAsync(history);
+        }
+    }
+
+    private async Task<HouseImportResultDto> ImportCoreAsync(Stream fileStream, HouseImportColumnMapDto columnMap,
+        HouseImportResultDto result, IProgress<ImportProgressDto>? progress, CancellationToken cancellationToken)
+    {
         Report(progress, 0, 1, "Lendo planilha");
 
         cancellationToken.ThrowIfCancellationRequested();
-        var rows = ReadWorksheetRows(fileStream);
+        var rows = spreadsheetReader.ReadWorksheetRows(fileStream);
 
         if (rows.Count == 0)
         {
@@ -41,7 +54,7 @@ internal class HouseImportService(
             return result;
         }
 
-        var headerMap = headerMatch.Value.HeaderMap;
+        var headerMap = ImportColumnMapper.Map(rows, headerMatch.Value.RowIndex, columnMap, result.Errors, result.Details);
         var streetIndex = FindColumnIndex(headerMap, columnMap.StreetColumn);
         var streetTypeIndex = FindColumnIndex(headerMap, columnMap.StreetTypeColumn);
         var cepIndex = FindColumnIndex(headerMap, columnMap.CepColumn);
@@ -68,6 +81,7 @@ internal class HouseImportService(
             try
             {
                 var row = rows[rowIndex];
+                if (row.All(string.IsNullOrWhiteSpace)) continue;
                 var cep = GetCell(row, cepIndex).Trim();
                 var importedStreet = GetCell(row, streetIndex);
                 var importedNeighborhood = GetCell(row, neighborhoodIndex);
@@ -122,27 +136,36 @@ internal class HouseImportService(
                 house.PossuiComplemento = !string.IsNullOrWhiteSpace(house.Complemento);
 
                 var key = GetHouseKey(house);
-                if (housesByKey.TryGetValue(key, out var existingHouse))
+                if (housesByKey.TryGetValue(key, out var existingMatches) && existingMatches.Count > 1)
                 {
-                    existingHouse.CEP = house.CEP;
-                    existingHouse.Rua = house.Rua;
-                    existingHouse.TipoLogradouro = house.TipoLogradouro;
-                    existingHouse.NumeroCasa = house.NumeroCasa;
-                    existingHouse.Bairro = house.Bairro;
-                    existingHouse.Cidade = house.Cidade;
-                    existingHouse.Estado = house.Estado;
-                    existingHouse.Pais = house.Pais;
-                    existingHouse.Complemento = house.Complemento;
-                    existingHouse.PossuiComplemento = house.PossuiComplemento;
+                    result.IgnoredCount++;
+                    result.Errors.Add($"Linha {rowIndex + 1}: endereço corresponde a várias residências; revisão manual necessária.");
+                    continue;
+                }
+                if (existingMatches?.SingleOrDefault() is { } existingHouse)
+                {
+                    if (!string.IsNullOrWhiteSpace(house.CEP)) existingHouse.CEP = house.CEP;
+                    if (!string.IsNullOrWhiteSpace(house.Rua)) existingHouse.Rua = house.Rua;
+                    if (!string.IsNullOrWhiteSpace(house.TipoLogradouro)) existingHouse.TipoLogradouro = house.TipoLogradouro;
+                    if (!string.IsNullOrWhiteSpace(house.NumeroCasa)) existingHouse.NumeroCasa = house.NumeroCasa;
+                    if (!string.IsNullOrWhiteSpace(house.Bairro)) existingHouse.Bairro = house.Bairro;
+                    if (!string.IsNullOrWhiteSpace(house.Cidade)) existingHouse.Cidade = house.Cidade;
+                    if (!string.IsNullOrWhiteSpace(house.Estado)) existingHouse.Estado = house.Estado;
+                    if (!string.IsNullOrWhiteSpace(house.Pais)) existingHouse.Pais = house.Pais;
+                    if (!string.IsNullOrWhiteSpace(house.Complemento)) existingHouse.Complemento = house.Complemento;
+                    existingHouse.PossuiComplemento = !string.IsNullOrWhiteSpace(existingHouse.Complemento);
 
                     await houseService.UpdateHouseAsync(existingHouse);
                     result.UpdatedCount++;
+                    result.MergedCount++;
+                    result.Details.Add($"Linha {rowIndex + 1}: residência #{existingHouse.CasaId} mesclada: {existingHouse.Rua}, {existingHouse.NumeroCasa}, {existingHouse.Complemento}.");
                 }
                 else
                 {
                     await houseService.SaveHouseAsync(house);
                     AddHouseKeys(housesByKey, house);
                     result.ImportedCount++;
+                    result.Details.Add($"Linha {rowIndex + 1}: residência #{house.CasaId} criada.");
                 }
             }
             catch (ArgumentException ex)
@@ -172,9 +195,9 @@ internal class HouseImportService(
         return result;
     }
 
-    private static Dictionary<string, House> BuildHouseKeyIndex(IEnumerable<House> houses)
+    private static Dictionary<string, List<House>> BuildHouseKeyIndex(IEnumerable<House> houses)
     {
-        var index = new Dictionary<string, House>(StringComparer.OrdinalIgnoreCase);
+        var index = new Dictionary<string, List<House>>(StringComparer.OrdinalIgnoreCase);
         foreach (var house in houses)
         {
             AddHouseKeys(index, house);
@@ -183,18 +206,19 @@ internal class HouseImportService(
         return index;
     }
 
-    private static void AddHouseKeys(Dictionary<string, House> index, House house)
+    private static void AddHouseKeys(Dictionary<string, List<House>> index, House house)
     {
         foreach (var key in GetHouseKeys(house))
         {
-            index.TryAdd(key, house);
+            if (!index.TryGetValue(key, out var matches)) index[key] = matches = [];
+            if (matches.All(h => h.CasaId != house.CasaId)) matches.Add(house);
         }
     }
 
     private static IReadOnlyList<string> GetHouseKeys(House house)
     {
         return GetAddressStreetVariants(house.TipoLogradouro, house.Rua)
-            .Select(street => $"{Normalize(street)}|{Normalize(house.NumeroCasa)}|{Normalize(house.Complemento)}")
+            .Select(street => $"{Normalize(house.CEP)}|{Normalize(house.Cidade)}|{Normalize(house.Estado)}|{Normalize(street)}|{Normalize(house.NumeroCasa)}|{Normalize(house.Complemento)}")
             .Where(key => !string.IsNullOrWhiteSpace(key))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -239,124 +263,6 @@ internal class HouseImportService(
         return null;
     }
 
-    private static List<List<string>> ReadWorksheetRows(Stream fileStream)
-    {
-        using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: true);
-        var sharedStrings = ReadSharedStrings(archive);
-        var worksheetEntry = GetFirstWorksheetEntry(archive)
-            ?? throw new InvalidDataException("Nao foi possivel encontrar a primeira aba da planilha.");
-
-        using var worksheetStream = worksheetEntry.Open();
-        var worksheet = XDocument.Load(worksheetStream);
-        var rows = new List<List<string>>();
-
-        foreach (var rowElement in worksheet.Descendants(SpreadsheetNamespace + "row"))
-        {
-            var values = new List<string>();
-            var nextColumnIndex = 0;
-
-            foreach (var cell in rowElement.Elements(SpreadsheetNamespace + "c"))
-            {
-                var cellReference = cell.Attribute("r")?.Value ?? string.Empty;
-                var columnIndex = TryGetColumnIndex(cellReference) ?? nextColumnIndex;
-
-                if (columnIndex < nextColumnIndex && HasValueAt(values, columnIndex))
-                {
-                    columnIndex = nextColumnIndex;
-                }
-
-                while (values.Count <= columnIndex)
-                {
-                    values.Add(string.Empty);
-                }
-
-                values[columnIndex] = ReadCellValue(cell, sharedStrings);
-                nextColumnIndex = columnIndex + 1;
-            }
-
-            if (values.Any(value => !string.IsNullOrWhiteSpace(value)))
-            {
-                rows.Add(values);
-            }
-        }
-
-        return rows;
-    }
-
-    private static ZipArchiveEntry? GetFirstWorksheetEntry(ZipArchive archive)
-    {
-        var workbookEntry = archive.GetEntry("xl/workbook.xml");
-        var relationshipsEntry = archive.GetEntry("xl/_rels/workbook.xml.rels");
-
-        if (workbookEntry is null || relationshipsEntry is null)
-        {
-            return archive.GetEntry("xl/worksheets/sheet1.xml");
-        }
-
-        using var workbookStream = workbookEntry.Open();
-        using var relationshipsStream = relationshipsEntry.Open();
-        var workbook = XDocument.Load(workbookStream);
-        var relationships = XDocument.Load(relationshipsStream);
-        var firstSheet = workbook.Descendants(SpreadsheetNamespace + "sheet").FirstOrDefault();
-        var relationshipId = firstSheet?.Attribute(XName.Get("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships"))?.Value;
-
-        if (string.IsNullOrWhiteSpace(relationshipId))
-        {
-            return archive.GetEntry("xl/worksheets/sheet1.xml");
-        }
-
-        var relationship = relationships.Root?
-            .Elements()
-            .FirstOrDefault(element => element.Attribute("Id")?.Value == relationshipId);
-        var target = relationship?.Attribute("Target")?.Value;
-
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            return archive.GetEntry("xl/worksheets/sheet1.xml");
-        }
-
-        var normalizedTarget = target.Replace('\\', '/').TrimStart('/');
-        var worksheetPath = normalizedTarget.StartsWith("xl/", StringComparison.OrdinalIgnoreCase)
-            ? normalizedTarget
-            : $"xl/{normalizedTarget}";
-
-        return archive.GetEntry(worksheetPath) ?? archive.GetEntry("xl/worksheets/sheet1.xml");
-    }
-
-    private static List<string> ReadSharedStrings(ZipArchive archive)
-    {
-        var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
-        if (sharedStringsEntry is null)
-        {
-            return [];
-        }
-
-        using var stream = sharedStringsEntry.Open();
-        var document = XDocument.Load(stream);
-
-        return document.Descendants(SpreadsheetNamespace + "si")
-            .Select(item => string.Concat(item.Descendants(SpreadsheetNamespace + "t").Select(text => text.Value)))
-            .ToList();
-    }
-
-    private static string ReadCellValue(XElement cell, IReadOnlyList<string> sharedStrings)
-    {
-        var type = cell.Attribute("t")?.Value;
-
-        if (type == "inlineStr")
-        {
-            return string.Concat(cell.Descendants(SpreadsheetNamespace + "t").Select(text => text.Value));
-        }
-
-        var rawValue = cell.Element(SpreadsheetNamespace + "v")?.Value ?? string.Empty;
-        if (type == "s" && int.TryParse(rawValue, out var sharedStringIndex) && sharedStringIndex < sharedStrings.Count)
-        {
-            return sharedStrings[sharedStringIndex];
-        }
-
-        return rawValue;
-    }
-
     private static Dictionary<string, int> BuildHeaderMap(IReadOnlyList<string> header)
     {
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -380,23 +286,9 @@ internal class HouseImportService(
             return null;
         }
 
-        var normalizedColumnName = Normalize(columnName);
-        if (headerMap.TryGetValue(normalizedColumnName, out var index))
-        {
-            return index;
-        }
-
-        var compactColumnName = Compact(normalizedColumnName);
+        if (headerMap.TryGetValue(ACS_View.Domain.ValueObjects.ImportColumnAliases.Normalize(columnName), out var exact)) return exact;
         foreach (var item in headerMap)
-        {
-            var compactHeader = Compact(item.Key);
-            if (compactHeader == compactColumnName ||
-                compactHeader.Contains(compactColumnName, StringComparison.OrdinalIgnoreCase) ||
-                compactColumnName.Contains(compactHeader, StringComparison.OrdinalIgnoreCase))
-            {
-                return item.Value;
-            }
-        }
+            if (ACS_View.Domain.ValueObjects.ImportColumnAliases.Matches(item.Key, columnName)) return item.Value;
 
         return null;
     }
@@ -409,41 +301,6 @@ internal class HouseImportService(
         }
 
         return row[index.Value];
-    }
-
-    private static bool HasValueAt(IReadOnlyList<string> values, int index)
-    {
-        return index >= 0 && index < values.Count && !string.IsNullOrWhiteSpace(values[index]);
-    }
-
-    private static int? TryGetColumnIndex(string cellReference)
-    {
-        var letters = Regex.Match(cellReference, "^[A-Z]+", RegexOptions.IgnoreCase).Value.ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(letters))
-        {
-            return null;
-        }
-
-        var columnIndex = 0;
-
-        foreach (var letter in letters)
-        {
-            columnIndex *= 26;
-            columnIndex += letter - 'A' + 1;
-        }
-
-        return Math.Max(0, columnIndex - 1);
-    }
-
-    private static bool ParseBoolean(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        var normalized = Normalize(value);
-        return normalized is "1" or "sim" or "s" or "true" or "verdadeiro" or "x";
     }
 
     private async Task<House?> ResolveAddressFallbackAsync(

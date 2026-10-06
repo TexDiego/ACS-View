@@ -2,6 +2,7 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:ACS_View.Views"
+       xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
        x:Class="ACS_View.Views.AppShell"
        Shell.TitleColor="{StaticResource White}"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
@@ -13,25 +14,25 @@
 
     <ShellContent Route="login" x:Name="LoginContent"/>
 
-    <TabBar x:Name="MainTabBar">
+    <TabBar x:Name="MainTabBar" >
 
-        <Tab Title="Pessoas" Icon="group.png">
+        <Tab Title="Pessoas" Icon="{mi:Fluent Icon=People28}">
             <ShellContent Route="registers" x:Name="RegistersPage"/>
         </Tab>
 
-        <Tab Title="Casas" Icon="house.png">
+        <Tab Title="Casas" Icon="{mi:Fluent Icon=HomePerson24}">
             <ShellContent Route="houses" x:Name="HousesPageContent"/>
         </Tab>
 
-        <Tab Title="Início" Icon="layout.png">
+        <Tab Title="Início" Icon="{mi:Fluent Icon=AppFolder24}">
             <ShellContent Route="overallview" x:Name="OverallViewContent"/>
         </Tab>
 
-        <Tab Title="Visitas" Icon="writing.png">
+        <Tab Title="Visitas" Icon="{mi:Fluent Icon=ClipboardHeart24}">
             <ShellContent Route="visits" x:Name="AllVisitsContent"/>
         </Tab>
 
-        <Tab Title="Perfil" Icon="user.png">
+        <Tab Title="Perfil" Icon="{mi:Fluent Icon=PersonCircle24}">
             <ShellContent Route="profile" x:Name="ProfileContent"/>
         </Tab>
 

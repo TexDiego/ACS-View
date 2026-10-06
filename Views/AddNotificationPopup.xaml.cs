@@ -12,6 +12,7 @@ public partial class AddNotificationPopup : Popup<NoteNotificationRequestDto>
     {
         InitializeComponent();
         BindingContext = _viewModel = new AddNotificationPopupViewModel(noteContent, activeNotificationDate);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

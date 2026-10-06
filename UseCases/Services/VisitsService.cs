@@ -522,6 +522,12 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             .Where(condition => condition.UserId == patient.UserId && condition.PatientId == patient.Id)
             .ToListAsync();
 
+        var pregnancyCareLine = await GetPregnancyCareLineAsync(patient, referenceDate);
+        if (pregnancyCareLine is not null)
+        {
+            careLines.Add(pregnancyCareLine.Value);
+        }
+
         foreach (var condition in conditions)
         {
             var key = HealthConditionCatalog.GetKey(condition.Description ?? string.Empty);
@@ -529,7 +535,10 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
 
             if (string.Equals(key, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase))
             {
-                careLines.Add(VisitCareLineType.Pregnancy);
+                if (pregnancyCareLine is null)
+                {
+                    careLines.Add(VisitCareLineType.Pregnancy);
+                }
             }
             else if (normalized.Contains("puerper", StringComparison.OrdinalIgnoreCase))
             {
@@ -560,6 +569,34 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         }
 
         return careLines.Distinct().ToList();
+    }
+
+    private async Task<VisitCareLineType?> GetPregnancyCareLineAsync(Patient patient, DateTime referenceDate)
+    {
+        var pregnancies = await _connection.Table<PatientPregnancy>()
+            .Where(pregnancy => pregnancy.UserId == patient.UserId && pregnancy.PatientId == patient.Id)
+            .ToListAsync();
+
+        var pregnancy = pregnancies
+            .OrderByDescending(item => PregnancyCalculator.IsPuerperal(item, referenceDate))
+            .ThenByDescending(item => item.Status == PregnancyStatus.Active)
+            .ThenByDescending(item => item.CreatedAt)
+            .ThenByDescending(item => item.Id)
+            .FirstOrDefault();
+
+        if (pregnancy is null)
+        {
+            return null;
+        }
+
+        if (PregnancyCalculator.IsPuerperal(pregnancy, referenceDate))
+        {
+            return VisitCareLineType.Postpartum;
+        }
+
+        return pregnancy.Status == PregnancyStatus.Active
+            ? VisitCareLineType.Pregnancy
+            : null;
     }
 
     private async Task<int> CountCompletedVisitDaysInReferenceMonthAsync(
@@ -697,6 +734,8 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         {
             nameof(VisitCareLineType.Child) => "Criança até 2 anos",
             nameof(VisitCareLineType.NoVulnerability) => "Sem critérios de vulnerabilidade",
+            nameof(VisitCareLineType.Pregnancy) => "Gestante/Puérpera",
+            nameof(VisitCareLineType.Postpartum) => "Gestante/Puérpera",
             _ => GetCareLineLabel(careLine)
         };
     }

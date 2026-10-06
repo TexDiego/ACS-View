@@ -30,7 +30,7 @@ namespace ACS_View.UseCases.Services
                 {
                     pessoa.FamilyId = familyId;
                     pessoa.HouseId = houseId;
-                    pessoa.FamilyResponsibleSus = responsible.SusNumber;
+                    pessoa.FamilyResponsibleSus = responsible.PrimarySusNumber;
                     await service.UpdatePatient(pessoa);
                 }
             }
@@ -44,8 +44,7 @@ namespace ACS_View.UseCases.Services
             {
                 var oldHouseId = pessoa.HouseId;
                 var oldFamilyId = pessoa.FamilyId;
-                var wasResponsible = !string.IsNullOrWhiteSpace(pessoa.SusNumber) &&
-                    string.Equals(pessoa.FamilyResponsibleSus, pessoa.SusNumber, StringComparison.OrdinalIgnoreCase);
+                var wasResponsible = pessoa.HasSusNumber(pessoa.FamilyResponsibleSus);
 
                 pessoa.FamilyId = -1;
                 pessoa.HouseId = -1;
@@ -71,7 +70,7 @@ namespace ACS_View.UseCases.Services
 
             foreach (var person in remainingPeople)
             {
-                person.FamilyResponsibleSus = newResponsible.SusNumber;
+                person.FamilyResponsibleSus = newResponsible.PrimarySusNumber;
                 await service.UpdatePatient(person);
             }
         }

@@ -15,5 +15,13 @@ namespace ACS_View.Domain.Entities
         public string SecurityAnswer { get; set; } = string.Empty;
         public string SecurityAnswerHash { get; set; } = string.Empty;
         public string SecurityAnswerSalt { get; set; } = string.Empty;
+        public string RecoveryCodeHash { get; set; } = string.Empty;
+        public string RecoveryCodeSalt { get; set; } = string.Empty;
+        public int FailedLoginAttempts { get; set; }
+        public long LoginBlockedUntilUtc { get; set; }
+        public int FailedRecoveryAttempts { get; set; }
+        public long RecoveryBlockedUntilUtc { get; set; }
+        public int CredentialRevision { get; set; }
+        public string BiometricTokenHash { get; set; } = string.Empty;
     }
 }

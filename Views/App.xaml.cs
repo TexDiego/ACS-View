@@ -1,10 +1,12 @@
 using ACS_View.Application.Interfaces;
+using ACS_View.Application.State;
 
 namespace ACS_View.Views
 {
     public partial class App : Microsoft.Maui.Controls.Application
     {
         private readonly IAppStartupService appStartupService;
+        private readonly TransientInputLifecycle inputLifecycle = new();
         public IServiceProvider ServiceProvider { get; private set; }
 
         public App(IServiceProvider serviceProvider)
@@ -19,10 +21,24 @@ namespace ACS_View.Views
         {
             var shell = CreateShell(isAuthenticated: false);
             var window = new Window(shell);
+            window.Stopped += (_, _) => inputLifecycle.OnStopped();
+            window.Resumed += (_, _) =>
+            {
+                if (!inputLifecycle.ConsumeReset())
+                {
+                    return;
+                }
+
+                // Discard every retained page, including forms and modal inputs.
+                window.Page = CreateShell(isAuthenticated: false);
+                _ = RestoreSessionAsync(window);
+            };
             _ = RestoreSessionAsync(window);
 
             return window;
         }
+
+        public IDisposable BeginExternalInteraction() => inputLifecycle.BeginExternalInteraction();
 
         public async Task ResetToAuthenticatedShellAsync()
         {
@@ -64,6 +80,7 @@ namespace ACS_View.Views
 
         private async Task RestoreSessionAsync(Window window)
         {
+            var initialPage = window.Page;
             try
             {
                 await appStartupService.InitializeAsync();
@@ -76,6 +93,12 @@ namespace ACS_View.Views
 
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
+                    // A login, logout or another resume may have replaced this Shell.
+                    if (!ReferenceEquals(window.Page, initialPage))
+                    {
+                        return;
+                    }
+
                     var authenticatedShell = CreateShell(isAuthenticated: true);
                     window.Page = authenticatedShell;
                     await authenticatedShell.GoToAsync("//overallview");

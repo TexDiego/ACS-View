@@ -21,6 +21,8 @@ internal sealed class SpreadsheetReader : ISpreadsheetReader
 
         foreach (var rowElement in worksheet.Descendants(SpreadsheetNamespace + "row"))
         {
+            if (int.TryParse(rowElement.Attribute("r")?.Value, out var physicalRow))
+                while (rows.Count < physicalRow - 1) rows.Add([]);
             var values = new List<string>();
             var nextColumnIndex = 0;
 
@@ -43,10 +45,7 @@ internal sealed class SpreadsheetReader : ISpreadsheetReader
                 nextColumnIndex = columnIndex + 1;
             }
 
-            if (values.Any(value => !string.IsNullOrWhiteSpace(value)))
-            {
-                rows.Add(values);
-            }
+            rows.Add(values);
         }
 
         return rows;

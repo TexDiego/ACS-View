@@ -4,9 +4,9 @@ namespace ACS_View
     {
         private static bool IsDark => Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Dark;
 
-        internal static Color PageBackground => Color.FromArgb(IsDark ? "#101820" : "#FFFFFF");
+        internal static Color PageBackground => Color.FromArgb(IsDark ? "#101820" : "#F8FAFC");
         internal static Color Surface => Color.FromArgb(IsDark ? "#17232D" : "#FFFFFF");
-        internal static Color SurfaceMuted => Color.FromArgb(IsDark ? "#1F2C36" : "#F7FAFB");
+        internal static Color SurfaceMuted => Color.FromArgb(IsDark ? "#1F2C36" : "#F1F6F9");
         internal static Color TextPrimary => Color.FromArgb(IsDark ? "#EEF5F8" : "#1F2933");
         internal static Color BorderSoft => Color.FromArgb(IsDark ? "#2E4350" : "#D7E1E7");
         internal static Color BorderStrong => Color.FromArgb(IsDark ? "#42606F" : "#B7C7D0");

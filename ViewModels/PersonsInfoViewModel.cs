@@ -99,6 +99,23 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     private int _loadVersion;
 
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
+    public ICommand GoToFamilyCommand => new Command(async () => await GoToFamilyAsync());
+
+    private async Task GoToFamilyAsync()
+    {
+        var houseId = PersonInfo?.HouseId ?? 0;
+        if (houseId <= 0 || IsBusy)
+        {
+            return;
+        }
+
+        await ExecuteWithBusyAsync(() => ExecuteSafelyAsync(async () =>
+        {
+            await Shell.Current.ClosePopupAsync();
+            await NavigateToAsync("families", new Dictionary<string, object> { { "id", houseId } });
+        }, "Não foi possível abrir as famílias desta residência."));
+    }
+
     public ICommand EditPerson => new Command(async () => await EditPatient());
 
     private async Task EditPatient()

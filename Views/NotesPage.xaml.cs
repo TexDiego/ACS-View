@@ -15,7 +15,14 @@ public partial class NotesPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
         _ = _viewModel.LoadNotesAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
     }
 
     private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)

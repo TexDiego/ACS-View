@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:VisitRecordsViewModel"
              x:Class="ACS_View.Views.VisitRecordsPage"
              Shell.NavBarIsVisible="True"
@@ -70,57 +71,70 @@
             VerticalScrollBarVisibility="Never"
             Scrolled="CollectionView_Scrolled">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:VisitRecordFamilyGroupDto">
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
-                        <Grid RowDefinitions="auto,auto" RowSpacing="10">
-                            <Grid ColumnDefinitions="*,auto" ColumnSpacing="10">
-                                <VerticalStackLayout Spacing="2">
-                                    <Label Text="{Binding FamilyName}" Style="{StaticResource CardTitle}"/>
-                                    <Label Text="{Binding Visits.Count, StringFormat='{}{0} registros'}" Style="{StaticResource BodyMuted}"/>
-                                </VerticalStackLayout>
-
-                                <Button
-                                    Grid.Column="1"
-                                    Text="Abrir"
-                                    Style="{StaticResource PrimaryOutlineButton}"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToFamilyCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </Grid>
-
-                            <VerticalStackLayout
-                                Grid.Row="1"
-                                Spacing="8"
-                                BindableLayout.ItemsSource="{Binding Visits}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="dto:VisitRecordDto">
-                                        <Border
-                                            Padding="10"
-                                            StrokeShape="RoundRectangle 8"
-                                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
-                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
-                                            <Grid ColumnDefinitions="*,38" ColumnSpacing="8">
-                                                <VerticalStackLayout Spacing="3">
-                                                    <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}" FontSize="14"/>
-                                                    <Label Text="{Binding VisitDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                                    <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="12" FontAttributes="Bold"/>
-                                                    <Label Text="{Binding CareLinesText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                                    <Label Text="{Binding Notes}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                <DataTemplate x:DataType="dto:VisitRecordDayGroupDto">
+                    <VerticalStackLayout Spacing="10" Margin="0,0,0,20">
+                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
+                            <Label Text="{Binding Date, StringFormat='{}{0:dd/MM/yyyy}'}" Style="{StaticResource SectionTitle}"/>
+                            <Label Grid.Column="1" Text="{Binding VisitCount, StringFormat='{}{0} registros'}" Style="{StaticResource BodyMuted}" VerticalTextAlignment="Center"/>
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"/>
+                        <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Families}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="dto:VisitRecordFamilyGroupDto">
+                                    <Border Style="{StaticResource CardBorder}" Margin="12,0,0,0">
+                                        <Grid RowDefinitions="auto,auto" RowSpacing="10">
+                                            <Grid ColumnDefinitions="*,auto" ColumnSpacing="10">
+                                                <VerticalStackLayout Spacing="2">
+                                                    <Label Text="{Binding FamilyName}" Style="{StaticResource CardTitle}"/>
+                                                    <Label Text="{Binding Visits.Count, StringFormat='{}{0} registros'}" Style="{StaticResource BodyMuted}"/>
                                                 </VerticalStackLayout>
 
-                                                <ImageButton
+                                                <Button
                                                     Grid.Column="1"
-                                                    Source="bin"
-                                                    MaximumHeightRequest="28"
-                                                    MaximumWidthRequest="28"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisitCommand}"
-                                                    CommandParameter="{Binding Id}"/>
+                                                    Text="Abrir"
+                                                    Style="{StaticResource PrimaryOutlineButton}"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToFamilyCommand}"
+                                                    CommandParameter="{Binding .}"/>
                                             </Grid>
-                                        </Border>
+
+                                            <VerticalStackLayout
+                                                Grid.Row="1"
+                                                Spacing="8"
+                                                BindableLayout.ItemsSource="{Binding Visits}">
+                                                <BindableLayout.ItemTemplate>
+                                                    <DataTemplate x:DataType="dto:VisitRecordDto">
+                                                        <Border
+                                                            Padding="10"
+                                                            StrokeShape="RoundRectangle 8"
+                                                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                                            <Grid ColumnDefinitions="*,38" ColumnSpacing="8">
+                                                                <VerticalStackLayout Spacing="3">
+                                                                    <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}" FontSize="14"/>
+                                                                    <Label Text="{Binding VisitDate, StringFormat='{}{0:HH:mm}'}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                                    <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="12" FontAttributes="Bold"/>
+                                                                    <Label Text="{Binding CareLinesText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                                    <Label Text="{Binding Notes}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                                                </VerticalStackLayout>
+
+                                                                <ImageButton
+                                                                    Grid.Column="1"
+                                                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
+                                                                    MaximumHeightRequest="28"
+                                                                    MaximumWidthRequest="28"
+                                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisitCommand}"
+                                                                    CommandParameter="{Binding Id}"/>
+                                                            </Grid>
+                                                        </Border>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
 
@@ -172,6 +186,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
+            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

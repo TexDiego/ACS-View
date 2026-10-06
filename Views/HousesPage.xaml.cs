@@ -48,8 +48,15 @@ public partial class HousesPage : ContentPage, IQueryAttributable
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        InputFocusGuard.ClearTextInputFocus(this);
         _hasAppeared = true;
         _ = _viewModel.LoadInitialHousesAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        InputFocusGuard.ClearTextInputFocus(this);
+        base.OnDisappearing();
     }
 
     private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)

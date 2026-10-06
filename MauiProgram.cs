@@ -1,6 +1,7 @@
 using ACS_View.Infrastructure.DependencyInjection;
 using ACS_View.Views;
 using CommunityToolkit.Maui;
+using MauiIcons.Fluent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
 using SQLite;
@@ -15,6 +16,7 @@ namespace ACS_View
 
             builder
                 .UseMauiApp<App>()
+                .UseFluentMauiIcons()
                 .UseMauiCommunityToolkit()
                 .ConfigureMauiHandlers(handlers =>
                 {

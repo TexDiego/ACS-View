@@ -20,7 +20,7 @@ public partial class VisitRecordsViewModel : BaseViewModel
     private VisitStatus? selectedStatus;
     private DateTime selectedMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
-    [ObservableProperty] private ObservableCollection<VisitRecordFamilyGroupDto> visitGroups = [];
+    [ObservableProperty] private ObservableCollection<VisitRecordDayGroupDto> visitGroups = [];
     [ObservableProperty] private ObservableCollection<VisitStatusFilterOption> statusFilters = [];
     [ObservableProperty] private string footerText = string.Empty;
     [ObservableProperty] private string monthTitle = string.Empty;
@@ -66,7 +66,7 @@ public partial class VisitRecordsViewModel : BaseViewModel
             {
                 await visitsService.PurgeExpiredVisitsAsync(DateTime.Today);
                 var groups = await visitsService.GetVisitRecordGroupsAsync(selectedMonth, selectedStatus);
-                VisitGroups = new ObservableCollection<VisitRecordFamilyGroupDto>(groups);
+                VisitGroups = new ObservableCollection<VisitRecordDayGroupDto>(VisitRecordDayGroupDto.FromFamilies(groups));
                 var total = groups.Sum(group => group.Visits.Count);
                 FooterText = BuildFooterText(total);
                 UpdateMonthState();

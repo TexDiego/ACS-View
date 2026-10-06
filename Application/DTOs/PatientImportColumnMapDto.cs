@@ -2,6 +2,7 @@ namespace ACS_View.Application.DTOs
 {
     public class PatientImportColumnMapDto
     {
+        public string SourceFileName { get; set; } = string.Empty;
         public string NameColumn { get; set; } = "Nome";
         public string SusNumberColumn { get; set; } = "SUS";
         public string MotherNameColumn { get; set; } = "Mae";
@@ -23,10 +24,10 @@ namespace ACS_View.Application.DTOs
         public bool EnableAutomaticFamilyLinking { get; set; } = true;
         public bool OverwriteExistingFamilyLinks { get; set; } = false;
         public bool AllowGlobalUniqueParentMatch { get; set; } = true;
-        public bool AllowGlobalUniqueResponsibleMatch { get; set; } = false;
+        public bool AllowGlobalUniqueResponsibleMatch { get; set; } = true;
         public int MinimumParentAgeDifferenceYears { get; set; } = 12;
         public int MaximumMotherAgeDifferenceYears { get; set; } = 60;
         public int MaximumFatherAgeDifferenceYears { get; set; } = 80;
-        public List<PatientImportConditionColumnDto> HealthConditionColumns { get; set; } = [];
+        public List<PatientImportConditionColumnDto> HealthConditionColumns { get; set; } = ACS_View.Domain.ValueObjects.HealthConditionCatalog.Conditions.Select(c => new PatientImportConditionColumnDto { ConditionName = c, ColumnName = c }).ToList();
     }
 }

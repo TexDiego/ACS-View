@@ -3,10 +3,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.Views.AddHouse"
              Style="{StaticResource PageBackground}"
              Title="Adicionar Residência">
+
+    <ContentPage.Resources>
+        <Style TargetType="Entry">
+            <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"/>
+        </Style>
+    </ContentPage.Resources>
 
     <Grid Padding="16">
         <ScrollView VerticalScrollBarVisibility="Never">
@@ -16,68 +23,67 @@
                 BindingContext="{Binding HouseModel}"
                 x:DataType="model:House">
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*,44" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="CEP"/>
-                        <Entry Grid.Column="1" Text="{Binding CEP, Mode=TwoWay}" MaxLength="8" Keyboard="Numeric" Placeholder="Obrigatório" TextChanged="Entry_CEP_TextChanged"/>
-                        <ImageButton
-                            Grid.Column="2"
-                            Source="loupe.png"
-                            MaximumHeightRequest="40"
-                            Style="{StaticResource SoftIconButton}"
-                            BackgroundColor="Transparent"
-                            Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
-                    </Grid>
-                </Border>
+                <Grid ColumnSpacing="8">
+                    <Entry 
+                        Text="{Binding CEP, Mode=TwoWay}" 
+                        MaxLength="8" 
+                        Keyboard="Numeric" 
+                        Placeholder="CEP *" 
+                        TextChanged="Entry_CEP_TextChanged"/>
+                    
+                    <ImageButton
+                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        MaximumHeightRequest="40"
+                        Style="{StaticResource SoftIconButton}"
+                        HorizontalOptions="End"
+                        VerticalOptions="Center"
+                        Margin="0,0,8,-4"
+                        CornerRadius="8"
+                        HeightRequest="34"
+                        WidthRequest="34"
+                        Padding="2"
+                        BackgroundColor="{StaticResource Primary}"
+                        Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
+                </Grid>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Logradouro"/>
-                        <Entry Grid.Column="1" Text="{Binding Rua, Mode=TwoWay}" Placeholder="Obrigatório"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Rua, Mode=TwoWay}" 
+                    Placeholder="Logradouro *"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Número"/>
-                        <Entry Grid.Column="1" Text="{Binding NumeroCasa, Mode=TwoWay}" MaxLength="5" Keyboard="Numeric"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding NumeroCasa, Mode=TwoWay}" 
+                    MaxLength="5" 
+                    Placeholder="Número"
+                    Keyboard="Numeric"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Complemento"/>
-                        <Entry Grid.Column="1" Text="{Binding Complemento, Mode=TwoWay}" MaxLength="30"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Complemento, Mode=TwoWay}" 
+                    Placeholder="Complemento"
+                    MaxLength="30"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Bairro"/>
-                        <Entry Grid.Column="1" Text="{Binding Bairro, Mode=TwoWay}" Placeholder="Obrigatório"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Bairro, Mode=TwoWay}" 
+                    Placeholder="Bairro"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Cidade"/>
-                        <Entry Grid.Column="1" Text="{Binding Cidade, Mode=TwoWay}" Placeholder="Obrigatório"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Cidade, Mode=TwoWay}" 
+                    Placeholder="Cidade *"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Estado"/>
-                        <Entry Grid.Column="1" Text="{Binding Estado, Mode=TwoWay}" Placeholder="Obrigatório"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Estado, Mode=TwoWay}" 
+                    Placeholder="Estado *"/>
 
-                <Border Style="{StaticResource FieldBorder}">
-                    <Grid ColumnDefinitions="90,*" ColumnSpacing="8">
-                        <Label Grid.Column="0" Style="{StaticResource FieldLabel}" Text="País"/>
-                        <Entry Grid.Column="1" Text="{Binding Pais, Mode=TwoWay}" MaxLength="20" Placeholder="Obrigatório"/>
-                    </Grid>
-                </Border>
+                <Entry 
+                    Grid.Column="1" 
+                    Text="{Binding Pais, Mode=TwoWay}" 
+                    MaxLength="20" 
+                    Placeholder="País *"/>
             </VerticalStackLayout>
         </ScrollView>
 

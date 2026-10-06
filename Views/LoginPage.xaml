@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:Class="ACS_View.Views.LoginPage"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
@@ -9,7 +10,7 @@
     <Grid Padding="24" RowDefinitions="*,auto,*" MaximumWidthRequest="600">
         <VerticalStackLayout Grid.Row="1" Spacing="18">
             <Image
-                Source="form.png"
+                mi:MauiIcon.Value="{mi:Fluent Icon=Form24}"
                 HeightRequest="112"
                 WidthRequest="112"
                 HorizontalOptions="Center"/>
@@ -21,25 +22,35 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="18" Margin="0">
                 <VerticalStackLayout Spacing="14">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Login" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}" Padding="12,0">
-                            <Entry x:Name="UsernameEntry" HorizontalTextAlignment="Start"/>
-                        </Border>
-                    </VerticalStackLayout>
+                    
+                    <Entry 
+                        x:Name="UsernameEntry" 
+                        Placeholder="Nome de usuário"
+                        MaxLength="64"
+                        IsSpellCheckEnabled="False"
+                        IsTextPredictionEnabled="False"
+                        HorizontalTextAlignment="Start"/>
 
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Senha" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}" Padding="12,0">
-                            <Entry x:Name="PasswordEntry" IsPassword="True" HorizontalTextAlignment="Start"/>
-                        </Border>
-                    </VerticalStackLayout>
+                    <Entry 
+                        x:Name="PasswordEntry" 
+                        Placeholder="Senha"
+                        MaxLength="128"
+                        IsSpellCheckEnabled="False"
+                        IsTextPredictionEnabled="False"
+                        IsPassword="True" 
+                        HorizontalTextAlignment="Start"/>
 
                     <Button
                         x:Name="Btn_Login"
                         Text="Entrar"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="Btn_Login_Clicked"/>
+                    <Button x:Name="BiometricLoginButton"
+                            Text="Entrar com biometria"
+                            IsVisible="False"
+                            Style="{StaticResource Buttons}"
+                            Clicked="BiometricLogin_Clicked"/>
+                    
                 </VerticalStackLayout>
             </Border>
 

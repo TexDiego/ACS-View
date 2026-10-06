@@ -4,6 +4,7 @@
              x:Class="ACS_View.Views.GeneralMetrics"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:OverallViewModel">
 
     <ContentView.Resources>
@@ -29,7 +30,7 @@
                            VerticalOptions="Center"/>
 
                     <ImageButton Grid.Column="2"
-                                 Source="bin.png"
+                                 mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
                                  MaximumHeightRequest="40"
                                  MaximumWidthRequest="40"
                                  Style="{StaticResource DangerSoftIconButton}"
@@ -47,7 +48,7 @@
                     <SwipeView.LeftItems>
                         <SwipeItem
                             Style="{StaticResource DangerSwipeItem}"
-                            IconImageSource="bin.png"
+                            IconImageSource="{mi:Fluent Icon=Delete48}"
                             Text="Remover"
                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
                             CommandParameter="{Binding .}"/>

@@ -47,6 +47,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPatientConditionSeeder, PatientConditionsSeeder>();
         services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
         services.AddSingleton<IAuthService, AuthService>();
+#if ANDROID
+        services.AddSingleton<ILocalBiometricVault, ACS_View.Platforms.Android.AndroidBiometricVault>();
+#else
+        services.AddSingleton<ILocalBiometricVault, UnavailableBiometricVault>();
+#endif
+        services.AddSingleton<Microsoft.Maui.Storage.ISecureStorage>(Microsoft.Maui.Storage.SecureStorage.Default);
+        services.AddSingleton<TimeProvider>(TimeProvider.System);
         services.AddSingleton<IUserDataCleanupService, UserDataCleanupService>();
         services.AddSingleton<IPopupService, PopupService>();
         services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();
@@ -69,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPersonsInfoService, PersonsInfoService>();
         services.AddTransient<INoteService, NoteService>();
         services.AddTransient<IPatientService, PatientService>();
+        services.AddSingleton<IImportHistoryService, ImportHistoryService>();
         services.AddTransient<ISpreadsheetReader, SpreadsheetReader>();
         services.AddTransient<PatientFamilyLinkResolver>();
         services.AddTransient<IPatientImportService, PatientImportService>();
@@ -94,11 +102,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
         services.AddTransient<ImportDataViewModel>();
         services.AddTransient<DataCleanupViewModel>();
-        services.AddTransient<ForgotPasswordViewModel>();
 
-        services.AddSingleton<RegistersViewModel>();
-        services.AddSingleton<HousesPageViewModel>();
-        services.AddSingleton<CIDViewViewModel>();
+        // Shell retains pages within a session; a new Shell must get fresh input state.
+        services.AddTransient<RegistersViewModel>();
+        services.AddTransient<HousesPageViewModel>();
+        services.AddTransient<CIDViewViewModel>();
 
         services.AddTransient<OverallViewModel>();
 
@@ -115,6 +123,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LoginPage>();
         services.AddTransient<RegistrationPage>();
         services.AddTransient<ForgotPassword>();
+        services.AddTransient<AccountSecurityPage>();
         services.AddTransient<FamiliesPage>();
         services.AddTransient<BolsaFamiliaPage>();
         services.AddTransient<Profile>();

@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../UseCases/Services/PatientImportService.cs" Link="UseCases/Services/PatientImportService.cs" />
+    <Compile Include="../../UseCases/Services/PatientFamilyLinkResolver.cs" Link="UseCases/Services/PatientFamilyLinkResolver.cs" />
+    <Compile Include="../../UseCases/Services/SpreadsheetReader.cs" Link="UseCases/Services/SpreadsheetReader.cs" />
+    <Compile Include="../../UseCases/Services/ISpreadsheetReader.cs" Link="UseCases/Services/ISpreadsheetReader.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientService.cs" Link="Application/Interfaces/IPatientService.cs" />
+    <Compile Include="../../Application/Interfaces/IHouseService.cs" Link="Application/Interfaces/IHouseService.cs" />
+    <Compile Include="../../Application/Interfaces/IFamilyService.cs" Link="Application/Interfaces/IFamilyService.cs" />
+    <Compile Include="../../Application/Interfaces/ICepService.cs" Link="Application/Interfaces/ICepService.cs" />
+    <Compile Include="../../Application/Interfaces/ISQLiteConditionsRepository.cs" Link="Application/Interfaces/ISQLiteConditionsRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientBolsaFamiliaRepository.cs" Link="Application/Interfaces/IPatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IImportHistoryService.cs" Link="Application/Interfaces/IImportHistoryService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientImportService.cs" Link="Application/Interfaces/IPatientImportService.cs" />
+    <Compile Include="../../Application/DTOs/PatientImportColumnMapDto.cs" Link="Application/DTOs/PatientImportColumnMapDto.cs" />
+    <Compile Include="../../Application/DTOs/PatientImportConditionColumnDto.cs" Link="Application/DTOs/PatientImportConditionColumnDto.cs" />
+    <Compile Include="../../Application/DTOs/PatientImportResultDto.cs" Link="Application/DTOs/PatientImportResultDto.cs" />
+    <Compile Include="../../Application/DTOs/ImportProgressDto.cs" Link="Application/DTOs/ImportProgressDto.cs" />
+    <Compile Include="../../Application/DTOs/PagedResultDto.cs" Link="Application/DTOs/PagedResultDto.cs" />
+    <Compile Include="../../Application/DTOs/PatientListItemDto.cs" Link="Application/DTOs/PatientListItemDto.cs" />
+    <Compile Include="../../Application/DTOs/PatientListFilterDto.cs" Link="Application/DTOs/PatientListFilterDto.cs" />
+    <Compile Include="../../Application/DTOs/HouseListItemDto.cs" Link="Application/DTOs/HouseListItemDto.cs" />
+    <Compile Include="../../Domain/Entities/Patient.cs" Link="Domain/Entities/Patient.cs" />
+    <Compile Include="../../Domain/ValueObjects/SusNumberSet.cs" Link="Domain/ValueObjects/SusNumberSet.cs" />
+    <Compile Include="../../Domain/Entities/House.cs" Link="Domain/Entities/House.cs" />
+    <Compile Include="../../Domain/Entities/Family.cs" Link="Domain/Entities/Family.cs" />
+    <Compile Include="../../Domain/Entities/PatientBolsaFamilia.cs" Link="Domain/Entities/PatientBolsaFamilia.cs" />
+    <Compile Include="../../Domain/Entities/ImportHistory.cs" Link="Domain/Entities/ImportHistory.cs" />
+    <Compile Include="../../Domain/Entities/Health/PatientConditions.cs" Link="Domain/Entities/Health/PatientConditions.cs" />
+    <Compile Include="../../Domain/ValueObjects/HealthConditionCatalog.cs" Link="Domain/ValueObjects/HealthConditionCatalog.cs" />
+    <Compile Include="../../Domain/ValueObjects/ImportColumnAliases.cs" Link="Domain/ValueObjects/ImportColumnAliases.cs" />
+    <Compile Include="../../Domain/ValueObjects/BolsaFamiliaGroup.cs" Link="Domain/ValueObjects/BolsaFamiliaGroup.cs" />
+    <Compile Include="../../Domain/ValueObjects/BolsaFamiliaBeneficiary.cs" Link="Domain/ValueObjects/BolsaFamiliaBeneficiary.cs" />
+    <Compile Include="../../Domain/Enums/Sexo.cs" Link="Domain/Enums/Sexo.cs" />
+    <Compile Include="../../UseCases/Services/ImportColumnMapper.cs" />
+    <Compile Include="../../UseCases/Services/HouseImportService.cs" />
+    <Compile Include="../../Application/Interfaces/IHouseImportService.cs" />
+    <Compile Include="../../Application/DTOs/HouseImportColumnMapDto.cs" />
+    <Compile Include="../../Application/DTOs/HouseImportResultDto.cs" />
+  </ItemGroup>
+</Project>

@@ -15,6 +15,7 @@ public partial class AddMetricPopup : Popup<DashboardMetricCreateRequestDto>
     {
         InitializeComponent();
         BindingContext = _viewModel = new AddMetricPopupViewModel(candidates, validateRequest);
+        Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 
     private async void CancelButton_Clicked(object sender, EventArgs e)

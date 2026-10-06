@@ -5,6 +5,7 @@ using ACS_View.UseCases;
 using ACS_View.UseCases.Services;
 using ACS_View.ViewModels;
 using ACS_View.Views;
+using ACS_View.Application.Reminders;
 
 namespace ACS_View.Infrastructure.DependencyInjection;
 
@@ -54,6 +55,9 @@ public static class ServiceCollectionExtensions
 #endif
         services.AddSingleton<Microsoft.Maui.Storage.ISecureStorage>(Microsoft.Maui.Storage.SecureStorage.Default);
         services.AddSingleton<TimeProvider>(TimeProvider.System);
+        services.AddSingleton<INoteReminderStore, SQLiteNoteReminderStore>();
+        services.AddSingleton<INoteNotificationScheduler, LocalNoteNotificationScheduler>();
+        services.AddSingleton<INoteReminderService, NoteReminderService>();
         services.AddSingleton<IUserDataCleanupService, UserDataCleanupService>();
         services.AddSingleton<IPopupService, PopupService>();
         services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();

@@ -31,6 +31,6 @@ dotnet build 'ACS View.csproj' -f net10.0-android --no-restore
 
 Resultado: 22 verificações passaram. Os testes usam arquivos Excel Open XML gerados e os serviços reais de leitura, mapeamento, importação e resolução familiar, com repositórios em memória e consulta de CEP simulada. A compilação Android final passou com 0 erros e 51 avisos.
 
-A suíte geral `ACSView.Tests` encontrou uma incompatibilidade anterior, fora desta alteração: o catálogo local de visitas define 5 pontos para `NoVulnerability`, enquanto o teste espera 10. Esses arquivos não foram alterados nesta tarefa.
+A incompatibilidade anterior da suíte geral `ACSView.Tests` (expectativa de 10 pontos para `NoVulnerability`) foi corrigida na preparação Android v1.0.0: o teste agora verifica os 5 pontos definidos no catálogo desde o commit `79e6bf7`, sem alterar a regra do aplicativo.
 
 Ainda não houve validação visual em aparelho, importação de arquivos reais do usuário ou teste da consulta de CEP e do histórico persistido durante uma sessão real do aplicativo.

@@ -111,3 +111,39 @@ Todas as biometrias registradas no aparelho poderão desbloquear a conta que ati
 Referência: [BiometricPrompt e operações criptográficas no Android](https://developer.android.com/identity/sign-in/biometric-auth).
 
 Os testes locais substituem somente os adaptadores do sistema operacional; a validação de sensor, diálogo nativo, alteração das biometrias e ciclo de vida precisa ser feita em um aparelho real.
+
+## Distribuição Android por APK
+
+O identificador Android definitivo é `com.texdiego.acsview`. O `.csproj` é a fonte de versão: inicialmente `ApplicationDisplayVersion=1.0.0` e `ApplicationVersion=1`. Em cada publicação, altere a versão visível e aumente o inteiro `ApplicationVersion`; a tag deve corresponder exatamente à versão visível. O workflow rejeita divergências e não calcula versionCode a partir de SemVer. SDK e versões diretas de MAUI estão fixados; o CI instala o workload Android do conjunto `10.0.401`.
+
+Em 06/10/2026 foi criada a chave definitiva, **fora do repositório**, em `S:\Projetos Mobile\ACS View Secrets\ACSView-release.jks`, alias `acsview-release`. A pasta tem acesso NTFS restrito ao usuário proprietário. `ACSView-release-credentials.txt` guarda as duas senhas e o hash do keystore; `ACSView-release-base64.txt` guarda a representação para o GitHub. Preserve a chave e ambas as senhas para todas as atualizações e mantenha uma cópia segura independente deste computador. Não gere outra chave para uma atualização.
+
+Os quatro Actions Secrets já foram configurados em `TexDiego/ACS-View`: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` e `ANDROID_KEY_PASSWORD`. Para cadastrá-los novamente, leia os arquivos locais, sem imprimir os valores:
+
+```powershell
+$signingDir = 'S:\Projetos Mobile\ACS View Secrets'
+$values = @{}
+Get-Content (Join-Path $signingDir 'ACSView-release-credentials.txt') | ForEach-Object {
+    if ($_ -match '^([^:]+): (.*)$') { $values[$matches[1]] = $matches[2] }
+}
+Get-Content (Join-Path $signingDir 'ACSView-release-base64.txt') -Raw | gh secret set ANDROID_KEYSTORE_BASE64 --repo TexDiego/ACS-View
+$values.KeystorePassword | gh secret set ANDROID_KEYSTORE_PASSWORD --repo TexDiego/ACS-View
+$values.Alias | gh secret set ANDROID_KEY_ALIAS --repo TexDiego/ACS-View
+$values.KeyPassword | gh secret set ANDROID_KEY_PASSWORD --repo TexDiego/ACS-View
+gh secret list --repo TexDiego/ACS-View --json name --jq '.[].name'
+```
+
+Somente após passar os gates locais e o checklist físico crítico (incluindo atualização com preservação de SQLite), envie o commit e crie a primeira versão, confirmando antes que a tag não existe local ou remotamente:
+
+```powershell
+git tag -a v1.0.0 -m "ACS View 1.0.0"
+git push origin v1.0.0
+```
+
+Somente o push de uma tag `v*` aciona `.github/workflows/release-android.yml`. O CI exige uma tag estável `vN.N.N`, valida secrets, restaura, compila Debug e executa todas as seis suítes. Publica apenas Android Release/APK, reconstrói o keystore temporariamente, assina, verifica identidade, SDK e fingerprint SHA-256 do certificado definitivo e cria a GitHub Release com `ACSView-v1.0.0.apk`. O keystore temporário é removido mesmo em caso de falha; não há publicação a cada push da branch nem atualização interna automática. Depois, baixe e valide o APK exato anexado à Release.
+
+Baixe o APK em **Releases**, autorize a instalação pela origem usada (navegador/gerenciador de arquivos) e abra o arquivo. Todas as versões distribuídas precisam manter **o mesmo ApplicationId e a mesma chave de assinatura**, com versionCode crescente. Guarde cópias seguras da chave e das senhas: perder a chave impede atualizar instalações existentes. Atualizações compatíveis preservam o banco SQLite; **desinstalar ou limpar os dados remove os dados locais**. Backup Android continua desabilitado. A instalação antiga de desenvolvimento `com.companyname.acsview` é outro aplicativo: a mudança de identificador não transfere seus dados automaticamente.
+
+Veja [diagnóstico das notificações e checklist de Android real](docs/android-release-validation.md) antes da primeira distribuição. Um publish local sem os secrets usa a chave de desenvolvimento do SDK e serve para validação de build, não como APK de distribuição.
+
+O iOS está fora desta distribuição: o identificador existente foi preservado e não houve validação em Mac. As permissões antigas de armazenamento Android permanecem como dívida técnica documentada no checklist.

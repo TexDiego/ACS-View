@@ -5,6 +5,9 @@ using MauiIcons.Fluent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
 using SQLite;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
+using ACS_View.Infrastructure.Services;
 
 namespace ACS_View
 {
@@ -12,10 +15,23 @@ namespace ACS_View
     {
         public static MauiApp CreateMauiApp()
         {
+#if ANDROID
+            // Android can remove alarms on force-stop while the plugin keeps its
+            // persisted request list. Rebuild future reminders on process startup.
+            Preferences.Default.Set(LocalNoteNotificationScheduler.ExactAlarmCacheInvalid, true);
+#endif
             var builder = MauiApp.CreateBuilder();
 
             builder
                 .UseMauiApp<App>()
+                .UseLocalNotification(config => config.AddAndroid(android => android.AddChannel(new NotificationChannelRequest
+                {
+                    Id = LocalNoteNotificationScheduler.ChannelId,
+                    Name = "Lembretes de notas",
+                    Description = "Lembretes agendados das suas anotações no ACS View",
+                    Importance = AndroidImportance.Default,
+                    CanBypassDnd = false
+                })))
                 .UseFluentMauiIcons()
                 .UseMauiCommunityToolkit()
                 .ConfigureMauiHandlers(handlers =>

@@ -10,5 +10,6 @@ namespace ACS_View.Domain.Entities
         public string Content { get; set; }
         public DateTime CreationDate { get; set; } = DateTime.Now;
         public DateTime? NotifyOn { get; set; } = null;
+        public string? ReminderMessage { get; set; }
     }
 }

@@ -4,7 +4,6 @@ using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Plugin.LocalNotification;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -12,7 +11,7 @@ namespace ACS_View.ViewModels
 {
     public partial class NotesPageViewModel : BaseViewModel
     {
-        private const int MaxActiveNoteNotifications = 10;
+        private readonly INoteReminderService _reminders;
         private readonly INoteService _noteService;
         private readonly IPopupService _popupService;
         private int _loadedVersion = -1;
@@ -28,10 +27,11 @@ namespace ACS_View.ViewModels
         public ICommand ShowActiveNotificationsCommand => new Command(async () => await ShowActiveNotificationsAsync());
         public ICommand Refresh => new Command(async () => await LoadNotesAsync(force: true));
 
-        public NotesPageViewModel(INoteService noteService, IPopupService popupService)
+        public NotesPageViewModel(INoteService noteService, IPopupService popupService, INoteReminderService reminders)
         {
             _noteService = noteService;
             _popupService = popupService;
+            _reminders = reminders;
         }
 
         private async Task DeleteNoteAsync(int id)
@@ -42,7 +42,7 @@ namespace ACS_View.ViewModels
                 if (!confirm) return;
 
                 Note note = Notes.Where(n => n.Id == id).First();
-                CancelLocalNotification(note.Id);
+                await _reminders.CancelAsync(note.Id);
 
                 await _noteService.DeleteNoteAsync(id);
 
@@ -80,19 +80,13 @@ namespace ACS_View.ViewModels
             {
                 await ExecuteWithLoadingAsync(async () =>
                 {
+                    await _reminders.ReconcileAsync();
                     var notes = await _noteService.GetAllNotesAsync();
 
                     Notes.Clear();
 
                     foreach (var note in notes)
                     {
-                        if (note.NotifyOn < DateTime.Now)
-                        {
-                            CancelLocalNotification(note.Id);
-                            note.NotifyOn = null;
-                            await _noteService.UpdateNoteAsync(note);
-                        }
-
                         Notes.Add(note);
                     }
 
@@ -133,51 +127,17 @@ namespace ACS_View.ViewModels
             var reminderDate = result.Result.NotifyOn;
             var replacedExistingNotification = note.NotifyOn is not null && note.NotifyOn.Value > DateTime.Now;
 
-            if (CountActiveNoteNotifications(excludedNoteId: note.Id) >= MaxActiveNoteNotifications)
+            try
             {
-                await DisplayAlertAsync(
-                    "Limite de notificações",
-                    $"É possível manter no máximo {MaxActiveNoteNotifications} notificações ativas de notas. Cancele uma notificação ativa para adicionar outra.",
-                    "Ok");
+                if (!await _reminders.EnsurePermissionAsync()) return;
+                await _reminders.ScheduleAsync(note.Id, reminderDate, result.Result.Message);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Lembrete não definido", ex.Message, "Ok");
+                await LoadNotesAsync(force: true);
                 return;
             }
-
-            bool permit = await LocalNotificationCenter.Current.RequestNotificationPermission();
-            if (!permit)
-            {
-                await DisplayAlertAsync("Permissão negada", "Não foi possível definir o lembrete. Permissão de notificações negada.", "Ok");
-                return;
-            }
-
-            if (OperatingSystem.IsAndroidVersionAtLeast(13))
-            {
-                var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
-                if (status != PermissionStatus.Granted)
-                    status = await Permissions.RequestAsync<Permissions.PostNotifications>();
-
-                if (status != PermissionStatus.Granted)
-                {
-                    await DisplayAlertAsync("Permissão negada", "Não foi possível definir o lembrete. Permissão de notificações negada.", "Ok");
-                    return;
-                }
-            }
-
-            CancelLocalNotification(note.Id);
-            var request = new NotificationRequest
-            {
-                NotificationId = note.Id.GetHashCode(),
-                Title = "Lembrete de anotação",
-                Description = result.Result.Message,
-                Schedule = new NotificationRequestSchedule
-                {
-                    NotifyTime = reminderDate
-                }
-            };
-
-            await LocalNotificationCenter.Current.Show(request);
-
-            note.NotifyOn = reminderDate;
-            await _noteService.UpdateNoteAsync(note);
             await LoadNotesAsync(force: true);
 
             var message = replacedExistingNotification
@@ -216,28 +176,21 @@ namespace ACS_View.ViewModels
 
         private async Task CancelNotificationAsync(Note note, bool showAlert)
         {
-            CancelLocalNotification(note.Id);
-            note.NotifyOn = null;
-            await _noteService.UpdateNoteAsync(note);
+            try
+            {
+                await _reminders.CancelAsync(note.Id);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Cancelamento não confirmado", ex.Message, "Ok");
+                return;
+            }
             await LoadNotesAsync(force: true);
 
             if (showAlert)
             {
                 await DisplayAlertAsync("Notificação cancelada", "A notificação desta nota foi cancelada.", "Ok");
             }
-        }
-
-        private static void CancelLocalNotification(int noteId)
-        {
-            LocalNotificationCenter.Current.Cancel(noteId.GetHashCode());
-        }
-
-        private int CountActiveNoteNotifications(int? excludedNoteId = null)
-        {
-            return Notes.Count(note =>
-                note.Id != excludedNoteId &&
-                note.NotifyOn is DateTime notifyOn &&
-                notifyOn > DateTime.Now);
         }
 
         private IReadOnlyList<ActiveNoteNotificationDto> GetActiveNoteNotifications()

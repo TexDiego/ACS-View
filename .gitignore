@@ -361,3 +361,18 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Android signing material must stay outside the repository.
+*.keystore
+*.jks
+*.p12
+*keystore*.txt
+*credentials*.txt
+*release-base64*.txt
+*.apk
+*.aab
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

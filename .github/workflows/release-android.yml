@@ -1,0 +1,148 @@
+name: Android APK Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Validate explicit version and required secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import os, re, xml.etree.ElementTree as ET
+          for name in ('ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD'):
+              if not os.environ.get(name):
+                  raise SystemExit(f'Required GitHub Actions Secret missing: {name}')
+          tag = os.environ['RELEASE_TAG']
+          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+', tag):
+              raise SystemExit('Use a stable version tag such as v1.0.0')
+          project = ET.parse('ACS View.csproj').getroot()
+          version = project.findtext('./PropertyGroup/ApplicationDisplayVersion')
+          code = project.findtext('./PropertyGroup/ApplicationVersion')
+          if tag != f'v{version}':
+              raise SystemExit('Tag must match ApplicationDisplayVersion in the csproj')
+          if not code or not code.isdecimal() or not 0 < int(code) <= 2100000000:
+              raise SystemExit('ApplicationVersion must be a positive Android versionCode')
+          # Monotonic increments are maintained explicitly by the release author.
+          PY
+      - name: Install pinned MAUI Android workload
+        run: dotnet workload install maui-android --version 10.0.401
+      - name: Restore Android only
+        run: dotnet restore "ACS View.csproj" -p:TargetFrameworks=net10.0-android
+      - name: Build Android Debug
+        run: dotnet build "ACS View.csproj" -f net10.0-android -c Debug --no-restore
+      - name: Run all regression suites
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' project; do
+            dotnet run --project "$project"
+          done < <(find Tests -name '*.csproj' -print0 | sort -z)
+      - name: Publish signed APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          signing_dir=$(mktemp -d "$RUNNER_TEMP/acs-signing.XXXXXX")
+          trap 'rm -rf -- "$signing_dir"' EXIT
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$signing_dir/release.keystore"
+          export ACS_SIGNING_KEYSTORE="$signing_dir/release.keystore"
+          cat > "$signing_dir/signing.props" <<'XML'
+          <Project>
+            <PropertyGroup>
+              <AndroidKeyStore>true</AndroidKeyStore>
+              <AndroidSigningKeyStore>$(ACS_SIGNING_KEYSTORE)</AndroidSigningKeyStore>
+              <AndroidSigningKeyAlias>$(ANDROID_KEY_ALIAS)</AndroidSigningKeyAlias>
+              <AndroidSigningStorePass>env:ANDROID_KEYSTORE_PASSWORD</AndroidSigningStorePass>
+              <AndroidSigningKeyPass>env:ANDROID_KEY_PASSWORD</AndroidSigningKeyPass>
+            </PropertyGroup>
+          </Project>
+          XML
+          dotnet publish "ACS View.csproj" -f net10.0-android -c Release \
+            -p:TargetFrameworks=net10.0-android -p:AndroidPackageFormats=apk \
+            -p:CustomBeforeMicrosoftCommonTargets="$signing_dir/signing.props" \
+            -o "$RUNNER_TEMP/acs-apk"
+          mapfile -t apks < <(find "$RUNNER_TEMP/acs-apk" -maxdepth 1 -name '*-Signed.apk')
+          test "${#apks[@]}" -eq 1 || { echo 'Expected exactly one signed APK'; exit 1; }
+          mkdir -p release
+          cp -- "${apks[0]}" "release/ACSView-$RELEASE_TAG.apk"
+      - name: Verify final APK identity, permissions and signature
+        run: |
+          set -euo pipefail
+          build_tools=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          "$build_tools/apksigner" verify --verbose --print-certs "release/ACSView-$RELEASE_TAG.apk" > "$RUNNER_TEMP/apk-signature.txt"
+          cat "$RUNNER_TEMP/apk-signature.txt"
+          "$build_tools/aapt" dump badging "release/ACSView-$RELEASE_TAG.apk" > "$RUNNER_TEMP/apk-badging.txt"
+          "$build_tools/aapt" dump xmltree "release/ACSView-$RELEASE_TAG.apk" AndroidManifest.xml > "$RUNNER_TEMP/apk-manifest.txt"
+          python3 - <<'PY'
+          import os, re, zipfile, xml.etree.ElementTree as ET
+          project = ET.parse('ACS View.csproj').getroot()
+          version = project.findtext('./PropertyGroup/ApplicationDisplayVersion')
+          code = project.findtext('./PropertyGroup/ApplicationVersion')
+          text = open(os.path.join(os.environ['RUNNER_TEMP'], 'apk-badging.txt')).read()
+          expected = f"package: name='com.texdiego.acsview' versionCode='{code}' versionName='{version}'"
+          if not text.startswith(expected):
+              raise SystemExit('Final APK identity/version mismatch')
+          if "sdkVersion:'21'" not in text or "targetSdkVersion:'36'" not in text:
+              raise SystemExit('Final APK SDK mismatch')
+          manifest = open(os.path.join(os.environ['RUNNER_TEMP'], 'apk-manifest.txt')).read()
+          if re.search(r'android:debuggable.*0xffffffff', manifest):
+              raise SystemExit('Debuggable APK is forbidden')
+          if not re.search(r'android:allowBackup.*0x0\b', manifest):
+              raise SystemExit('Android backup must remain disabled')
+          for action in ('BOOT_COMPLETED', 'MY_PACKAGE_REPLACED', 'SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED'):
+              if action not in manifest:
+                  raise SystemExit(f'Missing recovery receiver action: {action}')
+          signature = open(os.path.join(os.environ['RUNNER_TEMP'], 'apk-signature.txt')).read()
+          expected_cert = 'aa6753d2d7763ed69a7dc7453cc19584c2a69604d524615956c72737fc5f09bd'
+          if f'Signer #1 certificate SHA-256 digest: {expected_cert}' not in signature:
+              raise SystemExit('APK must use the definitive ACS View release certificate')
+          if 'Android Debug' in signature:
+              raise SystemExit('Debug signing certificate is forbidden')
+          with zipfile.ZipFile(f"release/ACSView-{os.environ['RELEASE_TAG']}.apk") as apk:
+              for name in apk.namelist():
+                  if re.search(r'(?i)(\.(jks|keystore|p12|pfx|db|sqlite|sqlite3)$|credentials|release-base64)', name):
+                      raise SystemExit('Forbidden private material in APK')
+          for permission in ('POST_NOTIFICATIONS', 'VIBRATE', 'WAKE_LOCK', 'RECEIVE_BOOT_COMPLETED', 'SCHEDULE_EXACT_ALARM'):
+              if f"name='android.permission.{permission}'" not in text:
+                  raise SystemExit(f'Missing APK permission: {permission}')
+          if "name='android.permission.USE_EXACT_ALARM'" in text:
+              raise SystemExit('Do not combine exact alarm permissions')
+          PY
+          sha256sum "release/ACSView-$RELEASE_TAG.apk"
+      - name: Create GitHub Release and attach APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" "release/ACSView-$RELEASE_TAG.apk" \
+            --verify-tag --title "ACS View $RELEASE_TAG" --generate-notes
+      - name: Remove temporary signing files and build output
+        if: always()
+        run: |
+          rm -rf -- "$RUNNER_TEMP"/acs-signing.* "$RUNNER_TEMP/acs-apk"

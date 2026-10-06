@@ -17,6 +17,8 @@
     <Compile Include="../../UseCases/Services/AuthService.cs" />
     <Compile Include="../../UseCases/Services/DatabaseService.cs" />
     <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
+    <Compile Include="../../Infrastructure/Services/SQLiteNoteReminderStore.cs" />
+    <Compile Include="../../Application/Reminders/ReminderContracts.cs" />
     <Compile Include="../../Domain/Entities/**/*.cs" />
     <Compile Include="../../Domain/Enums/*.cs" />
     <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />

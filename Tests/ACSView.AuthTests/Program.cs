@@ -17,8 +17,19 @@ try
     // Start with the exact old schema, rather than a new User table.
     await connection.ExecuteAsync("CREATE TABLE User (Id INTEGER PRIMARY KEY AUTOINCREMENT, Username TEXT, Password TEXT, SecurityQuestion TEXT, SecurityAnswer TEXT)");
     await connection.ExecuteAsync("INSERT INTO User (Username, Password, SecurityQuestion, SecurityAnswer) VALUES (?, ?, ?, ?)", "antigo", "senha antiga", "Animal?", "gato");
+    var legacyReminderTime = DateTime.Now.AddDays(3);
+    await connection.ExecuteAsync("CREATE TABLE Note (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER, Content TEXT, CreationDate BIGINT, NotifyOn BIGINT)");
+    await connection.ExecuteAsync("INSERT INTO Note (UserId, Content, CreationDate, NotifyOn) VALUES (?, ?, ?, ?)", 1, "Nota de teste anterior à atualização", DateTime.Now, legacyReminderTime);
     var db = new DatabaseService(connection);
     await db.InitializeAsync();
+    Check((await connection.GetTableInfoAsync("Note")).Any(c => c.Name == "ReminderMessage"), "Note schema includes recoverable reminder message");
+    var preservedReminder = await connection.FindAsync<Note>(1);
+    Check(preservedReminder.NotifyOn == legacyReminderTime && preservedReminder.Content == "Nota de teste anterior à atualização", "Additive reminder migration preserves existing SQLite note");
+    var reminderStore = new SQLiteNoteReminderStore(db);
+    var storedReminder = (await reminderStore.GetAllAsync()).Single(n => n.Id == 1);
+    await reminderStore.SetAsync(storedReminder, legacyReminderTime.AddHours(1), "Mensagem de teste");
+    preservedReminder = await connection.FindAsync<Note>(1);
+    Check(preservedReminder.NotifyOn == legacyReminderTime.AddHours(1) && preservedReminder.ReminderMessage == "Mensagem de teste" && preservedReminder.UserId == 1 && preservedReminder.Content == storedReminder.Content, "Reminder persistence changes only reminder fields with owner guard");
     var old = (await db.GetUserByUsernameAsync("antigo"))!;
     Check(old.Password == "" && old.SecurityAnswer == "" && old.SecurityQuestion == "", "Migration clears plaintext and questions");
     Check(PasswordHasher.Verify("senha antiga", old.PasswordHash, old.PasswordSalt, old.PasswordHashVersion), "Migration preserves old password");

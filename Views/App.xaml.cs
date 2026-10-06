@@ -24,6 +24,7 @@ namespace ACS_View.Views
             window.Stopped += (_, _) => inputLifecycle.OnStopped();
             window.Resumed += (_, _) =>
             {
+                _ = ReconcileRemindersAsync();
                 if (!inputLifecycle.ConsumeReset())
                 {
                     return;
@@ -43,6 +44,7 @@ namespace ACS_View.Views
         public async Task ResetToAuthenticatedShellAsync()
         {
             await appStartupService.InitializeAsync();
+            await ReconcileRemindersAsync();
             await ResetShellAsync("//overallview");
         }
 
@@ -84,6 +86,7 @@ namespace ACS_View.Views
             try
             {
                 await appStartupService.InitializeAsync();
+                await ReconcileRemindersAsync();
 
                 var authService = ServiceProvider.GetRequiredService<IAuthService>();
                 if (!await authService.IsAuthenticatedAsync())
@@ -107,6 +110,20 @@ namespace ACS_View.Views
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Nao foi possivel restaurar sessao inicial: {ex.Message}");
+            }
+        }
+
+        private async Task ReconcileRemindersAsync()
+        {
+            try
+            {
+                await appStartupService.InitializeAsync();
+                await ServiceProvider.GetRequiredService<INoteReminderService>().ReconcileAsync();
+            }
+            catch (Exception)
+            {
+                // No note text or user data in diagnostics. Notes page retries visibly.
+                System.Diagnostics.Debug.WriteLine("Não foi possível reconciliar os lembretes de notas.");
             }
         }
     }

@@ -7,7 +7,8 @@ namespace ACS_View.UseCases.Services;
 
 internal sealed class UserDataCleanupService(
     IDatabaseService databaseService,
-    ICurrentUserContext currentUserContext) : IUserDataCleanupService
+    ICurrentUserContext currentUserContext,
+    INoteReminderService reminders) : IUserDataCleanupService
 {
     private readonly SQLiteAsyncConnection _connection = databaseService.Connection;
 
@@ -37,6 +38,8 @@ internal sealed class UserDataCleanupService(
         });
 
         MarkChanged(scope);
+        if (scope is UserDataDeletionScope.All or UserDataDeletionScope.Notes)
+            await reminders.ReconcileAsync();
     }
 
     private static void DeleteAll(SQLiteConnection connection, int userId)

@@ -154,7 +154,7 @@ Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.Description.Con
        VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.Description.Contains("até 2 anos", StringComparison.OrdinalIgnoreCase) == true, "Sugestao infantil deve seguir a matriz de criancas ate 2 anos.");
 Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Child)?.DeadlineRule == "ChildTwoStep", "Sugestao infantil deve manter a regra infantil da matriz, nao a metrica de menores de 6 anos.");
 Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.RequiredVisits == 1, "Pacientes sem criterios de vulnerabilidade devem exigir 1 visita no mes.");
-Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.Points == 10, "Pacientes sem criterios de vulnerabilidade devem ter pontuacao generica menor.");
+Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.NoVulnerability)?.Points == 5, "Pacientes sem criterios de vulnerabilidade devem ter pontuacao generica de 5 pontos.");
 Assert(VisitPriorityCalculator.Calculate([VisitCareLineType.NoVulnerability]).Factor == 1.0m, "Pacientes sem criterios devem manter prioridade base 1.0.");
 Assert(VisitScoringRuleCatalog.GetRule(VisitCareLineType.Postpartum)?.DeadlineRule == "Postpartum", "Puerperio deve existir como regra propria da matriz de visitas.");
 Assert(VisitPriorityCalculator.Calculate([VisitCareLineType.Postpartum]).Factor == 1.0m, "Puerperio isolado nao deve aumentar o fator de vulnerabilidade.");

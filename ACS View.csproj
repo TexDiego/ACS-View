@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
@@ -15,6 +15,8 @@
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>ACS_View</RootNamespace>
+		<!-- Keep the project identity consistent across all target frameworks and IDE restore. -->
+		<AssemblyName>ACSView</AssemblyName>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<UseMaterial3>true</UseMaterial3>
@@ -30,8 +32,8 @@
 		<ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">com.texdiego.acsview</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>2</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -42,6 +44,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<!-- Deploy assemblies incrementally during Android debugging. -->
+		<EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>
 		<!-- Install and debug only in the owner profile, excluding Dual Messenger profiles. -->
 		<AndroidDeviceUserId>0</AndroidDeviceUserId>
 	</PropertyGroup>

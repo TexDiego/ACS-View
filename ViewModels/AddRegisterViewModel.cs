@@ -20,7 +20,8 @@ namespace ACS_View.ViewModels
         IPatientInsulinDependencyRepository insulinDependencyRepository,
         IPregnancyService pregnancyService,
         ICareNotificationService careNotificationService,
-        IPopupService popupService) : BaseViewModel
+        IPopupService popupService,
+        IPatientPhoneService phoneService) : BaseViewModel
     {
         private readonly IPatientService _patientService = patientService;
         private readonly ICidRepository _cidRepo = cidRepo;
@@ -31,8 +32,6 @@ namespace ACS_View.ViewModels
         private readonly IPregnancyService _pregnancyService = pregnancyService;
         private readonly ICareNotificationService _careNotificationService = careNotificationService;
         private readonly IPopupService _popupService = popupService;
-
-        internal List<CidSubcategory> Subcategories = [];
 
         [ObservableProperty] private Patient currentPatient = new();
         [ObservableProperty] private ObservableCollection<HealthConditions> healthCategories = [];
@@ -47,6 +46,9 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private bool isInsulinDependent;
         [ObservableProperty] private bool isPregnancySelected;
         [ObservableProperty] private string pregnancySummary = "Detalhes gestacionais não informados";
+        public PhoneEditorViewModel PhoneEditor { get; } = new();
+        public SusNumberEditorViewModel SusEditor { get; } = new();
+        private bool _phonesLoaded = true;
 
         private bool _updatingParentNameInputs;
         private bool _updatingBirthDateInput;
@@ -143,9 +145,12 @@ namespace ACS_View.ViewModels
         internal async Task LoadPatient(int id)
         {
             _isLoadingPatient = true;
+            _phonesLoaded = false;
+            IsLoading = true;
+            var timer = Stopwatch.StartNew();
             try
             {
-                var p = await _patientService.GetPatientById(id);
+                var p = await MeasureLoadAsync("Paciente e SUS", () => _patientService.GetPatientById(id));
                 if (p == null)
                 {
                     await DisplayAlertAsync("Erro", "Paciente não encontrado.", "Voltar");
@@ -154,18 +159,20 @@ namespace ACS_View.ViewModels
 
                 NormalizePatientForEditing(p);
                 CurrentPatient = p;
+                SusEditor.LoadRecords(p.SusNumberRecords ?? []);
+                await MeasureLoadAsync("Telefones", LoadPhones);
                 _initialIsActive = p.IsActive;
                 SetParentNameInputs(p);
                 SetBirthDateInput(p.BirthDate);
-                await LoadBolsaFamiliaAsync(p);
-                await LoadInsulinDependencyAsync(p.Id);
-                await LoadPregnancyAsync(p.Id);
+                await MeasureLoadAsync("Bolsa Familia e responsavel", () => LoadBolsaFamiliaAsync(p));
+                await MeasureLoadAsync("Insulinodependencia", () => LoadInsulinDependencyAsync(p.Id));
+                await MeasureLoadAsync("Gestacao", () => LoadPregnancyAsync(p.Id));
 
                 HealthCategories.Clear();
                 CommonConditions.Clear();
                 LoadFixedConditions();
 
-                var patientConditions = await _conditionsRepository.GetConditionsByPatientIdAsync(id);
+                var patientConditions = await MeasureLoadAsync("Condicoes", () => _conditionsRepository.GetConditionsByPatientIdAsync(id));
                 foreach (var patientCondition in patientConditions.Where(c => !string.IsNullOrWhiteSpace(c.Description)))
                 {
                     var key = HealthConditionCatalog.GetKey(patientCondition.Description);
@@ -212,13 +219,13 @@ namespace ACS_View.ViewModels
 
                 UpdateConditionSelectionSnapshot();
 
-                var patientCids = await _patientCid.GetPatientCIDsByPatientId(id);
+                var patientCids = await MeasureLoadAsync("Vinculos CID", () => _patientCid.GetPatientCIDsByPatientId(id));
 
                 if (patientCids == null) return;
 
                 foreach (var patientCid in patientCids)
                 {
-                    var subcategory = Subcategories.FirstOrDefault(s => s.Id == patientCid.CidId);
+                    var subcategory = await MeasureLoadAsync("CID vinculado", () => _cidRepo.GetSubcategoryById(patientCid.CidId));
                     if (subcategory == null) continue;
 
                     HealthCategories.Add(new HealthConditions
@@ -238,21 +245,37 @@ namespace ACS_View.ViewModels
             finally
             {
                 _isLoadingPatient = false;
+                IsLoading = false;
+                Debug.WriteLine($"[Cadastro.Load] Edicao total: {timer.Elapsed.TotalMilliseconds:F1} ms");
             }
         }
 
-        internal async Task LoadSubcategories()
+        internal async Task LoadPhones()
         {
-            try
-            {
-                Subcategories = await _cidRepo.GetAllSubcategories();
-                LoadFixedConditions();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-                await DisplayAlertAsync("Erro", "Não foi possível obter as subcategorias de CID", "Voltar");
-            }
+            _phonesLoaded = false;
+            PhoneEditor.Load(await phoneService.GetPhonesByPatientId(CurrentPatient.Id) ?? []);
+            _phonesLoaded = true;
+        }
+
+        internal void InitializeNewPatient()
+        {
+            // A new page owns a fresh view model. No persisted patient data or CID catalog is needed.
+            LoadFixedConditions();
+            SetParentNameInputs(CurrentPatient);
+            SetBirthDateInput(CurrentPatient.BirthDate);
+            UpdateConditionSelectionSnapshot();
+        }
+
+        private static async Task<T> MeasureLoadAsync<T>(string service, Func<Task<T>> load)
+        {
+            var timer = Stopwatch.StartNew();
+            try { return await load(); }
+            finally { Debug.WriteLine($"[Cadastro.Load] {service}: {timer.Elapsed.TotalMilliseconds:F1} ms"); }
+        }
+
+        private static async Task MeasureLoadAsync(string service, Func<Task> load)
+        {
+            await MeasureLoadAsync(service, async () => { await load(); return true; });
         }
 
         internal Task ShowLoadErrorAsync()
@@ -262,13 +285,33 @@ namespace ACS_View.ViewModels
 
         private async Task Save()
         {
+            if (IsLoading || _isLoadingPatient) return;
             try
             {
                 await ExecuteWithLoadingAsync(async () =>
                 {
-                    if (string.IsNullOrWhiteSpace(CurrentPatient?.Name) || string.IsNullOrWhiteSpace(CurrentPatient?.SusNumber))
+                    if ((SusEditor.IsEditing || !string.IsNullOrWhiteSpace(SusEditor.Input)) && !SusEditor.TryApply())
                     {
-                        await DisplayAlertAsync("Aviso", "Nome e SUS do paciente são obrigatórios.");
+                        await DisplayAlertAsync("Aviso", SusEditor.Error);
+                        return;
+                    }
+                    SusEditor.ApplyTo(CurrentPatient);
+
+                    if (string.IsNullOrWhiteSpace(CurrentPatient?.Name))
+                    {
+                        await DisplayAlertAsync("Aviso", "Nome do paciente é obrigatório.");
+                        return;
+                    }
+
+                    if (!_phonesLoaded)
+                    {
+                        await DisplayAlertAsync("Aviso", "Reabra o cadastro para carregar os telefones antes de salvar.");
+                        return;
+                    }
+                    // Include any pending entry in the save instead of silently discarding it.
+                    if ((PhoneEditor.IsEditing || !string.IsNullOrWhiteSpace(PhoneEditor.Input)) && !PhoneEditor.TryApply())
+                    {
+                        await DisplayAlertAsync("Aviso", PhoneEditor.Error);
                         return;
                     }
 
@@ -304,7 +347,20 @@ namespace ACS_View.ViewModels
                     }
 
                     _initialIsActive = CurrentPatient.IsActive;
+                    // Reload generated identities after the transactional patient/SUS save.
+                    CurrentPatient = (await _patientService.GetPatientById(CurrentPatient.Id))!;
+                    SusEditor.LoadRecords(CurrentPatient.SusNumberRecords ?? []);
 
+                    await phoneService.SavePhones(CurrentPatient.Id, PhoneEditor.Phones.ToList());
+
+                    // Resolve only selected codes, before deleting their existing links.
+                    var selectedCidIds = new List<int>();
+                    foreach (var cid in HealthCategories)
+                    {
+                        var subcategory = await _cidRepo.GetSubcategoryByCodeAsync(cid.CID);
+                        selectedCidIds.Add(subcategory?.Id
+                            ?? throw new Exception($"CID não encontrado para condição: {cid.Name}"));
+                    }
                     await _patientCid.DeletePatientCIDByPatientId(CurrentPatient.Id);
                     await _conditionsRepository.DeleteConditionsByPatientIdAsync(CurrentPatient.Id);
 
@@ -324,16 +380,12 @@ namespace ACS_View.ViewModels
                         });
                     }
 
-                    foreach (var cid in HealthCategories)
+                    foreach (var cidId in selectedCidIds)
                     {
-                        var cidId = !string.IsNullOrWhiteSpace(cid.CID)
-                            ? Subcategories.FirstOrDefault(s => string.Equals(s.Code, cid.CID, StringComparison.OrdinalIgnoreCase))?.Id
-                            : Subcategories.FirstOrDefault(s => string.Equals(s.Description, cid.Name, StringComparison.OrdinalIgnoreCase))?.Id;
-
                         await _patientCid.CreatePatientCID(new PatientCID
                         {
                             PatientId = CurrentPatient.Id,
-                            CidId = cidId ?? throw new Exception($"CID não encontrado para condição: {cid.Name}")
+                            CidId = cidId
                         });
                     }
 

@@ -107,11 +107,6 @@ public static class DashboardMetricCombinationRules
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (baseFilterKeys.Count == 0)
-        {
-            return "Selecione ao menos uma metrica.";
-        }
-
         if (baseFilterKeys.Count > 3)
         {
             return "Selecione no maximo tres metricas.";
@@ -121,6 +116,11 @@ public static class DashboardMetricCombinationRules
             !string.IsNullOrWhiteSpace(sexModifier) ||
             minimumAgeModifier.HasValue ||
             maximumAgeModifier.HasValue;
+
+        if (baseFilterKeys.Count == 0 && !hasModifier)
+        {
+            return "Selecione um indicador ou informe sexo ou idade.";
+        }
 
         if (baseFilterKeys.Count == 1 && !hasModifier)
         {

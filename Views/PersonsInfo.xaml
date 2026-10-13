@@ -15,12 +15,12 @@
     BackgroundColor="Transparent"
     Padding="0">
 
-    <Grid RowDefinitions="auto,auto,*">
+    <Grid RowDefinitions="auto,13,*">
         <Border
             Grid.Row="1"
             Grid.RowSpan="2">
             <VerticalStackLayout
-                
+
                 Padding="10,10,10,10"
                 HorizontalOptions="Fill"
                 VerticalOptions="Fill"
@@ -92,10 +92,11 @@
 
                 <!-- Sus -->
                 <Label
-                    Text="{Binding SusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
+                    Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainSus, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainSus, Converter={converters:NullValueToBoolConverter}}"
                     TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                     FontSize="16"/>
-        
+
                 <!-- NIS -->
                 <Label
                     Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.NisNumber, Converter={converters:NISFormatConverter}, StringFormat='NIS: {0}'}"
@@ -122,6 +123,13 @@
                         FontSize="16"/>
 
                 </HorizontalStackLayout>
+
+                <!-- Telefone principal -->
+                <Label
+                    Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainPhone, Converter={converters:PhoneFormatConverter}}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainPhone, Converter={converters:NullValueToBoolConverter}}"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontSize="16"/>
 
                 <!-- Observação -->
                 <Label
@@ -222,6 +230,27 @@
 
             </VerticalStackLayout>
         </Border>
+
+        <!-- WhatsApp button -->
+        <Border
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            VerticalOptions="Start"
+            HorizontalOptions="End"
+            Margin="0,0,70,0"
+            StrokeShape="RoundRectangle 15"
+            Padding="8">
+
+            <ImageButton
+                mi:MauiIcon.Value="{mi:Fluent Icon=PhoneChat16}"
+                MaximumHeightRequest="30"
+                MaximumWidthRequest="30"
+                CornerRadius="0"
+                SemanticProperties.Description="Conversar no WhatsApp com o telefone principal"
+                ToolTipProperties.Text="Conversar no WhatsApp"
+                Command="{Binding OpenWhatsAppCommand}"/>
+        </Border>
+
         <Border
             Grid.Row="0"
             Grid.RowSpan="2"

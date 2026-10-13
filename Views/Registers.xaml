@@ -86,6 +86,7 @@
                             ColumnDefinitions="*,auto"
                             RowDefinitions="*,*"
                             ColumnSpacing="12"
+                            RowSpacing="6"
                             Padding="5"
                             BackgroundColor="{AppThemeBinding
                                                 Light={StaticResource Surface},
@@ -104,7 +105,9 @@
                                 </VerticalStackLayout.GestureRecognizers>
 
                                 <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                <Label Text="{Binding SusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding PrimarySusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
+                                       IsVisible="{Binding PrimarySusNumber, Converter={converters:NullValueToBoolConverter}}"
+                                       Style="{StaticResource BodyMuted}"/>
                             </VerticalStackLayout>
 
                             <ImageButton
@@ -120,31 +123,29 @@
                                 CommandParameter="{Binding Id}"/>
 
                             <Grid
-                                ColumnDefinitions="*,*"
+                                ColumnDefinitions="0.2*,*"
                                 Grid.ColumnSpan="2"
                                 Grid.Row="1"
-                                ColumnSpacing="10">
+                                ColumnSpacing="10"
+                                HeightRequest="38">
+
+                                <ImageButton
+                                    Grid.Column="0"
+                                    Style="{StaticResource DeleteImageButton}"
+                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
+                                    ToolTipProperties.Text="Excluir"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                    CommandParameter="{Binding Id}"/>
 
                                 <Button
-                                    Grid.Column="0"
+                                    Grid.Column="1"
                                     Text="Editar"
                                     Style="{StaticResource PrimaryOutlineButton}"
-                                    MaximumHeightRequest="40"
                                     mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
                                     ToolTipProperties.Text="Editar"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                     CommandParameter="{Binding .}"/>
 
-                                <Button
-                                    Grid.Column="1"
-                                    Text="Excluir"
-                                    BackgroundColor="Transparent"
-                                    Style="{StaticResource GhostButton}"
-                                    MaximumHeightRequest="40"
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
-                                    ToolTipProperties.Text="Excluir"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding Id}"/>
                             </Grid>
                         </Grid>
                     </Border>

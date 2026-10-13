@@ -1,6 +1,7 @@
 using ACS_View.Domain.Entities.Health;
 using ACS_View.Application.Interfaces;
 using SQLite;
+using ACS_View.Infrastructure.Data.Migrations;
 
 namespace ACS_View.Infrastructure.Data.SQLite
 {
@@ -35,7 +36,7 @@ namespace ACS_View.Infrastructure.Data.SQLite
         public async Task InsertConditionAsync(PatientConditions condition)
         {
             condition.UserId = currentUserContext.RequireCurrentUserId();
-            await _connection.InsertAsync(condition);
+            await _connection.RunInTransactionAsync(c=>{c.Insert(condition);RelationalStore.SetConditionIdentity(c,condition);});
         }
 
         public async Task InsertConditionsAsync(List<PatientConditions> conditions)
@@ -46,7 +47,10 @@ namespace ACS_View.Infrastructure.Data.SQLite
                 condition.UserId = userId;
             }
 
-            await _connection.InsertAllAsync(conditions);
+            await _connection.RunInTransactionAsync(c=>
+            {
+                foreach(var condition in conditions){c.Insert(condition);RelationalStore.SetConditionIdentity(c,condition);}
+            });
         }
     }
 }

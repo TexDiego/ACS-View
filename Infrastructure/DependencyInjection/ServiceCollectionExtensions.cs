@@ -36,6 +36,8 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddSingleton<IDatabaseService, DatabaseService>();
+        services.AddSingleton<IRelationalDataService, RelationalDataService>();
+        services.AddSingleton<IDatabaseBackupService, DatabaseBackupService>();
         services.AddSingleton<IAppStartupService, AppStartupService>();
         services.AddSingleton<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IHouseService, HouseService>();
@@ -48,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPatientConditionSeeder, PatientConditionsSeeder>();
         services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IAppUpdateService, GitHubAppUpdateService>();
 #if ANDROID
         services.AddSingleton<ILocalBiometricVault, ACS_View.Platforms.Android.AndroidBiometricVault>();
 #else
@@ -62,6 +65,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPopupService, PopupService>();
         services.AddSingleton<IHouseRepository, SQLiteHouseRepository>();
         services.AddSingleton<IPatientRepository, SQLitePatientRepository>();
+        services.AddSingleton<IPatientPhoneRepository, SQLitePatientPhoneRepository>();
+        services.AddSingleton<IPatientSusRepository, SQLitePatientSusRepository>();
+        services.AddSingleton<IPatientPhoneService, PatientPhoneService>();
+        services.AddSingleton<IPatientSusService, PatientSusService>();
         services.AddSingleton<IPatientBolsaFamiliaRepository, SQLitePatientBolsaFamiliaRepository>();
         services.AddSingleton<IPatientInsulinDependencyRepository, SQLitePatientInsulinDependencyRepository>();
         services.AddSingleton(new HttpClient

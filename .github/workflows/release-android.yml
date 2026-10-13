@@ -151,8 +151,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          python3 - <<'PY'
+          import json, pathlib, xml.etree.ElementTree as ET
+          project = ET.parse('ACS View.csproj').getroot()
+          code = int(project.findtext('./PropertyGroup/ApplicationVersion'))
+          version = project.findtext('./PropertyGroup/ApplicationDisplayVersion')
+          minimum = json.load(open('update-policy.json'))['minimumVersionCode']
+          if type(minimum) is not int or not 0 < minimum <= code:
+              raise SystemExit('minimumVersionCode must be a positive integer no greater than ApplicationVersion')
+          metadata = json.dumps({'versionCode': code, 'minimumVersionCode': minimum}, separators=(',', ':'))
+          with open('release/update-notes.md', 'w') as notes:
+              notes.write('<!-- acs-update ' + metadata + ' -->\n')
+              notes.write(pathlib.Path(f'docs/release-notes-v{version}.md').read_text(encoding='utf-8'))
+          PY
           gh release create "$RELEASE_TAG" "release/ACSView-$RELEASE_TAG.apk" \
-            --verify-tag --title "ACS View $RELEASE_TAG" --generate-notes
+            --verify-tag --title "ACS View $RELEASE_TAG" --notes-file release/update-notes.md
       - name: Remove temporary signing files and build output
         if: always()
         run: |

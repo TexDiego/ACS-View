@@ -4,6 +4,7 @@ namespace ACS_View.Application.DTOs
     {
         public int Id { get; set; }
         public string SusNumber { get; set; } = string.Empty;
+        public string PrimarySusNumber { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
     }
 }

@@ -48,13 +48,6 @@ public partial class AddMetricPopupViewModel : BaseViewModel
         errorMessage = string.Empty;
 
         var selectedMetrics = Metrics.Where(metric => metric.IsSelected).ToList();
-        if (selectedMetrics.Count == 0)
-        {
-            errorMessage = "Selecione ao menos uma metrica.";
-            SetError(errorMessage);
-            return false;
-        }
-
         if (selectedMetrics.Count > MaxSelectedMetrics)
         {
             errorMessage = $"Selecione no maximo {MaxSelectedMetrics} metricas.";
@@ -80,6 +73,13 @@ public partial class AddMetricPopupViewModel : BaseViewModel
             SelectedSex != AllSexesOption ||
             minimumAge.HasValue ||
             maximumAge.HasValue;
+
+        if (selectedMetrics.Count == 0 && !hasModifier)
+        {
+            errorMessage = "Selecione um indicador ou informe sexo ou idade.";
+            SetError(errorMessage);
+            return false;
+        }
 
         if (selectedMetrics.Count == 1 && !hasModifier)
         {

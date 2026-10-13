@@ -77,9 +77,12 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                 COALESCE(NULLIF(TRIM(responsible.Name), ''), 'Familia ' || v.FamilyId) AS FamilyName
             FROM Visits v
             LEFT JOIN Patient p ON p.UserId = v.UserId AND p.Id = v.PatientId
+            LEFT JOIN LegacyFamilyMap fm ON fm.UserId=v.UserId AND fm.LegacyHouseId=v.HouseId
+                AND fm.LocalNumber=v.FamilyId AND fm.SourcePatientId=0
+            LEFT JOIN FamilyRecord family ON family.Id=fm.FamilyId AND family.UserId=v.UserId
             LEFT JOIN Patient responsible
-                ON responsible.UserId = p.UserId
-               AND responsible.Id = p.FamilyResponsiblePatientId
+                ON responsible.UserId = v.UserId
+               AND responsible.Id = family.ResponsiblePatientId
             WHERE v.UserId = ?
               AND v.VisitDate >= ?
               AND v.VisitDate < ?
@@ -244,17 +247,23 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             await EnsureNoDuplicateVisitAsync(userId, visit.PatientId, visit.VisitDate);
         }
 
-        await _connection.InsertAsync(visit);
-
+        var careLines=new List<VisitCareLineType>();
         if (visit.PatientId > 0)
         {
             var patient = await _connection.Table<Patient>()
                 .FirstOrDefaultAsync(item => item.UserId == userId && item.Id == visit.PatientId);
             if (patient is not null)
             {
-                await InsertCareLineSnapshotAsync(userId, visit.Id, patient, visit.VisitDate);
+                careLines=await GetCareLinesAsync(patient,visit.VisitDate);
             }
         }
+        await _connection.RunInTransactionAsync(c=>
+        {
+            EnsureNoDuplicateVisit(c,userId,visit.PatientId,visit.VisitDate);
+            c.Insert(visit);
+            foreach(var line in careLines.Distinct())
+                c.Insert(new VisitCareLine{UserId=userId,VisitId=visit.Id,CareLineType=line.ToString()});
+        });
 
         DataChangeTracker.MarkVisitsChanged();
     }
@@ -306,11 +315,21 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             Notes = request.Notes?.Trim() ?? string.Empty
         };
 
-        await _connection.InsertAsync(batch);
         var address = await GetAddressAsync(userId, request.HouseId);
-
-        foreach (var item in selectedPeople)
+        var snapshots=new Dictionary<int,List<VisitCareLineType>>();
+        foreach(var patient in patients.Values)
+            snapshots[patient.Id]=await GetCareLinesAsync(patient,visitDate);
+        await _connection.RunInTransactionAsync(c=>
         {
+          foreach(var patient in patients.Values)
+          {
+            var current=c.Table<Patient>().FirstOrDefault(p=>p.Id==patient.Id && p.UserId==userId && p.HouseId==request.HouseId && p.FamilyId==request.FamilyId);
+            if(current==null)throw new InvalidOperationException("Vínculo familiar alterado; recarregue os membros.");
+            EnsureNoDuplicateVisit(c,userId,patient.Id,visitDate);
+          }
+          c.Insert(batch);
+          foreach (var item in selectedPeople)
+          {
             var patient = patients[item.PatientId];
             var status = item.Status.ToString();
             var visit = new Visits
@@ -329,9 +348,11 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                 CreatedAt = DateTime.Now
             };
 
-            await _connection.InsertAsync(visit);
-            await InsertCareLineSnapshotAsync(userId, visit.Id, patient, visit.VisitDate);
-        }
+            c.Insert(visit);
+            foreach(var line in snapshots[patient.Id].Distinct())
+                c.Insert(new VisitCareLine{UserId=userId,VisitId=visit.Id,CareLineType=line.ToString()});
+          }
+        });
 
         DataChangeTracker.MarkVisitsChanged();
         return selectedPeople.Count;
@@ -345,57 +366,16 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         }
 
         var userId = currentUserContext.RequireCurrentUserId();
-        await _connection.ExecuteAsync("DELETE FROM VisitCareLine WHERE VisitId = ? AND UserId = ?", id, userId);
-        await _connection.ExecuteAsync("DELETE FROM Visits WHERE Id = ? AND UserId = ?", id, userId);
+        await _connection.RunInTransactionAsync(c=>
+        {
+            c.Execute("DELETE FROM VisitCareLine WHERE VisitId = ? AND UserId = ?",id,userId);
+            c.Execute("DELETE FROM Visits WHERE Id = ? AND UserId = ?",id,userId);
+        });
         DataChangeTracker.MarkVisitsChanged();
     }
 
-    private async Task PurgeExpiredVisitsAsync(int userId, DateTime referenceDate)
-    {
-        var cutoff = referenceDate.Date.AddYears(-1);
-        var deletedCareLines = await _connection.ExecuteAsync(
-            """
-            DELETE FROM VisitCareLine
-            WHERE UserId = ?
-              AND VisitId IN (
-                  SELECT Id
-                  FROM Visits
-                  WHERE UserId = ?
-                    AND VisitDate < ?
-              )
-            """,
-            userId,
-            userId,
-            cutoff);
-
-        var deletedVisits = await _connection.ExecuteAsync(
-            "DELETE FROM Visits WHERE UserId = ? AND VisitDate < ?",
-            userId,
-            cutoff);
-
-        var deletedBatches = await _connection.ExecuteAsync(
-            "DELETE FROM VisitBatch WHERE UserId = ? AND VisitDate < ?",
-            userId,
-            cutoff);
-
-        await _connection.ExecuteAsync(
-            """
-            DELETE FROM VisitCareLine
-            WHERE UserId = ?
-              AND VisitId NOT IN (
-                  SELECT Id
-                  FROM Visits
-                  WHERE UserId = ?
-              )
-            """,
-            userId,
-            userId);
-
-        if (deletedCareLines > 0 || deletedVisits > 0 || deletedBatches > 0)
-        {
-            DataChangeTracker.MarkVisitsChanged();
-        }
-    }
+    // Kept for caller compatibility; historical events are retained until explicit deletion.
+    private Task PurgeExpiredVisitsAsync(int userId, DateTime referenceDate) => Task.CompletedTask;
 
     private static IEnumerable<VisitSuggestionDto> MergePatientSuggestions(IEnumerable<VisitSuggestionDto> suggestions)
     {
@@ -490,30 +470,23 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         }
     }
 
-    private async Task InsertCareLineSnapshotAsync(int userId, int visitId, Patient patient, DateTime referenceDate)
+    private static void EnsureNoDuplicateVisit(SQLiteConnection c,int userId,int patientId,DateTime visitDate)
     {
-        var careLines = await GetCareLinesAsync(patient, referenceDate);
-        foreach (var careLine in careLines.Distinct())
-        {
-            await _connection.InsertAsync(new VisitCareLine
-            {
-                UserId = userId,
-                VisitId = visitId,
-                CareLineType = careLine.ToString()
-            });
-        }
+        if(patientId>0 && c.ExecuteScalar<int>("SELECT COUNT(*) FROM Visits WHERE UserId=? AND PatientId=? AND VisitDate>=? AND VisitDate<?",userId,patientId,visitDate.Date,visitDate.Date.AddDays(1))>0)
+            throw new InvalidOperationException("Já existe visita para esta pessoa nesta data.");
     }
 
     private async Task<List<VisitCareLineType>> GetCareLinesAsync(Patient patient, DateTime referenceDate)
     {
         var careLines = new List<VisitCareLineType>();
 
-        if (patient.BirthDate > referenceDate.Date.AddYears(-2))
+        var hasBirthDate=await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Patient WHERE Id=? AND UserId=? AND BirthDate IS NOT NULL AND BirthDate<>0",patient.Id,patient.UserId)>0;
+        if (hasBirthDate && patient.BirthDate > referenceDate.Date.AddYears(-2))
         {
             careLines.Add(VisitCareLineType.Child);
         }
 
-        if (patient.BirthDate <= referenceDate.Date.AddYears(-60))
+        if (hasBirthDate && patient.BirthDate <= referenceDate.Date.AddYears(-60))
         {
             careLines.Add(VisitCareLineType.Elderly);
         }
@@ -573,9 +546,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
 
     private async Task<VisitCareLineType?> GetPregnancyCareLineAsync(Patient patient, DateTime referenceDate)
     {
-        var pregnancies = await _connection.Table<PatientPregnancy>()
-            .Where(pregnancy => pregnancy.UserId == patient.UserId && pregnancy.PatientId == patient.Id)
-            .ToListAsync();
+        var pregnancies = await _connection.QueryAsync<PatientPregnancy>($"SELECT {ACS_View.Infrastructure.Data.Migrations.LegacyDateSql.Projection<PatientPregnancy>()} FROM PatientPregnancy WHERE UserId=? AND PatientId=?",patient.UserId,patient.Id);
 
         var pregnancy = pregnancies
             .OrderByDescending(item => PregnancyCalculator.IsPuerperal(item, referenceDate))

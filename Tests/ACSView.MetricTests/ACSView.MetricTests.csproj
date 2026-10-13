@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <Compile Include="../../ViewModels/AddMetricPopupViewModel.cs" Link="AddMetricPopupViewModel.cs" />
+    <Compile Include="../../Domain/ValueObjects/Dashboard.cs" Link="Dashboard.cs" />
+    <Compile Include="../../Domain/ValueObjects/DashboardFilterKeys.cs" Link="DashboardFilterKeys.cs" />
+    <Compile Include="../../Domain/ValueObjects/DashboardMetricCombinationRules.cs" Link="DashboardMetricCombinationRules.cs" />
+    <Compile Include="../../Domain/Enums/Sexo.cs" Link="Sexo.cs" />
+    <Compile Include="../../Application/DTOs/DashboardMetricOptionDto.cs" Link="DashboardMetricOptionDto.cs" />
+    <Compile Include="../../Application/DTOs/DashboardMetricCreateRequestDto.cs" Link="DashboardMetricCreateRequestDto.cs" />
+    <Compile Include="../../Application/DTOs/DashboardMetricPreferencesDto.cs" Link="DashboardMetricPreferencesDto.cs" />
+  </ItemGroup>
+</Project>

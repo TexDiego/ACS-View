@@ -5,6 +5,7 @@ using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
 using System.Diagnostics;
+using ACS_View.Infrastructure.Data.Migrations;
 
 namespace ACS_View.Infrastructure.Data.SQLite;
 
@@ -15,27 +16,22 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
     public async Task DeleteAsync(int id)
     {
         var userId = currentUserContext.RequireCurrentUserId();
+        // Archive individual patients; clinical and visit history must remain recoverable.
         await _connection.RunInTransactionAsync(connection =>
         {
-            connection.Execute("DELETE FROM PatientCID WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM PatientConditions WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM PatientBolsaFamilia WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM PatientInsulinDependency WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM PatientPregnancy WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM CareNotification WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM PatientVaccineDose WHERE PatientId = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM Vaccines WHERE Id = ? AND UserId = ?", id, userId);
-            connection.Execute("DELETE FROM Patient WHERE Id = ? AND UserId = ?", id, userId);
+            connection.Execute("UPDATE Patient SET IsActive=0, StatusReason='Arquivado', StatusChangedAt=? WHERE Id=? AND UserId=?",DateTime.UtcNow,id,userId);
         });
     }
 
-    public Task<List<Patient>?> GetAllAsync()
+    public async Task<List<Patient>?> GetAllAsync()
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.Table<Patient>()
+        var patients = await _connection.Table<Patient>()
             .Where(p => p.UserId == userId)
             .OrderBy(n => n.Name)
             .ToListAsync();
+        await LoadSusRecordsAsync(patients, userId);
+        return patients;
     }
 
     public async Task<PagedResultDto<PatientListItemDto>> GetListAsync(string? search, int skip, int take, PatientListFilterDto filter)
@@ -60,7 +56,8 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
                         p.SearchName LIKE ?
                         OR p.SearchMotherName LIKE ?
                         OR p.SearchFatherName LIKE ?
-                        OR p.SusNumber LIKE ? COLLATE NOCASE
+                        OR (p.SusNumber LIKE ? COLLATE NOCASE OR EXISTS (
+                            SELECT 1 FROM PatientSusNumber s WHERE s.PatientId=p.Id AND s.UserId=p.UserId AND s.Number LIKE ?))
                         OR EXISTS (
                             SELECT 1
                             FROM House h
@@ -74,6 +71,8 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
                 parameters.Add(likeSearch);
                 parameters.Add(likeSearch);
                 parameters.Add(rawLikeSearch);
+                var digits=string.Concat(normalizedSearch.Where(char.IsDigit));
+                parameters.Add(digits.Length==0 ? "no-cns-match" : $"%{digits}%");
                 AddHouseAddressSearchParameters(parameters, SearchTextNormalizer.Normalize(normalizedSearch));
             }
 
@@ -81,6 +80,7 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
             AddAgeClause(filter, whereParts, parameters);
             AddBolsaFamiliaClause(filter, whereParts);
             AddSexClause(filter, whereParts, parameters);
+            AddMissingInformationClauses(filter, whereParts);
 
             var whereClause = whereParts.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", whereParts)}";
             var orderBy = GetOrderByClause(filter);
@@ -94,7 +94,10 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
 
             var items = await _connection.QueryAsync<PatientListItemDto>(
                 $"""
-                SELECT p.Id, p.SusNumber, p.Name
+                SELECT p.Id, p.SusNumber, p.Name,
+                    COALESCE((SELECT s.Number FROM PatientSusNumber s
+                        WHERE s.PatientId=p.Id AND s.UserId=p.UserId AND s.IsPrimary=1
+                        LIMIT 1), '') AS PrimarySusNumber
                 FROM Patient p
                 {whereClause}
                 ORDER BY {orderBy}
@@ -115,10 +118,10 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
         }
     }
 
-    public Task<List<Patient>?> GetByConditionAsync(int conditionId)
+    public async Task<List<Patient>?> GetByConditionAsync(int conditionId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.QueryAsync<Patient>(
+        var patients = await _connection.QueryAsync<Patient>(
             """
             SELECT p.*
             FROM Patient p
@@ -132,38 +135,73 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
             userId,
             userId,
             conditionId);
+        await LoadSusRecordsAsync(patients, userId);
+        return patients;
     }
 
-    public Task<Patient?> GetByIdAsync(int id)
+    public async Task<Patient?> GetByIdAsync(int id)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.Table<Patient>().FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+        var patient = await _connection.Table<Patient>().FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+        if (patient is not null)
+            patient.SusNumberRecords = await _connection.Table<PatientSusNumber>()
+                .Where(n => n.UserId == userId && n.PatientId == id).ToListAsync();
+        return patient;
+    }
+
+    private async Task LoadSusRecordsAsync(List<Patient> patients, int userId)
+    {
+        var records = (await _connection.Table<PatientSusNumber>().Where(n => n.UserId == userId).ToListAsync()).ToLookup(n => n.PatientId);
+        foreach (var patient in patients) patient.SusNumberRecords = records[patient.Id].ToList();
     }
 
     public Task InsertAsync(Patient patient)
     {
         patient.UserId = currentUserContext.RequireCurrentUserId();
-        return _connection.InsertAsync(patient);
+        return _connection.RunInTransactionAsync(c => { c.Insert(patient); RelationalStore.SyncPatient(c,patient); });
     }
 
     public Task UpdateAsync(Patient patient)
     {
-        patient.UserId = currentUserContext.RequireCurrentUserId();
-        return _connection.UpdateAsync(patient);
+        var userId = currentUserContext.RequireCurrentUserId();
+        return _connection.RunInTransactionAsync(c =>
+        {
+            var original=c.Table<Patient>().FirstOrDefault(p=>p.Id==patient.Id && p.UserId==userId);
+            if(original==null) throw new InvalidOperationException("Paciente não pertence à conta atual.");
+            if(original.RowRevision!=patient.RowRevision)
+                throw new InvalidOperationException("O cadastro foi alterado desde a leitura. Recarregue antes de salvar.");
+            patient.UserId=userId;
+            if (original.SusNumber != patient.SusNumber) RelationalStore.IssueLegacySus(c, original);
+            // sqlite-net materializes NULL scalars using model defaults. Write only fields
+            // actually changed, so editing CNS/family cannot replace unknown dates or text.
+            var changed=typeof(Patient).GetProperties().Where(p=>p.CanWrite && p.Name is not "Id" and not "UserId" and not "RowRevision"
+                && !Attribute.IsDefined(p,typeof(IgnoreAttribute)) && !Equals(p.GetValue(original),p.GetValue(patient))).ToList();
+            if(changed.Count>0)
+            {
+                var values=changed.Select(p=>p.GetValue(patient)!).ToList();values.Add(patient.Id);values.Add(userId);
+                c.Execute($"UPDATE Patient SET {string.Join(",",changed.Select(p=>$"{SchemaMigrator.Quote(p.Name)}=?"))} WHERE Id=? AND UserId=?",values.ToArray());
+            }
+            RelationalStore.SyncPatient(c,patient);
+            patient.RowRevision=c.ExecuteScalar<int>("SELECT RowRevision FROM Patient WHERE Id=? AND UserId=?",patient.Id,userId);
+        });
     }
 
-    public Task<List<Patient>?> GetByHouseIdAsync(int houseId)
+    public async Task<List<Patient>?> GetByHouseIdAsync(int houseId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.Table<Patient>().Where(p => p.HouseId == houseId && p.UserId == userId).ToListAsync();
+        var patients = await _connection.Table<Patient>().Where(p => p.HouseId == houseId && p.UserId == userId).ToListAsync();
+        await LoadSusRecordsAsync(patients, userId);
+        return patients;
     }
 
-    public Task<List<Patient>?> GetByFamilyAndHouseIdAsync(int familyId, int houseId)
+    public async Task<List<Patient>?> GetByFamilyAndHouseIdAsync(int familyId, int houseId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        return _connection.Table<Patient>()
+        var patients = await _connection.Table<Patient>()
             .Where(p => p.FamilyId == familyId && p.HouseId == houseId && p.UserId == userId)
             .ToListAsync();
+        await LoadSusRecordsAsync(patients, userId);
+        return patients;
     }
 
     private static void AddAgeClause(PatientListFilterDto filter, List<string> whereParts, List<object> parameters)
@@ -215,6 +253,36 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
                   AND bf.UserId = p.UserId
             )
             """);
+    }
+
+    private static void AddMissingInformationClauses(PatientListFilterDto filter, List<string> whereParts)
+    {
+        // Legacy CNS evidence and any relational CNS (including secondary numbers) count as information.
+        if (filter.WithoutSusNumber)
+            whereParts.Add("""
+                TRIM(COALESCE(p.SusNumber, ''), char(9) || char(10) || char(13) || ' ') = ''
+                AND NOT EXISTS (
+                    SELECT 1 FROM PatientSusNumber s
+                    WHERE s.PatientId = p.Id AND s.UserId = p.UserId
+                      AND TRIM(COALESCE(s.Number, ''), char(9) || char(10) || char(13) || ' ') <> ''
+                )
+                """);
+
+        if (filter.WithoutPhone)
+            whereParts.Add("""
+                NOT EXISTS (
+                    SELECT 1 FROM PatientPhone ph
+                    WHERE ph.PatientId = p.Id AND ph.UserId = p.UserId
+                      AND TRIM(COALESCE(ph.Number, ''), char(9) || char(10) || char(13) || ' ') <> ''
+                )
+                """);
+
+        if (filter.WithoutMotherName)
+            whereParts.Add("TRIM(COALESCE(p.MotherName, ''), char(9) || char(10) || char(13) || ' ') = ''");
+        if (filter.WithoutFatherName)
+            whereParts.Add("TRIM(COALESCE(p.FatherName, ''), char(9) || char(10) || char(13) || ' ') = ''");
+        if (filter.WithoutHouse)
+            whereParts.Add("NOT EXISTS (SELECT 1 FROM House h WHERE h.CasaId = p.HouseId AND h.UserId = p.UserId)");
     }
 
     private static string GetOrderByClause(PatientListFilterDto filter)

@@ -3,6 +3,7 @@ using ACS_View.Domain.Entities.Health;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Maui.Extensions;
@@ -16,7 +17,9 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                                           ISQLiteConditionsRepository _conditionsRepository,
                                           IPatientBolsaFamiliaRepository _bolsaFamiliaRepository,
                                           IPatientInsulinDependencyRepository _insulinDependencyRepository,
-                                          IPregnancyService _pregnancyService) : BaseViewModel
+                                          IPregnancyService _pregnancyService,
+                                          IPatientPhoneService _phoneService,
+                                          IPatientSusService _susService) : BaseViewModel
 {
     private static readonly Dictionary<string, string> _chapterIconMap = new()
     {
@@ -92,6 +95,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
     [ObservableProperty] private string nisNumber = string.Empty;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenWhatsAppCommand))]
+    private string mainPhone = string.Empty;
+    [ObservableProperty] private string mainSus = string.Empty;
     [ObservableProperty] private string pregnancyInfo = string.Empty;
     [ObservableProperty] private string pregnancyRiskSuggestionInfo = string.Empty;
     [ObservableProperty] private bool hasPregnancyInfo;
@@ -100,6 +107,20 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
     public ICommand GoToFamilyCommand => new Command(async () => await GoToFamilyAsync());
+
+    private bool CanOpenWhatsApp() => WhatsAppPhone.TryCreateChatUri(MainPhone, out _);
+
+    [RelayCommand(CanExecute = nameof(CanOpenWhatsApp))]
+    private async Task OpenWhatsAppAsync()
+    {
+        if (!WhatsAppPhone.TryCreateChatUri(MainPhone, out var uri)) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (!await Launcher.Default.OpenAsync(uri!))
+                await DisplayAlertAsync("WhatsApp", "Não foi possível abrir a conversa no WhatsApp.");
+        }, "Não foi possível abrir a conversa no WhatsApp.");
+    }
 
     private async Task GoToFamilyAsync()
     {
@@ -134,6 +155,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         Endereco = "Carregando endereço...";
         Complemento = string.Empty;
         NisNumber = string.Empty;
+        MainPhone = string.Empty;
+        MainSus = string.Empty;
         PregnancyInfo = string.Empty;
         PregnancyRiskSuggestionInfo = string.Empty;
         HasPregnancyInfo = false;
@@ -175,8 +198,10 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             var iconsTask = BuildHealthIconsAsync(patientId);
             var bolsaFamiliaTask = _bolsaFamiliaRepository.GetByPatientIdAsync(patientId);
             var pregnancyTask = _pregnancyService.GetDetailsByPatientIdAsync(patientId);
+            var phonesTask = _phoneService.GetPhonesByPatientId(patientId);
+            var susTask = _susService.GetMainSusAsync(patientId);
 
-            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask, pregnancyTask);
+            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask, pregnancyTask, phonesTask, susTask);
 
             if (loadVersion != _loadVersion)
             {
@@ -189,6 +214,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                 Endereco = addressTask.Result.Endereco;
                 Complemento = addressTask.Result.Complemento ?? string.Empty;
                 NisNumber = benefit?.NisNumber?.Trim() ?? string.Empty;
+                MainPhone = phonesTask.Result?.FirstOrDefault(p => p.IsPrimary)?.Number ?? string.Empty;
+                MainSus = susTask.Result;
                 SetPregnancyInfo(pregnancyTask.Result);
                 Icons = new ObservableCollection<HealthIcon>(iconsTask.Result);
             });

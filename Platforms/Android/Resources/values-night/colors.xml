@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Match PrimaryLight and OnPrimaryContainer in the app palette. -->
+    <color name="inputFocusColor">#DDF3FA</color>
+    <color name="onInputFocusColor">#001F2A</color>
+</resources>

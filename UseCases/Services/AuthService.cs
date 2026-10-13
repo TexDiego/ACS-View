@@ -15,8 +15,13 @@ internal sealed class AuthService(IDatabaseService databaseService, ICurrentUser
     private const string SessionKey = "LocalAuthSessionV2";
     private const string BiometricAccountKey = "BiometricAccountV1";
     private readonly SemaphoreSlim gate = new(1, 1);
-    private sealed record LocalSession(int UserId, int Revision, long ExpiresUtc);
-    private sealed record BiometricGrant(int UserId, int Revision, string Token);
+    private sealed record LocalSession(int UserId, int Revision, long ExpiresUtc, string? DatabaseIdentity=null);
+    private sealed record BiometricGrant(int UserId, int Revision, string Token, string? DatabaseIdentity=null);
+    // Restores always use a new path. Identical user IDs/revisions in another snapshot
+    // must never inherit a protected session or biometric authorization.
+    private string DatabaseIdentity => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(databaseService.Connection.DatabasePath))));
+    private bool IsSameDatabase(string? identity) => identity==DatabaseIdentity ||
+        (identity==null && Path.GetFileName(databaseService.Connection.DatabasePath).Equals("health_app.db",StringComparison.Ordinal));
 
     public async Task<bool> IsAuthenticatedAsync()
     {
@@ -34,7 +39,7 @@ internal sealed class AuthService(IDatabaseService databaseService, ICurrentUser
             var raw = await secureStorage.GetAsync(SessionKey);
             var session = raw is null ? null : JsonSerializer.Deserialize<LocalSession>(raw);
             var user = session is null ? null : await databaseService.GetUserByIdAsync(session.UserId);
-            if (session is null || user is null || session.ExpiresUtc <= Now || session.Revision != user.CredentialRevision)
+            if (session is null || user is null || session.ExpiresUtc <= Now || session.Revision != user.CredentialRevision || !IsSameDatabase(session.DatabaseIdentity))
             {
                 ClearSession();
                 return false;
@@ -231,7 +236,7 @@ internal sealed class AuthService(IDatabaseService databaseService, ICurrentUser
             }
             if (!await biometricVault.IsAvailableAsync()) throw new InvalidOperationException("Biometria indisponível neste aparelho. Continue usando sua senha.");
             var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-            var payload = JsonSerializer.Serialize(new BiometricGrant(user.Id, user.CredentialRevision, token));
+            var payload = JsonSerializer.Serialize(new BiometricGrant(user.Id, user.CredentialRevision, token,DatabaseIdentity));
             try
             {
                 await biometricVault.ProtectAsync(payload);
@@ -264,6 +269,7 @@ internal sealed class AuthService(IDatabaseService databaseService, ICurrentUser
             var user = grant is null ? null : await databaseService.GetUserByIdAsync(grant.UserId);
             var enrolledId = await secureStorage.GetAsync(BiometricAccountKey);
             if (grant is null || user is null || enrolledId != user.Id.ToString()
+                || !IsSameDatabase(grant.DatabaseIdentity)
                 || user.CredentialRevision != grant.Revision || string.IsNullOrEmpty(user.BiometricTokenHash)
                 || grant.Token is null || grant.Token.Length != 44 || !ValidBiometricToken(grant.Token, user.BiometricTokenHash))
             {
@@ -339,7 +345,7 @@ internal sealed class AuthService(IDatabaseService databaseService, ICurrentUser
         try
         {
             RemoveLegacySession();
-            await secureStorage.SetAsync(SessionKey, JsonSerializer.Serialize(new LocalSession(user.Id, user.CredentialRevision, Now + 7 * 86400)));
+            await secureStorage.SetAsync(SessionKey, JsonSerializer.Serialize(new LocalSession(user.Id, user.CredentialRevision, Now + 7 * 86400,DatabaseIdentity)));
         }
         catch
         {

@@ -45,6 +45,7 @@ internal sealed class UserDataCleanupService(
     private static void DeleteAll(SQLiteConnection connection, int userId)
     {
         DeletePatients(connection, userId);
+        connection.Execute("DELETE FROM TerritorialAssignment WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM House WHERE UserId = ?", userId);
         DeleteNotes(connection, userId);
     }
@@ -52,6 +53,15 @@ internal sealed class UserDataCleanupService(
     private static void DeletePatients(SQLiteConnection connection, int userId)
     {
         connection.Execute("DELETE FROM ImportHistory WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM MigrationIssue WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientPhone WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientSusNumber WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM FamilyMember WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM FamilyResidenceHistory WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM LegacyFamilyMap WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM FamilyRecord WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientPregnancy WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM CareNotification WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientCID WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientConditions WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientBolsaFamilia WHERE UserId = ?", userId);
@@ -67,11 +77,11 @@ internal sealed class UserDataCleanupService(
 
     private static void DeleteHouses(SQLiteConnection connection, int userId)
     {
-        connection.Execute("DELETE FROM VisitCareLine WHERE UserId = ?", userId);
-        connection.Execute("DELETE FROM VisitBatch WHERE UserId = ?", userId);
-        connection.Execute("DELETE FROM Visits WHERE UserId = ?", userId);
-        connection.Execute("DELETE FROM Family WHERE UserId = ?", userId);
-        connection.Execute("DELETE FROM House WHERE UserId = ?", userId);
+        connection.Execute("UPDATE FamilyResidenceHistory SET EndedAt=? WHERE UserId=? AND EndedAt IS NULL",DateTime.UtcNow,userId);
+        connection.Execute("UPDATE FamilyRecord SET HouseId=NULL, ResponsiblePatientId=NULL WHERE UserId=?",userId);
+        connection.Execute("UPDATE FamilyMember SET LeftAt=?, UpdatedAt=? WHERE UserId=? AND LeftAt IS NULL",DateTime.UtcNow,DateTime.UtcNow,userId);
+        connection.Execute("UPDATE TerritorialAssignment SET ValidTo=? WHERE UserId=? AND ValidTo IS NULL",DateTime.UtcNow,userId);
+        connection.Execute("UPDATE House SET IsActive=0 WHERE UserId=?",userId);
         connection.Execute(
             """
             UPDATE Patient

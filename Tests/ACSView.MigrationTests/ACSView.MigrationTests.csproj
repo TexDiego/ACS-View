@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <Compile Include="../../Domain/**/*.cs" />
+    <Compile Include="../../Application/Security/*.cs" />
+    <Compile Include="../../Application/Querying/*.cs" />
+    <Compile Include="../../Application/DTOs/*.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
+    <Compile Include="../../Application/Interfaces/ICurrentUserContext.cs" />
+    <Compile Include="../../Application/Interfaces/IFamilyManager.cs" />
+    <Compile Include="../../Application/Interfaces/IRelationalDataService.cs" />
+    <Compile Include="../../Application/Interfaces/INoteReminderService.cs" />
+    <Compile Include="../../Application/Interfaces/IUserDataCleanupService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IHouseRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IVisitsService.cs" />
+    <Compile Include="../../Infrastructure/Data/Migrations/*.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientRepository.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLiteHouseRepository.cs" />
+    <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseService.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseBackupService.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseBackupService.cs" />
+    <Compile Include="../../UseCases/Services/FamilyManager.cs" />
+    <Compile Include="../../UseCases/Services/RelationalDataService.cs" />
+    <Compile Include="../../UseCases/Services/UserDataCleanupService.cs" />
+    <Compile Include="../../UseCases/Services/VisitsService.cs" />
+    <Compile Include="../../UseCases/Services/VaccineService.cs" />
+    <Compile Include="../../Application/Interfaces/IVaccineService.cs" />
+    <Compile Include="../../UseCases/Services/PregnancyService.cs" />
+    <Compile Include="../../Application/Interfaces/IPregnancyService.cs" />
+    <Compile Include="../../ViewModels/VaccineApplicationPopupViewModel.cs" />
+    <Compile Include="../../ViewModels/PhoneEditorViewModel.cs" />
+    <Compile Include="../../ViewModels/SusNumberEditorViewModel.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientSusService.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientSusRepository.cs" />
+    <Compile Include="../../UseCases/Services/PatientSusService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientPhoneService.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientPhoneRepository.cs" />
+    <Compile Include="../../UseCases/Services/PatientPhoneService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientService.cs" />
+    <Compile Include="../../Application/Interfaces/IHouseService.cs" />
+    <Compile Include="../../Application/Interfaces/IFamilyService.cs" />
+    <Compile Include="../../Application/Interfaces/ICepService.cs" />
+    <Compile Include="../../Application/Interfaces/ISQLiteConditionsRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientImportService.cs" />
+    <Compile Include="../../Application/Interfaces/IHouseImportService.cs" />
+    <Compile Include="../../Application/Interfaces/IImportHistoryService.cs" />
+    <Compile Include="../../UseCases/Services/PatientService.cs" />
+    <Compile Include="../../UseCases/Services/HouseService.cs" />
+    <Compile Include="../../UseCases/Services/FamilyService.cs" />
+    <Compile Include="../../UseCases/Services/ImportHistoryService.cs" />
+    <Compile Include="../../UseCases/Services/PatientImportService.cs" />
+    <Compile Include="../../UseCases/Services/HouseImportService.cs" />
+    <Compile Include="../../UseCases/Services/PatientFamilyLinkResolver.cs" />
+    <Compile Include="../../UseCases/Services/ISpreadsheetReader.cs" />
+    <Compile Include="../../UseCases/Services/ImportColumnMapper.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLiteConditionsRepository.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientBolsaFamiliaRepository.cs" />
+  </ItemGroup>
+</Project>

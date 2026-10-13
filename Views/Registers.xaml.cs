@@ -26,11 +26,12 @@ public partial class Registers : ContentPage, IQueryAttributable
         ICareNotificationService careNotificationService,
         IPopupService popupService,
         IDialogService dialogService,
-        RegistersViewModel viewModel)
+        RegistersViewModel viewModel,
+        IPatientPhoneService phoneService)
     {
         InitializeComponent();
         _dialogService = dialogService;
-        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService);
+        _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService);
         BindingContext = _viewModel = viewModel;
     }
 

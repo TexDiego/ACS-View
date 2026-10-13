@@ -272,11 +272,9 @@ public partial class OverallViewModel : BaseViewModel
     {
         var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
         var removedRootMetrics = GetRemovedRootMetrics();
-        var candidates = GetCombinationCandidates().ToList();
-        var canCreateCombination = HasValidCombination(candidates, HealthTabSelected);
 
         var result = await popupService.ShowAsync<OverallMetricMenuAction>(
-            new OverallMetricMenuPopup(removedRootMetrics.Count > 0, canCreateCombination));
+            new OverallMetricMenuPopup(removedRootMetrics.Count > 0, canAddMetric: true));
 
         if (result.WasDismissed || result is null)
         {
@@ -307,15 +305,7 @@ public partial class OverallViewModel : BaseViewModel
 
     private async Task AddCombinedMetricAsync()
     {
-        var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
         var candidates = GetCombinationCandidates().ToList();
-        var canCreateCombination = HasValidCombination(candidates, HealthTabSelected);
-
-        if (!canCreateCombination)
-        {
-            await DisplayAlertAsync("Métricas", "Não há métricas compatíveis para combinar.", "Voltar");
-            return;
-        }
 
         var requestResult = await popupService.ShowAsync<DashboardMetricCreateRequestDto>(
             new AddMetricPopup(candidates, request => GetCombinationValidationError(request, HealthTabSelected)));
@@ -331,7 +321,7 @@ public partial class OverallViewModel : BaseViewModel
                 string.Equals(metric.FilterKey, key, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
-        if (selectedMetrics.Count == 0 || selectedMetrics.Any(metric => metric is null))
+        if (selectedMetrics.Any(metric => metric is null))
         {
             await DisplayAlertAsync("Métricas", "Não foi possível localizar as métricas selecionadas.", "Voltar");
             return;
@@ -339,6 +329,8 @@ public partial class OverallViewModel : BaseViewModel
 
         var metrics = selectedMetrics.OfType<Dashboard>().ToList();
         var filterKeys = metrics.Select(metric => metric.FilterKey).ToList();
+        var isHealth = filterKeys.Count > 0 && HealthTabSelected;
+        var targetDashboard = isHealth ? HealthDashboard : MetricsDashboard;
 
         var validationError = GetCombinationValidationError(request, HealthTabSelected);
         if (!string.IsNullOrWhiteSpace(validationError))
@@ -352,9 +344,7 @@ public partial class OverallViewModel : BaseViewModel
             request.MinimumAgeModifier,
             request.MaximumAgeModifier);
 
-        var baseCombinationKey = filterKeys.Count == 1
-            ? filterKeys[0]
-            : DashboardFilterKeys.CreateCombination(filterKeys);
+        var baseCombinationKey = GetDerivedBaseFilterKey(filterKeys);
 
         var combinationKey = DashboardFilterKeys.CreateModified(
             baseCombinationKey,
@@ -373,7 +363,7 @@ public partial class OverallViewModel : BaseViewModel
             metrics,
             combinationKey,
             total,
-            BuildModifierSummary(modifiers, GetDefaultSummary(HealthTabSelected)));
+            BuildModifierSummary(modifiers, GetDefaultSummary(isHealth)));
 
         suppressMetricPreferencePersistence = true;
 
@@ -381,7 +371,7 @@ public partial class OverallViewModel : BaseViewModel
         {
             targetDashboard.Add(combinedMetric);
             metricCombinations.Add(new MetricCombination(
-                IsHealth: HealthTabSelected,
+                IsHealth: isHealth,
                 FilterKeys: filterKeys,
                 SexModifier: modifiers.Sex,
                 MinimumAgeModifier: modifiers.MinimumAge,
@@ -393,6 +383,10 @@ public partial class OverallViewModel : BaseViewModel
         }
 
         await SaveMetricPreferencesAsync();
+        if (filterKeys.Count == 0)
+        {
+            SwitchMetricsView("0");
+        }
     }
 
     private async Task<List<Dashboard>> BuildOptionalPregnancyMetricsAsync()
@@ -439,62 +433,13 @@ public partial class OverallViewModel : BaseViewModel
                              !DashboardMetricCombinationRules.IsHealthMetric(metric.FilterKey));
     }
 
-    private static bool HasValidCombination(IReadOnlyList<Dashboard> candidates, bool targetIsHealth)
-    {
-        foreach (var candidate in candidates)
-        {
-            if (DashboardMetricCombinationRules.CanCombine(
-                    [candidate.FilterKey],
-                    targetIsHealth,
-                    minimumAgeModifier: 0))
-            {
-                return true;
-            }
-        }
-
-        for (var firstIndex = 0; firstIndex < candidates.Count; firstIndex++)
-        {
-            for (var secondIndex = firstIndex + 1; secondIndex < candidates.Count; secondIndex++)
-            {
-                if (CanCombine([candidates[firstIndex], candidates[secondIndex]], targetIsHealth))
-                {
-                    return true;
-                }
-
-                for (var thirdIndex = secondIndex + 1; thirdIndex < candidates.Count; thirdIndex++)
-                {
-                    if (CanCombine([candidates[firstIndex], candidates[secondIndex], candidates[thirdIndex]], targetIsHealth))
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static bool CanCombine(IReadOnlyList<Dashboard> metrics, bool targetIsHealth)
-    {
-        return DashboardMetricCombinationRules.CanCombine(
-            metrics.Select(metric => metric.FilterKey).ToList(),
-            targetIsHealth);
-    }
-
-    private static bool CanCombine(IReadOnlyList<Dashboard> metrics)
-    {
-        var filterKeys = metrics.Select(metric => metric.FilterKey).ToList();
-        return DashboardMetricCombinationRules.CanCombine(filterKeys, targetIsHealth: false) ||
-               DashboardMetricCombinationRules.CanCombine(filterKeys, targetIsHealth: true);
-    }
-
     private static string? GetCombinationValidationError(
         DashboardMetricCreateRequestDto request,
         bool targetIsHealth)
     {
         return DashboardMetricCombinationRules.GetValidationError(
             request.GetSelectedFilterKeys(),
-            targetIsHealth,
+            request.GetSelectedFilterKeys().Count > 0 && targetIsHealth,
             request.SexModifier,
             request.MinimumAgeModifier,
             request.MaximumAgeModifier);
@@ -768,6 +713,12 @@ public partial class OverallViewModel : BaseViewModel
     private static IReadOnlyList<string> GetMetricDependencyKeys(string filterKey)
     {
         var baseFilterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
+        // Personal metrics have no selected root indicator to depend on.
+        if (baseFilterKey == DashboardFilterKeys.All)
+        {
+            return [];
+        }
+
         return DashboardFilterKeys.IsCombination(baseFilterKey)
             ? DashboardFilterKeys.GetCombinationParts(baseFilterKey)
             : [baseFilterKey];
@@ -822,7 +773,7 @@ public partial class OverallViewModel : BaseViewModel
                     string.Equals(metric.FilterKey, filterKey, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
-            if (metrics.Count == 0 || metrics.Any(metric => metric is null))
+            if (metrics.Any(metric => metric is null))
             {
                 continue;
             }
@@ -863,7 +814,7 @@ public partial class OverallViewModel : BaseViewModel
     {
         return new Dashboard
         {
-            Name = string.Join(" + ", metrics.Select(metric => metric.Name)),
+            Name = metrics.Count == 0 ? "Pacientes" : string.Join(" + ", metrics.Select(metric => metric.Name)),
             FilterKey = combinationKey,
             Summary = summary,
             Total = total,
@@ -951,14 +902,11 @@ public partial class OverallViewModel : BaseViewModel
         foreach (var combination in preferences.Combinations)
         {
             var filterKeys = combination.GetSelectedFilterKeys();
-            if (filterKeys.Count == 0)
-            {
-                continue;
-            }
+            var isHealth = filterKeys.Count > 0 && combination.IsHealth;
 
             if (!DashboardMetricCombinationRules.CanCombine(
                     filterKeys,
-                    combination.IsHealth,
+                    isHealth,
                     combination.SexModifier,
                     combination.MinimumAgeModifier,
                     combination.MaximumAgeModifier))
@@ -967,7 +915,7 @@ public partial class OverallViewModel : BaseViewModel
             }
 
             metricCombinations.Add(new MetricCombination(
-                combination.IsHealth,
+                isHealth,
                 filterKeys.ToList(),
                 combination.SexModifier,
                 combination.MinimumAgeModifier,
@@ -1037,9 +985,7 @@ public partial class OverallViewModel : BaseViewModel
 
     private static string GetCombinationFilterKey(MetricCombination combination)
     {
-        var baseCombinationKey = combination.FilterKeys.Count == 1
-            ? combination.FilterKeys[0]
-            : DashboardFilterKeys.CreateCombination(combination.FilterKeys);
+        var baseCombinationKey = GetDerivedBaseFilterKey(combination.FilterKeys);
 
         return DashboardFilterKeys.CreateModified(
             baseCombinationKey,
@@ -1049,6 +995,13 @@ public partial class OverallViewModel : BaseViewModel
     }
 
     private sealed record MetricModifierSelection(string? Sex = null, int? MinimumAge = null, int? MaximumAge = null);
+
+    private static string GetDerivedBaseFilterKey(IReadOnlyList<string> filterKeys) => filterKeys.Count switch
+    {
+        0 => DashboardFilterKeys.All,
+        1 => filterKeys[0],
+        _ => DashboardFilterKeys.CreateCombination(filterKeys)
+    };
 
     private sealed record MetricCombination(
         bool IsHealth,

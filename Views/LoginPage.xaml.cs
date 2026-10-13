@@ -1,4 +1,6 @@
 using ACS_View.Application.Interfaces;
+using Microsoft.Maui.Controls;
+using ACS_View.Application.Updates;
 
 namespace ACS_View.Views;
 
@@ -7,21 +9,127 @@ public partial class LoginPage : ContentPage
     private readonly IAuthService _authService;
     private readonly IDialogService _dialogService;
     private bool signingIn;
+    private readonly IAppUpdateService _updates;
+    private Task<bool>? _updateGate;
+    private AppUpdate? _availableUpdate;
+    private bool _loginAllowed;
+    private bool _appeared;
+    private CancellationTokenSource? _download;
 
-    public LoginPage(IAuthService authService, IDialogService dialogService)
+    public LoginPage(IAuthService authService, IDialogService dialogService, IAppUpdateService updates)
     {
         InitializeComponent();
         _authService = authService;
         _dialogService = dialogService;
+        _updates = updates;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         InputFocusGuard.ClearTextInputFocus(this);
-        var status = await _authService.GetBiometricStatusAsync();
-        BiometricLoginButton.IsVisible = status.Enabled;
+        if (_appeared) return;
+        _appeared = true;
+        if (!await PrepareForLoginAsync() || Window is null) return;
+
+        if (await _authService.GetBiometricStatusAsync() is { Enabled: true })
+        {
+            await BiometricLogin();
+        }
     }
+
+    public Task<bool> PrepareForLoginAsync() => _updateGate ??= CheckUpdateAsync();
+
+    private async Task<bool> CheckUpdateAsync()
+    {
+        _availableUpdate = await _updates.CheckAsync();
+        UpdateStatus.IsVisible = false;
+        if (_availableUpdate is { } update)
+        {
+            UpdateMessage.Text = $"A versão {update.Version} está disponível. " + (update.Required
+                ? "Esta atualização é necessária para entrar."
+                : "Você pode instalar agora ou continuar com a versão atual.");
+            UpdateCard.IsVisible = true;
+            SkipUpdate.IsVisible = !update.Required;
+            var install = await _dialogService.ShowConfirmationAsync(
+                update.Required ? "Atualização necessária" : "Atualização disponível",
+                UpdateMessage.Text, "Instalar", update.Required ? "Fechar" : "Agora não");
+            if (install) await InstallAvailableUpdateAsync();
+            if (update.Required) return false;
+            // Keep login manual after opening the Android installer.
+            SetLoginAllowed(true);
+            return !install;
+        }
+        SetLoginAllowed(true);
+        return true;
+    }
+
+    private void SetLoginAllowed(bool allowed)
+    {
+        _loginAllowed = allowed;
+        LoginForm.IsEnabled = allowed;
+        AccountActions.IsEnabled = allowed;
+    }
+
+    private async void InstallUpdate_Clicked(object sender, EventArgs e) => await InstallAvailableUpdateAsync();
+
+    private async Task InstallAvailableUpdateAsync()
+    {
+        if (_availableUpdate is null || _download is not null) return;
+        _download = new CancellationTokenSource();
+        SetLoginAllowed(false);
+        InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = false;
+        CancelDownload.IsVisible = true;
+        UpdateStatus.Text = "Preparando atualização…";
+        UpdateStatus.IsVisible = true;
+        var interaction = (Microsoft.Maui.Controls.Application.Current as App)?.BeginExternalInteraction();
+        var window = Window;
+        var installerOpened = false;
+        EventHandler? resumed = null;
+        resumed = (_, _) =>
+        {
+            interaction?.Dispose();
+            if (window is not null) window.Resumed -= resumed;
+        };
+        if (window is not null) window.Resumed += resumed;
+        try
+        {
+            await _updates.InstallAsync(_availableUpdate, _download.Token);
+            installerOpened = true;
+            UpdateStatus.Text = "Confirme a instalação no Android. Se cancelar, toque em Instalar novamente.";
+        }
+        catch (OperationCanceledException)
+        {
+            UpdateStatus.Text = "Download cancelado ou tempo limite atingido. Você pode tentar novamente.";
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus.Text = "Não foi possível instalar a atualização.";
+            await _dialogService.ShowAlertAsync("Atualização", ex is InvalidOperationException ? ex.Message : "Falha no download. Verifique sua conexão e tente novamente.");
+        }
+        finally
+        {
+            if (!installerOpened || window is null)
+            {
+                interaction?.Dispose();
+                if (window is not null) window.Resumed -= resumed;
+            }
+            _download.Dispose();
+            _download = null;
+            InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = true;
+            CancelDownload.IsVisible = false;
+            SetLoginAllowed(!_availableUpdate.Required);
+        }
+    }
+
+    private void SkipUpdate_Clicked(object sender, EventArgs e)
+    {
+        if (_availableUpdate?.Required == true || _download is not null) return;
+        UpdateCard.IsVisible = UpdateStatus.IsVisible = false;
+        SetLoginAllowed(true);
+    }
+
+    private void CancelDownload_Clicked(object sender, EventArgs e) => _download?.Cancel();
 
     protected override void OnDisappearing()
     {
@@ -31,7 +139,7 @@ public partial class LoginPage : ContentPage
 
     private async void Btn_Login_Clicked(object sender, EventArgs e)
     {
-        if (signingIn) return;
+        if (signingIn || !_loginAllowed) return;
         signingIn = true;
         if (sender is Button button) button.IsEnabled = false;
         try
@@ -60,14 +168,15 @@ public partial class LoginPage : ContentPage
 
     private async void RegisterUser_Clicked(object sender, EventArgs e)
     {
+        if (!_loginAllowed) return;
         await Shell.Current.GoToAsync("registration");
     }
 
-    private async void BiometricLogin_Clicked(object sender, EventArgs e)
+    private async Task BiometricLogin()
     {
-        if (signingIn) return;
+        if (signingIn || !_loginAllowed) return;
         signingIn = true;
-        Btn_Login.IsEnabled = BiometricLoginButton.IsEnabled = false;
+        Btn_Login.IsEnabled = false;
         using var interaction = (Microsoft.Maui.Controls.Application.Current as App)?.BeginExternalInteraction();
         try
         {
@@ -84,13 +193,13 @@ public partial class LoginPage : ContentPage
         finally
         {
             signingIn = false;
-            Btn_Login.IsEnabled = BiometricLoginButton.IsEnabled = true;
-            BiometricLoginButton.IsVisible = (await _authService.GetBiometricStatusAsync()).Enabled;
+            Btn_Login.IsEnabled = true;
         }
     }
 
     private async void Button_Clicked(object sender, EventArgs e)
     {
+        if (!_loginAllowed) return;
         await Shell.Current.GoToAsync("forgotpassword");
     }
 }

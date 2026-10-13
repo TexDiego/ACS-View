@@ -30,6 +30,7 @@
     <Compile Include="../../Application/DTOs/PatientListItemDto.cs" Link="Application/DTOs/PatientListItemDto.cs" />
     <Compile Include="../../Application/DTOs/PatientListFilterDto.cs" Link="Application/DTOs/PatientListFilterDto.cs" />
     <Compile Include="../../Application/DTOs/HouseListItemDto.cs" Link="Application/DTOs/HouseListItemDto.cs" />
+    <Compile Include="../../Domain/Entities/PatientSusNumber.cs" />
     <Compile Include="../../Domain/Entities/Patient.cs" Link="Domain/Entities/Patient.cs" />
     <Compile Include="../../Domain/ValueObjects/SusNumberSet.cs" Link="Domain/ValueObjects/SusNumberSet.cs" />
     <Compile Include="../../Domain/Entities/House.cs" Link="Domain/Entities/House.cs" />

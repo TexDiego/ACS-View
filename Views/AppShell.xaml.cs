@@ -12,6 +12,7 @@ public partial class AppShell : Shell
     private static bool routesRegistered;
     private readonly IServiceProvider _serviceProvider;
     private bool isThemeChangeHandlerRegistered;
+    internal LoginPage? LoginPage { get; private set; }
 #if !WINDOWS
     private readonly StatusBarBehavior statusBarThemeBehavior = new();
 #endif
@@ -40,7 +41,8 @@ public partial class AppShell : Shell
         }
 
         Items.Remove(MainTabBar);
-        LoginContent.ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<LoginPage>());
+        LoginPage = _serviceProvider.GetRequiredService<LoginPage>();
+        LoginContent.Content = LoginPage;
     }
 
     protected override void OnAppearing()

@@ -37,6 +37,8 @@ namespace ACS_View
                 .ConfigureMauiHandlers(handlers =>
                 {
 #if ANDROID
+                    handlers.AddHandler<Shell, ACS_View.Platforms.Android.BrandShellRenderer>();
+
                     Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("ClearInitialFocus", (handler, _) =>
                     {
                         handler.PlatformView.Post(() => handler.PlatformView.ClearFocus());
@@ -76,7 +78,7 @@ namespace ACS_View
 
             builder.Services.AddSingleton(sp =>
             {
-                var dbPath = Path.Combine(FileSystem.AppDataDirectory, "health_app.db");
+                var dbPath = ACS_View.Infrastructure.Data.Migrations.DatabaseRecovery.GetSelectedDatabasePath(FileSystem.AppDataDirectory);
                 return new SQLiteAsyncConnection(dbPath);
             });
 

@@ -1,14 +1,14 @@
-﻿using SQLite;
-
+using SQLite;
 using ACS_View.Domain.ValueObjects;
 
 namespace ACS_View.Domain.Entities
 {
     public class Patient
-    {        
+    {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
         public int UserId { get; set; }
+        public int RowRevision { get; set; }
         public int FamilyId { get; set; } = -1;
         public int HouseId { get; set; } = -1;
 
@@ -18,25 +18,36 @@ namespace ACS_View.Domain.Entities
         public string SusNumber
         {
             get => susNumber;
-            set => susNumber = SusNumberSet.Join(SusNumberSet.Parse(value));
+            // Materializing an old row must not silently discard its original evidence.
+            set { susNumber = value ?? string.Empty; SusNumberRecords = null; }
         }
 
         [Ignore]
         [System.Text.Json.Serialization.JsonIgnore]
         public IReadOnlyList<string> SusNumbers
         {
-            get => SusNumberSet.Parse(susNumber);
-            set => susNumber = SusNumberSet.Join(value);
+            get => SusNumberRecords?.OrderByDescending(n => n.IsPrimary).ThenBy(n => n.OriginalOrder).Select(n => n.Number).ToArray() ?? SusNumberSet.Parse(susNumber);
+            set { susNumber = SusNumberSet.Join(value); SusNumberRecords = null; }
         }
+
+        [Ignore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public IReadOnlyList<PatientSusNumber>? SusNumberRecords { get; set; }
 
         [Ignore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string PrimarySusNumber => SusNumbers.FirstOrDefault() ?? string.Empty;
 
-        public void AddSusNumbers(string? numbers) =>
-            SusNumbers = SusNumbers.Concat(SusNumberSet.Parse(numbers)).ToArray();
+        public void AddSusNumbers(string? numbers)
+        {
+            var additions = SusNumberSet.Parse(numbers).Except(SusNumbers).ToArray();
+            if (additions.Length == 0) return;
+            // Retain the exact old text while appending imported numbers.
+            var existingExtra = SusNumbers.Except(SusNumberSet.Parse(SusNumber));
+            SusNumber = string.Join("; ", new[] { SusNumber }.Where(n => !string.IsNullOrWhiteSpace(n)).Concat(existingExtra).Concat(additions));
+        }
 
-        public bool HasSusNumber(string? number) => SusNumberSet.Overlaps(SusNumber, number);
+        public bool HasSusNumber(string? number) => SusNumbers.Intersect(SusNumberSet.Parse(number)).Any();
         public string? FamilyResponsibleSus { get; set; }
         public int? MotherPatientId { get; set; }
         public int? FatherPatientId { get; set; }

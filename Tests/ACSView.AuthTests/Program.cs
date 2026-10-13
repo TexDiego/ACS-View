@@ -188,6 +188,27 @@ try
     await auth.ConfigureBiometricsAsync(replacement, true);
     await auth.LoginAsync("antigo", password);
     Check(!(await auth.GetBiometricStatusAsync()).Enabled && biometrics.Payload is null, "Switching accounts removes previous biometric enrollment");
+    var sourceSession=vault.Values["LocalAuthSessionV2"];
+    var restorePath=Path.Combine(Path.GetTempPath(),$"health_app-restored-{Guid.NewGuid():N}.db");
+    await connection.BackupAsync(restorePath);
+    var restoredConnection=new SQLiteAsyncConnection(restorePath);
+    try
+    {
+        var restoredAuth=new AuthService(new DatabaseService(restoredConnection),context,vault,clock,biometrics);
+        context.Clear();
+        Check(!await restoredAuth.IsAuthenticatedAsync() && !context.HasCurrentUser,"Restored database rejects old session even with matching user ID and revision");
+        var oldSession=System.Text.Json.Nodes.JsonNode.Parse(sourceSession)!;oldSession.AsObject().Remove("DatabaseIdentity");
+        vault.Values["LocalAuthSessionV2"]=oldSession.ToJsonString();
+        Check(!await restoredAuth.IsAuthenticatedAsync(),"Legacy session without database binding cannot bypass restore login");
+        await restoredAuth.LoginAsync("antigo",password);
+        Check(await restoredAuth.IsAuthenticatedAsync(),"Restored database accepts fresh password authentication");
+        await auth.LoginAsync("antigo",password);
+        await auth.ConfigureBiometricsAsync(password,true);
+        context.Clear();
+        await Reject(()=>restoredAuth.LoginWithBiometricsAsync(),"Biometric grant cannot cross restored databases");
+        Check((await restoredConnection.FindAsync<Note>(note.Id)).Content==note.Content,"Restore authentication guard preserves patient-independent user notes");
+    }
+    finally { await restoredConnection.CloseAsync();File.Delete(restorePath); }
     Console.WriteLine($"PASS: {checks} authentication, biometric and migration checks.");
 }
 finally

@@ -55,12 +55,15 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="*,auto">
-                    <Label Text="Indicadores" Style="{StaticResource FieldLabel}"/>
+                    <Label Text="Indicadores (opcionais)" Style="{StaticResource FieldLabel}"/>
                     <Label
                         Grid.Column="1"
                         Text="{Binding SelectedCountText}"
                         Style="{StaticResource BodyMuted}"/>
                 </Grid>
+                <Label
+                    Text="Para contar pessoas apenas por sexo ou idade, deixe os indicadores sem seleção. A métrica ficará na aba geral."
+                    Style="{StaticResource BodyMuted}"/>
             </VerticalStackLayout>
 
             <ScrollView Grid.Row="1">

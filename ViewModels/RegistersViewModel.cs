@@ -383,6 +383,12 @@ namespace ACS_View.ViewModels
                 parts.Add(GetSexSummary());
             }
 
+            if (_listFilter.WithoutSusNumber) parts.Add("sem CNS (SUS)");
+            if (_listFilter.WithoutPhone) parts.Add("sem telefone");
+            if (_listFilter.WithoutMotherName) parts.Add("sem nome da mãe");
+            if (_listFilter.WithoutFatherName) parts.Add("sem nome do pai");
+            if (_listFilter.WithoutHouse) parts.Add("sem residência");
+
             if (_listFilter.SortBy != PatientListSortOption.Name || _listFilter.SortDescending)
             {
                 parts.Add(_listFilter.SortBy == PatientListSortOption.Age ? "idade" : "nome desc.");

@@ -59,34 +59,32 @@
                             Color="{StaticResource TextSecondary}"/>
                         <Grid
                             Margin="5"
-                            ColumnDefinitions="*,*,*"
+                            ColumnDefinitions="0.2*,*,0.2*"
+                            HeightRequest="38"
                             ColumnSpacing="5">
-                            <Button
+
+                            <ImageButton
                                 Grid.Column="0"
-                                MaximumHeightRequest="38"
                                 mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
-                                Text="Excluir"
-                                Style="{StaticResource DangerOutlineButton}"
+                                Style="{StaticResource DeleteImageButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteFamilyCommand}"
                                 CommandParameter="{Binding IdFamily}"/>
 
                             <Button
                                 Grid.Column="1"
-                                MaximumHeightRequest="38"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
-                                Text="Editar"
-                                Style="{StaticResource PrimaryOutlineButton}"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}"
-                                CommandParameter="{Binding IdFamily}"/>
-
-                            <Button
-                                Grid.Column="2"
-                                MaximumHeightRequest="38"
                                 mi:MauiIcon.Value="{mi:Fluent Icon=ClipboardHeart24}"
                                 Text="Visitar"
                                 Style="{StaticResource PrimaryOutlineButton}"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VisitFamilyCommand}"
                                 CommandParameter="{Binding IdFamily}"/>
+
+                            <ImageButton
+                                Grid.Column="2"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
+                                Style="{StaticResource EditImageButton}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditFamilyCommand}"
+                                CommandParameter="{Binding IdFamily}"/>
+
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

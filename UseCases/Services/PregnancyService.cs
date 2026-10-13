@@ -5,6 +5,7 @@ using ACS_View.Domain.Entities.Health;
 using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
+using ACS_View.Infrastructure.Data.Migrations;
 
 namespace ACS_View.UseCases.Services;
 
@@ -17,9 +18,7 @@ internal sealed class PregnancyService(
     public async Task<PatientPregnancy?> GetActiveOrLatestByPatientIdAsync(int patientId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        var pregnancies = await _connection.Table<PatientPregnancy>()
-            .Where(pregnancy => pregnancy.UserId == userId && pregnancy.PatientId == patientId)
-            .ToListAsync();
+        var pregnancies = await ReadPregnanciesAsync(userId,patientId);
 
         return pregnancies
             .OrderByDescending(pregnancy => PregnancyCalculator.IsPuerperal(pregnancy))
@@ -46,10 +45,9 @@ internal sealed class PregnancyService(
             return null;
         }
 
-        var allPatients = await _connection.Table<Patient>()
-            .Where(item => item.UserId == userId)
-            .ToListAsync();
-        var registeredChildrenCount = PregnancyCalculator.CalculateRegisteredChildrenCount(patientId, allPatients);
+        var registeredChildrenCount = await _connection.Table<Patient>()
+            .Where(item => item.UserId == userId && item.MotherPatientId == patientId)
+            .CountAsync();
         var conditions = await _connection.Table<PatientConditions>()
             .Where(condition => condition.UserId == userId && condition.PatientId == patientId)
             .ToListAsync();
@@ -90,51 +88,38 @@ internal sealed class PregnancyService(
             pregnancy.EndedAt = DateTime.Today;
         }
 
-        if (pregnancy.Id > 0)
+        await _connection.RunInTransactionAsync(c=>
         {
-            await _connection.UpdateAsync(pregnancy);
-        }
-        else
-        {
-            pregnancy.CreatedAt = pregnancy.CreatedAt == default ? DateTime.UtcNow : pregnancy.CreatedAt;
-            await _connection.InsertAsync(pregnancy);
-        }
-
-        if (pregnancy.Status != PregnancyStatus.Active)
-        {
-            await CloseOtherActivePregnanciesAsync(pregnancy);
-        }
+            if(c.Table<Patient>().FirstOrDefault(p=>p.UserId==pregnancy.UserId && p.Id==pregnancy.PatientId)==null)
+                throw new InvalidOperationException("Paciente não pertence à conta atual.");
+            if(pregnancy.Id>0)
+            {
+                var original=c.Table<PatientPregnancy>().FirstOrDefault(p=>p.Id==pregnancy.Id && p.UserId==pregnancy.UserId && p.PatientId==pregnancy.PatientId);
+                if(original==null)throw new InvalidOperationException("Episódio não pertence ao paciente atual.");
+                c.Execute("UPDATE PatientPregnancy SET LastMenstrualPeriod=?,ExpectedBirthDate=?,Status=?,ManualRisk=?,InformedChildrenCount=?,EndedAt=?,EndType=?,Notes=? WHERE Id=? AND UserId=?",
+                    pregnancy.LastMenstrualPeriod,pregnancy.ExpectedBirthDate,pregnancy.Status,pregnancy.ManualRisk,pregnancy.InformedChildrenCount,pregnancy.EndedAt,pregnancy.EndType,pregnancy.Notes,pregnancy.Id,pregnancy.UserId);
+            }
+            else
+            {
+                pregnancy.CreatedAt=pregnancy.CreatedAt==default?DateTime.UtcNow:pregnancy.CreatedAt;
+                c.Insert(pregnancy);
+            }
+        });
 
         DataChangeTracker.MarkPatientsChanged();
         return pregnancy;
     }
 
-    private async Task CloseOtherActivePregnanciesAsync(PatientPregnancy pregnancy)
-    {
-        var activePregnancies = await _connection.Table<PatientPregnancy>()
-            .Where(item =>
-                item.UserId == pregnancy.UserId &&
-                item.PatientId == pregnancy.PatientId &&
-                item.Status == PregnancyStatus.Active)
-            .ToListAsync();
-
-        foreach (var activePregnancy in activePregnancies.Where(item => item.Id != pregnancy.Id))
-        {
-            activePregnancy.Status = PregnancyStatus.NotConfirmed;
-            activePregnancy.EndedAt = null;
-            activePregnancy.EndType = null;
-            await _connection.UpdateAsync(activePregnancy);
-        }
-    }
+    private Task<List<PatientPregnancy>> ReadPregnanciesAsync(int user,int patient) =>
+        _connection.QueryAsync<PatientPregnancy>($"SELECT {LegacyDateSql.Projection<PatientPregnancy>()} FROM PatientPregnancy WHERE UserId=? AND PatientId=?",user,patient);
 
     public async Task SyncPregnancyConditionAsync(int patientId, bool isPregnant)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        var activePregnancy = await _connection.Table<PatientPregnancy>()
-            .FirstOrDefaultAsync(pregnancy =>
-                pregnancy.UserId == userId &&
-                pregnancy.PatientId == patientId &&
-                pregnancy.Status == PregnancyStatus.Active);
+        var active=(await ReadPregnanciesAsync(userId,patientId)).Where(p=>p.Status==PregnancyStatus.Active).ToList();
+        if(!isPregnant && active.Count>1)
+            throw new InvalidOperationException("Há episódios gestacionais ativos distintos. Concilie os episódios antes de desmarcar a condição.");
+        var activePregnancy=active.FirstOrDefault();
 
         if (isPregnant)
         {

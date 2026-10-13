@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <Compile Include="../../Domain/**/*.cs" />
+    <Compile Include="../../Application/Security/*.cs" />
+    <Compile Include="../../Application/Querying/*.cs" />
+    <Compile Include="../../Application/DTOs/*.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
+    <Compile Include="../../Application/Interfaces/ICurrentUserContext.cs" />
+    <Compile Include="../../Application/Interfaces/IRelationalDataService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientRepository.cs" />
+    <Compile Include="../../Infrastructure/Data/Migrations/*.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientRepository.cs" />
+    <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseService.cs" />
+    <Compile Include="../../UseCases/Services/RelationalDataService.cs" />
+    <Compile Include="../../UseCases/Services/PregnancyService.cs" />
+    <Compile Include="../../Application/Interfaces/IPregnancyService.cs" />
+
+    <Compile Include="../../ViewModels/PhoneEditorViewModel.cs" />
+    <Compile Include="../../ViewModels/SusNumberEditorViewModel.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientPhoneService.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientPhoneRepository.cs" />
+    <Compile Include="../../UseCases/Services/PatientPhoneService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientService.cs" />
+    <Compile Include="../../Application/Interfaces/ISQLiteConditionsRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../UseCases/Services/PatientService.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLiteConditionsRepository.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientBolsaFamiliaRepository.cs" />
+    <Compile Include="../../ViewModels/AddRegisterViewModel.cs" />
+    <Compile Include="../../ViewModels/ConditionPopupViewModel.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLiteCidRepository.cs" />
+    <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientInsulinDependencyRepository.cs" />
+    <Compile Include="../../UseCases/Services/PatientCidService.cs" />
+    <Compile Include="../../Application/Interfaces/ICidRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientCidRepository.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientInsulinDependencyRepository.cs" />
+    <Compile Include="../../Application/Interfaces/ICareNotificationService.cs" />
+    <Compile Include="../../Application/Interfaces/IPopupService.cs" />
+  </ItemGroup>
+</Project>

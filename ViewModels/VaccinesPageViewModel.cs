@@ -160,7 +160,7 @@ namespace ACS_View.ViewModels
             }
 
             var previous = card.Dose;
-            var optimistic = CreateDoseDto(previous, request.ApplicationDate, request.LotNumber, request.Notes);
+            var optimistic = CreateDoseDto(previous, request.ApplicationDate, request.LotNumber, request.Notes,true);
             UpdateCard(card, optimistic);
 
             try
@@ -210,13 +210,14 @@ namespace ACS_View.ViewModels
             PatientVaccineDoseDto previous,
             DateTime? applicationDate,
             string lotNumber,
-            string notes)
+            string notes,bool isApplied=false)
         {
             var status = VaccineStatusCalculator.Calculate(
                 HealthRecord!.BirthDate,
                 DateTime.Today,
                 previous.Definition,
                 applicationDate);
+            if(isApplied && applicationDate==null)status=VaccineStatus.Applied;
 
             return previous with
             {
@@ -305,7 +306,7 @@ namespace ACS_View.ViewModels
         };
         public string ApplicationDateText => Dose.ApplicationDate.HasValue
             ? $"Aplicada em {Dose.ApplicationDate.Value:dd/MM/yyyy}"
-            : "Sem registro de aplicacao";
+            : Dose.IsApplied ? "Aplicada; data não informada" : "Sem registro de aplicacao";
         public string DeadlineText => Dose.MaximumDate.HasValue
             ? $"Prazo maximo: {Dose.MaximumDate.Value:dd/MM/yyyy}"
             : $"Recomendada em: {Dose.RecommendedDate:dd/MM/yyyy}";

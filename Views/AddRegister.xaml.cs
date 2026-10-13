@@ -21,13 +21,34 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         IPatientInsulinDependencyRepository insulinDependencyRepository,
         IPregnancyService pregnancyService,
         ICareNotificationService careNotificationService,
-        IPopupService popupService)
+        IPopupService popupService,
+        IPatientPhoneService phoneService)
     {
+        var timer = Stopwatch.StartNew();
         InitializeComponent();
-        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService);
+        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService);
+        Debug.WriteLine($"[Cadastro.Load] Construir pagina e bindings: {timer.Elapsed.TotalMilliseconds:F1} ms");
     }
 
     private bool? _sexOptionsHorizontal;
+
+    private void OnEditPhoneClicked(object? sender, EventArgs e) => PhoneEntry.Focus();
+
+    private void OnEditSusClicked(object? sender, EventArgs e) => SusEntry.Focus();
+
+    private void OnPrimarySusCheckedChanged(object? sender, CheckedChangedEventArgs e)
+    {
+        if (e.Value && sender is RadioButton { BindingContext: ACS_View.Domain.ValueObjects.SusNumber number }
+            && _viewModel.SusEditor.Numbers.Contains(number))
+            _viewModel.SusEditor.PrimaryNumber = number;
+    }
+
+    private void OnPrimaryPhoneCheckedChanged(object? sender, CheckedChangedEventArgs e)
+    {
+        if (e.Value && sender is RadioButton { BindingContext: ACS_View.Domain.ValueObjects.Phone phone }
+            && _viewModel.PhoneEditor.Phones.Contains(phone))
+            _viewModel.PhoneEditor.PrimaryPhone = phone;
+    }
 
     private void OnSexOptionsSizeChanged(object? sender, EventArgs e)
     {
@@ -36,30 +57,21 @@ public partial class AddRegister : ContentPage, IQueryAttributable
             return;
         }
 
-        // Allow room for all three labels; use full-width options on small screens.
-        var horizontal = grid.Width >= 480;
-        if (_sexOptionsHorizontal == horizontal)
-        {
-            return;
-        }
-
+        // Three compact choices on typical screens; two rows at narrow widths.
+        var horizontal = grid.Width >= 300;
+        if (_sexOptionsHorizontal == horizontal) return;
         _sexOptionsHorizontal = horizontal;
         grid.RowDefinitions.Clear();
         grid.ColumnDefinitions.Clear();
-        for (var index = 0; index < (horizontal ? 1 : 3); index++)
-        {
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        }
-
-        for (var index = 0; index < (horizontal ? 3 : 1); index++)
-        {
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        if (!horizontal) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (var index = 0; index < (horizontal ? 3 : 2); index++)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
-        }
-
         for (var index = 0; index < grid.Children.Count; index++)
         {
-            grid.SetRow(grid.Children[index], horizontal ? 0 : index);
-            grid.SetColumn(grid.Children[index], horizontal ? index : 0);
+            grid.SetRow(grid.Children[index], !horizontal && index == 2 ? 1 : 0);
+            grid.SetColumn(grid.Children[index], !horizontal && index == 2 ? 0 : index);
+            grid.SetColumnSpan(grid.Children[index], !horizontal && index == 2 ? 2 : 1);
         }
     }
 
@@ -97,16 +109,16 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         }
 
         _isLoading = true;
+        var timer = Stopwatch.StartNew();
         try
         {
-            if (!(_viewModel.Subcategories is { Count: > 0 }))
+            if (_patientId is > 0)
             {
-                await _viewModel.LoadSubcategories();
+                await _viewModel.LoadPatient(_patientId.Value);
             }
-
-            if (_patientId is int id)
+            else
             {
-                await _viewModel.LoadPatient(id);
+                _viewModel.InitializeNewPatient();
             }
 
             _loaded = true;
@@ -119,6 +131,7 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         finally
         {
             _isLoading = false;
+            Debug.WriteLine($"[Cadastro.Load] {(_patientId is > 0 ? "Edicao" : "Novo")} pronto: {timer.Elapsed.TotalMilliseconds:F1} ms");
         }
     }
 

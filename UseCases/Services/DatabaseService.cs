@@ -1,313 +1,44 @@
 using ACS_View.Domain.Entities;
-using ACS_View.Domain.Entities.Health;
 using ACS_View.Application.Interfaces;
-using ACS_View.Domain.ValueObjects;
-using SQLite;
-using System.Diagnostics;
 using ACS_View.Application.Security;
+using ACS_View.Infrastructure.Data.Migrations;
+using SQLite;
+using System.Collections.Concurrent;
 
 namespace ACS_View.UseCases.Services
 {
     internal class DatabaseService(SQLiteAsyncConnection database) : IDatabaseService
     {
-        private readonly SemaphoreSlim _initializeLock = new(1, 1);
+        private static readonly ConcurrentDictionary<string,SemaphoreSlim> InitializationLocks=new(
+            OperatingSystem.IsWindows()?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal);
+        private readonly SemaphoreSlim _initializeLock = InitializationLocks.GetOrAdd(Path.GetFullPath(database.DatabasePath),_=>new SemaphoreSlim(1,1));
         private bool _initialized;
-
         public SQLiteAsyncConnection Connection { get; } = database;
-
         public async Task InitializeAsync()
         {
-            if (_initialized)
-            {
-                return;
-            }
-
             await _initializeLock.WaitAsync();
             try
             {
-                if (_initialized)
-                {
-                    return;
-                }
-
+                if (_initialized) return;
                 await Connection.ExecuteScalarAsync<int>("PRAGMA secure_delete = ON");
-                await CreateDomainTablesAsync();
+                await new SchemaMigrator(Connection).RunAsync();
+                // Retain the existing credential upgrade, including secure removal of plaintext.
+                // Its intentional security changes are separate from relational preservation.
+                await MigrateUserTableAsync();
                 _initialized = true;
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Erro ao inicializar banco: {ex.Message}");
-                throw;
-            }
-            finally
-            {
-                _initializeLock.Release();
-            }
+            finally { _initializeLock.Release(); }
         }
-
-        public Task<User?> GetUserByUsernameAsync(string username)
+        public Task<User?> GetUserByUsernameAsync(string username) => Connection.Table<User>().FirstOrDefaultAsync(x => x.Username == username);
+        public Task<User?> GetUserByIdAsync(int id) => Connection.Table<User>().FirstOrDefaultAsync(x => x.Id == id);
+        public Task<int> InsertUserAsync(User user) => Connection.InsertAsync(user);
+        public Task<int> UpdateUserAsync(User user) => Connection.UpdateAsync(user);
+        public Task ClaimLegacyDataForUserAsync(int userId)
         {
-            return Connection.Table<User>().FirstOrDefaultAsync(x => x.Username == username);
+            // Authentication is not evidence of ownership of unscoped legacy data.
+            // Leave UserId=0 records quarantined until an explicit reconciliation workflow.
+            return Task.CompletedTask;
         }
-
-        public Task<User?> GetUserByIdAsync(int id)
-        {
-            return Connection.Table<User>().FirstOrDefaultAsync(x => x.Id == id);
-        }
-
-        public Task<int> InsertUserAsync(User user)
-        {
-            return Connection.InsertAsync(user);
-        }
-
-        public Task<int> UpdateUserAsync(User user)
-        {
-            return Connection.UpdateAsync(user);
-        }
-
-        public async Task ClaimLegacyDataForUserAsync(int userId)
-        {
-            if (userId <= 0)
-            {
-                return;
-            }
-
-            foreach (var tableName in UserScopedTables)
-            {
-                await Connection.ExecuteAsync($"UPDATE [{tableName}] SET UserId = ? WHERE UserId = 0", userId);
-            }
-        }
-
-        private async Task CreateDomainTablesAsync()
-        {
-            await Connection.CreateTablesAsync<Patient, PatientBolsaFamilia, Vaccines, PatientVaccineDose>();
-            await Connection.CreateTablesAsync<PatientPregnancy, CareNotification>();
-            await Connection.CreateTableAsync<PatientInsulinDependency>();
-            await Connection.CreateTableAsync<CepAddressCache>();
-            await Connection.CreateTableAsync<ImportHistory>();
-            await Connection.CreateTablesAsync<Note, House>();
-            await Connection.CreateTablesAsync<Family, User>();
-            await Connection.CreateTablesAsync<CidCategory, CidChapter>();
-            await Connection.CreateTablesAsync<CidGroup, CidSubcategory>();
-            await Connection.CreateTablesAsync<Visits, VisitBatch, VisitCareLine, PatientCID>();
-            await Connection.CreateTablesAsync<CommonConditions, PatientConditions>();
-
-            await MigratePatientTableAsync();
-            await MigrateHouseTableAsync();
-            await MigrateVisitsTableAsync();
-            await MigrateUserScopedTablesAsync();
-            await MigrateBolsaFamiliaTableAsync();
-            await MigrateInsulinDependencyTableAsync();
-            await MigratePregnancyTableAsync();
-            await MigratePatientVaccineDoseTableAsync();
-            await MigrateLegacyVaccinesAsync();
-            await MigrateUserTableAsync();
-            await BackfillSearchColumnsAsync();
-            await BackfillCepAddressCacheAsync();
-            await BackfillFamilyResponsibleAsync();
-            await CreateIndexesAsync();
-        }
-
-        private async Task MigratePatientTableAsync()
-        {
-            await EnsureColumnAsync("Patient", nameof(Patient.FamilyResponsibleSus), "TEXT NULL");
-            await EnsureColumnAsync("Patient", nameof(Patient.MotherPatientId), "INTEGER NULL");
-            await EnsureColumnAsync("Patient", nameof(Patient.FatherPatientId), "INTEGER NULL");
-            await EnsureColumnAsync("Patient", nameof(Patient.FamilyResponsiblePatientId), "INTEGER NULL");
-            await EnsureColumnAsync("Patient", nameof(Patient.IsActive), "INTEGER NOT NULL DEFAULT 1");
-            await EnsureColumnAsync("Patient", nameof(Patient.StatusReason), "TEXT NOT NULL DEFAULT ''");
-            await EnsureColumnAsync("Patient", nameof(Patient.StatusChangedAt), "TEXT NULL");
-            await BackfillPatientStatusAsync();
-        }
-
-        private async Task BackfillPatientStatusAsync()
-        {
-            await Connection.ExecuteAsync("UPDATE Patient SET IsActive = 1 WHERE IsActive IS NULL");
-            await Connection.ExecuteAsync("UPDATE Patient SET StatusReason = '' WHERE StatusReason IS NULL");
-        }
-
-        private async Task MigrateHouseTableAsync()
-        {
-            await EnsureColumnAsync("House", nameof(House.TipoLogradouro), "TEXT NOT NULL DEFAULT ''");
-        }
-
-        private async Task MigrateVisitsTableAsync()
-        {
-            await EnsureColumnAsync("Visits", nameof(Visits.PatientId), "INTEGER NOT NULL DEFAULT 0");
-            await EnsureColumnAsync("Visits", nameof(Visits.BatchId), "INTEGER NULL");
-            await EnsureColumnAsync("Visits", nameof(Visits.VisitDate), "TEXT NULL");
-            await EnsureColumnAsync("Visits", nameof(Visits.Status), "TEXT NOT NULL DEFAULT ''");
-            await EnsureColumnAsync("Visits", nameof(Visits.Notes), "TEXT NOT NULL DEFAULT ''");
-            await EnsureColumnAsync("Visits", nameof(Visits.CreatedAt), "TEXT NULL");
-            await EnsureColumnAsync("Visits", nameof(Visits.UpdatedAt), "TEXT NULL");
-            await BackfillLegacyVisitsAsync();
-        }
-
-        private async Task BackfillLegacyVisitsAsync()
-        {
-            await Connection.ExecuteAsync("UPDATE Visits SET VisitDate = Date WHERE VisitDate IS NULL OR VisitDate = ''");
-            await Connection.ExecuteAsync("UPDATE Visits SET CreatedAt = Date WHERE CreatedAt IS NULL OR CreatedAt = ''");
-            await Connection.ExecuteAsync(
-                """
-                UPDATE Visits
-                SET Status = CASE
-                    WHEN Description = 'Realizada' COLLATE NOCASE THEN 'Completed'
-                    WHEN Description = 'Ausente' COLLATE NOCASE THEN 'Absent'
-                    WHEN Description = 'Recusada' COLLATE NOCASE THEN 'Refused'
-                    ELSE Status
-                END
-                WHERE Status IS NULL OR Status = ''
-                """);
-        }
-
-        private async Task MigrateUserScopedTablesAsync()
-        {
-            foreach (var tableName in UserScopedTables)
-            {
-                await EnsureColumnAsync(tableName, "UserId", "INTEGER NOT NULL DEFAULT 0");
-            }
-        }
-
-        private async Task MigrateBolsaFamiliaTableAsync()
-        {
-            if (!await ColumnExistsAsync("Patient", "BolsaFamilia"))
-            {
-                return;
-            }
-
-            await Connection.RunInTransactionAsync(connection =>
-            {
-                connection.Execute(
-                    """
-                    INSERT INTO PatientBolsaFamilia (UserId, PatientId, ResponsiblePatientId, NisNumber)
-                    SELECT p.UserId, p.Id, p.Id, ''
-                    FROM Patient p
-                    WHERE COALESCE(p.BolsaFamilia, 0) = 1
-                      AND NOT EXISTS (
-                          SELECT 1
-                          FROM PatientBolsaFamilia bf
-                          WHERE bf.UserId = p.UserId
-                            AND bf.PatientId = p.Id
-                      )
-                    """);
-
-                // Consume the legacy flags atomically with the migration. PatientBolsaFamilia
-                // is now authoritative; stale flags must not restore benefits removed in registration.
-                connection.Execute("UPDATE Patient SET BolsaFamilia = 0 WHERE COALESCE(BolsaFamilia, 0) = 1");
-            });
-        }
-
-        private async Task MigrateInsulinDependencyTableAsync()
-        {
-            await Connection.ExecuteAsync(
-                """
-                INSERT INTO PatientInsulinDependency (UserId, PatientId)
-                SELECT pc.UserId, pc.PatientId
-                FROM PatientConditions pc
-                INNER JOIN Patient p ON p.UserId = pc.UserId AND p.Id = pc.PatientId
-                WHERE pc.Description = ? COLLATE NOCASE
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM PatientInsulinDependency pid
-                      WHERE pid.UserId = pc.UserId
-                        AND pid.PatientId = pc.PatientId
-                  )
-                """,
-                HealthConditionCatalog.Insulinodependente);
-        }
-
-        private async Task MigratePregnancyTableAsync()
-        {
-            await Connection.ExecuteAsync(
-                """
-                INSERT INTO PatientPregnancy
-                    (UserId, PatientId, LastMenstrualPeriod, ExpectedBirthDate, Status, ManualRisk, InformedChildrenCount, CreatedAt, EndedAt, EndType, Notes)
-                SELECT pc.UserId, pc.PatientId, NULL, NULL, 1, 0, NULL, CURRENT_TIMESTAMP, NULL, NULL, ''
-                FROM PatientConditions pc
-                INNER JOIN Patient p ON p.UserId = pc.UserId AND p.Id = pc.PatientId
-                WHERE pc.Description = ? COLLATE NOCASE
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM PatientPregnancy pp
-                      WHERE pp.UserId = pc.UserId
-                        AND pp.PatientId = pc.PatientId
-                        AND pp.Status = 1
-                  )
-                """,
-                HealthConditionCatalog.Gestante);
-        }
-
-        private async Task MigrateLegacyVaccinesAsync()
-        {
-            var legacyRecords = await Connection.Table<Vaccines>().ToListAsync();
-            var legacyProperties = typeof(Vaccines).GetProperties()
-                .ToDictionary(property => property.Name, StringComparer.OrdinalIgnoreCase);
-
-            foreach (var legacyRecord in legacyRecords)
-            {
-                if (legacyRecord.Id <= 0)
-                {
-                    continue;
-                }
-
-                foreach (var legacyColumn in VaccineDoseCatalog.LegacyBooleanColumns)
-                {
-                    if (!legacyProperties.TryGetValue(legacyColumn.Key, out var property) ||
-                        property.GetValue(legacyRecord) is not bool isApplied ||
-                        !isApplied)
-                    {
-                        continue;
-                    }
-
-                    await InsertMigratedDoseAsync(
-                        legacyRecord.UserId,
-                        legacyRecord.Id,
-                        legacyColumn.Value);
-                }
-            }
-
-            await Connection.ExecuteAsync(
-                """
-                DELETE FROM PatientVaccineDose
-                WHERE Id NOT IN (
-                    SELECT MIN(Id)
-                    FROM PatientVaccineDose
-                    GROUP BY UserId, PatientId, DoseKey
-                )
-                """);
-        }
-
-        private async Task MigratePatientVaccineDoseTableAsync()
-        {
-            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.LotNumber), "TEXT NOT NULL DEFAULT ''");
-            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.Notes), "TEXT NOT NULL DEFAULT ''");
-            await EnsureColumnAsync("PatientVaccineDose", nameof(PatientVaccineDose.CreatedAt), "TEXT NULL");
-            await Connection.ExecuteAsync("UPDATE PatientVaccineDose SET CreatedAt = COALESCE(AppliedAt, CURRENT_TIMESTAMP) WHERE CreatedAt IS NULL OR CreatedAt = ''");
-            await Connection.ExecuteAsync("UPDATE PatientVaccineDose SET AppliedAt = CreatedAt WHERE IsApplied = 1 AND (AppliedAt IS NULL OR AppliedAt = '')");
-        }
-
-        private Task InsertMigratedDoseAsync(int userId, int patientId, string doseKey)
-        {
-            return Connection.ExecuteAsync(
-                """
-                INSERT INTO PatientVaccineDose (UserId, PatientId, DoseKey, IsApplied, AppliedAt, LotNumber, Notes, CreatedAt)
-                SELECT ?, ?, ?, 1, CURRENT_TIMESTAMP, '', '', CURRENT_TIMESTAMP
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM PatientVaccineDose
-                    WHERE UserId = ?
-                      AND PatientId = ?
-                      AND DoseKey = ?
-                )
-                """,
-                userId,
-                patientId,
-                doseKey,
-                userId,
-                patientId,
-                doseKey);
-        }
-
         private async Task MigrateUserTableAsync()
         {
             await EnsureColumnAsync("User", nameof(User.PasswordHash), "TEXT NOT NULL DEFAULT ''");
@@ -359,214 +90,9 @@ namespace ACS_View.UseCases.Services
             return columns.Any(column => string.Equals(column.Name, columnName, StringComparison.OrdinalIgnoreCase));
         }
 
-        private async Task CreateIndexesAsync()
-        {
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Name ON Patient(Name COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_Name ON Patient(UserId, Name COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_IsActive ON Patient(UserId, IsActive)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_IsActive_Name ON Patient(UserId, IsActive, Name COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchName ON Patient(SearchName)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchMotherName ON Patient(SearchMotherName)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SearchFatherName ON Patient(SearchFatherName)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_SusNumber ON Patient(SusNumber COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_FamilyResponsibleSus ON Patient(FamilyResponsibleSus COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_MotherPatientId ON Patient(MotherPatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_FatherPatientId ON Patient(FatherPatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_FamilyResponsiblePatientId ON Patient(FamilyResponsiblePatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_HouseId ON Patient(HouseId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_HouseId ON Patient(UserId, HouseId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_Family_House ON Patient(FamilyId, HouseId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Patient_UserId_Family_House ON Patient(UserId, FamilyId, HouseId)");
-            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientBolsaFamilia_User_Patient ON PatientBolsaFamilia(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientBolsaFamilia_User_Responsible ON PatientBolsaFamilia(UserId, ResponsiblePatientId)");
-            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientInsulinDependency_User_Patient ON PatientInsulinDependency(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientPregnancy_User_Patient ON PatientPregnancy(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientPregnancy_User_Status ON PatientPregnancy(UserId, Status)");
-            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_CareNotification_User_Key ON CareNotification(UserId, UniqueKey)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CareNotification_User_Status ON CareNotification(UserId, Status)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CareNotification_User_Patient ON CareNotification(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_PatientId ON PatientCID(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientCID_UserId_CidId ON PatientCID(UserId, CidId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientConditions_UserId_PatientId ON PatientConditions(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE UNIQUE INDEX IF NOT EXISTS UX_PatientVaccineDose_User_Patient_Dose ON PatientVaccineDose(UserId, PatientId, DoseKey)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_PatientVaccineDose_UserId_PatientId ON PatientVaccineDose(UserId, PatientId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CepAddressCache_Cep ON CepAddressCache(Cep)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Tipo_Rua_Numero ON House(TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_UserId_Tipo_Rua_Numero ON House(UserId, TipoLogradouro COLLATE NOCASE, Rua COLLATE NOCASE, NumeroCasa)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_Rua_Numero ON House(Rua COLLATE NOCASE, NumeroCasa)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_SearchRua_Numero ON House(SearchRua, NumeroCasa)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_UserId_SearchRua_Numero ON House(UserId, SearchRua, NumeroCasa)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_House_SearchComplemento ON House(SearchComplemento)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Note_UserId_CreationDate ON Note(UserId, CreationDate)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Date ON Visits(UserId, Date)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Patient_Date ON Visits(UserId, PatientId, VisitDate)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Visits_UserId_Status_Date ON Visits(UserId, Status, VisitDate)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitCareLine_UserId_VisitId ON VisitCareLine(UserId, VisitId)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitCareLine_UserId_Type ON VisitCareLine(UserId, CareLineType)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_VisitBatch_UserId_Family_Date ON VisitBatch(UserId, HouseId, FamilyId, VisitDate)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Family_UserId_IdFamilia ON Family(UserId, IdFamilia)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Code ON CidSubcategory(Code COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidSubcategory_Description ON CidSubcategory(Description COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidCategory_Code ON CidCategory(Code COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidGroup_Code ON CidGroup(Code COLLATE NOCASE)");
-            await Connection.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_CidChapter_Code ON CidChapter(Code COLLATE NOCASE)");
-        }
-
-        private async Task BackfillSearchColumnsAsync()
-        {
-            var patients = await Connection.Table<Patient>().ToListAsync();
-            foreach (var patient in patients)
-            {
-                var searchName = SearchTextNormalizer.Normalize(patient.Name);
-                var searchMotherName = SearchTextNormalizer.Normalize(patient.MotherName);
-                var searchFatherName = SearchTextNormalizer.Normalize(patient.FatherName);
-
-                if (patient.SearchName == searchName &&
-                    patient.SearchMotherName == searchMotherName &&
-                    patient.SearchFatherName == searchFatherName)
-                {
-                    continue;
-                }
-
-                patient.SearchName = searchName;
-                patient.SearchMotherName = searchMotherName;
-                patient.SearchFatherName = searchFatherName;
-                await Connection.UpdateAsync(patient);
-            }
-
-            var houses = await Connection.Table<House>().ToListAsync();
-            foreach (var house in houses)
-            {
-                var searchRua = SearchTextNormalizer.Normalize(BuildStreetDisplay(house.TipoLogradouro, house.Rua));
-                var searchComplemento = SearchTextNormalizer.Normalize(house.Complemento);
-
-                if (house.SearchRua == searchRua &&
-                    house.SearchComplemento == searchComplemento)
-                {
-                    continue;
-                }
-
-                house.SearchRua = searchRua;
-                house.SearchComplemento = searchComplemento;
-                await Connection.UpdateAsync(house);
-            }
-        }
-
-        private async Task BackfillCepAddressCacheAsync()
-        {
-            var houses = await Connection.Table<House>().ToListAsync();
-            foreach (var house in houses)
-            {
-                var cep = CepNumberRules.Normalize(house.CEP);
-                if (!CepNumberRules.IsValid(cep) || !HasAddressData(house) || IsSuspiciousCity(house.Cidade))
-                {
-                    continue;
-                }
-
-                await Connection.ExecuteAsync(
-                    """
-                    INSERT OR IGNORE INTO CepAddressCache
-                        (Cep, Rua, TipoLogradouro, Bairro, Cidade, Estado, Pais, UpdatedAt)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    cep,
-                    house.Rua?.Trim() ?? string.Empty,
-                    house.TipoLogradouro?.Trim() ?? string.Empty,
-                    house.Bairro?.Trim() ?? string.Empty,
-                    house.Cidade?.Trim() ?? string.Empty,
-                    house.Estado?.Trim() ?? string.Empty,
-                    string.IsNullOrWhiteSpace(house.Pais) ? "Brasil" : house.Pais.Trim(),
-                    DateTime.UtcNow);
-            }
-        }
-
-        private async Task BackfillFamilyResponsibleAsync()
-        {
-            var patients = await Connection.Table<Patient>().ToListAsync();
-            var familyGroups = patients
-                .Where(patient => patient.HouseId > 0 && patient.FamilyId > 0)
-                .GroupBy(patient => new { patient.HouseId, patient.FamilyId });
-
-            foreach (var familyGroup in familyGroups)
-            {
-                var groupPatients = familyGroup.ToList();
-                var memberSusNumbers = groupPatients
-                    .SelectMany(patient => patient.SusNumbers)
-                    .Where(sus => !string.IsNullOrWhiteSpace(sus))
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-                var validResponsibleSus = groupPatients
-                    .Select(patient => patient.FamilyResponsibleSus)
-                    .Where(sus => !string.IsNullOrWhiteSpace(sus) && memberSusNumbers.Contains(SusNumberSet.Parse(sus).FirstOrDefault() ?? string.Empty))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                var responsibleSus = validResponsibleSus.Count == 1
-                    ? validResponsibleSus[0]
-                    : groupPatients.FirstOrDefault(patient => patient.SusNumbers.Count > 0)?.PrimarySusNumber;
-
-                if (string.IsNullOrWhiteSpace(responsibleSus))
-                {
-                    continue;
-                }
-
-                foreach (var patient in groupPatients)
-                {
-                    if (string.Equals(patient.FamilyResponsibleSus, responsibleSus, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    patient.FamilyResponsibleSus = responsibleSus;
-                    await Connection.UpdateAsync(patient);
-                }
-            }
-        }
-
         private sealed class TableColumnInfo
         {
-            [Column("name")]
-            public string Name { get; set; } = string.Empty;
-        }
-
-        private static readonly string[] UserScopedTables =
-        [
-            "Patient",
-            "PatientBolsaFamilia",
-            "PatientInsulinDependency",
-            "PatientPregnancy",
-            "CareNotification",
-            "House",
-            "Family",
-            "Note",
-            "Visits",
-            "VisitBatch",
-            "VisitCareLine",
-            "Vaccines",
-            "PatientVaccineDose",
-            "PatientCID",
-            "PatientConditions"
-        ];
-
-        private static string BuildStreetDisplay(string? streetType, string? street)
-        {
-            return string.Join(" ", new[] { streetType, street }
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => value!.Trim()));
-        }
-
-        private static bool HasAddressData(House house)
-        {
-            return !string.IsNullOrWhiteSpace(house.Rua) ||
-                   !string.IsNullOrWhiteSpace(house.Bairro) ||
-                   !string.IsNullOrWhiteSpace(house.Cidade) ||
-                   !string.IsNullOrWhiteSpace(house.Estado);
-        }
-
-        private static bool IsSuspiciousCity(string? value)
-        {
-            var normalized = value?.Trim();
-            return !string.IsNullOrWhiteSpace(normalized) && normalized.All(char.IsDigit);
+            [Column("name")] public string Name { get; set; } = string.Empty;
         }
     }
 }

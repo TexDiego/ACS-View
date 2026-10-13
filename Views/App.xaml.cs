@@ -89,6 +89,11 @@ namespace ACS_View.Views
                 await ReconcileRemindersAsync();
 
                 var authService = ServiceProvider.GetRequiredService<IAuthService>();
+                if (initialPage is AppShell { LoginPage: { } loginPage }
+                    && !await loginPage.PrepareForLoginAsync())
+                {
+                    return;
+                }
                 if (!await authService.IsAuthenticatedAsync())
                 {
                     return;

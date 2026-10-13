@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System.Text.Json.Serialization;
 
 namespace ACS_View.Domain.Entities
@@ -8,6 +8,8 @@ namespace ACS_View.Domain.Entities
         [PrimaryKey, AutoIncrement]
         public int CasaId { get; set; }
         public int UserId { get; set; }
+        public int RowRevision { get; set; }
+        public bool IsActive { get; set; } = true;
 
         [JsonPropertyName("cep")]
         public string CEP { get; set; } = string.Empty;

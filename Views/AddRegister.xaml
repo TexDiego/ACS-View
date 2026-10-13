@@ -12,7 +12,6 @@
              Style="{StaticResource PageBackground}"
              Title="Adicionar cadastro">
 
-    <!-- TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" -->
     <ContentPage.Resources>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="13"/>
@@ -32,10 +31,10 @@
         <!-- The radio template makes the entire option the selection surface. -->
         <ControlTemplate x:Key="SexOptionTemplate">
             <Border Style="{StaticResource FieldBorder}"
-                    Padding="12,10"
-                    StrokeThickness="2"
+                    Padding="6,4"
+                    StrokeThickness="1"
                     StrokeShape="RoundRectangle 8"
-                    MinimumHeightRequest="48"
+                    MinimumHeightRequest="36"
                     HorizontalOptions="Fill"
                     VerticalOptions="Fill">
                 <VisualStateManager.VisualStateGroups>
@@ -60,7 +59,7 @@
                 </VisualStateManager.VisualStateGroups>
                 <Label x:Name="OptionLabel"
                        Text="{TemplateBinding Content}"
-                       FontSize="14"
+                       FontSize="12"
                        HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"
                        LineBreakMode="WordWrap"
@@ -69,8 +68,62 @@
         </ControlTemplate>
         <Style x:Key="SexOption" TargetType="RadioButton">
             <Setter Property="ControlTemplate" Value="{StaticResource SexOptionTemplate}"/>
+            <Setter Property="MinimumHeightRequest" Value="36"/>
             <Setter Property="HorizontalOptions" Value="Fill"/>
             <Setter Property="VerticalOptions" Value="Fill"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style x:Key="CompactNumberAction" TargetType="ImageButton">
+            <Setter Property="HeightRequest" Value="36"/>
+            <Setter Property="WidthRequest" Value="36"/>
+            <Setter Property="MinimumHeightRequest" Value="36"/>
+            <Setter Property="MinimumWidthRequest" Value="36"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="BorderWidth" Value="0"/>
+        </Style>
+        <ControlTemplate x:Key="NumberOptionTemplate">
+            <Border Padding="4,2" StrokeThickness="0" StrokeShape="RoundRectangle 6"
+                    MinimumHeightRequest="36" HorizontalOptions="Fill">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="CheckedStates">
+                        <VisualState x:Name="Checked">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource DarkPrimaryContainer}}"/>
+                                <Setter TargetName="SelectedDot" Property="Ellipse.Opacity" Value="1"/>
+                                <Setter TargetName="NumberLabel" Property="Label.FontAttributes" Value="Bold"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Unchecked">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent"/>
+                                <Setter TargetName="SelectedDot" Property="Ellipse.Opacity" Value="0"/>
+                                <Setter TargetName="NumberLabel" Property="Label.FontAttributes" Value="None"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+                <Grid ColumnDefinitions="16,*" ColumnSpacing="6">
+                    <Grid VerticalOptions="Center" InputTransparent="True">
+                        <Ellipse WidthRequest="14" HeightRequest="14" StrokeThickness="1.5"
+                                 Stroke="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                        <Ellipse x:Name="SelectedDot" WidthRequest="6" HeightRequest="6" Opacity="0"
+                                 Fill="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
+                    </Grid>
+                    <Label x:Name="NumberLabel" Grid.Column="1" Text="{TemplateBinding Content}" FontSize="14"
+                           VerticalTextAlignment="Center" LineBreakMode="TailTruncation" InputTransparent="True"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
+                </Grid>
+            </Border>
+        </ControlTemplate>
+        <Style x:Key="NumberOption" TargetType="RadioButton">
+            <Setter Property="ControlTemplate" Value="{StaticResource NumberOptionTemplate}"/>
+            <Setter Property="MinimumHeightRequest" Value="36"/>
+            <Setter Property="MinimumWidthRequest" Value="0"/>
+            <Setter Property="HorizontalOptions" Value="Fill"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="0"/>
         </Style>
@@ -148,33 +201,152 @@
                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectFatherCommand}"/>
                 </Grid>
 
-                <!-- CNS -->
-                <Entry
-                    VerticalOptions="Center"
-                    Margin="0"
-                    Keyboard="Text"
-                    Placeholder="Números CNS separados por ponto e vírgula"
-                    Text="{Binding SusNumber, Mode=TwoWay}"/>
+                <!-- Números SUS -->
+                <Border
+                    Style="{StaticResource FieldBorder}"
+                    Padding="8"
+                    BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SusEditor}"
+                    x:DataType="vm:SusNumberEditorViewModel">
 
-                <!-- Separate full-width fields avoid competing intrinsic sizes. -->
+                    <VerticalStackLayout Spacing="4">
+
+                        <Label
+                            Text="Números CNS"
+                            Style="{StaticResource labels}"/>
+
+                        <Grid
+                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnSpacing="2">
+
+                            <Entry
+                                x:Name="SusEntry"
+                                Keyboard="Numeric"
+                                Placeholder="Número CNS (15 dígitos)"
+                                Text="{Binding Input, Mode=TwoWay}"
+                                ClearButtonVisibility="WhileEditing"
+                                ReturnType="Done"
+                                ReturnCommand="{Binding ApplyCommand}"
+                                MinimumHeightRequest="40"
+                                FontSize="14"
+                                MaxLength="15"/>
+
+                            <ImageButton
+                                Grid.Column="1"
+                                Style="{StaticResource CompactNumberAction}"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=AddCircle12, IconSize=20}"
+                                Command="{Binding ApplyCommand}"
+                                VerticalOptions="Center"
+                                SemanticProperties.Description="{Binding ApplyLabel}"
+                                ToolTipProperties.Text="{Binding ApplyLabel}">
+
+                                <ImageButton.Triggers>
+                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="mi:MauiIcon.Value" Value="{mi:Fluent Icon=Edit24, IconSize=20}"/>
+                                    </DataTrigger>
+                                </ImageButton.Triggers>
+                            </ImageButton>
+
+                            <ImageButton
+                                Grid.Column="2"
+                                Style="{StaticResource CompactNumberAction}"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Dismiss24, IconSize=20}"
+                                Command="{Binding CancelCommand}"
+                                IsVisible="{Binding IsEditing}"
+                                VerticalOptions="Center"
+                                SemanticProperties.Description="Cancelar edição"
+                                ToolTipProperties.Text="Cancelar edição"/>
+                        </Grid>
+
+                        <Label
+                            Text="{Binding Error}"
+                            IsVisible="{Binding HasError}"
+                            FontSize="12"
+                            LineBreakMode="WordWrap"
+                            TextColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource DarkError}}"/>
+
+                        <CollectionView
+                            Margin="0,10,0,0"
+                            ItemsSource="{Binding Numbers}"
+                            SelectionMode="None"
+                            HeightRequest="{Binding ListHeight}"
+                            ItemSizingStrategy="MeasureAllItems"
+                            VerticalScrollBarVisibility="Default">
+
+                            <CollectionView.EmptyView>
+                                <Label Text="Nenhum número SUS adicionado." FontSize="12" VerticalTextAlignment="Center"/>
+                            </CollectionView.EmptyView>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="objects:SusNumber">
+                                    <Grid
+                                        ColumnDefinitions="*,36,36"
+                                        ColumnSpacing="2"
+                                        Margin="0,0,0,4">
+
+                                        <RadioButton
+                                            Style="{StaticResource NumberOption}"
+                                            Content="{Binding Number}"
+                                            IsChecked="{Binding IsPrimary, Mode=OneWay}"
+                                            CheckedChanged="OnPrimarySusCheckedChanged"
+                                            SemanticProperties.Description="{Binding Number, StringFormat='Selecionar {0} como principal'}"
+                                            ToolTipProperties.Text="{Binding Number, StringFormat='Selecionar {0} como principal'}"/>
+
+                                        <ImageButton
+                                            Grid.Column="1"
+                                            Style="{StaticResource CompactNumberAction}"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=Edit24, IconSize=18}"
+                                            SemanticProperties.Description="Editar número SUS"
+                                            ToolTipProperties.Text="Editar número SUS"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}}, Path=EditCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnEditSusClicked"/>
+
+                                        <ImageButton
+                                            Grid.Column="2" Style="{StaticResource CompactNumberAction}"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=Delete24, IconSize=18}"
+                                            SemanticProperties.Description="Excluir número SUS"
+                                            ToolTipProperties.Text="Excluir número SUS"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}}, Path=DeleteCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <Label
+                            Text="Selecione o número principal."
+                            FontSize="11"
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Sexo -->
                 <Border Style="{StaticResource FieldBorder}" Padding="10">
                     <VerticalStackLayout Spacing="8">
-                        <Label Style="{StaticResource labels}" Text="Sexo"/>
-                        <Grid x:Name="SexOptionsGrid"
-                              RowDefinitions="Auto,Auto,Auto"
-                              ColumnDefinitions="*"
-                              RowSpacing="8"
-                              ColumnSpacing="8"
-                              SizeChanged="OnSexOptionsSizeChanged"
-                              RadioButtonGroup.GroupName="Sexo"
-                              RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}">
+
+                        <Label
+                            Style="{StaticResource labels}"
+                            Text="Sexo"/>
+
+                        <Grid
+                            x:Name="SexOptionsGrid"
+                            RowDefinitions="Auto"
+                            ColumnDefinitions="*,*,*"
+                            RowSpacing="4"
+                            ColumnSpacing="4"
+                            SizeChanged="OnSexOptionsSizeChanged"
+                            RadioButtonGroup.GroupName="Sexo"
+                            RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}">
+
                             <RadioButton Grid.Row="0" Content="Masculino" Value="Masculino" Style="{StaticResource SexOption}"/>
-                            <RadioButton Grid.Row="1" Content="Feminino" Value="Feminino" Style="{StaticResource SexOption}"/>
-                            <RadioButton Grid.Row="2" Content="Indeterminado" Value="Indeterminado" Style="{StaticResource SexOption}"/>
+                            <RadioButton Grid.Column="1" Content="Feminino" Value="Feminino" Style="{StaticResource SexOption}"/>
+                            <RadioButton Grid.Column="2" Content="Indeterminado" Value="Indeterminado" Style="{StaticResource SexOption}"/>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Data de nascimento -->
                 <Border Style="{StaticResource FieldBorder}" Padding="10">
                     <VerticalStackLayout Spacing="4">
                         <Label Style="{StaticResource labels}" Text="Data de nascimento"/>
@@ -188,6 +360,121 @@
                             Format="dd/MM/yyyy"
                             MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MinimumDate}"
                             MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MaximumDate}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Telefones -->
+                <Border
+                    Style="{StaticResource FieldBorder}"
+                    Padding="8"
+                    BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PhoneEditor}"
+                    x:DataType="vm:PhoneEditorViewModel">
+
+                    <VerticalStackLayout Spacing="4">
+
+                        <Label
+                            Text="Telefones"
+                            Style="{StaticResource labels}"/>
+
+                        <Grid
+                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnSpacing="2">
+
+                            <Entry
+                                x:Name="PhoneEntry"
+                                Keyboard="Telephone"
+                                Placeholder="Número com DDD"
+                                Text="{Binding Input, Mode=TwoWay}"
+                                ClearButtonVisibility="WhileEditing"
+                                ReturnType="Done"
+                                ReturnCommand="{Binding ApplyCommand}"
+                                MinimumHeightRequest="40"
+                                FontSize="14"/>
+
+                            <ImageButton
+                                Grid.Column="1"
+                                Style="{StaticResource CompactNumberAction}"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=AddCircle12, IconSize=20}"
+                                Command="{Binding ApplyCommand}"
+                                VerticalOptions="Center"
+                                SemanticProperties.Description="{Binding ApplyLabel}"
+                                ToolTipProperties.Text="{Binding ApplyLabel}">
+
+                                <ImageButton.Triggers>
+                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="mi:MauiIcon.Value" Value="{mi:Fluent Icon=Edit24, IconSize=20}"/>
+                                    </DataTrigger>
+                                </ImageButton.Triggers>
+                            </ImageButton>
+
+                            <ImageButton
+                                Grid.Column="2"
+                                Style="{StaticResource CompactNumberAction}"
+                                mi:MauiIcon.Value="{mi:Fluent Icon=Dismiss24, IconSize=20}"
+                                Command="{Binding CancelCommand}"
+                                IsVisible="{Binding IsEditing}"
+                                VerticalOptions="Center"
+                                SemanticProperties.Description="Cancelar edição"
+                                ToolTipProperties.Text="Cancelar edição"/>
+                        </Grid>
+
+                        <Label
+                            Text="{Binding Error}"
+                            IsVisible="{Binding HasError}"
+                            FontSize="12"
+                            LineBreakMode="WordWrap"
+                            TextColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource DarkError}}"/>
+
+                        <CollectionView
+                            Margin="0,10,0,0"
+                            ItemsSource="{Binding Phones}"
+                            SelectionMode="None"
+                            HeightRequest="{Binding ListHeight}"
+                            ItemSizingStrategy="MeasureAllItems">
+
+                            <CollectionView.EmptyView>
+                                <Label Text="Nenhum telefone adicionado." FontSize="12" VerticalTextAlignment="Center"/>
+                            </CollectionView.EmptyView>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="objects:Phone">
+                                    <Grid ColumnDefinitions="*,36,36" ColumnSpacing="2" Margin="0,0,0,4">
+
+                                        <RadioButton
+                                            Style="{StaticResource NumberOption}"
+                                            Content="{Binding Number, Converter={converters:PhoneFormatConverter}}"
+                                            IsChecked="{Binding IsPrimary, Mode=OneWay}"
+                                            CheckedChanged="OnPrimaryPhoneCheckedChanged"
+                                            SemanticProperties.Description="{Binding Number, StringFormat='Selecionar {0} como principal'}"
+                                            ToolTipProperties.Text="{Binding Number, StringFormat='Selecionar {0} como principal'}"/>
+
+                                        <ImageButton
+                                            Grid.Column="1"
+                                            Style="{StaticResource CompactNumberAction}"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=Edit24, IconSize=18}"
+                                            SemanticProperties.Description="Editar telefone"
+                                            ToolTipProperties.Text="Editar telefone"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}}, Path=EditCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnEditPhoneClicked"/>
+
+                                        <ImageButton
+                                            Grid.Column="2" Style="{StaticResource CompactNumberAction}"
+                                            mi:MauiIcon.Value="{mi:Fluent Icon=Delete24, IconSize=18}"
+                                            SemanticProperties.Description="Excluir telefone"
+                                            ToolTipProperties.Text="Excluir telefone"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}}, Path=DeleteCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <Label
+                            Text="Selecione o número principal."
+                            FontSize="11"
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
                     </VerticalStackLayout>
                 </Border>
 

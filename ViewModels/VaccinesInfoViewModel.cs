@@ -37,10 +37,10 @@ namespace ACS_View.ViewModels
             DeadlineText = dose.MaximumDate.HasValue
                 ? $"Prazo maximo: {dose.MaximumDate.Value:dd/MM/yyyy}"
                 : "Sem prazo maximo definido";
-            HasApplication = dose.ApplicationDate.HasValue;
+            HasApplication = dose.IsApplied;
             ApplicationDateText = dose.ApplicationDate.HasValue
                 ? $"Aplicada em {dose.ApplicationDate.Value:dd/MM/yyyy}"
-                : "Sem registro de aplicacao";
+                : dose.IsApplied ? "Aplicada; data não informada" : "Sem registro de aplicacao";
             LotNumber = dose.LotNumber;
             Notes = dose.Notes;
             HasLotNumber = !string.IsNullOrWhiteSpace(LotNumber);

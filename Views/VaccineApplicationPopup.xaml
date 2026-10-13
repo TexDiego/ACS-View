@@ -39,9 +39,15 @@
 
             <VerticalStackLayout Spacing="4">
                 <Label Text="Data de aplicação" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
+                <HorizontalStackLayout>
+                    <CheckBox IsChecked="{Binding HasKnownApplicationDate, Mode=TwoWay}"/>
+                    <Label Text="Data de aplicação conhecida" Style="{StaticResource BodyMuted}" VerticalTextAlignment="Center"/>
+                </HorizontalStackLayout>
+                <Label Text="Data de aplicação não informada." Style="{StaticResource BodyMuted}" IsVisible="{Binding HasUnknownApplicationDate}"/>
+                <Border Style="{StaticResource FieldBorder}" IsVisible="{Binding HasKnownApplicationDate}">
                     <DatePicker
                         Date="{Binding ApplicationDate, Mode=TwoWay}"
+                        IsEnabled="{Binding HasKnownApplicationDate}"
                         MaximumDate="{Binding MaximumDate}"/>
                 </Border>
             </VerticalStackLayout>

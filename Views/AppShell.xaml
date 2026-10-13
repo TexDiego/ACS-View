@@ -4,7 +4,7 @@
        xmlns:pages="clr-namespace:ACS_View.Views"
        xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
        x:Class="ACS_View.Views.AppShell"
-       Shell.TitleColor="{StaticResource White}"
+       Shell.TitleColor="White"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
        Shell.ForegroundColor="White"
        Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"

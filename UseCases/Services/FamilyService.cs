@@ -124,7 +124,7 @@ namespace ACS_View.UseCases.Services
             try
             {
                 var result = await _connection.ExecuteScalarAsync<int?>(
-                    "SELECT MAX(FamilyId) FROM Patient WHERE HouseId = ? AND UserId = ?",
+                    "SELECT MAX(LocalNumber) FROM LegacyFamilyMap WHERE LegacyHouseId = ? AND UserId = ?",
                     houseId,
                     currentUserContext.RequireCurrentUserId()
                 );

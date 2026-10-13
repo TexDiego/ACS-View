@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ACS_View.Domain.Entities.Health
@@ -8,6 +8,7 @@ namespace ACS_View.Domain.Entities.Health
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
         public int UserId { get; set; }
+        public int? ConditionId { get; set; }
 
         [ForeignKey(nameof(Patient))]
         public int? PatientId { get; set; }

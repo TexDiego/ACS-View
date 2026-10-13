@@ -7,6 +7,7 @@
              Shell.TabBarIsVisible="False"
              Style="{StaticResource PageBackground}">
 
+    <ScrollView>
     <Grid Padding="24" RowDefinitions="*,auto,*" MaximumWidthRequest="600">
         <VerticalStackLayout Grid.Row="1" Spacing="18">
             <Image
@@ -20,24 +21,33 @@
                 <Label Text="Acompanhamento comunitário" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
 
-            <Border Style="{StaticResource CardBorder}" Padding="18" Margin="0">
+            <Label x:Name="UpdateStatus" Text="Verificando atualizações…" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center" />
+            <Border x:Name="UpdateCard" IsVisible="False" Style="{StaticResource CardBorder}" Padding="18">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="UpdateMessage" Style="{StaticResource BodyMuted}" />
+                    <Button x:Name="InstallUpdate" Text="Instalar atualização" Style="{StaticResource PrimaryButton}" Clicked="InstallUpdate_Clicked" />
+                    <Button x:Name="SkipUpdate" Text="Agora não" Style="{StaticResource GhostButton}" Clicked="SkipUpdate_Clicked" />
+                    <Button x:Name="CancelDownload" Text="Cancelar download" IsVisible="False" Style="{StaticResource GhostButton}" Clicked="CancelDownload_Clicked" />
+                </VerticalStackLayout>
+            </Border>
+            <Border x:Name="LoginForm" IsEnabled="False" Style="{StaticResource CardBorder}" Padding="18" Margin="0">
                 <VerticalStackLayout Spacing="14">
-                    
-                    <Entry 
-                        x:Name="UsernameEntry" 
+
+                    <Entry
+                        x:Name="UsernameEntry"
                         Placeholder="Nome de usuário"
                         MaxLength="64"
                         IsSpellCheckEnabled="False"
                         IsTextPredictionEnabled="False"
                         HorizontalTextAlignment="Start"/>
 
-                    <Entry 
-                        x:Name="PasswordEntry" 
+                    <Entry
+                        x:Name="PasswordEntry"
                         Placeholder="Senha"
                         MaxLength="128"
                         IsSpellCheckEnabled="False"
                         IsTextPredictionEnabled="False"
-                        IsPassword="True" 
+                        IsPassword="True"
                         HorizontalTextAlignment="Start"/>
 
                     <Button
@@ -45,16 +55,11 @@
                         Text="Entrar"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="Btn_Login_Clicked"/>
-                    <Button x:Name="BiometricLoginButton"
-                            Text="Entrar com biometria"
-                            IsVisible="False"
-                            Style="{StaticResource Buttons}"
-                            Clicked="BiometricLogin_Clicked"/>
-                    
+
                 </VerticalStackLayout>
             </Border>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Grid x:Name="AccountActions" IsEnabled="False" ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Button
                     x:Name="RegisterUser"
                     Grid.Column="0"
@@ -71,4 +76,5 @@
             </Grid>
         </VerticalStackLayout>
     </Grid>
+    </ScrollView>
 </ContentPage>

@@ -13,5 +13,5 @@ public sealed record PatientVaccineDoseDto(
     string Notes,
     VaccineStatus Status)
 {
-    public bool IsApplied => ApplicationDate.HasValue;
+    public bool IsApplied => Status == VaccineStatus.Applied || ApplicationDate.HasValue;
 }

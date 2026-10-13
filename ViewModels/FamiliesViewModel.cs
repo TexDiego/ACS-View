@@ -171,16 +171,7 @@ namespace ACS_View.ViewModels
 
                 if (!confirm) return;
 
-                var pessoasDaFamilia = await _patientService.GetPatientsByFamilyAndHouseId(idFamily, _idHouse);
-
-                foreach (var person in pessoasDaFamilia)
-                {
-                    person.HouseId = -1;
-                    person.FamilyId = -1;
-                    person.FamilyResponsibleSus = null;
-
-                    await _patientService.UpdatePatient(person);
-                }
+                await _familyManager.RemoveFamilyAsync(_idHouse,idFamily);
 
                 OnPropertyChanged(nameof(Families));
                 await LoadFamiliesAsync();

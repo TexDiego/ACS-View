@@ -11,12 +11,14 @@ public partial class VaccineApplicationPopupViewModel : BaseViewModel
     private string notes;
     private string errorMessage = string.Empty;
     private bool hasError;
+    private bool hasKnownApplicationDate;
 
     public VaccineApplicationPopupViewModel(int patientId, PatientVaccineDoseDto dose)
     {
         this.patientId = patientId;
         this.dose = dose;
         applicationDate = dose.ApplicationDate ?? DateTime.Today;
+        hasKnownApplicationDate=!dose.IsApplied || dose.ApplicationDate.HasValue;
         lotNumber = dose.LotNumber;
         notes = dose.Notes;
     }
@@ -27,6 +29,15 @@ public partial class VaccineApplicationPopupViewModel : BaseViewModel
         ? $"Recomendada: {dose.RecommendedDate:dd/MM/yyyy} | Prazo: {dose.MaximumDate.Value:dd/MM/yyyy}"
         : $"Recomendada: {dose.RecommendedDate:dd/MM/yyyy}";
     public DateTime MaximumDate => DateTime.Today;
+    public bool HasKnownApplicationDate
+    {
+        get=>hasKnownApplicationDate;
+        set
+        {
+            if(SetProperty(ref hasKnownApplicationDate,value))OnPropertyChanged(nameof(HasUnknownApplicationDate));
+        }
+    }
+    public bool HasUnknownApplicationDate=>!HasKnownApplicationDate;
 
     public DateTime ApplicationDate
     {
@@ -68,7 +79,7 @@ public partial class VaccineApplicationPopupViewModel : BaseViewModel
     {
         request = null;
 
-        if (ApplicationDate.Date > DateTime.Today)
+        if (HasKnownApplicationDate && ApplicationDate.Date > DateTime.Today)
         {
             SetError("A data de aplicação não pode ser futura.");
             return false;
@@ -77,7 +88,7 @@ public partial class VaccineApplicationPopupViewModel : BaseViewModel
         request = new VaccineApplicationRequestDto(
             patientId,
             dose.Definition.DoseKey,
-            ApplicationDate.Date,
+            HasKnownApplicationDate ? ApplicationDate.Date : null,
             LotNumber ?? string.Empty,
             Notes ?? string.Empty);
 

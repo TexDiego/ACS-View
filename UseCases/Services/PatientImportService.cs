@@ -369,7 +369,9 @@ namespace ACS_View.UseCases.Services
         {
             var before = System.Text.Json.JsonSerializer.Serialize(patient);
             if (!string.IsNullOrWhiteSpace(name)) patient.Name = name.Trim();
-            patient.AddSusNumbers(susNumber);
+            // Empty/missing cells preserve the entity list. New numbers are appended,
+            // retaining the legacy text; the patient repository persists both atomically.
+            if (!string.IsNullOrWhiteSpace(susNumber)) patient.AddSusNumbers(susNumber);
             if (!string.IsNullOrWhiteSpace(motherName)) patient.MotherName = motherName.Trim();
             if (!string.IsNullOrWhiteSpace(fatherName)) patient.FatherName = fatherName.Trim();
             if (!string.IsNullOrWhiteSpace(observation) && !patient.Observacao.Split(" | ").Contains(observation.Trim()))

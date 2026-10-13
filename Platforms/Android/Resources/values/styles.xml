@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MAUI wraps Material 3 inputs with this theme. Setting the legacy
+         colorPrimary resource alone does not change their focus colors. -->
+    <style name="Maui.Material3.Theme.Base" parent="Theme.Material3.DayNight">
+        <!-- Preserve the base settings supplied by MAUI 10.0.110. -->
+        <item name="maui_edgetoedge_optout">true</item>
+        <item name="maui_splash">false</item>
+        <item name="bottomNavigationViewStyle">@style/Widget.Material3.BottomNavigationView</item>
+        <item name="materialButtonStyle">@style/MauiMaterialButton</item>
+
+        <!-- Material outlined fields use colorPrimary for their focused
+             stroke, label and cursor; legacy inputs use the accent tint. -->
+        <item name="colorPrimary">@color/inputFocusColor</item>
+        <item name="colorOnPrimary">@color/onInputFocusColor</item>
+        <item name="colorAccent">@color/inputFocusColor</item>
+        <item name="colorControlActivated">@color/inputFocusColor</item>
+    </style>
+</resources>

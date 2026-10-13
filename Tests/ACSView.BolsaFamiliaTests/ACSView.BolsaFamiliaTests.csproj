@@ -16,6 +16,7 @@
     <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
     <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientBolsaFamiliaRepository.cs" />
     <Compile Include="../../UseCases/Services/DatabaseService.cs" />
+    <Compile Include="../../Infrastructure/Data/Migrations/*.cs" />
     <Compile Include="../../Domain/Entities/**/*.cs" />
     <Compile Include="../../Domain/Enums/*.cs" />
     <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />

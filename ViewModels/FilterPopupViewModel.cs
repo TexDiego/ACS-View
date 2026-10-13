@@ -3,7 +3,6 @@ using ACS_View.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Xamarin.Google.Crypto.Tink.Shaded.Protobuf;
 
 namespace ACS_View.ViewModels
 {
@@ -12,6 +11,11 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private string minimumAge = string.Empty;
         [ObservableProperty] private string maximumAge = string.Empty;
         [ObservableProperty] private bool onlyBolsaFamilia;
+        [ObservableProperty] private bool withoutSusNumber;
+        [ObservableProperty] private bool withoutPhone;
+        [ObservableProperty] private bool withoutMotherName;
+        [ObservableProperty] private bool withoutFatherName;
+        [ObservableProperty] private bool withoutHouse;
         [ObservableProperty] private int filterBy = 0;
         [ObservableProperty] private int orderBy = 0;
 
@@ -24,11 +28,36 @@ namespace ACS_View.ViewModels
 
         public ICommand ToggleSexCommand { get; }
         public ICommand ToggleBolsaFamiliaCommand { get; }
+        public ICommand ToggleMissingInformationCommand { get; }
+
+        public double PopupHeight
+        {
+            get
+            {
+                try
+                {
+                    var info = DeviceDisplay.MainDisplayInfo;
+                    return Math.Min(680, Math.Max(240, info.Height / Math.Max(1, info.Density) - 80));
+                }
+                catch { return 600; }
+            }
+        }
 
         public FilterPopupViewModel()
         {
             ToggleSexCommand = new Command<SexFilterOption>(ToggleSex);
             ToggleBolsaFamiliaCommand = new Command(ToggleBolsaFamilia);
+            ToggleMissingInformationCommand = new Command<string>(field =>
+            {
+                switch (field)
+                {
+                    case nameof(WithoutSusNumber): WithoutSusNumber = !WithoutSusNumber; break;
+                    case nameof(WithoutPhone): WithoutPhone = !WithoutPhone; break;
+                    case nameof(WithoutMotherName): WithoutMotherName = !WithoutMotherName; break;
+                    case nameof(WithoutFatherName): WithoutFatherName = !WithoutFatherName; break;
+                    case nameof(WithoutHouse): WithoutHouse = !WithoutHouse; break;
+                }
+            });
         }
 
         private void ToggleBolsaFamilia()
@@ -42,6 +71,11 @@ namespace ACS_View.ViewModels
             MinimumAge = filter.MinimumAge?.ToString() ?? string.Empty;
             MaximumAge = filter.MaximumAge?.ToString() ?? string.Empty;
             OnlyBolsaFamilia = filter.OnlyBolsaFamilia;
+            WithoutSusNumber = filter.WithoutSusNumber;
+            WithoutPhone = filter.WithoutPhone;
+            WithoutMotherName = filter.WithoutMotherName;
+            WithoutFatherName = filter.WithoutFatherName;
+            WithoutHouse = filter.WithoutHouse;
             FilterBy = (int)filter.SortBy;
             OrderBy = filter.SortDescending ? 1 : 0;
 
@@ -58,6 +92,11 @@ namespace ACS_View.ViewModels
             {
                 FilterKey = string.IsNullOrWhiteSpace(filterKey) ? "ALL" : filterKey,
                 OnlyBolsaFamilia = OnlyBolsaFamilia,
+                WithoutSusNumber = WithoutSusNumber,
+                WithoutPhone = WithoutPhone,
+                WithoutMotherName = WithoutMotherName,
+                WithoutFatherName = WithoutFatherName,
+                WithoutHouse = WithoutHouse,
                 Sexes = SexOptions
                     .Where(option => option.IsSelected)
                     .Select(option => option.Value)

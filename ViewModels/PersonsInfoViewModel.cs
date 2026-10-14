@@ -19,7 +19,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                                           IPatientInsulinDependencyRepository _insulinDependencyRepository,
                                           IPregnancyService _pregnancyService,
                                           IPatientPhoneService _phoneService,
-                                          IPatientSusService _susService) : BaseViewModel
+                                          IPatientSusService _susService,
+                                          ISnackbarService _snackbarService) : BaseViewModel
 {
     private static readonly Dictionary<string, string> _chapterIconMap = new()
     {
@@ -95,9 +96,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
     [ObservableProperty] private string nisNumber = string.Empty;
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(OpenWhatsAppCommand))]
-    private string mainPhone = string.Empty;
+    [ObservableProperty] private string mainPhone = string.Empty;
     [ObservableProperty] private string mainSus = string.Empty;
     [ObservableProperty] private string pregnancyInfo = string.Empty;
     [ObservableProperty] private string pregnancyRiskSuggestionInfo = string.Empty;
@@ -108,18 +107,25 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
     public ICommand GoToFamilyCommand => new Command(async () => await GoToFamilyAsync());
 
-    private bool CanOpenWhatsApp() => WhatsAppPhone.TryCreateChatUri(MainPhone, out _);
-
-    [RelayCommand(CanExecute = nameof(CanOpenWhatsApp))]
+    [RelayCommand]
     private async Task OpenWhatsAppAsync()
     {
-        if (!WhatsAppPhone.TryCreateChatUri(MainPhone, out var uri)) return;
+        if (!WhatsAppPhone.TryCreateChatUri(MainPhone, out var uri))
+        {
+            await _snackbarService.ShowAsync("Não há número de WhatsApp válido disponível para este paciente.", SnackbarStyle.Error);
+            return;
+        }
 
-        await ExecuteSafelyAsync(async () =>
+        try
         {
             if (!await Launcher.Default.OpenAsync(uri!))
-                await DisplayAlertAsync("WhatsApp", "Não foi possível abrir a conversa no WhatsApp.");
-        }, "Não foi possível abrir a conversa no WhatsApp.");
+                await _snackbarService.ShowAsync("Não foi possível abrir a conversa no WhatsApp.", SnackbarStyle.Error);
+        }
+        catch (Exception ex) when (IsCancellationException(ex)) { }
+        catch (Exception)
+        {
+            await _snackbarService.ShowAsync("Não foi possível abrir a conversa no WhatsApp.", SnackbarStyle.Error);
+        }
     }
 
     private async Task GoToFamilyAsync()

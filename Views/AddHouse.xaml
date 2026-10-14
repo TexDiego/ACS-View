@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:AddHouseViewModel"
              x:Class="ACS_View.Views.AddHouse"
              Style="{StaticResource PageBackground}"
@@ -32,7 +32,7 @@
                         TextChanged="Entry_CEP_TextChanged"/>
                     
                     <ImageButton
-                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        Source="{icons:ThemedIcon Icon=Search32, Role=OnFill}"
                         MaximumHeightRequest="40"
                         Style="{StaticResource SoftIconButton}"
                         HorizontalOptions="End"

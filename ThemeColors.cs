@@ -11,7 +11,7 @@ namespace ACS_View
         internal static Color BorderSoft => Color.FromArgb(IsDark ? "#2E4350" : "#D7E1E7");
         internal static Color BorderStrong => Color.FromArgb(IsDark ? "#42606F" : "#B7C7D0");
         internal static Color SelectedSurface => Color.FromArgb(IsDark ? "#153E4B" : "#DDF3FA");
-        internal static Color TabBarSelectedIndicator => Color.FromArgb(IsDark ? "#DDF3FA" : "#006B91");
+        internal static Color TabBarSelectedIndicator => Color.FromArgb(IsDark ? "#153E4B" : "#DDF3FA");
         internal static Color SkeletonFill => Color.FromArgb(IsDark ? "#293946" : "#E5EBEF");
         internal static Color SkeletonShine => Color.FromArgb(IsDark ? "#33FFFFFF" : "#FFFFFFFF");
         internal static Color PopupOverlay => Color.FromArgb(IsDark ? "#99071116" : "#4D6B7680");

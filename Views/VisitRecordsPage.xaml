@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:VisitRecordsViewModel"
              x:Class="ACS_View.Views.VisitRecordsPage"
              Shell.NavBarIsVisible="True"
@@ -119,7 +119,7 @@
 
                                                                 <ImageButton
                                                                     Grid.Column="1"
-                                                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
+                                                                    Source="{icons:ThemedIcon Icon=Delete48, Role=Danger}"
                                                                     MaximumHeightRequest="28"
                                                                     MaximumWidthRequest="28"
                                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteVisitCommand}"
@@ -186,7 +186,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
-            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
+            Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

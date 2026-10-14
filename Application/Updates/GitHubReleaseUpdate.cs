@@ -15,7 +15,8 @@ public static class GitHubReleaseUpdate
         var release = document.RootElement;
         if (release.GetProperty("draft").GetBoolean() || release.GetProperty("prerelease").GetBoolean()) return null;
         var tag = release.GetProperty("tag_name").GetString() ?? "";
-        if (!Version.TryParse(tag.TrimStart('v'), out var version)) return null;
+        if (!TryVersion(tag.TrimStart('v', 'V'), out var version)
+            || !TryVersion(installedVersion, out var current)) return null;
         long code = 0, minimum = 0;
         var body = release.TryGetProperty("body", out var notes) ? notes.GetString() ?? "" : "";
         var start = body.IndexOf(Marker, StringComparison.Ordinal);
@@ -29,7 +30,9 @@ public static class GitHubReleaseUpdate
             minimum = metadata.RootElement.GetProperty("minimumVersionCode").GetInt64();
             if (code <= 0 || minimum < 0 || minimum > code) return null;
         }
-        if (code > 0 ? code <= installedCode : !Version.TryParse(installedVersion, out var current) || version <= current)
+        // Stable release tags identify the display version. Inconsistent metadata
+        // must not advertise the installed release (or an older release) again.
+        if (version <= current || (code > 0 && code <= installedCode))
             return null;
         foreach (var asset in release.GetProperty("assets").EnumerateArray())
         {
@@ -39,9 +42,17 @@ public static class GitHubReleaseUpdate
                 || !url.AbsolutePath.StartsWith($"/{Repository}/releases/download/", StringComparison.Ordinal)) continue;
             var size = asset.GetProperty("size").GetInt64();
             if (size <= 0) continue;
-            return new(version.ToString(), code, installedCode < minimum, url, size,
+            return new(tag.TrimStart('v', 'V'), code, installedCode < minimum, url, size,
                 asset.TryGetProperty("digest", out var digest) ? digest.GetString() : null);
         }
         return null;
+    }
+
+    private static bool TryVersion(string value, out Version version)
+    {
+        version = new Version(0, 0, 0, 0);
+        if (!Version.TryParse(value, out var parsed)) return false;
+        version = new Version(parsed.Major, parsed.Minor, Math.Max(0, parsed.Build), Math.Max(0, parsed.Revision));
+        return true;
     }
 }

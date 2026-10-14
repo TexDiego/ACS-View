@@ -5,7 +5,7 @@
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:controls="clr-namespace:ACS_View.Controls"
              xmlns:converters="clr-namespace:ACS_View.Converters"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:RegistersViewModel"
              x:Class="ACS_View.Views.Registers"
              Shell.NavBarIsVisible="True"
@@ -13,7 +13,7 @@
              Title="{Binding Condition}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{mi:Fluent Icon=PersonAdd24}" Command="{Binding AddPerson}"/>
+        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=PersonAdd24, Role=OnFill}" Command="{Binding AddPerson}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*" BackgroundColor="Transparent">
@@ -33,7 +33,7 @@
                 <ImageButton
                     Grid.Column="0"
                     ToolTipProperties.Text="Filtrar"
-                    mi:MauiIcon.Value="{mi:Fluent Icon=Filter28}"
+                    Source="{icons:ThemedIcon Icon=Filter28, Role=OnFill}"
                     CornerRadius="10"
                     BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
                     HorizontalOptions="End"
@@ -113,7 +113,7 @@
                             <ImageButton
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=Syringe24}"
+                                Source="{icons:ThemedIcon Icon=Syringe24, Role=Surface}"
                                 Margin="0,0,5,0"
                                 CornerRadius="0"
                                 ToolTipProperties.Text="Vacinas"
@@ -132,7 +132,7 @@
                                 <ImageButton
                                     Grid.Column="0"
                                     Style="{StaticResource DeleteImageButton}"
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
+                                    Source="{icons:ThemedIcon Icon=Delete48, Role=OnFill}"
                                     ToolTipProperties.Text="Excluir"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                     CommandParameter="{Binding Id}"/>
@@ -141,7 +141,7 @@
                                     Grid.Column="1"
                                     Text="Editar"
                                     Style="{StaticResource PrimaryOutlineButton}"
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
+                                    ImageSource="{icons:ThemedIcon Icon=Pen28, Role=OnFill}"
                                     ToolTipProperties.Text="Editar"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                     CommandParameter="{Binding .}"/>
@@ -189,7 +189,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
-            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
+            Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

@@ -45,11 +45,11 @@ internal sealed class AccountCredentialsView : ContentView
         form.Add(StyledLabel(title, "SectionTitle"));
         form.Add(StyledLabel(kind == AccountFormKind.Recovery
             ? "Informe o usuário e o código guardado ao criar ou proteger a conta. Escolha sua própria senha nova."
-            : "Use uma frase de 15 a 128 caracteres, com várias palavras. Espaços são aceitos; não é preciso decorar combinações de símbolos.", "BodyMuted"));
+            : "Use uma senha de 8 a 128 caracteres, com várias palavras. Espaços são aceitos; não é preciso decorar combinações de símbolos.", "BodyMuted"));
         if (kind != AccountFormKind.Security) form.Add(username);
         if (kind == AccountFormKind.Security)
         {
-            form.Add(StyledLabel("Confirme a senha atual e escolha uma senha longa. Você pode repetir a atual se ela já tiver pelo menos 15 caracteres. Um novo código substituirá o anterior.", "BodyMuted"));
+            form.Add(StyledLabel("Confirme a senha atual e escolha uma senha longa. Você pode repetir a atual se ela já tiver pelo menos 8 caracteres. Um novo código substituirá o anterior.", "BodyMuted"));
             form.Add(currentPassword);
         }
         if (kind == AccountFormKind.Recovery) form.Add(recoveryCode);

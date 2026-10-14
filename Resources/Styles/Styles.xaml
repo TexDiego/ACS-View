@@ -25,9 +25,9 @@
         <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
         <Setter Property="Shell.NavBarHasShadow" Value="False"/>
         <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainer}, Dark={StaticResource DarkSurfaceContainer}}"/>
-        <Setter Property="Shell.TabBarForegroundColor" Value="White"/>
-        <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
-        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource TextMuted}, Dark={StaticResource DarkTextMuted}}"/>
+        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource IconPrimary}, Dark={StaticResource DarkIconPrimary}}"/>
+        <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource IconPrimary}, Dark={StaticResource DarkIconPrimary}}"/>
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
     </Style>
 
     <Style TargetType="Label">
@@ -256,8 +256,9 @@
     </Style>
 
     <Style x:Key="DangerOutlineButton" TargetType="Button" BasedOn="{StaticResource PrimaryOutlineButton}">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"/>
-        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"/>
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource IconDanger}, Dark={StaticResource DarkIconDanger}}"/>
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource IconDanger}, Dark={StaticResource DarkIconDanger}}"/>
     </Style>
 
     <Style x:Key="BaseImageButton" TargetType="ImageButton">
@@ -270,7 +271,7 @@
     </Style>
 
     <Style x:Key="EditImageButton" TargetType="ImageButton" BasedOn="{StaticResource BaseImageButton}">
-        <Setter Property="BackgroundColor" Value="#FA7321"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource DarkPrimaryLight}}"/>
         <Setter Property="CornerRadius" Value="8"/>
     </Style>
 

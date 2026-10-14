@@ -25,15 +25,34 @@ internal static class DatabaseRecovery
         File.WriteAllText(pending,Path.GetFileName(restored));
         File.Move(pending,selection,true);
     }
-    public static async Task<string> CreateSnapshotAsync(SQLiteAsyncConnection source)
+    internal static long AvailableStorageBytes(string directory)
+    {
+#if ANDROID
+        // Android's root filesystem may be read-only/full while /data has space.
+        // Measure the filesystem containing the app's private database instead.
+        using var storage = new global::Android.OS.StatFs(directory);
+        return storage.AvailableBytes;
+#else
+        return new DriveInfo(Path.GetPathRoot(Path.GetFullPath(directory))!).AvailableFreeSpace;
+#endif
+    }
+
+    internal static void EnsureStorage(string directory, long databaseBytes, Func<string, long>? availableBytes = null)
+    {
+        var required = Math.Max(checked(databaseBytes * 3), 16L * 1024 * 1024);
+        if ((availableBytes ?? AvailableStorageBytes)(directory) < required)
+            throw new IOException("Espaço de armazenamento insuficiente para proteger e atualizar o banco. Libere espaço no dispositivo e tente novamente. Seus dados foram preservados.");
+    }
+
+    public static async Task<string> CreateSnapshotAsync(SQLiteAsyncConnection source, Func<string, long>? availableBytes = null)
     {
         var path = Path.GetFullPath(source.DatabasePath);
         var directory = Path.Combine(Path.GetDirectoryName(path)!, "migration-backups");
         Directory.CreateDirectory(directory);
-        var size = new FileInfo(path).Length;
-        var drive = new DriveInfo(Path.GetPathRoot(path)!);
-        if (drive.AvailableFreeSpace < Math.Max(size * 3, 16 * 1024 * 1024))
-            throw new IOException("Espaço insuficiente para snapshot e migração.");
+        // page_count includes committed pages still in WAL, unlike FileInfo.Length.
+        var size = checked(await source.ExecuteScalarAsync<long>("PRAGMA page_count")
+            * await source.ExecuteScalarAsync<long>("PRAGMA page_size"));
+        EnsureStorage(directory, size, availableBytes);
         var snapshot = Path.Combine(directory, $"pre-migration-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}.db");
         for(var attempt=0;;attempt++)
         {
@@ -48,16 +67,14 @@ internal static class DatabaseRecovery
 
     // Restore into a NEW path. Caller closes the app/connections before selecting this path.
     // Never overwrite the original or its WAL/SHM, which remain available for recovery.
-    public static string RestoreToNewPath(string snapshot, string destination)
+    public static string RestoreToNewPath(string snapshot, string destination, Func<string, long>? availableBytes = null)
     {
         if (File.Exists(destination)) throw new IOException("Destino da restauração já existe.");
         using var source = new SQLiteConnection(snapshot, SQLiteOpenFlags.ReadOnly);
         SchemaMigrator.ValidateIntegrity(source);
         if (source.ExecuteScalar<int>("PRAGMA user_version") > SchemaMigrator.CurrentVersion)
             throw new InvalidOperationException("Backup de versão mais recente.");
-        var drive=new DriveInfo(Path.GetPathRoot(Path.GetFullPath(destination))!);
-        if(drive.AvailableFreeSpace < Math.Max(new FileInfo(snapshot).Length*3,16*1024*1024))
-            throw new IOException("Espaço insuficiente para restaurar e validar o backup.");
+        EnsureStorage(Path.GetDirectoryName(Path.GetFullPath(destination))!, new FileInfo(snapshot).Length, availableBytes);
         source.Backup(destination);
         using var restored = new SQLiteConnection(destination, SQLiteOpenFlags.ReadOnly);
         SchemaMigrator.ValidateIntegrity(restored);

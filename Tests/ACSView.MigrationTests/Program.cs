@@ -15,6 +15,7 @@ var directory=Path.Combine(Path.GetTempPath(),"acs-relational-"+Guid.NewGuid().T
 Directory.CreateDirectory(directory);
 // Synthetic only. Keep failed fixtures in temp for investigation, never in Git.
 await CleanInstall();
+await StorageChecks();
 await PhoneTests.Run(directory, Check);
 WhatsAppPhoneTests.Run(Check);
 await SusNumberTests.Run(directory, Check);
@@ -47,6 +48,34 @@ async Task CleanInstall()
     Check(await c.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM SchemaMigration")==SchemaMigrator.CurrentVersion,"Ordered migration ledger");
     await new DatabaseService(c).InitializeAsync();
     Check(await c.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM SchemaMigration")==SchemaMigrator.CurrentVersion,"Repeated initialization is idempotent");
+    await c.CloseAsync();
+}
+async Task StorageChecks()
+{
+    var path=Path.Combine(directory,"storage.db");
+    var c=new SQLiteAsyncConnection(path);
+    await c.ExecuteScalarAsync<string>("PRAGMA journal_mode=WAL");
+    await c.ExecuteScalarAsync<int>("PRAGMA wal_autocheckpoint=0");
+    await c.ExecuteAsync("CREATE TABLE Evidence(Id INTEGER PRIMARY KEY,Value BLOB)");
+    await c.ExecuteAsync("INSERT INTO Evidence VALUES(1,zeroblob(6*1024*1024))");
+    var logicalBytes=await c.ExecuteScalarAsync<long>("PRAGMA page_count")*await c.ExecuteScalarAsync<long>("PRAGMA page_size");
+    Check(logicalBytes>new FileInfo(path).Length,"Storage budget includes committed WAL pages");
+    var snapshotDirectory=Path.Combine(directory,"migration-backups");
+    var snapshotsBefore=Directory.Exists(snapshotDirectory)?Directory.GetFiles(snapshotDirectory).Length:0;
+    string? measured=null;
+    await Reject(()=>DatabaseRecovery.CreateSnapshotAsync(c,p=>{measured=p;return logicalBytes*3-1;}),"Actual insufficient storage rejects snapshot before migration");
+    Check(measured==snapshotDirectory,"Snapshot measures its destination filesystem, not the system root");
+    Check(Directory.GetFiles(snapshotDirectory).Length==snapshotsBefore,"Low storage creates no partial backup");
+    Check(await c.ExecuteScalarAsync<int>("PRAGMA user_version")==0 && await c.ExecuteScalarAsync<int>("SELECT length(Value) FROM Evidence WHERE Id=1")==6*1024*1024,"Low storage keeps original schema and data");
+    var snapshot=await DatabaseRecovery.CreateSnapshotAsync(c,_=>logicalBytes*3);
+    using(var saved=new SQLiteConnection(snapshot,SQLiteOpenFlags.ReadOnly))
+        Check(saved.ExecuteScalar<int>("SELECT length(Value) FROM Evidence WHERE Id=1")==6*1024*1024,"Sufficient destination storage creates a validated backup including WAL data");
+    var restoredPath=Path.Combine(directory,"storage-restored.db");
+    await Reject(()=>Task.Run(()=>DatabaseRecovery.RestoreToNewPath(snapshot,restoredPath,_=>0)),"Insufficient restore storage keeps original and backup");
+    Check(!File.Exists(restoredPath) && File.Exists(path) && File.Exists(snapshot),"Rejected restore does not create or replace a database");
+    measured=null;
+    DatabaseRecovery.RestoreToNewPath(snapshot,restoredPath,p=>{measured=p;return long.MaxValue;});
+    Check(measured==directory,"Restore measures the destination directory");
     await c.CloseAsync();
 }
 async Task InterruptedMigration()

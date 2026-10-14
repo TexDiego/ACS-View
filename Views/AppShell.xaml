@@ -2,37 +2,37 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:ACS_View.Views"
-       xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+       xmlns:icons="clr-namespace:ACS_View.Controls"
        x:Class="ACS_View.Views.AppShell"
        Shell.TitleColor="White"
        Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
        Shell.ForegroundColor="White"
-       Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
-       Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource DarkPrimaryLight}}"
-       Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
-       Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource DarkSurface}, Dark={StaticResource DarkTextMuted}}">
+       Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource IconPrimary}, Dark={StaticResource DarkIconPrimary}}"
+       Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainer}, Dark={StaticResource DarkSurfaceContainer}}"
+       Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource IconPrimary}, Dark={StaticResource DarkIconPrimary}}"
+       Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}">
 
     <ShellContent Route="login" x:Name="LoginContent"/>
 
     <TabBar x:Name="MainTabBar" >
 
-        <Tab Title="Pessoas" Icon="{mi:Fluent Icon=People28}">
+        <Tab Title="Pessoas" Icon="{icons:ThemedIcon Icon=People28, Role=Primary}">
             <ShellContent Route="registers" x:Name="RegistersPage"/>
         </Tab>
 
-        <Tab Title="Casas" Icon="{mi:Fluent Icon=HomePerson24}">
+        <Tab Title="Casas" Icon="{icons:ThemedIcon Icon=HomePerson24, Role=Primary}">
             <ShellContent Route="houses" x:Name="HousesPageContent"/>
         </Tab>
 
-        <Tab Title="Início" Icon="{mi:Fluent Icon=AppFolder24}">
+        <Tab Title="Início" Icon="{icons:ThemedIcon Icon=AppFolder24, Role=Primary}">
             <ShellContent Route="overallview" x:Name="OverallViewContent"/>
         </Tab>
 
-        <Tab Title="Visitas" Icon="{mi:Fluent Icon=ClipboardHeart24}">
+        <Tab Title="Visitas" Icon="{icons:ThemedIcon Icon=ClipboardHeart24, Role=Primary}">
             <ShellContent Route="visits" x:Name="AllVisitsContent"/>
         </Tab>
 
-        <Tab Title="Perfil" Icon="{mi:Fluent Icon=PersonCircle24}">
+        <Tab Title="Perfil" Icon="{icons:ThemedIcon Icon=PersonCircle24, Role=Primary}">
             <ShellContent Route="profile" x:Name="ProfileContent"/>
         </Tab>
 

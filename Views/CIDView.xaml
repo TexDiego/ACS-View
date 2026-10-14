@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:converters="clr-namespace:ACS_View.Converters"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:CIDViewViewModel"
              x:Class="ACS_View.Views.CIDView"
              Style="{StaticResource PageBackground}"
@@ -134,7 +134,7 @@
 
             <ImageButton
                 x:Name="BackToTopButton"
-                mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
+                Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
                 Style="{StaticResource FloatingBackToTopButton}"
                 Clicked="BackToTopButton_Clicked"/>
         </Grid>

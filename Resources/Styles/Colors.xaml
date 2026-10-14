@@ -9,6 +9,13 @@
     <Color x:Key="PrimaryLight">#DDF3FA</Color>
     <Color x:Key="PrimaryContainer">#DDF3FA</Color>
     <Color x:Key="OnPrimary">#FFFFFF</Color>
+    <!-- Icon foregrounds are separate from filled backgrounds. -->
+    <Color x:Key="IconForeground">#1F2933</Color>
+    <Color x:Key="DarkIconForeground">#EEF5F8</Color>
+    <Color x:Key="IconPrimary">#006B91</Color>
+    <Color x:Key="DarkIconPrimary">#BCEBFA</Color>
+    <Color x:Key="IconDanger">#BA1A1A</Color>
+    <Color x:Key="DarkIconDanger">#FFB4AB</Color>
     <Color x:Key="OnPrimaryContainer">#001F2A</Color>
     <Color x:Key="Accent">#C93919</Color>
     <Color x:Key="AccentLight">#FBE9E4</Color>

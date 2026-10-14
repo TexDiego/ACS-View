@@ -25,6 +25,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDialogService>(dialogService);
         services.AddSingleton<INavigationService>(navigationService);
         services.AddSingleton<IMainThreadDispatcher>(mainThreadDispatcher);
+        services.AddSingleton<ISnackbarPresenter, MauiSnackbarPresenter>();
+        services.AddSingleton<ISnackbarService, SnackbarService>();
 
         services.AddDomainServices();
         services.AddViewModels();

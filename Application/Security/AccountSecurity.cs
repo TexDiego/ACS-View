@@ -15,8 +15,8 @@ public static class AccountSecurity
 
     public static void ValidatePassword(string password)
     {
-        if (password.Length is < 15 or > 128 || string.IsNullOrWhiteSpace(password))
-            throw new InvalidOperationException("Use uma senha de 15 a 128 caracteres. Uma frase com várias palavras é mais fácil de lembrar.");
+        if (password.Length is < 8 or > 128 || string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("Use uma senha de 8 a 128 caracteres. Uma frase com várias palavras é mais fácil de lembrar.");
     }
 
     public static string NewRecoveryCode()

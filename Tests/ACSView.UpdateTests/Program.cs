@@ -18,6 +18,14 @@ Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.0.0", 1) is { Requir
 Check(GitHubReleaseUpdate.Parse(Release(body: required), "1.0.0", 1) is { Required: true }, "Below minimum is mandatory");
 Check(GitHubReleaseUpdate.Parse(Release(body: required), "1.0.0", 2) is { Required: false }, "Minimum supported remains optional");
 Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.1.0", 2) is null, "Same build");
+Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.1.0", 1) is null, "Installed display version suppresses inconsistent higher feed code");
+Check(GitHubReleaseUpdate.Parse(Release(body: required), "1.1.0", 0) is null, "Unreadable build does not require reinstalling the installed release");
+Check(GitHubReleaseUpdate.Parse(Release(body: required), "1.2.0", 1) is null, "Higher feed code cannot downgrade the display version");
+Check(GitHubReleaseUpdate.Parse(Release(), "1.1", 0) is null, "Missing zero version components are equivalent");
+Check(GitHubReleaseUpdate.Parse(Release(), "1.1.0.0", 0) is null, "Zero revision is equivalent");
+Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.0.0", 2) is null, "Newer display version cannot downgrade the build code");
+Check(GitHubReleaseUpdate.Parse(Release(body: optional), "unknown", 1) is null, "Unknown installed version does not advertise an unverified update");
+Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.0.0", 1) is { Version: "1.1.0" }, "Display release version stays readable");
 Check(GitHubReleaseUpdate.Parse(Release(body: optional), "1.2.0", 4) is null, "No downgrade");
 Check(GitHubReleaseUpdate.Parse(Release(), "1.1.0", 2) is null, "Same legacy version");
 Check(GitHubReleaseUpdate.Parse(Release(prerelease: true), "1.0.0", 1) is null, "Ignore prerelease");

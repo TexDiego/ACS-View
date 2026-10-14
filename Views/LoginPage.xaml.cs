@@ -43,6 +43,7 @@ public partial class LoginPage : ContentPage
     private async Task<bool> CheckUpdateAsync()
     {
         _availableUpdate = await _updates.CheckAsync();
+        UpdateCard.IsVisible = false;
         UpdateStatus.IsVisible = false;
         if (_availableUpdate is { } update)
         {

@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:ACS_View.Domain.Entities"
     xmlns:values="clr-namespace:ACS_View.Domain.ValueObjects"
     xmlns:converters="clr-namespace:ACS_View.Converters"
-    xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+    xmlns:icons="clr-namespace:ACS_View.Controls"
     x:DataType="vm:PersonsInfoViewModel"
     x:Class="ACS_View.Views.PersonsInfo"
     WidthRequest="{Binding PopupWidth}"
@@ -242,7 +242,7 @@
             Padding="8">
 
             <ImageButton
-                mi:MauiIcon.Value="{mi:Fluent Icon=PhoneChat16}"
+                Source="{icons:ThemedIcon Icon=PhoneChat16, Role=Surface}"
                 MaximumHeightRequest="30"
                 MaximumWidthRequest="30"
                 CornerRadius="0"
@@ -261,7 +261,7 @@
             Padding="8">
 
             <ImageButton
-                mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
+                Source="{icons:ThemedIcon Icon=Pen28, Role=Surface}"
                 MaximumHeightRequest="30"
                 MaximumWidthRequest="30"
                 CornerRadius="0"

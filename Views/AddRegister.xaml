@@ -6,7 +6,7 @@
              xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
              xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
              xmlns:converters="clr-namespace:ACS_View.Converters"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
              Style="{StaticResource PageBackground}"
@@ -165,7 +165,7 @@
 
                     <ImageButton
                         Grid.Column="1"
-                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        Source="{icons:ThemedIcon Icon=Search32, Role=OnFill}"
                         Style="{StaticResource SoftIconButton}"
                         HeightRequest="40"
                         WidthRequest="40"
@@ -190,7 +190,7 @@
 
                     <ImageButton
                         Grid.Column="1"
-                        mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                        Source="{icons:ThemedIcon Icon=Search32, Role=OnFill}"
                         Style="{StaticResource SoftIconButton}"
                         HeightRequest="40"
                         WidthRequest="40"
@@ -233,7 +233,7 @@
                             <ImageButton
                                 Grid.Column="1"
                                 Style="{StaticResource CompactNumberAction}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=AddCircle12, IconSize=20}"
+                                Source="{icons:ThemedIcon Icon=AddCircle12, IconSize=20, Role=Surface}"
                                 Command="{Binding ApplyCommand}"
                                 VerticalOptions="Center"
                                 SemanticProperties.Description="{Binding ApplyLabel}"
@@ -241,7 +241,7 @@
 
                                 <ImageButton.Triggers>
                                     <DataTrigger TargetType="ImageButton" Binding="{Binding IsEditing}" Value="True">
-                                        <Setter Property="mi:MauiIcon.Value" Value="{mi:Fluent Icon=Edit24, IconSize=20}"/>
+                                        <Setter Property="Source" Value="{icons:ThemedIcon Icon=Edit24, IconSize=20, Role=Surface}"/>
                                     </DataTrigger>
                                 </ImageButton.Triggers>
                             </ImageButton>
@@ -249,7 +249,7 @@
                             <ImageButton
                                 Grid.Column="2"
                                 Style="{StaticResource CompactNumberAction}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=Dismiss24, IconSize=20}"
+                                Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}"
                                 Command="{Binding CancelCommand}"
                                 IsVisible="{Binding IsEditing}"
                                 VerticalOptions="Center"
@@ -294,7 +294,7 @@
                                         <ImageButton
                                             Grid.Column="1"
                                             Style="{StaticResource CompactNumberAction}"
-                                            mi:MauiIcon.Value="{mi:Fluent Icon=Edit24, IconSize=18}"
+                                            Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}"
                                             SemanticProperties.Description="Editar número SUS"
                                             ToolTipProperties.Text="Editar número SUS"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}}, Path=EditCommand}"
@@ -303,7 +303,7 @@
 
                                         <ImageButton
                                             Grid.Column="2" Style="{StaticResource CompactNumberAction}"
-                                            mi:MauiIcon.Value="{mi:Fluent Icon=Delete24, IconSize=18}"
+                                            Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}"
                                             SemanticProperties.Description="Excluir número SUS"
                                             ToolTipProperties.Text="Excluir número SUS"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}}, Path=DeleteCommand}"
@@ -394,7 +394,7 @@
                             <ImageButton
                                 Grid.Column="1"
                                 Style="{StaticResource CompactNumberAction}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=AddCircle12, IconSize=20}"
+                                Source="{icons:ThemedIcon Icon=AddCircle12, IconSize=20, Role=Surface}"
                                 Command="{Binding ApplyCommand}"
                                 VerticalOptions="Center"
                                 SemanticProperties.Description="{Binding ApplyLabel}"
@@ -402,7 +402,7 @@
 
                                 <ImageButton.Triggers>
                                     <DataTrigger TargetType="ImageButton" Binding="{Binding IsEditing}" Value="True">
-                                        <Setter Property="mi:MauiIcon.Value" Value="{mi:Fluent Icon=Edit24, IconSize=20}"/>
+                                        <Setter Property="Source" Value="{icons:ThemedIcon Icon=Edit24, IconSize=20, Role=Surface}"/>
                                     </DataTrigger>
                                 </ImageButton.Triggers>
                             </ImageButton>
@@ -410,7 +410,7 @@
                             <ImageButton
                                 Grid.Column="2"
                                 Style="{StaticResource CompactNumberAction}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=Dismiss24, IconSize=20}"
+                                Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}"
                                 Command="{Binding CancelCommand}"
                                 IsVisible="{Binding IsEditing}"
                                 VerticalOptions="Center"
@@ -451,7 +451,7 @@
                                         <ImageButton
                                             Grid.Column="1"
                                             Style="{StaticResource CompactNumberAction}"
-                                            mi:MauiIcon.Value="{mi:Fluent Icon=Edit24, IconSize=18}"
+                                            Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}"
                                             SemanticProperties.Description="Editar telefone"
                                             ToolTipProperties.Text="Editar telefone"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}}, Path=EditCommand}"
@@ -460,7 +460,7 @@
 
                                         <ImageButton
                                             Grid.Column="2" Style="{StaticResource CompactNumberAction}"
-                                            mi:MauiIcon.Value="{mi:Fluent Icon=Delete24, IconSize=18}"
+                                            Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}"
                                             SemanticProperties.Description="Excluir telefone"
                                             ToolTipProperties.Text="Excluir telefone"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}}, Path=DeleteCommand}"
@@ -524,7 +524,7 @@
                             <ImageButton
                                 Grid.Column="1"
                                 Style="{StaticResource SoftIconButton}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=Search32}"
+                                Source="{icons:ThemedIcon Icon=Search32, Role=OnFill}"
                                 IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IsBolsaFamiliaSelected}"
                                 HeightRequest="30"
                                 WidthRequest="30"
@@ -534,7 +534,7 @@
                             <ImageButton
                                 Grid.Column="2"
                                 Style="{StaticResource SoftIconButton}"
-                                mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
+                                Source="{icons:ThemedIcon Icon=DismissCircle24, Role=OnFill}"
                                 HeightRequest="30"
                                 WidthRequest="30"
                                 Padding="9"
@@ -656,7 +656,7 @@
 
                                         <ImageButton
                                             Grid.Column="2"
-                                            mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
+                                            Source="{icons:ThemedIcon Icon=DismissCircle24, Role=Danger}"
                                             HeightRequest="22"
                                             WidthRequest="22"
                                             VerticalOptions="Center"
@@ -716,7 +716,7 @@
 
                                 <ImageButton
                                     Grid.Column="1"
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=DismissCircle24}"
+                                    Source="{icons:ThemedIcon Icon=DismissCircle24, Role=Danger}"
                                     HeightRequest="20"
                                     WidthRequest="20"
                                     Margin="0,0,5,0"

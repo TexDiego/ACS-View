@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:controls="clr-namespace:ACS_View.Controls"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:DataType="vm:HousesPageViewModel"
              x:Class="ACS_View.Views.HousesPage"
              Shell.NavBarIsVisible="True"
@@ -12,7 +12,7 @@
              Title="Residências">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{mi:Fluent Icon=HomeAdd24}" Command="{Binding NewHouseCommand}"/>
+        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=HomeAdd24, Role=OnFill}" Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
@@ -89,7 +89,7 @@
                                 VerticalOptions="Center">
 
                                 <ImageButton
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=Pen28}"
+                                    Source="{icons:ThemedIcon Icon=Pen28, Role=Surface}"
                                     ToolTipProperties.Text="Editar"
                                     MaximumHeightRequest="28"
                                     MaximumWidthRequest="28"
@@ -98,7 +98,7 @@
                                     CommandParameter="{Binding .}"/>
 
                                 <ImageButton
-                                    mi:MauiIcon.Value="{mi:Fluent Icon=Delete48}"
+                                    Source="{icons:ThemedIcon Icon=Delete48, Role=Danger}"
                                     ToolTipProperties.Text="Excluir"
                                     MaximumHeightRequest="28"
                                     MaximumWidthRequest="28"
@@ -148,7 +148,7 @@
         <ImageButton
             x:Name="BackToTopButton"
             Grid.RowSpan="3"
-            mi:MauiIcon.Value="{mi:Fluent Icon=ArrowCircleUp24}"
+            Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
             Style="{StaticResource FloatingBackToTopButton}"
             Clicked="BackToTopButton_Clicked"/>
     </Grid>

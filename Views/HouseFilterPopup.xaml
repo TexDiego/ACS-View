@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tk:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+          xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+          xmlns:vm="clr-namespace:ACS_View.ViewModels"
+          xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+          x:Class="ACS_View.Views.HouseFilterPopup"
+          x:TypeArguments="dto:HouseNumberFilterDto"
+          x:DataType="vm:HouseFilterPopupViewModel"
+          WidthRequest="{Binding PopupWidth}"
+          CanBeDismissedByTappingOutsideOfPopup="True"
+          BackgroundColor="Transparent" Padding="0">
+    <Border Padding="14" StrokeShape="RoundRectangle 8"
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+        <VerticalStackLayout Spacing="14">
+            <Label Text="Filtros de residências" Style="{StaticResource SectionTitle}" HorizontalOptions="Center"/>
+            <Label Text="Limites do número (inclusive)" Style="{StaticResource FieldLabel}"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Entry Text="{Binding StartNumber}" Placeholder="Número inicial" Keyboard="Numeric"
+                       SemanticProperties.Description="Número inicial" ClearButtonVisibility="WhileEditing"/>
+                <Entry Grid.Column="1" Text="{Binding EndNumber}" Placeholder="Número final" Keyboard="Numeric"
+                       SemanticProperties.Description="Número final" ClearButtonVisibility="WhileEditing"/>
+            </Grid>
+            <Label Text="Paridade" Style="{StaticResource FieldLabel}"/>
+            <Picker Title="Paridade" ItemsSource="{Binding ParityOptions}" SelectedIndex="{Binding ParityIndex}"/>
+            <Label Text="Deixe os limites vazios para pesquisar qualquer número. Casas sem número aparecem quando não há filtro numérico."
+                   Style="{StaticResource BodyMuted}"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="Cancelar" Style="{StaticResource GhostButton}" Clicked="CancelButton_Clicked"/>
+                <Button Grid.Column="1" Text="Aplicar" Style="{StaticResource Buttons}" Clicked="ApplyButton_Clicked"/>
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</tk:Popup>

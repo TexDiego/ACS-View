@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="sqlite-net-base" Version="1.9.172" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <Compile Include="../../Domain/ValueObjects/TerritorialRules.cs" />
+    <Compile Include="../../Application/DTOs/HouseNumberFilterDto.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../UseCases/Services/PatientImportService.cs" Link="UseCases/Services/PatientImportService.cs" />

@@ -115,6 +115,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
         services.AddTransient<ImportDataViewModel>();
         services.AddTransient<DataCleanupViewModel>();
+        services.AddTransient<VetorialControlViewModel>();
+        services.AddTransient<VetorialControlOptionsViewModel>();
 
         // Shell retains pages within a session; a new Shell must get fresh input state.
         services.AddTransient<RegistersViewModel>();
@@ -143,7 +145,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<VaccinesPage>();
         services.AddTransient<ImportDataPage>();
         services.AddTransient<DataCleanupPage>();
-
+        services.AddTransient<VetorialControl>();
         services.AddTransient<HousesPage>();
         services.AddTransient<NotesPage>();
         services.AddTransient<Registers>();
@@ -151,6 +153,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<GeneralMetrics>();
         services.AddTransient<HealthMetrics>();
         services.AddTransient<CIDView>();
+        services.AddTransient<VetorialControlOptions>();
 
         return services;
     }

@@ -2,13 +2,14 @@ using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Application.DTOs;
+using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace ACS_View.ViewModels
 {
-    public partial class HousesPageViewModel(IHouseService _houseService, IPatientService _patientService) : BaseViewModel
+    public partial class HousesPageViewModel(IHouseService _houseService, IPatientService _patientService, IPopupService _popupService, IDialogService _dialogService) : BaseViewModel
     {
         private const int PageSize = 30;
         private const int SearchDebounceMilliseconds = 300;
@@ -21,6 +22,9 @@ namespace ACS_View.ViewModels
         private string _lastLoadedSearch = string.Empty;
         private string _filterKey = DashboardFilterKeys.All;
         private string _lastLoadedFilterKey = DashboardFilterKeys.All;
+
+        private HouseNumberFilterDto _numberFilter = new();
+        private HouseNumberFilterDto? _lastLoadedNumberFilter;
 
         [ObservableProperty] private string searchText = string.Empty;
         [ObservableProperty] private ObservableCollection<HouseListItemDto> houses = [];
@@ -37,6 +41,8 @@ namespace ACS_View.ViewModels
         public ICommand LoadHousesCommand => new Command<string?>(async search => await SearchHousesAsync(search));
         public ICommand LoadMoreHousesCommand => new Command(async () => await LoadMoreHousesAsync());
         public ICommand NewHouseCommand => new Command(async () => await NavigateToAsync("addhouse", new Dictionary<string, object> { { "house", new House() } }));
+        public ICommand VetorialControlCommand => new Command(async () => await NavigateToAsync("vetorialcontrol"));
+        public ICommand Filter => new Command(async () => await ShowFilterPopupAsync());
         public ICommand ClearFiltersCommand => new Command(async () => await ClearFiltersAsync());
 
         public async Task LoadInitialHousesAsync()
@@ -45,7 +51,8 @@ namespace ACS_View.ViewModels
             if (Houses.Count > 0 &&
                 _loadedHousesVersion == DataChangeTracker.HousesVersion &&
                 string.Equals(_lastLoadedSearch, normalizedSearch, StringComparison.Ordinal) &&
-                string.Equals(_lastLoadedFilterKey, _filterKey, StringComparison.OrdinalIgnoreCase))
+                string.Equals(_lastLoadedFilterKey, _filterKey, StringComparison.OrdinalIgnoreCase) &&
+                _lastLoadedNumberFilter == _numberFilter)
             {
                 return;
             }
@@ -56,13 +63,15 @@ namespace ACS_View.ViewModels
         public void SetFilter(string? filterKey)
         {
             _filterKey = DashboardFilterKeys.GetBaseFilterKey(filterKey);
-            HasActiveFilters = !string.Equals(_filterKey, DashboardFilterKeys.All, StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(_filterKey, DashboardFilterKeys.Residences, StringComparison.OrdinalIgnoreCase);
-            FilterSummary = HasActiveFilters ? GetFilterTitle(_filterKey) : string.Empty;
+            Interlocked.Increment(ref _loadVersion);
+            UpdateFilterState();
         }
 
         private async Task SearchHousesAsync(string? search)
         {
+            Interlocked.Increment(ref _loadVersion);
+            IsLoading = true;
+            IsLoadingMore = false;
             try
             {
                 var cancellationToken = ResetSearchDebounce();
@@ -87,6 +96,8 @@ namespace ACS_View.ViewModels
         {
             var normalizedSearch = search?.Trim() ?? string.Empty;
             var loadVersion = Interlocked.Increment(ref _loadVersion);
+            var filterKey = _filterKey;
+            var numberFilter = _numberFilter;
 
             IsLoading = true;
             IsLoadingMore = false;
@@ -95,7 +106,7 @@ namespace ACS_View.ViewModels
 
             try
             {
-                var result = await _houseService.GetHouseListAsync(search, 0, PageSize, _filterKey);
+                var result = await _houseService.GetHouseListAsync(normalizedSearch, 0, PageSize, filterKey, numberFilter);
                 if (loadVersion != _loadVersion)
                 {
                     return;
@@ -105,13 +116,15 @@ namespace ACS_View.ViewModels
 
                 RunOnMainThread(() =>
                 {
+                    if (loadVersion != _loadVersion) return;
                     Houses = firstPage;
                     TotalHouses = result.TotalCount;
                     _loadedHousesCount = Houses.Count;
                     _hasMoreHouses = _loadedHousesCount < TotalHouses;
                     _loadedHousesVersion = DataChangeTracker.HousesVersion;
                     _lastLoadedSearch = normalizedSearch;
-                    _lastLoadedFilterKey = _filterKey;
+                    _lastLoadedFilterKey = filterKey;
+                    _lastLoadedNumberFilter = numberFilter;
                 });
             }
             catch (Exception ex) when (IsCancellationException(ex))
@@ -134,13 +147,16 @@ namespace ACS_View.ViewModels
             }
 
             IsLoadingMore = true;
+            var loadVersion = _loadVersion;
 
             try
             {
-                var result = await _houseService.GetHouseListAsync(SearchText, _loadedHousesCount, PageSize, _filterKey);
+                var result = await _houseService.GetHouseListAsync(SearchText, _loadedHousesCount, PageSize, _filterKey, _numberFilter);
+                if (loadVersion != _loadVersion) return;
 
                 RunOnMainThread(() =>
                 {
+                    if (loadVersion != _loadVersion) return;
                     foreach (var house in result.Items)
                     {
                         Houses.Add(house);
@@ -153,7 +169,7 @@ namespace ACS_View.ViewModels
             }
             finally
             {
-                IsLoadingMore = false;
+                if (loadVersion == _loadVersion) IsLoadingMore = false;
             }
         }
 
@@ -217,8 +233,31 @@ namespace ACS_View.ViewModels
 
         private async Task ClearFiltersAsync()
         {
+            _throttleCts?.Cancel();
+            _numberFilter = new();
             SetFilter(DashboardFilterKeys.All);
             await RefreshHousesAsync(SearchText);
+        }
+
+        private async Task ShowFilterPopupAsync()
+        {
+            var result = await _popupService.ShowAsync<HouseNumberFilterDto>(new HouseFilterPopup(_numberFilter, _dialogService));
+            if (result.WasDismissed || result.Result is null) return;
+            _throttleCts?.Cancel();
+            _numberFilter = result.Result;
+            UpdateFilterState();
+            await RefreshHousesAsync(SearchText);
+        }
+
+        private void UpdateFilterState()
+        {
+            var parts = new List<string>();
+            if (!string.Equals(_filterKey, DashboardFilterKeys.All, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(_filterKey, DashboardFilterKeys.Residences, StringComparison.OrdinalIgnoreCase))
+                parts.Add(GetFilterTitle(_filterKey));
+            if (_numberFilter.IsActive) parts.Add(_numberFilter.Summary);
+            HasActiveFilters = parts.Count > 0;
+            FilterSummary = HasActiveFilters ? $"Filtros: {string.Join(", ", parts)}" : string.Empty;
         }
 
         private static string GetFilterTitle(string filterKey)

@@ -56,7 +56,7 @@ internal static class SusEntityTests
             check((await patients.GetByIdAsync(patient.Id))!.SusNumbers.Count == 0, "Removing final SUS survives patient reload");
 
             // Recreate the immediately previous version with incomplete backfill and an extra entity.
-            await c.ExecuteAsync("DELETE FROM SchemaMigration WHERE Version=4");
+            await c.ExecuteAsync("DELETE FROM SchemaMigration WHERE Version>=4");
             await c.ExecuteAsync("PRAGMA user_version=3");
             await c.ExecuteAsync("UPDATE Patient SET SusNumber=? WHERE Id=?", "raw;444444444444444;555555555555555", patient.Id);
             var retained = new PatientSusNumber { UserId = 1, PatientId = patient.Id, Number = "666666666666666", IsPrimary = true, OriginalOrder = 0 };

@@ -14,6 +14,7 @@ var checks=0;
 var directory=Path.Combine(Path.GetTempPath(),"acs-relational-"+Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);
 // Synthetic only. Keep failed fixtures in temp for investigation, never in Git.
+await VectorControlTests.Run(directory, Check);
 await CleanInstall();
 await StorageChecks();
 await PhoneTests.Run(directory, Check);

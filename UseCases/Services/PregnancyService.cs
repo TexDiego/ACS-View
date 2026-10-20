@@ -15,6 +15,15 @@ internal sealed class PregnancyService(
 {
     private readonly SQLiteAsyncConnection _connection = databaseService.Connection;
 
+    public Task<int> GetRegisteredChildrenCountAsync(int patientId)
+    {
+        var userId = currentUserContext.RequireCurrentUserId();
+        if (patientId <= 0) return Task.FromResult(0);
+        return _connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM Patient child JOIN Patient mother ON mother.Id = child.MotherPatientId AND mother.UserId = child.UserId WHERE mother.Id = ? AND mother.UserId = ?",
+            patientId, userId);
+    }
+
     public async Task<PatientPregnancy?> GetActiveOrLatestByPatientIdAsync(int patientId)
     {
         var userId = currentUserContext.RequireCurrentUserId();
@@ -45,9 +54,7 @@ internal sealed class PregnancyService(
             return null;
         }
 
-        var registeredChildrenCount = await _connection.Table<Patient>()
-            .Where(item => item.UserId == userId && item.MotherPatientId == patientId)
-            .CountAsync();
+        var registeredChildrenCount = await GetRegisteredChildrenCountAsync(patientId);
         var conditions = await _connection.Table<PatientConditions>()
             .Where(condition => condition.UserId == userId && condition.PatientId == patientId)
             .ToListAsync();

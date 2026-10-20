@@ -8,6 +8,20 @@ namespace ACS_View.Infrastructure.Data.Migrations;
 
 internal static class RelationalStore
 {
+    // House stores the current classification; TerritorialAssignment retains its existing history
+    // and independent operational AreaCode/SectorCode. All residence writers use this helper.
+    internal static void RecordHouseTerritory(SQLiteConnection c, House house)
+    {
+        var current = c.Table<TerritorialAssignment>().FirstOrDefault(t => t.HouseId == house.CasaId && t.UserId == house.UserId && t.ValidTo == null);
+        var sector = TerritorialRules.OptionalCode(house.SetorCensitario) ?? "";
+        var block = TerritorialRules.OptionalCode(house.NumeroQuadra) ?? "";
+        if ((current?.CensusSector ?? "") == sector && (current?.BlockNumber ?? "") == block) return;
+        var now = DateTime.UtcNow;
+        c.Execute("UPDATE TerritorialAssignment SET ValidTo=? WHERE HouseId=? AND UserId=? AND ValidTo IS NULL", now, house.CasaId, house.UserId);
+        c.Insert(new TerritorialAssignment { UserId = house.UserId, HouseId = house.CasaId, CensusSector = sector, BlockNumber = block,
+            AreaCode = current?.AreaCode ?? "", SectorCode = current?.SectorCode ?? "", ValidFrom = now });
+    }
+
     public static void CreateSchema(SQLiteConnection c)
     {
         c.Execute("""

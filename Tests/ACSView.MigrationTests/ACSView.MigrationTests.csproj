@@ -33,6 +33,9 @@
     <Compile Include="../../UseCases/Services/PregnancyService.cs" />
     <Compile Include="../../Application/Interfaces/IPregnancyService.cs" />
     <Compile Include="../../ViewModels/VaccineApplicationPopupViewModel.cs" />
+    <Compile Include="../../ViewModels/AddHouseViewModel.cs" />
+    <Compile Include="../../ViewModels/VetorialControlViewModel.cs" />
+    <Compile Include="../../ViewModels/VetorialControlOptionsViewModel.cs" />
     <Compile Include="../../ViewModels/PhoneEditorViewModel.cs" />
     <Compile Include="../../ViewModels/SusNumberEditorViewModel.cs" />
     <Compile Include="../../Application/Interfaces/IPatientSusService.cs" />

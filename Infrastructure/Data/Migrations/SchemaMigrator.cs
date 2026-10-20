@@ -9,7 +9,7 @@ namespace ACS_View.Infrastructure.Data.Migrations;
 
 internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
     // Only invoked from startup before services may write. SQLite serializes each transaction.
     internal Action<int>? BeforeValidation { get; init; }
     public string? BackupPath { get; private set; }
@@ -51,6 +51,7 @@ internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
                     case 2: RelationalStore.CreateSchema(c); break;
                     case 3: RelationalStore.MigrateData(c,before.Any(t=>t.Name=="PatientConditions" && t.Columns.Contains("ConditionId"))); break;
                     case 4: RelationalStore.BackfillSusNumbers(c); break;
+                    case 5: AddHouseTerritory(c, before); break;
                 }
                 BeforeValidation?.Invoke(next);
                 ValidatePreservation(c, before);
@@ -59,7 +60,7 @@ internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
                     c.Execute("INSERT INTO SchemaPreservation VALUES(?,?,?,?,?,?)",next,t.Name,t.Rows.Length,
                         c.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Quote(t.Name)}"),string.Join(",",t.Columns),Digest([t]));
                 c.Execute("INSERT INTO SchemaMigration VALUES (?, ?, ?, ?)", next,
-                    new[] { "", "legacy-expand", "relational-expand", "relational-backfill", "sus-entity-backfill" }[next],
+                    new[] { "", "legacy-expand", "relational-expand", "relational-backfill", "sus-entity-backfill", "house-territory" }[next],
                     DateTime.UtcNow.ToString("O"), Digest(before));
                 c.Execute($"PRAGMA user_version = {next}");
             }
@@ -105,6 +106,23 @@ internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
     }
     private static string Digest(List<TableSnapshot> before) => Convert.ToHexString(SHA256.HashData(
         Encoding.UTF8.GetBytes(string.Join("\n", before.Select(t => t.Name + ":" + string.Join(",", t.Rows))))));
+
+    private static void AddHouseTerritory(SQLiteConnection c, List<TableSnapshot> before)
+    {
+        var originalColumns = before.FirstOrDefault(t => t.Name == "House")?.Columns ?? [];
+        var columns = new[] { (Name: "SetorCensitario", Source: "CensusSector"), (Name: "NumeroQuadra", Source: "BlockNumber") };
+        foreach (var column in columns)
+            if (!c.GetTableInfo("House").Any(x => x.Name == column.Name))
+                c.Execute($"ALTER TABLE House ADD COLUMN {Quote(column.Name)} TEXT NULL");
+        // Populate only newly introduced columns from the existing active history. The migration
+        // holds the write transaction; suspend the revision trigger so original revisions remain exact.
+        var revisionTrigger = c.ExecuteScalar<string>("SELECT sql FROM sqlite_master WHERE type='trigger' AND name='House_Revision'");
+        if (!string.IsNullOrEmpty(revisionTrigger)) c.Execute("DROP TRIGGER House_Revision");
+        foreach (var column in columns.Where(x => !originalColumns.Contains(x.Name)))
+            c.Execute($"UPDATE House SET {Quote(column.Name)}=(SELECT NULLIF(t.{column.Source},'') FROM TerritorialAssignment t WHERE t.HouseId=House.CasaId AND t.UserId=House.UserId AND t.ValidTo IS NULL) WHERE EXISTS (SELECT 1 FROM TerritorialAssignment t WHERE t.HouseId=House.CasaId AND t.UserId=House.UserId AND t.ValidTo IS NULL)");
+        if (!string.IsNullOrEmpty(revisionTrigger)) c.Execute(revisionTrigger);
+        c.Execute("CREATE INDEX IF NOT EXISTS IX_House_User_Active_Territory ON House(UserId,IsActive,SetorCensitario,NumeroQuadra)");
+    }
 
     private static void ExpandLegacy(SQLiteConnection c)
     {

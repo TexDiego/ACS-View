@@ -12,12 +12,14 @@
              Title="Residências">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=HomeAdd24, Role=OnFill}" Command="{Binding NewHouseCommand}"/>
+        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=Map24, Role=OnFill}" ToolTipProperties.Text="Controle Vetorial" Command="{Binding VetorialControlCommand}"/>
+        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=HomeAdd24, Role=OnFill}" ToolTipProperties.Text="Adicionar residência" Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
 
         <Border Grid.Row="0" Style="{StaticResource SearchPanel}">
+            <Grid ColumnDefinitions="*,Auto">
             <SearchBar
                 Margin="0,0,0,-1"
                 Placeholder="Buscar rua, número ou paciente"
@@ -25,9 +27,20 @@
                 MaxLength="80"
                 BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerHigh}, Dark={StaticResource DarkSurfaceContainerHigh}}"
                 TextChanged="SearchBar_TextChanged"/>
+            <ImageButton Grid.Column="1"
+                         ToolTipProperties.Text="Filtrar"
+                         SemanticProperties.Description="Filtrar residências"
+                         Source="{icons:ThemedIcon Icon=Filter28, Role=OnFill}"
+                         CornerRadius="10"
+                         BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                         Margin="0,0,5,2" Padding="2"
+                         HeightRequest="34" WidthRequest="34"
+                         VerticalOptions="Center"
+                         Command="{Binding Filter}"/>
+            </Grid>
         </Border>
 
-        <Grid ColumnDefinitions="*,*" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
+        <Grid ColumnDefinitions="*,auto" Grid.Row="1" Margin="4,-6,4,10" HorizontalOptions="Fill">
             <Label
                 Grid.Column="0"
                 HorizontalOptions="Start"

@@ -579,6 +579,9 @@ namespace ACS_View.ViewModels
                 return existingDetails;
             }
 
+            var registeredChildrenCount = patientId > 0
+                ? await _pregnancyService.GetRegisteredChildrenCountAsync(patientId)
+                : 0;
             var pregnancy = new PatientPregnancy
             {
                 PatientId = patientId,
@@ -594,13 +597,13 @@ namespace ACS_View.ViewModels
                 CurrentPatient,
                 pregnancy,
                 conditions,
-                registeredChildrenCount: 0);
+                registeredChildrenCount);
 
             return new PregnancyDetailsDto
             {
                 Patient = CurrentPatient,
                 Pregnancy = pregnancy,
-                RegisteredChildrenCount = 0,
+                RegisteredChildrenCount = registeredChildrenCount,
                 ConditionDescriptions = conditions.ToList(),
                 RiskSuggestion = suggestion,
                 GestationalAge = PregnancyCalculator.CalculateGestationalAge(pregnancy),

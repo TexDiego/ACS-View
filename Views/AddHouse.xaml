@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
@@ -84,6 +84,9 @@
                     Text="{Binding Pais, Mode=TwoWay}" 
                     MaxLength="20" 
                     Placeholder="País *"/>
+                <Label Text="Organização territorial" Style="{StaticResource BodyMuted}" Margin="0,12,0,0"/>
+                <Entry Text="{Binding SetorCensitario, Mode=TwoWay}" Placeholder="Setor censitário (opcional)"/>
+                <Entry Text="{Binding NumeroQuadra, Mode=TwoWay}" Placeholder="Quadra (opcional)"/>
             </VerticalStackLayout>
         </ScrollView>
 

@@ -49,7 +49,7 @@ public partial class PregnancyPopupViewModel : BaseViewModel
             (pregnancy.LastMenstrualPeriod is null
                 ? DateTime.Today.AddDays(280)
                 : PregnancyCalculator.CalculateExpectedBirthDate(pregnancy.LastMenstrualPeriod.Value));
-        InformedChildrenCountText = pregnancy.InformedChildrenCount?.ToString() ?? string.Empty;
+        InformedChildrenCountText = (pregnancy.InformedChildrenCount ?? registeredChildrenCount).ToString();
         SelectedRisk = GetRiskText(pregnancy.ManualRisk);
         SelectedStatus = GetStatusText(pregnancy.Status);
         ShowEndFields = pregnancy.Status == PregnancyStatus.Ended;

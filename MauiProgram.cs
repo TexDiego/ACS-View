@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
 using SQLite;
 using Plugin.LocalNotification;
-using Plugin.LocalNotification.AndroidOption;
+using Plugin.LocalNotification.Core.Models.AndroidOption;
 using ACS_View.Infrastructure.Services;
 
 namespace ACS_View
@@ -24,7 +24,7 @@ namespace ACS_View
 
             builder
                 .UseMauiApp<App>()
-                .UseLocalNotification(config => config.AddAndroid(android => android.AddChannel(new NotificationChannelRequest
+                .UseLocalNotification(config => config.AddAndroid(android => android.AddChannel(new AndroidNotificationChannelRequest
                 {
                     Id = LocalNoteNotificationScheduler.ChannelId,
                     Name = "Lembretes de notas",

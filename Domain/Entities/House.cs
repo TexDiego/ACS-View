@@ -1,4 +1,4 @@
-using SQLite;
+﻿using SQLite;
 using System.Text.Json.Serialization;
 
 namespace ACS_View.Domain.Entities
@@ -17,6 +17,9 @@ namespace ACS_View.Domain.Entities
         [JsonPropertyName("logradouro")]
         public string Rua { get; set; } = string.Empty;
         public string TipoLogradouro { get; set; } = string.Empty;
+
+        public string? SetorCensitario { get; set; }
+        public string? NumeroQuadra { get; set; }
 
         public string NumeroCasa { get; set; } = string.Empty;
         public string SearchRua { get; set; } = string.Empty;

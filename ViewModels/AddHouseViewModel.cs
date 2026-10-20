@@ -1,4 +1,4 @@
-using ACS_View.Domain.Entities;
+﻿using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -66,6 +66,7 @@ namespace ACS_View.ViewModels
             catch (Exception ex)
             {
                 await DisplayAlertAsync("Erro", ex.Message, "Voltar");
+                return;
             }
 
             HouseModel = new();
@@ -115,6 +116,10 @@ namespace ACS_View.ViewModels
             {
                 CasaId = current.CasaId,
                 UserId = current.UserId,
+                RowRevision = current.RowRevision,
+                IsActive = current.IsActive,
+                SetorCensitario = current.SetorCensitario,
+                NumeroQuadra = current.NumeroQuadra,
                 CEP = CepNumberRules.Normalize(address.CEP),
                 Rua = CoalesceAddressValue(address.Rua, current.Rua),
                 TipoLogradouro = CoalesceAddressValue(address.TipoLogradouro, current.TipoLogradouro),

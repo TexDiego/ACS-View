@@ -1,3 +1,4 @@
+using ACS_View.Application.DTOs;
 using System.Diagnostics;
 using System.Reflection;
 using ACS_View.Application.Interfaces;
@@ -68,6 +69,15 @@ var pregnancy = new PregnancyService(database, user);
 var phones = new PatientPhoneService(new SQLitePatientPhoneRepository(database, user, new RelationalDataService(database, user)));
 AddRegisterViewModel CreateEditor() => new(patients, cids, patientCids, conditions, bolsa, insulin, pregnancy,
     Noop<ICareNotificationService>(), Reject<IPopupService>(), phones);
+
+// An existing mother can open a first pregnancy before an episode is saved.
+await db.InsertAsync(new Patient { UserId = 1, Name = "Child for first episode", MotherPatientId = 2 });
+var firstEpisodeEditor = CreateEditor();
+await firstEpisodeEditor.LoadPatient(2);
+var draftDetails = await (Task<PregnancyDetailsDto>)typeof(AddRegisterViewModel)
+    .GetMethod("BuildDraftPregnancyDetailsAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+    .Invoke(firstEpisodeEditor, new object[] { 2 })!;
+Check(draftDetails.RegisteredChildrenCount == 1, "First pregnancy draft counts existing MotherPatientId links");
 
 await Bench("Old opening: full CID catalog", async () => { await cids.GetAllSubcategories(); });
 await Bench("New form: local initialization", () => { CreateEditor().InitializeNewPatient(); return Task.CompletedTask; });

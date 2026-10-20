@@ -5,6 +5,7 @@ namespace ACS_View.Application.Interfaces;
 
 public interface IPregnancyService
 {
+    Task<int> GetRegisteredChildrenCountAsync(int patientId);
     Task<PatientPregnancy?> GetActiveOrLatestByPatientIdAsync(int patientId);
     Task<PregnancyDetailsDto?> GetDetailsByPatientIdAsync(int patientId);
     Task<PatientPregnancy> SaveAsync(PatientPregnancy pregnancy);

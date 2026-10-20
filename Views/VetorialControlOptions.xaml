@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+             x:DataType="vm:VetorialControlOptionsViewModel"
+             x:Class="ACS_View.Views.VetorialControlOptions"
+             Style="{StaticResource PageBackground}"
+             Title="Configuração territorial">
+
+    <Grid
+        Padding="{StaticResource PagePadding}"
+        RowDefinitions="Auto,*,Auto" RowSpacing="8">
+
+        <Grid ColumnDefinitions="*,Auto">
+            <Label
+                Text="{Binding SelectedCount, StringFormat='Lote atual: {0} residências'}"
+                FontAttributes="Bold"
+                VerticalOptions="Center"/>
+
+            <Button
+                Grid.Column="1"
+                Text="Limpar lote"
+                Style="{StaticResource DangerButton}"
+                Command="{Binding ClearSelectionCommand}"/>
+        </Grid>
+
+        <CollectionView
+            x:Name="ResidenceResults"
+            Grid.Row="1"
+            ItemsSource="{Binding SearchResults}"
+            SelectionMode="None"
+            HandlerChanged="OnResultsHandlerChanged"
+            VerticalScrollBarVisibility="Never">
+
+            <CollectionView.Header>
+                <VerticalStackLayout
+                    Spacing="8"
+                    Padding="0,0,0,12">
+
+                    <Entry
+                        x:Name="StreetEntry"
+                        Text="{Binding StreetQuery}"
+                        Placeholder="Rua / logradouro"/>
+
+                    <Grid
+                        ColumnDefinitions="*,*"
+                        ColumnSpacing="8">
+
+                        <Entry
+                            x:Name="StartNumberEntry"
+                            Text="{Binding StartNumber}"
+                            Placeholder="Número inicial"
+                            Keyboard="Numeric"/>
+
+                        <Entry
+                            x:Name="EndNumberEntry"
+                            Grid.Column="1"
+                            Text="{Binding EndNumber}"
+                            Placeholder="Número final"
+                            Keyboard="Numeric"/>
+                    </Grid>
+
+                    <Picker
+                        Title="Paridade"
+                        ItemsSource="{Binding ParityOptions}"
+                        SelectedIndex="{Binding ParityIndex}"/>
+
+                    <Button
+                        Text="Buscar"
+                        Style="{StaticResource Buttons}"
+                        Clicked="OnSearchClicked"/>
+
+                    <VerticalStackLayout
+                        BindableLayout.ItemsSource="{Binding SelectionSegments}"
+                        Spacing="4"
+                        Margin="0">
+
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TerritorialSelectionSegment">
+                                <Grid
+                                    ColumnDefinitions="*,Auto"
+                                    ColumnSpacing="8"
+                                    Margin="0,15">
+
+                                    <Label
+                                        Grid.Column="0"
+                                        Text="{Binding Summary}"
+                                        Style="{StaticResource BodyMuted}"
+                                        VerticalOptions="Center"/>
+
+                                    <Button
+                                        Grid.Column="1"
+                                        Text="Remover"
+                                        Style="{StaticResource DangerButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VetorialControlOptionsViewModel}},
+                                                          Path=RemoveSegmentCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Button
+                        Text="Selecionar todos os resultados"
+                        Command="{Binding SelectAllResultsCommand}"/>
+
+                    <Label
+                        Text="{Binding ResultSummary}"
+                        Style="{StaticResource BodyMuted}"/>
+                </VerticalStackLayout>
+            </CollectionView.Header>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TerritorialSearchResult">
+                    <Border
+                        Style="{StaticResource CardBorder}"
+                        Padding="8">
+
+                        <Grid
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+
+                            <CheckBox
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                VerticalOptions="Center"/>
+
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Spacing="4">
+
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VetorialControlOptionsViewModel}},
+                                                          Path=ToggleResultCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </VerticalStackLayout.GestureRecognizers>
+
+                                <Label
+                                    Text="{Binding Address}"
+                                    FontAttributes="Bold"/>
+
+                                <Label
+                                    Text="{Binding Classification}"
+                                    Style="{StaticResource BodyMuted}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <VerticalStackLayout
+            Grid.Row="2"
+            Spacing="6"
+            Margin="0,0,0,15">
+
+            <Grid
+                ColumnDefinitions="*,*"
+                ColumnSpacing="8">
+
+                <Entry
+                    Text="{Binding TargetCensusSector}"
+                    Placeholder="Setor censitário"/>
+
+                <Entry
+                    Grid.Column="1"
+                    Text="{Binding TargetBlock}"
+                    Placeholder="Quadra"/>
+            </Grid>
+
+            <Button
+                Text="Revisar e aplicar lote"
+                Style="{StaticResource Buttons}"
+                Command="{Binding ApplyBatchCommand}"/>
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"/>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

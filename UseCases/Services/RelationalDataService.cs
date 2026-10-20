@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
+using ACS_View.Domain.ValueObjects;
 using ACS_View.Infrastructure.Data.Migrations;
 
 namespace ACS_View.UseCases.Services;
@@ -51,17 +52,22 @@ internal sealed class RelationalDataService(IDatabaseService database, ICurrentU
         });
     }
     public Task DeletePhoneAsync(int id) => database.Connection.ExecuteAsync("DELETE FROM PatientPhone WHERE Id=? AND UserId=?",id,context.RequireCurrentUserId());
-    public Task AssignTerritoryAsync(TerritorialAssignment assignment)
+    public async Task AssignTerritoryAsync(TerritorialAssignment assignment)
     {
         var user=context.RequireCurrentUserId();
         if(assignment.Id!=0)throw new ArgumentException("Crie uma nova atribuição para preservar o histórico.");
+        assignment.CensusSector=TerritorialRules.OptionalCode(assignment.CensusSector) ?? "";
+        assignment.BlockNumber=TerritorialRules.OptionalCode(assignment.BlockNumber) ?? "";
         assignment.UserId=user;assignment.ValidFrom=DateTime.UtcNow;assignment.ValidTo=null;
-        return database.Connection.RunInTransactionAsync(c=>
+        await database.Connection.RunInTransactionAsync(c=>
         {
             if(c.Table<House>().FirstOrDefault(h=>h.CasaId==assignment.HouseId && h.UserId==user && h.IsActive)==null)
                 throw new InvalidOperationException("Residência não pertence à conta atual.");
             c.Execute("UPDATE TerritorialAssignment SET ValidTo=? WHERE HouseId=? AND UserId=? AND ValidTo IS NULL",assignment.ValidFrom,assignment.HouseId,user);
             c.Insert(assignment);
+            c.Execute("UPDATE House SET SetorCensitario=?, NumeroQuadra=? WHERE CasaId=? AND UserId=?",
+                TerritorialRules.OptionalCode(assignment.CensusSector), TerritorialRules.OptionalCode(assignment.BlockNumber), assignment.HouseId, user);
         });
+        DataChangeTracker.MarkHousesChanged();
     }
 }

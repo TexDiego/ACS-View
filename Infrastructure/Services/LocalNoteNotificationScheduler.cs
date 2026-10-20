@@ -2,6 +2,7 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Application.Reminders;
 using ACS_View.Views;
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
 
 namespace ACS_View.Infrastructure.Services;
 
@@ -98,7 +99,7 @@ internal sealed class LocalNoteNotificationScheduler(IDialogService dialogs) : I
         .Where(r => r.NotificationId > 0 && r.Schedule.NotifyTime.HasValue &&
             (r.ReturningData == Marker + r.NotificationId ||
              (string.IsNullOrEmpty(r.ReturningData) && r.Title == "Lembrete de anotação")))
-        .Select(r => new PendingNoteReminder(r.NotificationId, r.Schedule.NotifyTime!.Value, r.Description)).ToList();
+        .Select(r => new PendingNoteReminder(r.NotificationId, r.Schedule.NotifyTime!.Value.LocalDateTime, r.Description)).ToList();
 #if ANDROID
         // Revoking exact-alarm access removes AlarmManager alarms but not the plugin's
         // SharedPreferences list. A subsequent grant invalidates that stale cache.

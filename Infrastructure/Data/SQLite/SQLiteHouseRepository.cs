@@ -3,6 +3,7 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
 using SQLite;
+using ACS_View.Infrastructure.Data.Migrations;
 using System.Diagnostics;
 
 namespace ACS_View.Infrastructure.Data.SQLite;
@@ -10,6 +11,57 @@ namespace ACS_View.Infrastructure.Data.SQLite;
 internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, ICurrentUserContext currentUserContext) : IHouseRepository
 {
     private readonly SQLiteAsyncConnection _connection = databaseService.Connection;
+
+    public Task<List<House>> SearchTerritorialAsync(string street)
+    {
+        var tokens = SearchTextNormalizer.Normalize(street).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var clauses = string.Join(" AND ", tokens.Select(_ => "instr(SearchRua, ?) > 0"));
+        if (tokens.Length == 0) throw new ArgumentException("Informe a rua / logradouro.");
+        return _connection.QueryAsync<House>($"SELECT * FROM House WHERE UserId=? AND IsActive=1 AND {clauses}",
+            new object[] { currentUserContext.RequireCurrentUserId() }.Concat(tokens.Cast<object>()).ToArray());
+    }
+
+    private static List<House> ReadSelection(SQLiteConnection c, IEnumerable<int> ids, int userId)
+    {
+        var houses = new List<House>();
+        foreach (var chunk in ids.Distinct().Chunk(400))
+            houses.AddRange(c.Query<House>($"SELECT * FROM House WHERE UserId=? AND IsActive=1 AND CasaId IN ({string.Join(",", chunk.Select(_ => "?"))})",
+                new object[] { userId }.Concat(chunk.Cast<object>()).ToArray()));
+        return houses;
+    }
+
+    public async Task<List<House>> GetTerritorialSelectionAsync(IReadOnlyCollection<int> ids)
+    {
+        var userId = currentUserContext.RequireCurrentUserId();
+        List<House> houses = [];
+        await _connection.RunInTransactionAsync(c => houses = ReadSelection(c, ids, userId));
+        if (houses.Count != ids.Distinct().Count()) throw new InvalidOperationException("Uma residência foi removida ou não pertence à conta atual. Limpe o lote e pesquise novamente.");
+        return houses;
+    }
+
+    public async Task<int> ApplyTerritoryAsync(IReadOnlyCollection<House> reviewed, string sector, string block, bool onlyUnclassified)
+    {
+        var userId = currentUserContext.RequireCurrentUserId();
+        if (reviewed.Count == 0 || string.IsNullOrWhiteSpace(sector) || string.IsNullOrWhiteSpace(block))
+            throw new ArgumentException("Selecione residências e informe setor e quadra.");
+        var count = 0;
+        await _connection.RunInTransactionAsync(c =>
+        {
+            if (currentUserContext.RequireCurrentUserId() != userId) throw new InvalidOperationException("A sessão foi alterada.");
+            var expected = reviewed.ToDictionary(h => h.CasaId);
+            var current = ReadSelection(c, expected.Keys, userId);
+            if (current.Count != expected.Count || current.Any(h => expected[h.CasaId].UserId != userId || h.RowRevision != expected[h.CasaId].RowRevision))
+                throw new InvalidOperationException("O lote foi alterado desde a revisão. Revise novamente antes de aplicar.");
+            foreach (var house in current)
+            {
+                if (onlyUnclassified && TerritorialRules.IsClassified(house)) continue;
+                count += c.Execute("UPDATE House SET SetorCensitario=?, NumeroQuadra=? WHERE CasaId=? AND UserId=? AND IsActive=1", sector.Trim(), block.Trim(), house.CasaId, userId);
+                house.SetorCensitario = sector.Trim(); house.NumeroQuadra = block.Trim();
+                RelationalStore.RecordHouseTerritory(c, house);
+            }
+        });
+        return count;
+    }
 
     public Task DeleteAsync(House house)
     {
@@ -32,20 +84,21 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
         });
     }
 
-    public async Task<List<House>> GetAllAsync()
+    public Task<List<House>> GetAllAsync(string? search = null)
     {
-        var userId = currentUserContext.RequireCurrentUserId();
-        return await _connection.Table<House>().Where(h => h.UserId == userId && h.IsActive).ToListAsync();
+        // Share the exact address/complement/patient criteria used by the residences page.
+        var criteria = BuildSearchCriteria(search, currentUserContext.RequireCurrentUserId(), null);
+        return _connection.QueryAsync<House>($"SELECT * FROM House {criteria.WhereClause}", [.. criteria.Parameters]);
     }
 
-    public async Task<PagedResultDto<HouseListItemDto>> GetListAsync(string? search, int skip, int take, string? filterKey = null)
+    public async Task<PagedResultDto<HouseListItemDto>> GetListAsync(string? search, int skip, int take, string? filterKey = null, HouseNumberFilterDto? numberFilter = null)
     {
         try
         {
             skip = Math.Max(skip, 0);
             take = Math.Clamp(take, 1, 100);
 
-            var searchCriteria = BuildSearchCriteria(search, currentUserContext.RequireCurrentUserId(), filterKey);
+            var searchCriteria = BuildSearchCriteria(search, currentUserContext.RequireCurrentUserId(), filterKey, numberFilter);
             var totalCount = await _connection.ExecuteScalarAsync<int>(
                 $"SELECT COUNT(*) FROM House {searchCriteria.WhereClause}",
                 [.. searchCriteria.Parameters]);
@@ -115,10 +168,25 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
         return _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM House WHERE UserId = ? AND IsActive=1", userId);
     }
 
-    public Task InsertAsync(House house)
+    public async Task InsertAsync(House house)
     {
         house.UserId = currentUserContext.RequireCurrentUserId();
-        return _connection.InsertAsync(house);
+        var originalId = house.CasaId;
+        try
+        {
+            await _connection.RunInTransactionAsync(c =>
+            {
+                c.Insert(house);
+                RelationalStore.RecordHouseTerritory(c, house);
+            });
+        }
+        catch
+        {
+            // sqlite-net publishes generated IDs before commit. A rolled-back ID must never
+            // make the editor retry as an update against an unrelated future residence.
+            house.CasaId = originalId;
+            throw;
+        }
     }
 
     public Task UpdateAsync(House house)
@@ -139,11 +207,12 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
                 var values=changed.Select(p=>p.GetValue(house)!).ToList();values.Add(house.CasaId);values.Add(userId);
                 c.Execute($"UPDATE House SET {string.Join(",",changed.Select(p=>$"{ACS_View.Infrastructure.Data.Migrations.SchemaMigrator.Quote(p.Name)}=?"))} WHERE CasaId=? AND UserId=?",values.ToArray());
             }
+            RelationalStore.RecordHouseTerritory(c, house);
             house.RowRevision=c.ExecuteScalar<int>("SELECT RowRevision FROM House WHERE CasaId=? AND UserId=?",house.CasaId,userId);
         });
     }
 
-    private static HouseSearchCriteria BuildSearchCriteria(string? search, int userId, string? filterKey)
+    private static HouseSearchCriteria BuildSearchCriteria(string? search, int userId, string? filterKey, HouseNumberFilterDto? numberFilter = null)
     {
         var parameters = new List<object> { userId };
         var clauses = new List<string> { "UserId = ?", "IsActive=1" };
@@ -157,9 +226,36 @@ internal sealed class SQLiteHouseRepository(IDatabaseService databaseService, IC
                     FROM Patient p
                     WHERE p.UserId = House.UserId
                       AND p.HouseId = House.CasaId
+                      AND p.FamilyId > 0
                       AND COALESCE(p.IsActive, 1) = 1
                 )
                 """);
+        }
+
+        if (numberFilter is { IsActive: true })
+        {
+            numberFilter.Validate();
+            // Same initial decimal component as TerritorialRules.NumericPart: 450-B -> 450.
+            // Reject unknown numbers and values outside Int32 before counting or paging.
+            const string trimmed = "TRIM(NumeroCasa, char(9,10,11,12,13,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288))";
+            const string number = "CAST(" + trimmed + " AS INTEGER)";
+            clauses.Add($"{trimmed} GLOB '[0-9]*'");
+            clauses.Add($"{number} <= 2147483647");
+            if (numberFilter.Start.HasValue)
+            {
+                clauses.Add($"{number} >= ?");
+                parameters.Add(numberFilter.Start.Value);
+            }
+            if (numberFilter.End.HasValue)
+            {
+                clauses.Add($"{number} <= ?");
+                parameters.Add(numberFilter.End.Value);
+            }
+            if (numberFilter.Parity != HouseParity.All)
+            {
+                clauses.Add($"{number} % 2 = ?");
+                parameters.Add(numberFilter.Parity == HouseParity.Even ? 0 : 1);
+            }
         }
 
         if (string.IsNullOrWhiteSpace(search))

@@ -10,6 +10,29 @@ namespace ACS_View.UseCases.Services
 {
     internal class HouseService(IHouseRepository repository) : IHouseService
     {
+        public Task<List<House>> GetTerritorialHousesAsync(string? search = null) => repository.GetAllAsync(search);
+
+        public async Task<List<House>> SearchTerritorialAsync(string street, int? start, int? end, HouseParity parity)
+        {
+            if (string.IsNullOrWhiteSpace(street)) throw new ArgumentException("Informe a rua / logradouro.");
+            TerritorialRules.ValidateRange(start, end);
+            var candidates = await repository.SearchTerritorialAsync(street);
+            return await Task.Run(() => candidates.Where(h => TerritorialRules.MatchesNumber(h.NumeroCasa, start, end, parity))
+                .OrderBy(TerritorialRules.Street, NaturalCodeComparer.Instance).ThenBy(h => h.NumeroCasa, NaturalCodeComparer.Instance).ThenBy(h => h.CasaId).ToList());
+        }
+
+        public Task<List<House>> GetTerritorialSelectionAsync(IReadOnlyCollection<int> ids) => repository.GetTerritorialSelectionAsync(ids);
+
+        public async Task<int> ApplyTerritoryAsync(IReadOnlyCollection<House> reviewed, string sector, string block, bool onlyUnclassified)
+        {
+            if (reviewed.Count == 0) throw new ArgumentException("Selecione ao menos uma residência.");
+            if (string.IsNullOrWhiteSpace(sector) || string.IsNullOrWhiteSpace(block))
+                throw new ArgumentException("Informe o setor censitário e a quadra.");
+            var count = await repository.ApplyTerritoryAsync(reviewed, sector.Trim(), block.Trim(), onlyUnclassified);
+            if (count > 0) DataChangeTracker.MarkHousesChanged();
+            return count;
+        }
+
         public async Task DeleteHouseAsync(int id)
         {
             try
@@ -41,9 +64,9 @@ namespace ACS_View.UseCases.Services
             }
         }
 
-        public Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take, string? filterKey = null)
+        public Task<PagedResultDto<HouseListItemDto>> GetHouseListAsync(string? search, int skip, int take, string? filterKey = null, HouseNumberFilterDto? numberFilter = null)
         {
-            return repository.GetListAsync(search, skip, take, filterKey);
+            return repository.GetListAsync(search, skip, take, filterKey, numberFilter);
         }
 
         public Task<House?> GetHouseByIdAsync(int id)
@@ -90,6 +113,8 @@ namespace ACS_View.UseCases.Services
 
         private static void NormalizeHouseFields(House house)
         {
+            house.SetorCensitario = TerritorialRules.OptionalCode(house.SetorCensitario);
+            house.NumeroQuadra = TerritorialRules.OptionalCode(house.NumeroQuadra);
             house.TipoLogradouro = NormalizeAddressOptional(house.TipoLogradouro);
             house.Rua = NormalizeAddressRequired(house.Rua, "Logradouro");
             house.Bairro = NormalizeAddressRequired(house.Bairro, "Bairro");

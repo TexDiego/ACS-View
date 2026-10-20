@@ -31,5 +31,6 @@
     <Compile Include="../../Domain/ValueObjects/VaccineDoseCatalog.cs" />
     <Compile Include="../../Domain/ValueObjects/VaccineDoseDefinition.cs" />
     <Compile Include="../../Domain/ValueObjects/VaccineDoseKeys.cs" />
+    <Compile Include="../../Domain/ValueObjects/TerritorialRules.cs" />
   </ItemGroup>
 </Project>

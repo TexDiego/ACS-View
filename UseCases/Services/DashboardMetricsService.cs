@@ -52,6 +52,7 @@ namespace ACS_View.UseCases.Services
                           FROM Patient p
                           WHERE p.UserId = h.UserId
                             AND p.HouseId = h.CasaId
+                            AND p.FamilyId > 0
                             AND {ActivePatientAliasClause}
                       )
                     """,

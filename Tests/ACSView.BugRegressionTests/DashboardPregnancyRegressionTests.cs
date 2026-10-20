@@ -95,7 +95,7 @@ internal static class DashboardPregnancyRegressionTests
         vm.SearchResults[0].IsSelected = false;
         check(vm.SelectedCount == 1 && changes == 0 && ReferenceEquals(segments, vm.SelectionSegments)
             && ReferenceEquals(segment, vm.SelectionSegments.Single()) && ReferenceEquals(results, vm.SearchResults)
-            && segment.Summary.EndsWith("1 residências"), "Checkbox updates count and summary without rebuilding header or result rows");
+            && segment.Summary.EndsWith("1 residÃªncias"), "Checkbox updates count and summary without rebuilding header or result rows");
         vm.ToggleResultCommand.Execute(vm.SearchResults[0]);
         check(vm.SelectedCount == 2 && vm.SearchResults.All(row => row.IsSelected), "Address tap and checkbox keep the same selection");
         vm.RemoveSegmentCommand.Execute(segment);

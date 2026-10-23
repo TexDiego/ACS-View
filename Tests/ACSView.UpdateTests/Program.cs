@@ -56,6 +56,31 @@ using (var client = new HttpClient(new FeedHandler(async (_, token) =>
     var timer = System.Diagnostics.Stopwatch.StartNew();
     Check(await new GitHubUpdateChecker(client).CheckAsync(true, "1.0.0", 1) is null && timer.Elapsed < TimeSpan.FromSeconds(5), "Slow feed is cancelled within short deadline");
 }
+var payload = Enumerable.Range(0, 200000).Select(i => (byte)i).ToArray();
+var updateFile = Path.Combine(Path.GetTempPath(), $"acs-update-{Guid.NewGuid():N}.apk");
+var update = new AppUpdate("1.2.1", 5, false, new Uri("https://example.test/update.apk"), payload.Length,
+    "sha256:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(payload)));
+using (var client = new HttpClient(new FeedHandler((_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+    { Content = new ByteArrayContent(payload) }))))
+{
+    var reports = new List<ACS_View.Application.Interfaces.AppUpdateProgress>();
+    try
+    {
+        await AppUpdateDownloader.DownloadAsync(client, update, updateFile, new DownloadProgress(reports.Add), CancellationToken.None);
+        Check(File.ReadAllBytes(updateFile).SequenceEqual(payload), "Download streams complete file");
+        Check(reports.Any(p => p.Message.Contains("Baixando")) && reports.Any(p => p.Message.Contains("Verificando")) &&
+            reports.Zip(reports.Skip(1)).All(pair => pair.First.Progress <= pair.Second.Progress), "Download reports actual bytes and verification with monotonic progress");
+        try { await AppUpdateDownloader.DownloadAsync(client, update with { Size = payload.Length + 1 }, updateFile, null, CancellationToken.None); throw new Exception("Expected incomplete download"); }
+        catch (InvalidOperationException) { Check(!File.Exists(updateFile), "Incomplete APK is removed and cannot be installed"); }
+        try { await AppUpdateDownloader.DownloadAsync(client, update with { Digest = "sha256:bad" }, updateFile, null, CancellationToken.None); throw new Exception("Expected digest failure"); }
+        catch (InvalidOperationException) { Check(!File.Exists(updateFile), "Invalid digest removes APK"); }
+        using var cancelled = new CancellationTokenSource();
+        var cancelProgress = new DownloadProgress(p => { if (p.Message.Contains("Baixando")) cancelled.Cancel(); });
+        try { await AppUpdateDownloader.DownloadAsync(client, update, updateFile, cancelProgress, cancelled.Token); throw new Exception("Expected cancellation"); }
+        catch (OperationCanceledException) { Check(!File.Exists(updateFile), "Cancellation during download removes partial APK"); }
+    }
+    finally { if (File.Exists(updateFile)) File.Delete(updateFile); }
+}
 Console.WriteLine($"Passed {checks} update checks.");
 
 sealed class FeedHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : HttpMessageHandler
@@ -66,4 +91,9 @@ sealed class FeedHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpRe
         Calls++;
         return send(request, cancellationToken);
     }
+}
+
+sealed class DownloadProgress(Action<ACS_View.Application.Interfaces.AppUpdateProgress> report) : IProgress<ACS_View.Application.Interfaces.AppUpdateProgress>
+{
+    public void Report(ACS_View.Application.Interfaces.AppUpdateProgress value) => report(value);
 }

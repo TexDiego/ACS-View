@@ -25,6 +25,11 @@
             <Border x:Name="UpdateCard" IsVisible="False" Style="{StaticResource CardBorder}" Padding="18">
                 <VerticalStackLayout Spacing="10">
                     <Label x:Name="UpdateMessage" Style="{StaticResource BodyMuted}" />
+                    <VerticalStackLayout x:Name="UpdateProgressPanel" IsVisible="False" Spacing="8">
+                        <ProgressBar x:Name="UpdateProgress" Progress="0" />
+                        <Label x:Name="UpdateProgressText" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap" />
+                        <Label Text="Aguarde para entrar enquanto a atualização está em andamento." Style="{StaticResource BodyMuted}" />
+                    </VerticalStackLayout>
                     <Button x:Name="InstallUpdate" Text="Instalar atualização" Style="{StaticResource PrimaryButton}" Clicked="InstallUpdate_Clicked" />
                     <Button x:Name="SkipUpdate" Text="Agora não" Style="{StaticResource GhostButton}" Clicked="SkipUpdate_Clicked" />
                     <Button x:Name="CancelDownload" Text="Cancelar download" IsVisible="False" Style="{StaticResource GhostButton}" Clicked="CancelDownload_Clicked" />

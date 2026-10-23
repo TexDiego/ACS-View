@@ -14,6 +14,7 @@ public partial class LoginPage : ContentPage
     private AppUpdate? _availableUpdate;
     private bool _loginAllowed;
     private bool _appeared;
+    private bool _installerPending;
     private CancellationTokenSource? _download;
 
     public LoginPage(IAuthService authService, IDialogService dialogService, IAppUpdateService updates)
@@ -67,36 +68,60 @@ public partial class LoginPage : ContentPage
 
     private void SetLoginAllowed(bool allowed)
     {
-        _loginAllowed = allowed;
-        LoginForm.IsEnabled = allowed;
-        AccountActions.IsEnabled = allowed;
+        _loginAllowed = allowed && _download is null && !_installerPending;
+        LoginForm.IsEnabled = _loginAllowed;
+        AccountActions.IsEnabled = _loginAllowed;
     }
 
     private async void InstallUpdate_Clicked(object sender, EventArgs e) => await InstallAvailableUpdateAsync();
 
     private async Task InstallAvailableUpdateAsync()
     {
-        if (_availableUpdate is null || _download is not null) return;
+        if (_availableUpdate is null || _download is not null || _installerPending || signingIn) return;
         _download = new CancellationTokenSource();
         SetLoginAllowed(false);
         InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = false;
         CancelDownload.IsVisible = true;
-        UpdateStatus.Text = "Preparando atualização…";
+        UpdateStatus.Text = "Atualização em andamento.";
         UpdateStatus.IsVisible = true;
+        UpdateProgressPanel.IsVisible = true;
+        UpdateProgress.Progress = 0;
+        UpdateProgressText.Text = "Preparando atualização…";
+        var progress = new Progress<AppUpdateProgress>(value =>
+        {
+            if (_download is null) return;
+            UpdateProgress.Progress = value.Progress;
+            UpdateProgressText.Text = value.Message;
+        });
         var interaction = (Microsoft.Maui.Controls.Application.Current as App)?.BeginExternalInteraction();
         var window = Window;
         var installerOpened = false;
+        var returned = false;
         EventHandler? resumed = null;
         resumed = (_, _) =>
         {
+            // App switches during download must not release the installer/login gate.
+            if (_download is not null && !installerOpened) return;
+            returned = true;
+            if (installerOpened)
+            {
+                _installerPending = false;
+                InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = true;
+                UpdateProgressPanel.IsVisible = false;
+                UpdateStatus.Text = "Se a instalação não foi concluída, toque em Instalar atualização para tentar novamente.";
+                SetLoginAllowed(_availableUpdate?.Required != true);
+            }
             interaction?.Dispose();
             if (window is not null) window.Resumed -= resumed;
         };
         if (window is not null) window.Resumed += resumed;
         try
         {
-            await _updates.InstallAsync(_availableUpdate, _download.Token);
+            await _updates.InstallAsync(_availableUpdate, _download.Token, progress);
             installerOpened = true;
+            _installerPending = window is not null && !returned;
+            UpdateProgress.Progress = 1;
+            UpdateProgressText.Text = "Arquivo pronto. Confirme a instalação na tela do Android.";
             UpdateStatus.Text = "Confirme a instalação no Android. Se cancelar, toque em Instalar novamente.";
         }
         catch (OperationCanceledException)
@@ -117,15 +142,16 @@ public partial class LoginPage : ContentPage
             }
             _download.Dispose();
             _download = null;
-            InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = true;
+            InstallUpdate.IsEnabled = SkipUpdate.IsEnabled = !_installerPending;
             CancelDownload.IsVisible = false;
+            if (!_installerPending) UpdateProgressPanel.IsVisible = false;
             SetLoginAllowed(!_availableUpdate.Required);
         }
     }
 
     private void SkipUpdate_Clicked(object sender, EventArgs e)
     {
-        if (_availableUpdate?.Required == true || _download is not null) return;
+        if (_availableUpdate?.Required == true || _download is not null || _installerPending) return;
         UpdateCard.IsVisible = UpdateStatus.IsVisible = false;
         SetLoginAllowed(true);
     }

@@ -6,6 +6,19 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Application/DTOs/ImportAuditEntryDto.cs" />
+    <Compile Include="../../Domain/ValueObjects/PatientNameRules.cs" />
+    <Compile Include="../../Domain/ValueObjects/SearchTextNormalizer.cs" />
+    <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />
+    <Compile Include="../../UseCases/Services/PatientService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientRepository.cs" />
+    <Compile Include="../../Infrastructure/Services/CachedCepService.cs" />
+    <Compile Include="../../Infrastructure/Services/ViaCepService.cs" />
+    <Compile Include="../../Domain/ValueObjects/CepNumberRules.cs" />
+    <Compile Include="../../Domain/ValueObjects/StreetAddressParser.cs" />
+    <Compile Include="../../Domain/Entities/CepAddressCache.cs" />
+    <Compile Include="../../Domain/Entities/User.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
     <PackageReference Include="sqlite-net-base" Version="1.9.172" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     <Compile Include="../../Domain/ValueObjects/TerritorialRules.cs" />

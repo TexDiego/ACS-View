@@ -47,6 +47,7 @@ namespace ACS_View.UseCases.Services
             {
                 history.FinishedAt = DateTimeOffset.Now.ToString("O");
                 if (history.Status == "Concluída" && result.Errors.Count > 0) history.Status = "Concluída com pendências";
+                ImportAuditEntryDto.IncludeFailures(result.Entries, result.Errors);
                 history.ReportJson = System.Text.Json.JsonSerializer.Serialize(result);
                 await historyService.SaveAsync(history);
             }
@@ -62,7 +63,7 @@ namespace ACS_View.UseCases.Services
 
             if (rows.Count == 0)
             {
-                result.Errors.Add("A planilha nao possui linhas para importar.");
+                result.Errors.Add("A planilha não possui linhas para importar.");
                 return result;
             }
 
@@ -73,7 +74,7 @@ namespace ACS_View.UseCases.Services
                     ? string.Join(", ", rows[0].Where(value => !string.IsNullOrWhiteSpace(value)).Take(12))
                     : string.Empty;
 
-                result.Errors.Add($"Nao encontrei a coluna \"{columnMap.NameColumn}\". Colunas lidas: {detectedColumns}");
+                result.Errors.Add($"Não encontrei a coluna \"{columnMap.NameColumn}\". Colunas lidas: {detectedColumns}");
                 return result;
             }
 
@@ -150,7 +151,9 @@ namespace ACS_View.UseCases.Services
                 }
                 var existingPatient = candidates.SingleOrDefault();
                 var before = existingPatient == null ? null : System.Text.Json.JsonSerializer.Serialize(existingPatient);
-                var patient = existingPatient ?? new Patient();
+                var patient = before == null ? new Patient() : System.Text.Json.JsonSerializer.Deserialize<Patient>(before)!;
+                // JSON omits the relational CNS collection; preserve it on the working copy.
+                if (existingPatient != null) patient.SusNumberRecords = existingPatient.SusNumberRecords;
                 var isExistingPatient = patient.Id > 0;
                 var patientChanged = isExistingPatient
                     ? UpdateImportedPatientFields(patient, name, susNumber, motherName, fatherName, observation, importedSex, birthDate)
@@ -168,7 +171,10 @@ namespace ACS_View.UseCases.Services
                 if (ParseOptionalBoolean(responsibleValue) == false && patient.FamilyResponsiblePatientId == patient.Id && patient.Id > 0)
                     result.Errors.Add($"Linha {rowIndex + 1}: {name}: planilha informa que não é responsável familiar, mas o cadastro é responsável de uma família; vínculo preservado para revisão manual.");
                 var responsibleSus = GetCell(row, columns.FamilyResponsibleSusIndex).Trim();
-                if (!string.IsNullOrWhiteSpace(responsibleSus) && patient.FamilyResponsibleSus != responsibleSus)
+                if (!string.IsNullOrWhiteSpace(responsibleSus) &&
+                    !SusNumberSet.Parse(patient.FamilyResponsibleSus).Order().SequenceEqual(SusNumberSet.Parse(responsibleSus).Order()) &&
+                    !existingPatients.Any(p => p.Id == patient.FamilyResponsiblePatientId &&
+                        SusNumberSet.Parse(responsibleSus).All(p.HasSusNumber)))
                 {
                     patient.FamilyResponsibleSus = responsibleSus;
                     patientChanged = true;
@@ -187,6 +193,27 @@ namespace ACS_View.UseCases.Services
                     .Where(condition => HealthConditionCatalog.GetKey(condition) != HealthConditionCatalog.BolsaFamilia)
                     .ToList();
 
+                ImportAuditEntryDto? entry = null;
+                var conditionChanges = new List<string>();
+                void RecordRowFailure(Exception exception)
+                {
+                    if (entry == null) result.IgnoredCount++;
+                    else
+                    {
+                        result.Details.Remove(entry.DisplayText);
+                        if (entry.Status == "Ignorado" && conditionChanges.Count > 0)
+                        {
+                            result.IgnoredCount--; result.MergedCount++; result.UpdatedCount++;
+                            entry.Status = "Mesclado";
+                        }
+                        entry.Reason = entry.Status == "Ignorado"
+                            ? "Paciente já cadastrado; não houve alterações gravadas antes da falha."
+                            : "Gravação parcial mantida; a linha foi interrompida e requer revisão.";
+                        entry.Changes += " " + string.Join("; ", conditionChanges);
+                        result.Details.Add(entry.DisplayText);
+                    }
+                    result.Errors.Add($"Linha {rowIndex + 1}: processamento de {name} interrompido. {exception.Message}");
+                }
                 try
                 {
                     if (isExistingPatient)
@@ -201,12 +228,17 @@ namespace ACS_View.UseCases.Services
                         await patientService.CreatePatient(patient);
                     }
 
-                    if (isExistingPatient)
+                    entry = new ImportAuditEntryDto
                     {
-                        result.MergedCount++;
-                        result.Details.Add($"Linha {rowIndex + 1}: {name} mesclado no cadastro #{patient.Id}. {DescribeChanges(before!, patient)}");
-                    }
-                    else result.Details.Add($"Linha {rowIndex + 1}: {name} criado como cadastro #{patient.Id}.");
+                        RowNumber = rowIndex + 1, RecordId = patient.Id, Description = patient.Name,
+                        Status = !isExistingPatient ? "Importado" : patientChanged ? "Mesclado" : "Ignorado",
+                        Reason = !isExistingPatient ? "Novo paciente cadastrado." : patientChanged ? "Cadastro existente atualizado com os dados da planilha." : "Paciente já cadastrado; nenhuma atualização nos dados, condições ou benefício.",
+                        Changes = before == null ? "" : DescribeChanges(before, patient)
+                    };
+                    result.Entries.Add(entry);
+                    if (!isExistingPatient) result.ImportedCount++;
+                    else if (patientChanged) { result.MergedCount++; result.UpdatedCount++; }
+                    else result.IgnoredCount++;
 
                     if (before != null)
                     {
@@ -233,7 +265,7 @@ namespace ACS_View.UseCases.Services
                     var explicitConditions = columns.ConditionColumnIndexes
                         .Where(map => ParseOptionalBoolean(GetCell(row, map.ColumnIndex)) is not null)
                         .Select(map => map.ConditionName).ToList();
-                    var conditionsChanged = await SyncImportedConditionsAsync(patient.Id, explicitConditions, importedConditions);
+                    var conditionsChanged = await SyncImportedConditionsAsync(patient.Id, explicitConditions, importedConditions, conditionChanges);
                     if (conditionsChanged) result.Details.Add($"Linha {rowIndex + 1}: condições de saúde atualizadas: {string.Join(", ", explicitConditions)}.");
                     var bolsaFamiliaChanged = await AddMissingImportedBolsaFamiliaAsync(patient.Id, importedBolsaFamilia);
 
@@ -241,15 +273,12 @@ namespace ACS_View.UseCases.Services
                     var importedNeighborhood = GetCell(row, columns.PatientNeighborhoodIndex);
                     var importedCity = GetCell(row, columns.PatientCityIndex);
                     var importedState = GetCell(row, columns.PatientStateIndex);
-                    var needsCepFallback = HasMissingAddressValue(importedStreet, importedNeighborhood, importedCity, importedState);
-                    var addressFallback = needsCepFallback
-                        ? await ResolveAddressFallbackAsync(GetCell(row, columns.PatientCepIndex), cepCache)
-                        : null;
+                    var addressFallback = await ResolveAddressFallbackAsync(GetCell(row, columns.PatientCepIndex), cepCache);
 
-                    var street = CoalesceAddressValue(importedStreet, addressFallback?.Rua);
-                    var neighborhood = CoalesceAddressValue(importedNeighborhood, addressFallback?.Bairro);
-                    var city = CoalesceAddressValue(importedCity, addressFallback?.Cidade);
-                    var state = CoalesceAddressValue(importedState, addressFallback?.Estado);
+                    var street = CoalesceAddressValue(addressFallback?.Rua ?? "", importedStreet);
+                    var neighborhood = CoalesceAddressValue(addressFallback?.Bairro ?? "", importedNeighborhood);
+                    var city = CoalesceAddressValue(addressFallback?.Cidade ?? "", importedCity);
+                    var state = CoalesceAddressValue(addressFallback?.Estado ?? "", importedState);
 
                     rowContexts.Add(new PatientImportRowContext
                     {
@@ -273,47 +302,70 @@ namespace ACS_View.UseCases.Services
                             state)
                     });
 
-                    if (isExistingPatient)
+                    if (isExistingPatient && !patientChanged && (conditionsChanged || bolsaFamiliaChanged))
                     {
-                        if (patientChanged || conditionsChanged || bolsaFamiliaChanged)
-                        {
-                            result.UpdatedCount++;
-                        }
-                        else
-                        {
-                            result.IgnoredCount++;
-                        }
+                        result.IgnoredCount--; result.MergedCount++; result.UpdatedCount++;
+                        entry.Status = "Mesclado";
+                        entry.Reason = "Cadastro existente atualizado nas condições de saúde ou benefício.";
                     }
-                    else
-                    {
-                        result.ImportedCount++;
-                    }
+                    entry.Changes += (conditionsChanged ? " " + string.Join("; ", conditionChanges) + "." : "") +
+                        (bolsaFamiliaChanged ? " Bolsa Família incluído." : "");
+                    result.Details.Add(entry.DisplayText);
                 }
-                catch (OperationCanceledException) { throw; }
-                catch (ArgumentException ex)
-                {
-                    result.IgnoredCount++;
-                    result.Errors.Add($"Linha {rowIndex + 1}: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    result.IgnoredCount++;
-                    result.Errors.Add($"Linha {rowIndex + 1}: nao foi possivel importar o paciente. {ex.Message}");
-                }
+                catch (OperationCanceledException ex) { RecordRowFailure(ex); throw; }
+                catch (Exception ex) { RecordRowFailure(ex); }
 
                 processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
             }
 
             if (columnMap.EnableAutomaticFamilyLinking && rowContexts.Count > 0)
             {
-                processedProgressItems = await familyLinkResolver.ResolveAsync(
-                    rowContexts,
-                    columnMap,
-                    result,
-                    progress,
-                    processedProgressItems,
-                    totalProgressItems,
-                    cancellationToken);
+                var beforeLinks = (await patientService.GetAllPatients() ?? []).ToDictionary(p => p.Id,
+                    p => System.Text.Json.JsonSerializer.Serialize(p));
+                try
+                {
+                    processedProgressItems = await familyLinkResolver.ResolveAsync(
+                        rowContexts, columnMap, result, progress, processedProgressItems, totalProgressItems, cancellationToken);
+                }
+                finally
+                {
+                    // Compare saved links even when resolution was interrupted after some writes.
+                    foreach (var saved in await patientService.GetAllPatients() ?? [])
+                    {
+                        if (!beforeLinks.TryGetValue(saved.Id, out var previous)) continue;
+                        var old = System.Text.Json.JsonSerializer.Deserialize<Patient>(previous)!;
+                        if ((old.HouseId, old.FamilyId, old.FamilyResponsiblePatientId, old.MotherPatientId, old.FatherPatientId, old.FamilyResponsibleSus) ==
+                            (saved.HouseId, saved.FamilyId, saved.FamilyResponsiblePatientId, saved.MotherPatientId, saved.FatherPatientId, saved.FamilyResponsibleSus)) continue;
+                        var entry = result.Entries.LastOrDefault(e => e.EntityType == "Paciente" && e.RecordId == saved.Id);
+                        if (entry == null)
+                        {
+                            result.Entries.Add(new() { RecordId = saved.Id, Description = saved.Name, Status = "Vínculo ajustado",
+                                Reason = "Cadastro anterior complementado pela resolução dos vínculos desta importação.", Changes = DescribeChanges(previous, saved) });
+                            continue;
+                        }
+                        var suppliedContexts = rowContexts.Where(c => c.Patient.Id == saved.Id).ToList();
+                        var directLinkDifference = suppliedContexts.Any(c =>
+                            (old.HouseId != saved.HouseId && c.AddressKeys.Count > 0) ||
+                            (c.IsFamilyResponsible && old.FamilyResponsiblePatientId != saved.Id && saved.FamilyResponsiblePatientId == saved.Id));
+                        if (entry.Status == "Ignorado" && !directLinkDifference)
+                        {
+                            // Resolving information already held by the app is a separate audit event,
+                            // not evidence that this spreadsheet supplied different patient data.
+                            result.Entries.Add(new() { RecordId = saved.Id, Description = saved.Name, Status = "Vínculo ajustado",
+                                Reason = "Vínculo resolvido com dados já existentes no app; a linha da planilha foi ignorada por não conter alterações.", Changes = DescribeChanges(previous, saved) });
+                            continue;
+                        }
+                        result.Details.Remove(entry.DisplayText);
+                        if (entry.Status == "Ignorado")
+                        {
+                            result.IgnoredCount--; result.MergedCount++; result.UpdatedCount++;
+                            entry.Status = "Mesclado";
+                            entry.Reason = "Cadastro existente atualizado nos vínculos de residência ou família.";
+                        }
+                        entry.Changes += " " + DescribeChanges(previous, saved);
+                        result.Details.Add(entry.DisplayText);
+                    }
+                }
             }
 
             Report(progress, totalProgressItems, totalProgressItems, "Concluindo");
@@ -358,7 +410,12 @@ namespace ACS_View.UseCases.Services
                 ("Mãe", before.MotherName, patient.MotherName), ("Pai", before.FatherName, patient.FatherName),
                 ("Nascimento", before.BirthDate.ToString("dd/MM/yyyy"), patient.BirthDate.ToString("dd/MM/yyyy")),
                 ("Sexo", before.Sexo, patient.Sexo), ("Observação", before.Observacao, patient.Observacao),
-                ("CNS do responsável", before.FamilyResponsibleSus ?? "", patient.FamilyResponsibleSus ?? "")
+                ("CNS do responsável", before.FamilyResponsibleSus ?? "", patient.FamilyResponsibleSus ?? ""),
+                ("Residência", before.HouseId.ToString(), patient.HouseId.ToString()),
+                ("Família", before.FamilyId.ToString(), patient.FamilyId.ToString()),
+                ("Responsável", before.FamilyResponsiblePatientId?.ToString() ?? "", patient.FamilyResponsiblePatientId?.ToString() ?? ""),
+                ("Cadastro da mãe", before.MotherPatientId?.ToString() ?? "", patient.MotherPatientId?.ToString() ?? ""),
+                ("Cadastro do pai", before.FatherPatientId?.ToString() ?? "", patient.FatherPatientId?.ToString() ?? "")
             };
             var changes = fields.Where(f => f.Old != f.New).Select(f => $"{f.Label}: '{f.Old}' → '{f.New}'").ToList();
             return changes.Count == 0 ? "Dados pessoais mantidos; condições e vínculos conferidos." : string.Join("; ", changes);
@@ -367,18 +424,44 @@ namespace ACS_View.UseCases.Services
         private static bool UpdateImportedPatientFields(Patient patient, string name, string susNumber, string motherName,
             string fatherName, string observation, string? importedSex, DateTime? birthDate)
         {
-            var before = System.Text.Json.JsonSerializer.Serialize(patient);
-            if (!string.IsNullOrWhiteSpace(name)) patient.Name = name.Trim();
-            // Empty/missing cells preserve the entity list. New numbers are appended,
-            // retaining the legacy text; the patient repository persists both atomically.
-            if (!string.IsNullOrWhiteSpace(susNumber)) patient.AddSusNumbers(susNumber);
-            if (!string.IsNullOrWhiteSpace(motherName)) patient.MotherName = motherName.Trim();
-            if (!string.IsNullOrWhiteSpace(fatherName)) patient.FatherName = fatherName.Trim();
-            if (!string.IsNullOrWhiteSpace(observation) && !patient.Observacao.Split(" | ").Contains(observation.Trim()))
-                patient.Observacao = string.IsNullOrWhiteSpace(patient.Observacao) ? observation.Trim() : patient.Observacao + " | " + observation.Trim();
-            if (importedSex != null) patient.Sexo = importedSex;
-            if (birthDate != null) patient.BirthDate = birthDate.Value;
-            return before != System.Text.Json.JsonSerializer.Serialize(patient);
+            // Compare only supported, populated spreadsheet fields using the same name
+            // normalization as PatientService. Metadata and fields missing in the sheet do not participate.
+            var changed = false;
+            string ImportedName(string current, string imported, string label)
+            {
+                if (string.IsNullOrWhiteSpace(imported)) return current;
+                var value = PatientNameRules.NormalizeRequired(imported, label);
+                if (PatientNameRules.NormalizeOptional(current, label) == value) return current;
+                changed = true;
+                return value;
+            }
+            patient.Name = ImportedName(patient.Name, name, "Nome");
+            patient.MotherName = ImportedName(patient.MotherName, motherName, "Nome da mãe");
+            patient.FatherName = ImportedName(patient.FatherName, fatherName, "Nome do pai");
+            if (SusNumberSet.Parse(susNumber).Except(patient.SusNumbers).Any())
+            {
+                patient.AddSusNumbers(susNumber);
+                changed = true;
+            }
+            var existingObservations = patient.Observacao.Split(" | ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var additions = observation.Split(" | ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Except(existingObservations).ToArray();
+            if (additions.Length > 0)
+            {
+                patient.Observacao = string.Join(" | ", existingObservations.Concat(additions));
+                changed = true;
+            }
+            if (importedSex != null && (ParseSex(patient.Sexo) ?? patient.Sexo) != importedSex)
+            {
+                patient.Sexo = importedSex;
+                changed = true;
+            }
+            if (birthDate != null && patient.BirthDate.Date != birthDate.Value.Date)
+            {
+                patient.BirthDate = birthDate.Value.Date;
+                changed = true;
+            }
+            return changed;
         }
 
         private static ImportColumns ResolveColumns(
@@ -416,7 +499,8 @@ namespace ACS_View.UseCases.Services
         private async Task<bool> SyncImportedConditionsAsync(
             int patientId,
             IEnumerable<string> mappedConditionNames,
-            IEnumerable<string> selectedConditionNames)
+            IEnumerable<string> selectedConditionNames,
+            List<string> changes)
         {
             var mappedKeys = mappedConditionNames
                 .Select(HealthConditionCatalog.GetKey)
@@ -433,6 +517,7 @@ namespace ACS_View.UseCases.Services
             foreach (var condition in currentConditions.Where(condition => mappedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description)) && !selectedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description))))
             {
                 await conditionsRepository.DeleteConditionAsync(condition.Id);
+                changes.Add($"{condition.Description}: sim → não");
                 changed = true;
             }
 
@@ -444,6 +529,7 @@ namespace ACS_View.UseCases.Services
                     PatientId = patientId,
                     Description = conditionName
                 });
+                changes.Add($"{conditionName}: não → sim");
                 changed = true;
             }
 
@@ -562,7 +648,7 @@ namespace ACS_View.UseCases.Services
         {
             var key = ImportColumnAliases.Normalize(value);
             if (key is "1" or "sim" or "s" or "true" or "verdadeiro" or "x") return true;
-            if (key is "0" or "nao" or "n" or "false" or "falso") return false;
+            if (key is "0" or "nao" or "n" or "false" or "falso" or "naoinformado") return false;
             return null;
         }
 
@@ -629,24 +715,6 @@ namespace ACS_View.UseCases.Services
             return !string.IsNullOrWhiteSpace(importedValue)
                 ? importedValue.Trim()
                 : fallbackValue?.Trim() ?? string.Empty;
-        }
-
-        private static bool HasMissingAddressValue(params string[] values)
-        {
-            return values.Any(string.IsNullOrWhiteSpace);
-        }
-
-        private static string? BuildAddressKey(
-            string cep,
-            string streetType,
-            string street,
-            string number,
-            string complement,
-            string neighborhood,
-            string city,
-            string state)
-        {
-            return BuildAddressKeys(cep, streetType, street, number, complement, neighborhood, city, state).FirstOrDefault();
         }
 
         private static IReadOnlyList<string> BuildAddressKeys(

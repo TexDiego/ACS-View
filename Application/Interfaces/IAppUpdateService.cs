@@ -5,5 +5,7 @@ namespace ACS_View.Application.Interfaces;
 public interface IAppUpdateService
 {
     Task<AppUpdate?> CheckAsync();
-    Task InstallAsync(AppUpdate update, CancellationToken cancellationToken);
+    Task InstallAsync(AppUpdate update, CancellationToken cancellationToken, IProgress<AppUpdateProgress>? progress = null);
 }
+
+public sealed record AppUpdateProgress(double Progress, string Message);

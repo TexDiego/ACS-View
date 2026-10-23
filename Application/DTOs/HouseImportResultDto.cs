@@ -2,6 +2,7 @@ namespace ACS_View.Application.DTOs;
 
 public class HouseImportResultDto
 {
+    public List<ImportAuditEntryDto> Entries { get; set; } = [];
     public int MergedCount { get; set; }
         public List<string> Details { get; set; } = [];
         public int ImportedCount { get; set; }

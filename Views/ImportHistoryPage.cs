@@ -32,23 +32,44 @@ public sealed class ImportHistoryPage : ContentPage
             try
             {
                 var report = JsonSerializer.Deserialize<PatientImportResultDto>(entry.ReportJson) ?? new();
-                var summary = new Label { Text = $"{entry.FileName}\nInício: {FormatDate(entry.StartedAt)}\nFim: {FormatDate(entry.FinishedAt)}\n{entry.Status}\nCriados: {report.ImportedCount} · Atualizados: {report.UpdatedCount} · Mesclados: {report.MergedCount} · Ignorados: {report.IgnoredCount}" };
-                var entries = report.Errors.Select(t => "Pendência · " + t)
-                    .Concat(report.Details.Select(t => "Registro · " + t)).ToArray();
-                var search = new SearchBar { Placeholder = "Buscar pessoa, linha, campo ou pendência" };
-                var lines = new CollectionView { ItemsSource = entries, EmptyView = "Nenhum registro encontrado." };
+                var summary = new Label { Text = $"{entry.FileName}\nInício: {FormatDate(entry.StartedAt)}\nFim: {FormatDate(entry.FinishedAt)}\n{entry.Status}\nImportados: {report.ImportedCount} · Mesclados: {report.MergedCount} · Ignorados: {report.IgnoredCount}" };
+                // Structured outcomes are authoritative for new imports. Older reports stay readable.
+                var entries = report.Entries.Select(item => (Status: item.Status, Text: item.DisplayText))
+                    .Concat(report.Errors.Select(text => (Status: "Pendência", Text: "Pendência · " + text)))
+                    .Concat(report.Entries.Count == 0
+                        ? report.Details.Select(text => (Status: "Registro anterior", Text: "Registro anterior · " + text))
+                        : Enumerable.Empty<(string Status, string Text)>()).ToArray();
+                var filter = new Picker { Title = "Filtrar por resultado" };
+                var statuses = new[] { "Todos", "Importado", "Mesclado", "Ignorado", "Pendência", "Vínculo ajustado", "Registro anterior" };
+                filter.ItemsSource = statuses.Select(status => status == "Todos" ? $"Todos ({entries.Length})" : $"{status} ({entries.Count(item => item.Status == status)})").ToArray();
+                filter.SelectedIndex = 0;
+                var search = new SearchBar { Placeholder = "Buscar cadastro, linha, campo ou motivo" };
+                var count = new Label();
+                var lines = new CollectionView { EmptyView = "Nenhum registro para este filtro." };
                 lines.ItemTemplate = new DataTemplate(() =>
                 {
                     var label = new Label { Margin = new Thickness(0, 8), LineBreakMode = LineBreakMode.WordWrap };
                     label.SetBinding(Label.TextProperty, ".");
                     return label;
                 });
-                search.TextChanged += (_, args) => lines.ItemsSource = string.IsNullOrWhiteSpace(args.NewTextValue)
-                    ? entries : entries.Where(t => t.Contains(args.NewTextValue, StringComparison.CurrentCultureIgnoreCase)).ToArray();
-                var layout = new Grid { Padding = 16, RowSpacing = 12, RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) } };
+                void ApplyFilters()
+                {
+                    var selected = statuses[Math.Max(0, filter.SelectedIndex)];
+                    var visible = entries.Where(item => (selected == "Todos" || item.Status == selected) &&
+                        (string.IsNullOrWhiteSpace(search.Text) || item.Text.Contains(search.Text, StringComparison.CurrentCultureIgnoreCase)))
+                        .Select(item => item.Text).ToArray();
+                    lines.ItemsSource = visible;
+                    count.Text = $"{visible.Length} registros encontrados";
+                }
+                filter.SelectedIndexChanged += (_, _) => ApplyFilters();
+                search.TextChanged += (_, _) => ApplyFilters();
+                ApplyFilters();
+                var layout = new Grid { Padding = 16, RowSpacing = 12, RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) } };
                 layout.Add(summary, 0, 0);
-                layout.Add(search, 0, 1);
-                layout.Add(lines, 0, 2);
+                layout.Add(filter, 0, 1);
+                layout.Add(search, 0, 2);
+                layout.Add(count, 0, 3);
+                layout.Add(lines, 0, 4);
                 await Navigation.PushAsync(new ContentPage { Title = "Relatório de importação", Content = layout });
             }
             catch (Exception ex) { await DisplayAlertAsync("Histórico", $"Não foi possível abrir o relatório: {ex.Message}", "Voltar"); }

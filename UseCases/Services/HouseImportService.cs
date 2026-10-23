@@ -27,6 +27,7 @@ internal class HouseImportService(
         {
             history.FinishedAt = DateTimeOffset.Now.ToString("O");
             if (history.Status == "Concluída" && result.Errors.Count > 0) history.Status = "Concluída com pendências";
+            ImportAuditEntryDto.IncludeFailures(result.Entries, result.Errors, "Residência");
             history.ReportJson = System.Text.Json.JsonSerializer.Serialize(result);
             await historyService.SaveAsync(history);
         }
@@ -82,30 +83,26 @@ internal class HouseImportService(
             {
                 var row = rows[rowIndex];
                 if (row.All(string.IsNullOrWhiteSpace)) continue;
-                var cep = GetCell(row, cepIndex).Trim();
+                var cep = NormalizeCep(GetCell(row, cepIndex));
                 var importedStreet = GetCell(row, streetIndex);
                 var importedNeighborhood = GetCell(row, neighborhoodIndex);
                 var importedCity = GetCell(row, cityIndex);
                 var importedState = GetCell(row, stateIndex);
                 var importedCountry = GetCell(row, countryIndex);
-                var needsCepFallback = HasMissingAddressValue(
-                    importedStreet,
-                    importedNeighborhood,
-                    importedCity,
-                    importedState,
-                    importedCountry);
-
-                var addressFallback = needsCepFallback
-                    ? await ResolveAddressFallbackAsync(cep, cepCache)
-                    : null;
+                // ICepService checks the persistent cache before contacting ViaCEP.
+                // The batch cache also remembers failed lookups, avoiding repeated requests.
+                var addressFallback = await ResolveAddressFallbackAsync(cep, cepCache);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var street = CoalesceAddressValue(importedStreet, addressFallback?.Rua);
-                if (string.IsNullOrWhiteSpace(street))
+                var street = CoalesceAddressValue(addressFallback?.Rua ?? "", importedStreet);
+                if (string.IsNullOrWhiteSpace(street) || string.IsNullOrWhiteSpace(GetCell(row, numberIndex)) ||
+                    string.IsNullOrWhiteSpace(CoalesceAddressValue(addressFallback?.Bairro ?? "", importedNeighborhood)) ||
+                    string.IsNullOrWhiteSpace(CoalesceAddressValue(addressFallback?.Cidade ?? "", importedCity)) ||
+                    string.IsNullOrWhiteSpace(CoalesceAddressValue(addressFallback?.Estado ?? "", importedState)))
                 {
                     result.IgnoredCount++;
-                    result.Errors.Add($"Linha {rowIndex + 1}: nao foi possivel identificar a rua. Informe a coluna de rua ou um CEP valido.");
+                    result.Errors.Add($"Linha {rowIndex + 1}: residência ignorada por falta de informações: são necessários rua, número, bairro, cidade e estado. O CEP não forneceu os dados ausentes e a planilha está incompleta.");
                     processedProgressItems = ReportEvery(
                         progress,
                         processedProgressItems + 1,
@@ -118,13 +115,13 @@ internal class HouseImportService(
                 var house = new House
                 {
                     Rua = street,
-                    TipoLogradouro = GetCell(row, streetTypeIndex).Trim(),
+                    TipoLogradouro = CoalesceAddressValue(addressFallback?.TipoLogradouro ?? "", GetCell(row, streetTypeIndex)),
                     CEP = cep,
                     NumeroCasa = GetCell(row, numberIndex).Trim(),
-                    Bairro = CoalesceAddressValue(importedNeighborhood, addressFallback?.Bairro),
-                    Cidade = CoalesceAddressValue(importedCity, addressFallback?.Cidade),
-                    Estado = CoalesceAddressValue(importedState, addressFallback?.Estado),
-                    Pais = CoalesceAddressValue(importedCountry, addressFallback?.Pais),
+                    Bairro = CoalesceAddressValue(addressFallback?.Bairro ?? "", importedNeighborhood),
+                    Cidade = CoalesceAddressValue(addressFallback?.Cidade ?? "", importedCity),
+                    Estado = CoalesceAddressValue(addressFallback?.Estado ?? "", importedState),
+                    Pais = CoalesceAddressValue(addressFallback?.Pais ?? "", importedCountry),
                     Complemento = GetCell(row, complementIndex).Trim()
                 };
 
@@ -135,15 +132,19 @@ internal class HouseImportService(
 
                 house.PossuiComplemento = !string.IsNullOrWhiteSpace(house.Complemento);
 
-                var key = GetHouseKey(house);
-                if (housesByKey.TryGetValue(key, out var existingMatches) && existingMatches.Count > 1)
+                var existingMatches = GetHouseKeys(house).Where(housesByKey.ContainsKey)
+                    .SelectMany(key => housesByKey[key]).DistinctBy(h => h.CasaId).ToList();
+                if (existingMatches.Count > 1)
                 {
                     result.IgnoredCount++;
                     result.Errors.Add($"Linha {rowIndex + 1}: endereço corresponde a várias residências; revisão manual necessária.");
                     continue;
                 }
-                if (existingMatches?.SingleOrDefault() is { } existingHouse)
+                if (existingMatches.SingleOrDefault() is { } existingHouse)
                 {
+                    var previous = System.Text.Json.JsonSerializer.Deserialize<House>(System.Text.Json.JsonSerializer.Serialize(existingHouse))!;
+                    // Work on a copy so an unsuccessful save does not alter the batch index.
+                    existingHouse = System.Text.Json.JsonSerializer.Deserialize<House>(System.Text.Json.JsonSerializer.Serialize(previous))!;
                     if (!string.IsNullOrWhiteSpace(house.CEP)) existingHouse.CEP = house.CEP;
                     if (!string.IsNullOrWhiteSpace(house.Rua)) existingHouse.Rua = house.Rua;
                     if (!string.IsNullOrWhiteSpace(house.TipoLogradouro)) existingHouse.TipoLogradouro = house.TipoLogradouro;
@@ -155,7 +156,23 @@ internal class HouseImportService(
                     if (!string.IsNullOrWhiteSpace(house.Complemento)) existingHouse.Complemento = house.Complemento;
                     existingHouse.PossuiComplemento = !string.IsNullOrWhiteSpace(existingHouse.Complemento);
 
+                    var changes = typeof(House).GetProperties().Where(p =>
+                            (p.Name == nameof(House.CEP) ? NormalizeCep(p.GetValue(previous)?.ToString() ?? "") : Normalize(p.GetValue(previous)?.ToString() ?? "")) !=
+                            (p.Name == nameof(House.CEP) ? NormalizeCep(p.GetValue(existingHouse)?.ToString() ?? "") : Normalize(p.GetValue(existingHouse)?.ToString() ?? "")))
+                        .Select(p => $"{p.Name}: '{p.GetValue(previous)}' → '{p.GetValue(existingHouse)}'").ToArray();
+                    if (changes.Length == 0)
+                    {
+                        result.IgnoredCount++;
+                        var ignored = new ImportAuditEntryDto { EntityType = "Residência", RowNumber = rowIndex + 1, RecordId = existingHouse.CasaId,
+                            Description = $"{house.Rua}, {house.NumeroCasa}", Status = "Ignorado", Reason = "Residência já cadastrada; nenhuma atualização no endereço." };
+                        result.Entries.Add(ignored); result.Details.Add(ignored.DisplayText);
+                        continue;
+                    }
                     await houseService.UpdateHouseAsync(existingHouse);
+                    foreach (var matches in housesByKey.Values) matches.RemoveAll(h => h.CasaId == existingHouse.CasaId);
+                    AddHouseKeys(housesByKey, existingHouse);
+                    result.Entries.Add(new() { EntityType = "Residência", RowNumber = rowIndex + 1, RecordId = existingHouse.CasaId,
+                        Description = $"{house.Rua}, {house.NumeroCasa}", Status = "Mesclado", Reason = "Residência existente atualizada.", Changes = string.Join("; ", changes) });
                     result.UpdatedCount++;
                     result.MergedCount++;
                     result.Details.Add($"Linha {rowIndex + 1}: residência #{existingHouse.CasaId} mesclada: {existingHouse.Rua}, {existingHouse.NumeroCasa}, {existingHouse.Complemento}.");
@@ -165,6 +182,8 @@ internal class HouseImportService(
                     await houseService.SaveHouseAsync(house);
                     AddHouseKeys(housesByKey, house);
                     result.ImportedCount++;
+                    result.Entries.Add(new() { EntityType = "Residência", RowNumber = rowIndex + 1, RecordId = house.CasaId,
+                        Description = $"{house.Rua}, {house.NumeroCasa}", Status = "Importado", Reason = "Nova residência cadastrada." });
                     result.Details.Add($"Linha {rowIndex + 1}: residência #{house.CasaId} criada.");
                 }
             }
@@ -218,15 +237,10 @@ internal class HouseImportService(
     private static IReadOnlyList<string> GetHouseKeys(House house)
     {
         return GetAddressStreetVariants(house.TipoLogradouro, house.Rua)
-            .Select(street => $"{Normalize(house.CEP)}|{Normalize(house.Cidade)}|{Normalize(house.Estado)}|{Normalize(street)}|{Normalize(house.NumeroCasa)}|{Normalize(house.Complemento)}")
+            .Select(street => $"{NormalizeCep(house.CEP)}|{Normalize(house.Cidade)}|{Normalize(house.Estado)}|{Normalize(street)}|{Normalize(house.NumeroCasa)}|{Normalize(house.Complemento)}")
             .Where(key => !string.IsNullOrWhiteSpace(key))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-    }
-
-    private static string GetHouseKey(House house)
-    {
-        return GetHouseKeys(house).FirstOrDefault() ?? string.Empty;
     }
 
     private static IEnumerable<string> GetAddressStreetVariants(string? streetType, string? street)
@@ -308,7 +322,7 @@ internal class HouseImportService(
         Dictionary<string, House?> cepCache)
     {
         var normalizedCep = NormalizeCep(cep);
-        if (string.IsNullOrWhiteSpace(normalizedCep))
+        if (normalizedCep.Length != 8)
         {
             return null;
         }
@@ -345,11 +359,6 @@ internal class HouseImportService(
         return !string.IsNullOrWhiteSpace(importedValue)
             ? importedValue.Trim()
             : fallbackValue?.Trim() ?? string.Empty;
-    }
-
-    private static bool HasMissingAddressValue(params string[] values)
-    {
-        return values.Any(string.IsNullOrWhiteSpace);
     }
 
     private static string NormalizeCep(string value)

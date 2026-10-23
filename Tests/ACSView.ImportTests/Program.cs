@@ -64,6 +64,7 @@ var first = await Import([
     ["José Silva", "Maria Silva", "01/02/2010", "M", "sim", "Observação A", "01001000", "10", "222"],
     ["José Silva", "Maria Silva", "01/02/2010", "", "", "Observação B", "", "", ""]
 ]);
+Check(first.Entries.Any(e => e.EntityType == "Residência" && e.Status == "Importado"), "Residência criada na importação de pacientes também aparece na auditoria");
 Check(patients.Count == 1 && first.MergedCount == 1, "Linhas repetidas complementam o mesmo cadastro");
 Check(patients[0].Observacao.Contains("A") && patients[0].Observacao.Contains("B"), "Observações complementares preservadas");
 Check(conditions.Count == 1 && patients[0].Sexo == "Masculino", "Campos vazios preservam condições e sexo");
@@ -85,6 +86,7 @@ Check(child.MotherPatientId == parent.Id, "Mãe importada depois resolve víncul
 Check(child.FamilyResponsiblePatientId == parent.Id && child.FamilyId == parent.FamilyId && child.FamilyId > 0, "Responsável posterior calcula família sem duplicar residência");
 
 var repeat = await Import([["nome", "cns", "usa alcool"], ["Jose Silva", "111", "SIM"]]);
+Check(repeat.MergedCount == 0 && repeat.IgnoredCount == 1 && repeat.Entries.Single().Reason.Contains("nenhuma atualização"), "Paciente repetido sem alterações é ignorado e nunca mesclado");
 Check(repeat.ImportedCount == 0 && conditions.Count == 1 && houses.Count == 1, "Reimportação não duplica cadastros, condições ou residências");
 var conflict = await Import([
     ["nome", "cns", "nome da mae", "data nascimento", "diabetes", "coluna desconhecida"],
@@ -113,7 +115,7 @@ var houseImporter = new HouseImportService(houseService, cep, new SpreadsheetRea
 using (var workbook = Workbook([["cep", "numero imovel", "complemento"], ["01001000", "10", ""]]))
 {
     var report = await houseImporter.ImportAsync(workbook, new HouseImportColumnMapDto { SourceFileName = "teste.xlsx" });
-    Check(report.MergedCount == 1 && houses.Count == 1, "Importação de residências reutiliza casa criada com pacientes e registra mesclagem");
+    Check(report.MergedCount == 0 && report.IgnoredCount == 1 && report.Entries.Single().Status == "Ignorado" && houses.Count == 1, "Residência já cadastrada sem alterações é ignorada com motivo no histórico");
 }
 var fatherImport = await Import([["nome", "cns", "data nascimento"], ["Pedro Silva", "444", "01/01/1980"]]);
 var fatherLink = await Import([["nome", "cns", "nome do pai"], ["Jose Silva", "111", "Pedro Silva"]]);
@@ -135,11 +137,11 @@ var spacedRows = await Import([[], [], [], [], ["nome", "cns", "data nascimento"
 Check(spacedRows.Errors.Any(e => e.StartsWith("Linha 10: data de nascimento inválida")), "Relatório respeita a linha física do Excel com linhas vazias");
 var originalCount = patients.Count;
 var alternateSus = await Import([["nome", "cns"], ["Jose Silva", "999"]]);
-Check(patients.Count == originalCount && alternateSus.MergedCount == 1 && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999"]), "CNS secundário localiza cadastro sem dados de identidade e preserva os demais números");
+Check(patients.Count == originalCount && alternateSus.MergedCount == 0 && alternateSus.IgnoredCount == 1 && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999"]), "CNS secundário localiza cadastro sem dados de identidade e preserva os demais números");
 var multipleInCell = await Import([["nome", "cns"], ["Jose Silva", "111; 999, 555 / 5.55"]]);
 Check(patients.Count == originalCount && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999", "555"]), "Vários CNS na célula são normalizados e deduplicados");
 var sameSheet = await Import([["nome", "cns"], ["Jose Silva", "555; 666"], ["Jose Silva", "666"]]);
-Check(sameSheet.MergedCount == 2 && patients.Count == originalCount && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999", "555", "666"]), "Novo CNS fica disponível para linhas seguintes da mesma importação");
+Check(sameSheet.MergedCount == 1 && sameSheet.IgnoredCount == 1 && patients.Count == originalCount && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999", "555", "666"]), "Novo CNS fica disponível para linhas seguintes da mesma importação");
 var mixedPatients = await Import([["nome", "cns"], ["Jose Silva", "111; 222"]]);
 Check(mixedPatients.IgnoredCount == 1 && patients.Single(p => p.Id == child.Id).SusNumbers.SequenceEqual(["111", "999", "555", "666"]), "CNS de pessoas diferentes exige revisão e não mistura cadastros");
 
@@ -176,6 +178,154 @@ using (var database = new SQLite.SQLiteConnection(":memory:"))
 }
 Console.WriteLine("All import, persistence and multiple-CNS checks passed.");
 
+var linkPatientId = patients.Max(p => p.Id) + 1;
+patients.Add(new Patient { Id = linkPatientId, Name = "Só Vínculo", SusNumber = "950" });
+var linkOnly = await Import([["nome", "cns", "cep", "numero imovel"], ["Só Vínculo", "950", "01001000", "10"]]);
+Check(linkOnly.MergedCount == 1 && linkOnly.IgnoredCount == 0 && linkOnly.Entries.Single(e => e.EntityType == "Paciente").Changes.Contains("Residência"), "Alteração apenas no vínculo de residência é mesclagem auditada depois da resolução");
+var failingConditions = Proxy.For<ISQLiteConditionsRepository>((_, _) => throw new InvalidOperationException("Falha simulada após salvar paciente"));
+var partialImporter = new PatientImportService(patientService, cep, failingConditions, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal);
+using (var book = Workbook([["nome", "cns", "diabetes"], ["Parcial", "951", "sim"]]))
+{
+    var report = await partialImporter.ImportAsync(book, new());
+    Check(report.ImportedCount == 1 && report.IgnoredCount == 0 && report.Entries.Single().Reason.Contains("parcial") && patients.Any(p => p.HasSusNumber("951")), "Falha após criar paciente mantém auditoria da gravação parcial e não declara ignorado");
+}
+using (var book = Workbook([["nome", "cns", "diabetes"], ["Parcial Atualizado", "951", "sim"]]))
+{
+    var report = await partialImporter.ImportAsync(book, new());
+    Check(report.MergedCount == 1 && report.IgnoredCount == 0 && report.Entries.Single().Changes.Contains("Parcial Atualizado"), "Falha após atualizar cadastro preserva o antes/depois e registra mesclagem parcial");
+}
+
+// Audit outcomes and CEP precedence use real import services and a persistent SQLite cache.
+var lookupCalls = 0;
+var remoteCep = Proxy.For<ICepService>((_, _) =>
+{
+    lookupCalls++;
+    return Task.FromResult<House?>(new House { Rua = "Oficial", Bairro = "Centro", Cidade = "São Paulo", Estado = "SP" });
+});
+var priorityImporter = new HouseImportService(houseService, remoteCep, new SpreadsheetReader(), journal);
+using (var book = Workbook([
+    ["cep", "rua", "numero imovel", "bairro", "cidade", "estado", "pais"],
+    ["12345-678", "Planilha", "80", "Outro", "Outra Cidade", "RJ", "Brasil"],
+    ["12345678", "Planilha", "81", "Outro", "Outra Cidade", "RJ", "Brasil"]]))
+{
+    var report = await priorityImporter.ImportAsync(book, new());
+    Check(lookupCalls == 1 && report.ImportedCount == 2 && houses.Where(h => h.CEP == "12345678").All(h => h.Rua == "Oficial" && h.Cidade == "São Paulo"), "CEP tem precedência mesmo com planilha completa; CEP formatado é consultado uma vez por lote");
+    Check(report.Entries.All(e => e.Status == "Importado" && e.RecordId > 0), "Auditoria identifica linha e cadastro das residências criadas");
+}
+var offlineCalls = 0;
+var offlineCep = Proxy.For<ICepService>((_, _) => { offlineCalls++; return Task.FromException<House?>(new HttpRequestException("offline")); });
+var offlineImporter = new HouseImportService(houseService, offlineCep, new SpreadsheetReader(), journal);
+using (var book = Workbook([
+    ["cep", "rua", "numero imovel", "bairro", "cidade", "estado"],
+    ["87654-321", "Rua Manual", "20", "Bairro Manual", "Cidade Manual", "SP"],
+    ["87654321", "Rua Manual", "21", "Bairro Manual", "Cidade Manual", "SP"],
+    ["87654321", "", "22", "", "", ""]]))
+{
+    var report = await offlineImporter.ImportAsync(book, new());
+    Check(offlineCalls == 1 && report.ImportedCount == 2 && report.IgnoredCount == 1, "Falha de CEP é lembrada no lote; endereço completo da planilha permite importar");
+    Check(report.Entries.Single(e => e.RowNumber == 4).Status == "Ignorado" && report.Entries.Single(e => e.RowNumber == 4).Reason.Contains("falta de informações"), "Residência incompleta é ignorada com motivo claro na linha física");
+}
+houses.Single(h => h.CEP == "12345678" && h.NumeroCasa == "80").Bairro = "Antigo";
+using (var book = Workbook([["cep", "numero imovel"], ["12345678", "80"]]))
+{
+    var report = await priorityImporter.ImportAsync(book, new());
+    Check(report.MergedCount == 1 && report.UpdatedCount == 1 && report.IgnoredCount == 0 && report.Entries.Single().Changes.Contains("Antigo"), "Mesclagem de residência registra valor anterior e novo apenas quando houve alteração");
+}
+using (var book = Workbook([["cep", "numero imovel"], ["12345678", "80"]]))
+{
+    var report = await priorityImporter.ImportAsync(book, new());
+    Check(report.MergedCount == 0 && report.IgnoredCount == 1, "Repetir residência mesclada passa a ignorado");
+}
+var auditRoundtrip = JsonSerializer.Deserialize<PatientImportResultDto>(history.Last().ReportJson)!;
+Check(auditRoundtrip.Entries.Single().Status == "Ignorado", "Resultado estruturado da residência é compatível com leitor do histórico");
+
+var dbPath = Path.Combine(Path.GetTempPath(), $"acs-cep-audit-{Guid.NewGuid():N}.db");
+var cacheConnection = new SQLite.SQLiteAsyncConnection(dbPath);
+try
+{
+    await cacheConnection.CreateTableAsync<CepAddressCache>();
+    await cacheConnection.InsertAsync(new CepAddressCache { Cep = "01001000", Rua = "Do Cache", Bairro = "Centro", Cidade = "São Paulo", Estado = "SP" });
+    var dbService = Proxy.For<IDatabaseService>((m, _) => m == "get_Connection" ? cacheConnection : Task.CompletedTask);
+    var handler = new CepHttpHandler();
+    using var http = new HttpClient(handler) { BaseAddress = new Uri("https://viacep.com.br/") };
+    var cachedService = new ACS_View.Infrastructure.Services.CachedCepService(dbService, new ACS_View.Infrastructure.Services.ViaCepService(http));
+    Check((await cachedService.GetAddressByCepAsync("01001-000"))?.Rua == "Do Cache" && handler.Calls == 0, "CEP conhecido no cache persistente não consulta a API");
+    var resolved = await cachedService.GetAddressByCepAsync("22222-222");
+    Check(resolved?.Rua == "Remota" && handler.Calls == 1 && await cacheConnection.Table<CepAddressCache>().CountAsync() == 2, "CEP desconhecido consulta API e armazena o resultado no SQLite");
+    var reopenedService = new ACS_View.Infrastructure.Services.CachedCepService(dbService, new ACS_View.Infrastructure.Services.ViaCepService(http));
+    Check((await reopenedService.GetAddressByCepAsync("22222222"))?.Rua == "Remota" && handler.Calls == 1, "Outra instância reutiliza cache persistente sem repetir chamada de API");
+}
+finally
+{
+    await cacheConnection.CloseAsync();
+    File.Delete(dbPath);
+}
+Console.WriteLine("Audit and CEP cache regression checks passed.");
+
+// Exercise the real PatientService normalization boundary (the basic proxy above does not normalize names).
+var storedPatients = new List<Patient>
+{
+    new() { Id = 600, Name = "João Oliveira", MotherName = "Maria Oliveira", FatherName = "Pedro Oliveira",
+        SusNumber = "910", BirthDate = new DateTime(2000, 2, 3, 14, 30, 0), Sexo = "Masculino",
+        Observacao = "Observação A | Observação B", IsActive = false, StatusReason = "Registro manual",
+        RowRevision = 12, SearchName = "joao oliveira", FamilyResponsibleSus = "123456789012345",
+        SusNumberRecords = [new() { Number = "910", IsPrimary = true }, new() { Number = "911", OriginalOrder = 1 }] }
+};
+Patient CopyStoredPatient(Patient source)
+{
+    var copy = Clone(source);
+    copy.SusNumberRecords = source.SusNumberRecords?.Select(Clone).ToArray();
+    return copy;
+}
+var patientWrites = 0;
+var normalizedRepository = Proxy.For<IPatientRepository>((method, args) => method switch
+{
+    "GetAllAsync" => Task.FromResult<List<Patient>?>(storedPatients.Select(CopyStoredPatient).ToList()),
+    "UpdateAsync" => StoreNormalizedPatient((Patient)args[0]!),
+    _ => throw new Exception(method)
+});
+Task StoreNormalizedPatient(Patient value)
+{
+    patientWrites++;
+    storedPatients.RemoveAll(p => p.Id == value.Id);
+    storedPatients.Add(CopyStoredPatient(value));
+    return Task.CompletedTask;
+}
+var normalizedPatientService = new PatientService(normalizedRepository);
+var normalizedImporter = new PatientImportService(normalizedPatientService, cep, conditionRepo, benefits, new SpreadsheetReader(),
+    new PatientFamilyLinkResolver(normalizedPatientService, houseService, family), journal);
+async Task<PatientImportResultDto> ImportNormalized(string[][] rows, bool resolveLinks = false)
+{
+    using var book = Workbook(rows);
+    return await normalizedImporter.ImportAsync(book, new() { EnableAutomaticFamilyLinking = resolveLinks });
+}
+var normalizedRepeat = await ImportNormalized([
+    ["nome", "cns", "nome da mae", "nome do pai", "data nascimento", "sexo", "observacao", "cns do responsavel", "coluna não usada"],
+    ["JOÃO  OLIVEIRA", "910", "MARIA OLIVEIRA", "PEDRO OLIVEIRA", "03/02/2000", "M", "Observação A | Observação B", "123.4567.8901.2345", "dado externo"]
+]);
+Check(normalizedRepeat.MergedCount == 0 && normalizedRepeat.IgnoredCount == 1 && patientWrites == 0,
+    "Serviço real: maiúsculas, espaços, horário no nascimento, observações já presentes e CNS formatado não geram mesclagem nem gravação");
+var sparseRepeat = await ImportNormalized([["nome", "cns", "campo externo"], ["João Oliveira", "910", "qualquer valor"]]);
+Check(sparseRepeat.IgnoredCount == 1 && sparseRepeat.MergedCount == 0 && patientWrites == 0 && storedPatients[0].StatusReason == "Registro manual",
+    "Dados adicionais do app, campos ausentes e colunas não utilizadas não contam como diferença");
+var relationalRepeat = await ImportNormalized([["nome", "cns"], ["João Oliveira", "911"]]);
+Check(relationalRepeat.IgnoredCount == 1 && relationalRepeat.MergedCount == 0 && patientWrites == 0 && storedPatients[0].SusNumbers.SequenceEqual(["910", "911"]),
+    "CNS secundário já existente apenas na coleção relacional não é tratado como informação nova");
+var realDifference = await ImportNormalized([["nome", "cns", "observacao"], ["João Oliveira", "910", "Observação C"]]);
+Check(realDifference.MergedCount == 1 && patientWrites == 1 && realDifference.Entries.Single().Changes.Contains("Observação C"),
+    "Informação realmente nova em campo utilizado gera uma mesclagem com antes e depois");
+var realDifferenceRepeat = await ImportNormalized([["nome", "cns", "observacao"], ["JOÃO OLIVEIRA", "910", "Observação C"]]);
+Check(realDifferenceRepeat.IgnoredCount == 1 && realDifferenceRepeat.MergedCount == 0 && patientWrites == 1,
+    "Repetir a informação recém-mesclada volta a ignorado sem nova gravação");
+storedPatients.Add(new() { Id = 601, Name = "Maria Oliveira", SusNumber = "920", BirthDate = new DateTime(1970, 1, 1) });
+var automaticLink = await ImportNormalized([["nome", "cns"], ["João Oliveira", "910"]], resolveLinks: true);
+Check(automaticLink.IgnoredCount == 1 && automaticLink.MergedCount == 0 && storedPatients.Single(p => p.Id == 600).MotherPatientId == 601 &&
+    automaticLink.Entries.Any(e => e.Status == "Vínculo ajustado"),
+    "Vínculo inferido com dados já existentes é auditado separadamente e não transforma linha sem novidades em mesclada");
+Console.WriteLine("Normalized patient comparison checks passed.");
+
+await FamilyResponsibleImportTests.RunAsync();
+
 static MemoryStream Workbook(string[][] rows)
 {
     XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -195,5 +345,18 @@ public class Proxy : DispatchProxy
     public static T For<T>(Func<string, object?[], object?> handler) where T : class
     {
         var proxy = Create<T, Proxy>(); ((Proxy)(object)proxy).Handler = handler; return proxy;
+    }
+}
+
+public sealed class CepHttpHandler : HttpMessageHandler
+{
+    public int Calls { get; private set; }
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Calls++;
+        return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"cep\":\"22222-222\",\"logradouro\":\"Rua Remota\",\"bairro\":\"Centro\",\"localidade\":\"São Paulo\",\"uf\":\"SP\"}")
+        });
     }
 }

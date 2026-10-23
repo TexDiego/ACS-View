@@ -13,11 +13,11 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Pacientes" Style="{StaticResource SectionTitle}"/>
 
-                    <Label Text="As colunas de pacientes, condições de saúde e vínculos familiares são reconhecidas automaticamente."
+                    <Label Text="Selecione um ou mais arquivos. As planilhas são processadas em sequência e complementam os cadastros, condições de saúde e vínculos familiares."
                            Style="{StaticResource BodyMuted}"
                            LineBreakMode="WordWrap"/>
 
-                    <Button Text="Selecionar planilha de pacientes"
+                    <Button Text="Selecionar planilhas de pacientes"
                             Style="{StaticResource Buttons}"
                             IsEnabled="{Binding CanStartImport}"
                             Command="{Binding ImportPatientsCommand}"/>

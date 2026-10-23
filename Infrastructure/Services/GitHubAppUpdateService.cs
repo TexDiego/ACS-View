@@ -1,6 +1,5 @@
 using ACS_View.Application.Interfaces;
 using ACS_View.Application.Updates;
-using System.Security.Cryptography;
 
 namespace ACS_View.Infrastructure.Services;
 
@@ -22,8 +21,9 @@ public sealed class GitHubAppUpdateService : IAppUpdateService
             AppInfo.Current.VersionString, long.TryParse(AppInfo.Current.BuildString, out var code) ? code : 0);
     }
 
-    public async Task InstallAsync(AppUpdate update, CancellationToken cancellationToken)
+    public async Task InstallAsync(AppUpdate update, CancellationToken cancellationToken, IProgress<AppUpdateProgress>? progress = null)
     {
+        progress?.Report(new(0, "Preparando atualização…"));
 #if ANDROID
         var activity = Platform.CurrentActivity ?? throw new InvalidOperationException("Não foi possível abrir o instalador.");
         if (OperatingSystem.IsAndroidVersionAtLeast(26) && activity.PackageManager?.CanRequestPackageInstalls() != true)
@@ -43,21 +43,12 @@ public sealed class GitHubAppUpdateService : IAppUpdateService
         timeout.CancelAfter(TimeSpan.FromMinutes(5));
         try
         {
-            using var response = await Client.GetAsync(update.ApkUrl, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
-            response.EnsureSuccessStatusCode();
-            await using (var source = await response.Content.ReadAsStreamAsync(timeout.Token))
-            await using (var target = File.Create(path))
-                await source.CopyToAsync(target, timeout.Token);
-            if (new FileInfo(path).Length != update.Size) throw new InvalidOperationException("O download ficou incompleto. Tente novamente.");
-            if (update.Digest?.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                await using var file = File.OpenRead(path);
-                var hash = Convert.ToHexString(await SHA256.HashDataAsync(file, timeout.Token));
-                if (!hash.Equals(update.Digest[7..], StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Não foi possível verificar o APK. Tente novamente.");
-            }
+            await AppUpdateDownloader.DownloadAsync(Client, update, path, progress, timeout.Token);
+            timeout.Token.ThrowIfCancellationRequested();
+            progress?.Report(new(.98, "Abrindo o instalador do Android…"));
             if (!await Launcher.Default.OpenAsync(new OpenFileRequest("Instalar atualização", new ReadOnlyFile(path, "application/vnd.android.package-archive"))))
                 throw new InvalidOperationException("O Android não conseguiu abrir o instalador.");
+            progress?.Report(new(1, "Arquivo pronto. Confirme a instalação na tela do Android."));
         }
         catch
         {

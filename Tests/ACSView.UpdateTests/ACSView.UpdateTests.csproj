@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Application/Interfaces/IAppUpdateService.cs" />
+    <Compile Include="../../Application/Updates/AppUpdateDownloader.cs" />
     <Compile Include="../../Application/Updates/GitHubReleaseUpdate.cs" Link="GitHubReleaseUpdate.cs" />
     <Compile Include="../../Application/Updates/GitHubUpdateChecker.cs" Link="GitHubUpdateChecker.cs" />
   </ItemGroup>

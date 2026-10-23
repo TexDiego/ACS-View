@@ -28,7 +28,8 @@ internal sealed class PatientFamilyLinkResolver(
         {
             Patient = g.Last().Patient, RowNumber = g.Last().RowNumber,
             MotherName = g.Last().Patient.MotherName, FatherName = g.Last().Patient.FatherName,
-            FamilyResponsibleSus = g.Last().Patient.FamilyResponsibleSus ?? "",
+            FamilyResponsibleSus = g.LastOrDefault(c => !string.IsNullOrWhiteSpace(c.FamilyResponsibleSus))?.FamilyResponsibleSus
+                ?? g.Last().Patient.FamilyResponsibleSus ?? "",
             IsFamilyResponsible = g.Any(c => c.IsFamilyResponsible),
             AddressKeys = g.SelectMany(c => c.AddressKeys).Distinct().ToList(),
             ImportedHouse = g.LastOrDefault(c => c.AddressKeys.Count > 0)?.ImportedHouse ?? g.Last().ImportedHouse
@@ -85,12 +86,18 @@ internal sealed class PatientFamilyLinkResolver(
                             matches.Add(importedHouse);
                         }
                         result.Details.Add($"Linha {context.RowNumber}: residência #{importedHouse.CasaId} criada.");
+                        result.Entries.Add(new() { EntityType = "Residência", RowNumber = context.RowNumber, RecordId = importedHouse.CasaId,
+                            Description = $"{importedHouse.Rua}, {importedHouse.NumeroCasa}", Status = "Importado", Reason = "Residência criada com o endereço da importação de pacientes." });
                     }
                     catch (OperationCanceledException) { throw; }
                     catch (Exception ex) { result.Errors.Add($"Linha {context.RowNumber}: residência não criada: {ex.Message}"); }
                 }
             }
-            if (ResolveUniqueHouse(context.AddressKeys, housesByAddressKey, context.ImportedHouse) is { } matchedHouse &&
+            var resolvedHouse = ResolveUniqueHouse(context.AddressKeys, housesByAddressKey, context.ImportedHouse);
+            if (context.RowNumber > 0 && resolvedHouse != null && context.ImportedHouse?.CasaId != resolvedHouse.CasaId)
+                result.Entries.Add(new() { EntityType = "Residência", RowNumber = context.RowNumber, RecordId = resolvedHouse.CasaId,
+                    Description = $"{resolvedHouse.Rua}, {resolvedHouse.NumeroCasa}", Status = "Ignorado", Reason = "Residência já cadastrada; endereço reutilizado sem alteração." });
+            if (resolvedHouse is { } matchedHouse &&
                 ShouldSetLink(context.Patient.HouseId, columnMap.OverwriteExistingFamilyLinks))
             {
                 context.Patient.HouseId = matchedHouse.CasaId;
@@ -104,7 +111,12 @@ internal sealed class PatientFamilyLinkResolver(
 
             if (context.RowNumber > 0 && context.Patient.HouseId <= 0 && context.ImportedHouse is { } pendingHouse &&
                 (!string.IsNullOrWhiteSpace(pendingHouse.CEP) || !string.IsNullOrWhiteSpace(pendingHouse.NumeroCasa)))
+            {
                 result.Errors.Add($"Linha {context.RowNumber}: endereço não associado: CEP '{pendingHouse.CEP}', número '{pendingHouse.NumeroCasa}', complemento '{pendingHouse.Complemento}'. Residência incompleta ou ambígua; confira o CEP e complete o endereço.");
+                result.Entries.Add(new() { EntityType = "Residência", RowNumber = context.RowNumber,
+                    Description = $"CEP {pendingHouse.CEP}, número {pendingHouse.NumeroCasa}", Status = "Ignorado",
+                    Reason = "Residência não importada por falta de informações ou endereço ambíguo; confira o CEP e complete o endereço." });
+            }
             processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo residencias", context.RowNumber);
         }
 
@@ -121,34 +133,20 @@ internal sealed class PatientFamilyLinkResolver(
             processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
         }
 
-        var importedResponsiblesBySus = rowContexts
-            .Where(context => context.Patient.HouseId > 0)
-            .SelectMany(context => context.Patient.SusNumbers.Select(sus => new { Sus = sus, context.Patient }))
-            .GroupBy(item => item.Sus)
-            .ToDictionary(group => group.Key, group => group.Select(item => item.Patient).DistinctBy(patient => patient.Id).ToList());
-
         var indexes = BuildPatientIndexes(allPatients, rowContexts);
         foreach (var context in rowContexts)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var changed = await ResolveResponsibleAsync(
-                context,
-                columnMap,
-                importedResponsiblesBySus,
-                indexes,
-                nextFamilyIdByHouse);
+            var resolution = await ResolveResponsibleAsync(
+                context, columnMap, indexes, rowContexts, houses, nextFamilyIdByHouse);
 
-            if (changed)
+            if (resolution.Changed)
             {
                 await patientService.UpdatePatient(context.Patient);
                 result.Details.Add($"{RowLabel(context)}: {context.Patient.Name}: família {context.Patient.FamilyId}, responsável #{context.Patient.FamilyResponsiblePatientId} associados.");
             }
-            if (!string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) && context.Patient.FamilyResponsiblePatientId is null or <= 0)
-                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável CNS '{context.FamilyResponsibleSus}' não associado (não encontrado, ambíguo ou residência divergente).");
-            if (!string.IsNullOrWhiteSpace(context.FamilyResponsibleSus) && context.Patient.FamilyResponsiblePatientId is > 0 &&
-                patientsById.TryGetValue(context.Patient.FamilyResponsiblePatientId.Value, out var currentResponsible) &&
-                !currentResponsible.HasSusNumber(context.FamilyResponsibleSus))
-                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: CNS do responsável informado '{context.FamilyResponsibleSus}' diverge do vínculo existente #{currentResponsible.Id}; vínculo preservado para revisão manual.");
+            if (resolution.PendingReason is { } pendingReason)
+                result.Errors.Add($"{(resolution.ResidenceConflict ? context.Patient.Name : $"{RowLabel(context)}: {context.Patient.Name}")}: responsável CNS '{context.FamilyResponsibleSus}' não associado: {pendingReason}");
             if (context.IsFamilyResponsible && context.Patient.FamilyId <= 0)
                 result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável identificado, família pendente de residência.");
 
@@ -226,77 +224,106 @@ internal sealed class PatientFamilyLinkResolver(
         }
     }
 
-    private async Task<bool> ResolveResponsibleAsync(
+    private sealed record ResponsibleResolution(bool Changed, string? PendingReason = null, bool ResidenceConflict = false);
+
+    private async Task<ResponsibleResolution> ResolveResponsibleAsync(
         PatientImportRowContext context,
         PatientImportColumnMapDto columnMap,
-        IReadOnlyDictionary<string, List<Patient>> importedResponsiblesBySus,
         PatientImportIndexes indexes,
+        IReadOnlyList<PatientImportRowContext> allContexts,
+        IReadOnlyList<House> houses,
         Dictionary<int, int> nextFamilyIdByHouse)
     {
-        if (string.IsNullOrWhiteSpace(context.FamilyResponsibleSus))
-        {
-            return false;
-        }
+        if (string.IsNullOrWhiteSpace(context.FamilyResponsibleSus)) return new(false);
+        var numbers = SusNumberSet.Parse(context.FamilyResponsibleSus);
+        if (numbers.Count == 0) return new(false, "o valor informado não contém um CNS válido para busca.");
 
-        var normalizedSus = NormalizeSus(context.FamilyResponsibleSus);
-        if (string.IsNullOrWhiteSpace(normalizedSus))
-        {
-            return false;
-        }
-
-        var candidates = importedResponsiblesBySus.TryGetValue(normalizedSus, out var importedCandidates)
-            ? importedCandidates
-            : [];
-
-        candidates = candidates
-            .Where(candidate => context.Patient.HouseId <= 0 || candidate.HouseId == context.Patient.HouseId)
-            .DistinctBy(candidate => candidate.Id)
-            .ToList();
-
-        if (candidates.Count == 0 && columnMap.AllowGlobalUniqueResponsibleMatch &&
-            indexes.PatientsBySus.TryGetValue(normalizedSus, out var globalCandidates))
-        {
-            candidates = globalCandidates
-                .Where(candidate => context.Patient.HouseId <= 0 || candidate.HouseId == context.Patient.HouseId)
-                .DistinctBy(candidate => candidate.Id)
-                .ToList();
-        }
-
-        if (candidates.Count != 1)
-        {
-            return false;
-        }
-
+        // Resolve identity before applying residence rules. Never concatenate multiple CNS,
+        // or hide a duplicate identity by first filtering patients to the dependent's house.
+        var candidates = numbers.Where(indexes.PatientsBySus.ContainsKey)
+            .SelectMany(number => indexes.PatientsBySus[number]).DistinctBy(p => p.Id).ToList();
+        if (candidates.Count == 0) return new(false, "nenhum cadastro da conta atual contém o CNS informado.");
+        if (candidates.Count > 1)
+            return new(false, $"CNS ambíguo: corresponde aos cadastros {string.Join(", ", candidates.Select(p => $"#{p.Id} ({p.Name})"))}. Vínculos preservados; revisão manual necessária.");
         var responsible = candidates[0];
-        var changed = false;
-
+        var unknownNumbers = numbers.Where(number => !responsible.HasSusNumber(number)).ToArray();
+        if (unknownNumbers.Length > 0)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas os CNS {string.Join(", ", unknownNumbers)} não pertencem a esse cadastro. Revisão manual necessária.");
+        if (!columnMap.AllowGlobalUniqueResponsibleMatch && responsible.HouseId <= 0)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado sem residência; a busca global está desativada.");
         if (!columnMap.OverwriteExistingFamilyLinks && context.Patient.FamilyResponsiblePatientId is > 0 &&
-            context.Patient.FamilyResponsiblePatientId != responsible.Id) return false;
-        if (responsible.HouseId <= 0) return false;
-        if (context.Patient.HouseId <= 0) { context.Patient.HouseId = responsible.HouseId; changed = true; }
+            context.Patient.FamilyResponsiblePatientId != responsible.Id)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas o paciente já possui o responsável #{context.Patient.FamilyResponsiblePatientId}. Vínculo existente preservado.");
+        if (responsible.FamilyResponsiblePatientId is > 0 && responsible.FamilyResponsiblePatientId != responsible.Id)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas ele possui outro responsável familiar (#{responsible.FamilyResponsiblePatientId}). Vínculos existentes preservados.");
+
+        var changed = false;
+        var responsibleHouseId = responsible.HouseId;
+        if (responsibleHouseId <= 0)
+        {
+            // A known CNS can complete a missing residence only when all referencing
+            // patients agree on one valid house and the responsible has no conflicting address/family.
+            var referencingHouseIds = allContexts.Where(c =>
+                    SusNumberSet.Parse(c.FamilyResponsibleSus) is { Count: > 0 } reported && reported.All(responsible.HasSusNumber) &&
+                    (c.Patient.FamilyResponsiblePatientId is null or <= 0 || c.Patient.FamilyResponsiblePatientId == responsible.Id) &&
+                    c.Patient.FamilyId <= 0)
+                .Select(c => c.Patient.HouseId).Where(id => id > 0).Distinct().ToArray();
+            var hasPendingAddress = allContexts.Any(c => c.Patient.Id == responsible.Id && c.AddressKeys.Count > 0);
+            if (referencingHouseIds.Length != 1 || hasPendingAddress || responsible.FamilyId > 0 ||
+                !houses.Any(h => h.CasaId == referencingHouseIds[0] && h.IsActive))
+                return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas está sem residência. " +
+                    (referencingHouseIds.Length > 1 ? $"Pacientes que o indicam possuem residências diferentes: {string.Join("; ", referencingHouseIds.Select(id => FormatHouseAddress(id, houses)))}. Revisão manual necessária." : "Não há uma residência única e segura para completar o vínculo; cadastre ou confira o endereço do responsável."),
+                    ResidenceConflict: referencingHouseIds.Length > 1);
+            responsibleHouseId = referencingHouseIds[0];
+        }
+        if (context.Patient.HouseId > 0 && responsibleHouseId != context.Patient.HouseId)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas as residências divergem.\nResidência do paciente: {FormatHouseAddress(context.Patient.HouseId, houses)}.\nResidência do responsável: {FormatHouseAddress(responsibleHouseId, houses)}.\nNenhum endereço foi alterado.", ResidenceConflict: true);
+        if (!columnMap.OverwriteExistingFamilyLinks && context.Patient.FamilyId > 0 &&
+            context.Patient.FamilyId != responsible.FamilyId)
+            return new(false, $"cadastro #{responsible.Id} ({responsible.Name}) encontrado, mas o paciente já pertence à família {context.Patient.FamilyId} e o responsável à família {responsible.FamilyId}. Família existente preservada.");
+
         if (responsible.FamilyId <= 0)
         {
+            responsible.HouseId = responsibleHouseId;
             responsible.FamilyId = await GetNextFamilyIdAsync(responsible.HouseId, nextFamilyIdByHouse);
             responsible.FamilyResponsiblePatientId = responsible.Id;
             responsible.FamilyResponsibleSus = responsible.PrimarySusNumber;
             await patientService.UpdatePatient(responsible);
         }
-
-        if (ShouldSetNullableLink(context.Patient.FamilyResponsiblePatientId, columnMap.OverwriteExistingFamilyLinks) &&
-            context.Patient.FamilyResponsiblePatientId != responsible.Id)
+        if (context.Patient.HouseId <= 0) { context.Patient.HouseId = responsible.HouseId; changed = true; }
+        if (context.Patient.FamilyResponsiblePatientId != responsible.Id)
         {
             context.Patient.FamilyResponsiblePatientId = responsible.Id;
-            context.Patient.FamilyResponsibleSus = responsible.PrimarySusNumber;
+            // Retain the reported CNS, including secondary numbers, as import evidence.
+            context.Patient.FamilyResponsibleSus = context.FamilyResponsibleSus;
             changed = true;
         }
-
-        if (responsible.FamilyId > 0 && context.Patient.FamilyId != responsible.FamilyId && ShouldSetLink(context.Patient.FamilyId, columnMap.OverwriteExistingFamilyLinks))
+        if (context.Patient.FamilyId != responsible.FamilyId)
         {
             context.Patient.FamilyId = responsible.FamilyId;
             changed = true;
         }
+        return new(changed);
+    }
 
-        return changed;
+    private static string FormatHouseAddress(int houseId, IReadOnlyList<House> houses)
+    {
+        var house = houses.FirstOrDefault(h => h.CasaId == houseId);
+        if (house is null) return "Endereço não disponível no cadastro";
+        var street = house.Rua.Trim();
+        var streetType = house.TipoLogradouro.Trim();
+        if (streetType.Length > 0 && !street.StartsWith(streetType + " ", StringComparison.OrdinalIgnoreCase))
+            street = $"{streetType} {street}".Trim();
+        var cep = CepNumberRules.Normalize(house.CEP);
+        if (cep.Length == 8) cep = cep.Insert(5, "-");
+        return string.Join(", ", new[]
+        {
+            street.Length > 0 ? street : "Logradouro não informado",
+            string.IsNullOrWhiteSpace(house.NumeroCasa) ? "número não informado" : house.NumeroCasa.Trim(),
+            house.Complemento.Trim(), house.Bairro.Trim(),
+            string.Join("/", new[] { house.Cidade.Trim(), house.Estado.Trim() }.Where(value => value.Length > 0)),
+            cep.Length > 0 ? $"CEP {cep}" : ""
+        }.Where(value => value.Length > 0));
     }
 
     private static House? ResolveUniqueHouse(

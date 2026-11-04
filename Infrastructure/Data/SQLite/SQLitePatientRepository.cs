@@ -94,7 +94,10 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
 
             var items = await _connection.QueryAsync<PatientListItemDto>(
                 $"""
-                SELECT p.Id, p.SusNumber, p.Name,
+                SELECT p.Id, p.SusNumber, p.Name, p.MotherName, p.FatherName, {LegacyDateSql.AsTicks("p.BirthDate")} AS BirthDate,
+                    COALESCE((SELECT bf.NisNumber FROM PatientBolsaFamilia bf
+                        WHERE bf.PatientId=p.Id AND bf.UserId=p.UserId
+                        LIMIT 1), '') AS NisNumber,
                     COALESCE((SELECT s.Number FROM PatientSusNumber s
                         WHERE s.PatientId=p.Id AND s.UserId=p.UserId AND s.IsPrimary=1
                         LIMIT 1), '') AS PrimarySusNumber

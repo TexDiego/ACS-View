@@ -21,12 +21,14 @@ public partial class AddHouse : ContentPage, IQueryAttributable
     {
         if (query.TryGetValue("house", out var house))
         {
+            Title = "Editar residência";
             viewModel.HouseModel = (House)house;
             _loaded = true;
         }
 
         if (query.TryGetValue("houseId", out var houseId))
         {
+            Title = "Editar residência";
             _houseId = Convert.ToInt32(houseId);
             _loaded = false;
         }

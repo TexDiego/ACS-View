@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:ACS_View.Domain.Entities"
+    xmlns:values="clr-namespace:ACS_View.Domain.ValueObjects" 
+    xmlns:converter="clr-namespace:ACS_View.Converters"
+    xmlns:icons="clr-namespace:ACS_View.Controls"
+    x:Class="ACS_View.Resources.Styles.DesktopFamilies">
+    
+    <DataTemplate 
+        x:Key="DesktopFamilyTemplate"
+        x:DataType="values:Familia">
+
+        <Border 
+            Style="{StaticResource CardBorder}" 
+            Padding="20" 
+            Margin="0,0,0,12">
+
+            <Grid
+                ColumnDefinitions="*,Auto" 
+                RowDefinitions="Auto,Auto" 
+                ColumnSpacing="16"
+                RowSpacing="8">
+
+                <Label 
+                    Text="{Binding PessoasFamilia.Count, StringFormat='Integrantes: {0}'}" 
+                    Style="{StaticResource BodyMuted}"
+                    VerticalOptions="Center"/>
+
+                <FlexLayout 
+                    Grid.Row="1" 
+                    Grid.ColumnSpan="2"
+                    Direction="Row"
+                    AlignContent="SpaceAround"
+                    AlignItems="Start"
+                    JustifyContent="Start"
+                    Wrap="Wrap"
+                    BindableLayout.ItemsSource="{Binding PessoasFamilia}">
+
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:Patient">
+
+                            <Border
+                                Style="{StaticResource CardBorder}"
+                                MaximumWidthRequest="250"
+                                Margin="2"
+                                Padding="0">
+                                
+                                <Button
+                                    Text="{Binding Name}" 
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Dark={StaticResource White}, Light={StaticResource Primary}}"
+                                    VerticalOptions="Center"
+                                    BorderWidth="0"
+                                    StyleId="FamilyMember"
+                                    MinimumHeightRequest="40"
+                                    MaximumWidthRequest="250"
+                                    LineBreakMode="WordWrap"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                    CommandParameter="{Binding Id}"/>
+                            </Border>
+
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+
+                </FlexLayout>
+            
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="1" 
+                    Text="⋯" 
+                    FontSize="24" 
+                    WidthRequest="44" 
+                    HeightRequest="44" 
+                    Padding="0"
+                    Style="{StaticResource GhostButton}" 
+                    VerticalOptions="Start" 
+                    Clicked="FamilyActions_Clicked"
+                    SemanticProperties.Description="Ações da família"
+                    ToolTipProperties.Text="Visitar, editar ou excluir família"/>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate
+        x:Key="DesktopNoteTemplate" 
+        x:DataType="models:Note">
+
+        <Border 
+            Style="{StaticResource CardBorder}" 
+            Padding="12">
+
+            <VerticalStackLayout 
+            Spacing="9" 
+            Padding="10,5"
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+                <Label 
+                Text="{Binding Content}" 
+                Style="{StaticResource CardTitle}" 
+                FontSize="16"/>
+
+                <HorizontalStackLayout Spacing="4">
+                    <Label Text="Criado em" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="13" FontAttributes="Bold"/>
+                    <Label Text="{Binding CreationDate, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}"/>
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout Spacing="4" IsVisible="{Binding NotifyOn, Converter={converter:NullValueToBoolConverter}}">
+                    <Label Text="Notificar em" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="13" FontAttributes="Bold"/>
+                    <Label Text="{Binding NotifyOn, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}"/>
+                </HorizontalStackLayout>
+                <FlexLayout Direction="Row" Wrap="Wrap" IsVisible="{OnPlatform Default=False, WinUI=True}">
+                    <Button Text="Lembrete" Style="{StaticResource GhostButton}" Margin="0,4,12,0"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddNotification}" CommandParameter="{Binding Id}"/>
+                    <Button Text="Cancelar lembrete" Style="{StaticResource GhostButton}" Margin="0,4,12,0"
+                        IsVisible="{Binding NotifyOn, Converter={converter:NullValueToBoolConverter}}"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CancelNotificationCommand}" CommandParameter="{Binding Id}"/>
+                    <Button Text="Excluir anotação" Style="{StaticResource DangerOutlineButton}" Margin="0,4,0,0"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}" CommandParameter="{Binding Id}"/>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </Border>
+    </DataTemplate>
+
+</ResourceDictionary>

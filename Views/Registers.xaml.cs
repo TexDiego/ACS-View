@@ -30,6 +30,9 @@ public partial class Registers : ContentPage, IQueryAttributable
         IPatientPhoneService phoneService)
     {
         InitializeComponent();
+#if WINDOWS
+        Content = new Desktop.DesktopRegisters();
+#endif
         _dialogService = dialogService;
         _addRegisterViewModel = new(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService);
         BindingContext = _viewModel = viewModel;
@@ -129,7 +132,11 @@ public partial class Registers : ContentPage, IQueryAttributable
             if (item != null)
             {
                 await Task.Delay(100);
+#if WINDOWS
+                ((Desktop.DesktopRegisters)Content).ScrollToPatient(item);
+#else
                 collectionView.ScrollTo(item, position: ScrollToPosition.Center, animate: true);
+#endif
                 _viewModel.ScrollToId = 0;
             }
         }

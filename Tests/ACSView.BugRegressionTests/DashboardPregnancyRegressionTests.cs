@@ -97,10 +97,12 @@ internal static class DashboardPregnancyRegressionTests
             && ReferenceEquals(segment, vm.SelectionSegments.Single()) && ReferenceEquals(results, vm.SearchResults)
             && segment.Summary.EndsWith("1 residências"), "Checkbox updates count and summary without rebuilding header or result rows");
         vm.ToggleResultCommand.Execute(vm.SearchResults[0]);
-        check(vm.SelectedCount == 2 && vm.SearchResults.All(row => row.IsSelected), "Address tap and checkbox keep the same selection");
+        check(vm.SelectedCount == 2 && vm.SearchResults.All(row => row.IsSelected)
+            && vm.SelectionSegments.Count == 1 && ReferenceEquals(segment, vm.SelectionSegments.Single()),
+            "Address tap restores the existing bulk segment without an overlapping individual selection");
         vm.RemoveSegmentCommand.Execute(segment);
-        check(vm.SelectedCount == 1 && vm.SelectionSegments.Count == 1 && vm.SelectionSegments.Single().Summary.Contains("individual"),
-            "Removing bulk segment preserves the explicit individual selection and its visible summary");
+        check(vm.SelectedCount == 0 && vm.SelectionSegments.Count == 0 && vm.SearchResults.All(row => !row.IsSelected),
+            "Removing restored bulk segment clears every membership and visible summary");
         vm.ClearSelectionCommand.Execute(null);
         check(vm.SelectedCount == 0 && vm.SearchResults.All(row => !row.IsSelected), "Clear selection updates all existing rows");
         await c.CloseAsync();

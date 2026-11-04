@@ -61,7 +61,7 @@
                                         FontSize="12"/>
                                 </HorizontalStackLayout>
 
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="8" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                                     <Button
                                         Text="Reagendar"
                                         Style="{StaticResource GhostButton}"

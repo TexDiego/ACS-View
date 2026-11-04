@@ -1,5 +1,4 @@
 using ACS_View.Application.Interfaces;
-using Microsoft.Maui.Controls;
 using ACS_View.Application.Updates;
 
 namespace ACS_View.Views;
@@ -228,5 +227,15 @@ public partial class LoginPage : ContentPage
     {
         if (!_loginAllowed) return;
         await Shell.Current.GoToAsync("forgotpassword");
+    }
+
+    private void UsernameEntry_Completed(object sender, EventArgs e)
+    {
+        PasswordEntry.Focus();
+    }
+
+    private void PasswordEntry_Completed(object sender, EventArgs e)
+    {
+        Btn_Login_Clicked(Btn_Login, EventArgs.Empty);
     }
 }

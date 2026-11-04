@@ -26,8 +26,10 @@ public partial class AddRegister : ContentPage, IQueryAttributable
     {
         var timer = Stopwatch.StartNew();
         InitializeComponent();
+#if WINDOWS
+        Content = new Desktop.DesktopAddRegister();
+#endif
         BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService);
-        Debug.WriteLine($"[Cadastro.Load] Construir pagina e bindings: {timer.Elapsed.TotalMilliseconds:F1} ms");
     }
 
     private bool? _sexOptionsHorizontal;
@@ -143,6 +145,7 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         }
 
         _patientId = patientId;
+        Title = patientId > 0 ? "Editar cadastro" : "Adicionar cadastro";
         _loaded = false;
     }
 }

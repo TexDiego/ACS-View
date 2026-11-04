@@ -21,6 +21,9 @@ namespace ACS_View
             Preferences.Default.Set(LocalNoteNotificationScheduler.ExactAlarmCacheInvalid, true);
 #endif
             var builder = MauiApp.CreateBuilder();
+#if WINDOWS
+            ACS_View.Platforms.Windows.DesktopWindowAppearance.ConfigureToolbar();
+#endif
 
             builder
                 .UseMauiApp<App>()
@@ -36,6 +39,10 @@ namespace ACS_View
                 .UseMauiCommunityToolkit()
                 .ConfigureMauiHandlers(handlers =>
                 {
+#if WINDOWS
+                    handlers.AddHandler<CollectionView, ACS_View.Platforms.Windows.WindowsCollectionViewHandler>();
+                    handlers.AddHandler<ImageButton, ACS_View.Platforms.Windows.CenteredIconImageButtonHandler>();
+#endif
 #if ANDROID
                     handlers.AddHandler<Shell, ACS_View.Platforms.Android.BrandShellRenderer>();
 
@@ -57,6 +64,10 @@ namespace ACS_View
                 })
                 .ConfigureLifecycleEvents(events =>
                 {
+#if WINDOWS
+                    events.AddWindows(windows => windows.OnWindowCreated(window =>
+                        ACS_View.Platforms.Windows.DesktopWindowAppearance.Attach(window)));
+#endif
 #if ANDROID
                     events.AddAndroid(android => android.OnCreate((activity, _) =>
                     {

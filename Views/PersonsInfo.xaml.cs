@@ -9,6 +9,9 @@ public partial class PersonsInfo : Popup
     public PersonsInfo(PersonsInfoViewModel vm)
     {
         InitializeComponent();
+#if WINDOWS
+        Content = new Desktop.DesktopPersonsInfo();
+#endif
         BindingContext = vm;
     }
 

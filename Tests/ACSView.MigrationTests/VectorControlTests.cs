@@ -28,6 +28,18 @@ internal static class VectorControlTests
         check(sortedRows.Where(r => r.Kind == VectorRowKind.Sector).Select(r => r.Title).SequenceEqual(new[] { "Setor 2", "Setor 10" }) && sortedRows.Where(r => r.HouseId > 0).Select(r => r.HouseId).SequenceEqual(new[] { 3, 2, 1 }), "Flattened hierarchy orders sector, block and address naturally");
         var selection = new TerritorialSelection();
         selection.Add("A", 1, 3, HouseParity.All, [1, 2, 3]);
+        var originalBatch = selection.Segments.Single().Id;
+        selection.Toggle(2, "A", 1, 3, HouseParity.All);
+        check(selection.SelectedIds.SetEquals([1, 3]), "Batch checkbox can exclude one residence");
+        selection.Toggle(2, "A", 1, 3, HouseParity.All);
+        check(selection.SelectedIds.SetEquals([1, 2, 3]) && selection.Segments.Count == 1 && selection.Segments[0].Id == originalBatch,
+            "Reselecting an excluded batch residence restores the original segment on all platforms");
+        selection.Add("A", 1, 3, HouseParity.All, [3, 1, 2]);
+        check(selection.Segments.Count == 1, "Batch identity does not depend on result order");
+        selection.Remove(originalBatch);
+        check(selection.SelectedIds.Count == 0, "Restored batch has no hidden manual memberships");
+        selection.Clear();
+        selection.Add("A", 1, 3, HouseParity.All, [1, 2, 3]);
         selection.Add("B", null, null, HouseParity.All, [4, 5]);
         check(selection.SelectedIds.SetEquals([1, 2, 3, 4, 5]), "Selection accumulates across streets");
         selection.Add("C", null, null, HouseParity.All, [2, 3, 4]);

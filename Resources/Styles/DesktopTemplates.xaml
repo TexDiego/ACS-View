@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:model="clr-namespace:ACS_View.Domain.ValueObjects"
+                    xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+                    xmlns:converters="clr-namespace:ACS_View.Converters"
+                    xmlns:icons="clr-namespace:ACS_View.Controls"
+                    x:Class="ACS_View.Resources.Styles.DesktopTemplates">
+    
+    <DataTemplate 
+        x:Key="DesktopPatientTemplate" 
+        x:DataType="dto:PatientListItemDto">
+        
+        <Border 
+            Style="{StaticResource CardBorder}"
+            Padding="10,8"
+            Margin="0,0,0,5">
+            
+            <Grid
+                ColumnDefinitions="*,auto,50"
+                ColumnSpacing="15"
+                Padding="0">
+
+                <Grid 
+                    ColumnDefinitions="1.3*,Auto,*" 
+                    ColumnSpacing="24"
+                    Padding="5"
+                    VerticalOptions="Center">
+
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                            CommandParameter="{Binding .}"/>
+                    </Grid.GestureRecognizers>
+
+                    <VerticalStackLayout
+                        Grid.Column="0"
+                        VerticalOptions="Center"
+                        Spacing="5"
+                        Margin="0">
+
+                        <Label
+                            Text="{Binding Name}" 
+                            Grid.Row="0"
+                            Margin="0"
+                            VerticalTextAlignment="Center"
+                            VerticalOptions="Center"
+                            FontSize="26"
+                            FontAttributes="Bold"
+                            LineBreakMode="WordWrap"/>
+
+                        <HorizontalStackLayout 
+                            Spacing="0"
+                            VerticalOptions="Center"
+                            Grid.Row="1">
+
+                            <Label
+                                Text="{Binding BirthDate, 
+                                               StringFormat='{0:dd/MM/yyyy}'}" 
+                                FontSize="20"/>
+
+                            <Label 
+                                Text="{Binding BirthDate, 
+                                               Converter={converters:DateTimeToAgeConverter},
+                                               StringFormat=' - {0}'}"
+                                FontSize="20"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <BoxView
+                        Grid.Column="1"
+                        WidthRequest="2"
+                        CornerRadius="1"
+                        Margin="0"
+                        BackgroundColor="{AppThemeBinding Dark={StaticResource DarkSurfaceContainerHigh},
+                                                          Light={StaticResource PrimaryContainer}}"/>
+
+                    <VerticalStackLayout
+                        Grid.Column="2"
+                        VerticalOptions="Center"
+                        Margin="0">
+
+                        <Label 
+                            Grid.Row="0" 
+                            Grid.ColumnSpan="2" 
+                            Text="{Binding MotherName, StringFormat='Mãe: {0}'}"
+                            IsVisible="{Binding MotherName, Converter={converters:NullValueToBoolConverter}}"
+                            FontSize="16"
+                            LineBreakMode="WordWrap"/>
+
+                        <Label 
+                            Grid.Row="1" 
+                            IsVisible="{Binding FatherName, Converter={converters:NullValueToBoolConverter}}"
+                            Grid.ColumnSpan="2" 
+                            Text="{Binding FatherName, StringFormat='Pai: {0}'}"
+                            FontSize="16"
+                            LineBreakMode="WordWrap"/>
+
+                        <Label 
+                            Grid.Row="2" 
+                            IsVisible="{Binding PrimarySusNumber, Converter={converters:NullValueToBoolConverter}}"
+                            Text="{Binding PrimarySusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
+                            FontSize="15"/>
+
+                        <Label 
+                            Grid.Row="3" 
+                            IsVisible="{Binding NisNumber, Converter={converters:NullValueToBoolConverter}}"
+                            Text="{Binding NisNumber, Converter={converters:NISFormatConverter}, StringFormat='NIS: {0}'}"
+                            FontSize="15"/>
+                    </VerticalStackLayout>
+
+                </Grid>
+                
+                <ImageButton
+                    Grid.Column="1"
+                    Margin="0"
+                    Padding="0"
+                    SemanticProperties.Description="Vacinas do paciente"
+                    ToolTipProperties.Text="Vacinas"
+                    Source="{icons:ThemedIcon Icon=Syringe24, Role=Primary, IconSize=26}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                    CommandParameter="{Binding Id}"/>
+
+                <ImageButton
+                    Grid.Column="2"
+                    Source="{icons:ThemedIcon Icon=MoreHorizontal16, Role=Surface,IconSize=26}"
+                    Padding="0"
+                    Margin="0"
+                    VerticalOptions="Center"
+                    Clicked="PatientActions_Clicked"
+                    SemanticProperties.Description="Ações do paciente"
+                    ToolTipProperties.Text="Editar ou excluir paciente"/>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate 
+        x:Key="DesktopMetricTemplate" 
+        x:DataType="model:Dashboard">
+        
+        <Border 
+            Style="{StaticResource CardBorder}"
+            Margin="0" 
+            Padding="18"
+            HeightRequest="176">
+            
+            <Grid
+                RowDefinitions="Auto,*,Auto" 
+                ColumnDefinitions="*,Auto"
+                RowSpacing="8" 
+                ColumnSpacing="10">
+                
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer 
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.GoToPageAsync}"
+                        CommandParameter="{Binding FilterKey}"/>
+                </Grid.GestureRecognizers>
+                
+                <Label 
+                    Text="{Binding Name}"
+                    Style="{StaticResource CardTitle}" 
+                    MaxLines="2"/>
+                
+                <ImageButton 
+                    Grid.Column="1" 
+                    Source="{icons:ThemedIcon Icon=Delete48, Role=Danger}"
+                    HeightRequest="32"
+                    WidthRequest="32"
+                    VerticalOptions="Start"
+                    ToolTipProperties.Text="Ocultar métrica"
+                    SemanticProperties.Description="Ocultar métrica"
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveMetricCommand}"
+                    CommandParameter="{Binding .}"/>
+                
+                <Label 
+                    Grid.Row="1" 
+                    Grid.ColumnSpan="2" 
+                    Text="{Binding Summary}"
+                    Style="{StaticResource BodyMuted}"
+                    MaxLines="2"
+                    LineBreakMode="TailTruncation"
+                    ToolTipProperties.Text="{Binding Summary}"/>
+                
+                <Label 
+                    Grid.Row="2" 
+                    Grid.ColumnSpan="2"
+                    Text="{Binding Total}"
+                    Style="{StaticResource MetricNumber}"
+                    FontSize="32"
+                    HorizontalOptions="Start"/>
+            </Grid>
+        </Border>
+        
+    </DataTemplate>
+    
+</ResourceDictionary>

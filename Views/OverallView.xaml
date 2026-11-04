@@ -17,6 +17,8 @@
     <Grid Padding="16,16,16,0" RowDefinitions="auto,*" RowSpacing="14">
 
         <Border Grid.Row="0"
+                HorizontalOptions="{OnPlatform Default=Fill, WinUI=Start}"
+                WidthRequest="{OnPlatform Default=-1, WinUI=360}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkPrimaryLight}}"
                 Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                 StrokeShape="RoundRectangle 8"

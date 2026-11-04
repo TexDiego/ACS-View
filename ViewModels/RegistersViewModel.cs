@@ -174,13 +174,16 @@ namespace ACS_View.ViewModels
             }
 
             IsLoadingMore = true;
+            var loadVersion = _loadVersion;
 
             try
             {
                 var result = await _patientService.GetPatientListAsync(SearchText, _loadedPatientsCount, PageSize, _listFilter);
+                if (loadVersion != _loadVersion) return;
 
-                RunOnMainThread(() =>
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
+                    if (loadVersion != _loadVersion) return;
                     foreach (var patient in result.Items)
                     {
                         Patients.Add(patient);
@@ -193,12 +196,13 @@ namespace ACS_View.ViewModels
             }
             catch (Exception ex)
             {
+                if (loadVersion != _loadVersion) return;
                 Debug.WriteLine($"Erro ao carregar mais pacientes: {ex.Message}");
                 _hasMorePatients = false;
             }
             finally
             {
-                IsLoadingMore = false;
+                if (loadVersion == _loadVersion) IsLoadingMore = false;
             }
         }
 

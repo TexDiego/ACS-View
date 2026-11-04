@@ -298,7 +298,7 @@ async Task ImportIntegration()
     var family=new FamilyService(db,context);
     var reader=new RowsReader();
     var history=new ImportHistoryService(db,context);
-    var importer=new PatientImportService(patients,new OfflineCep(),new SQLiteConditionsRepository(db,context),new SQLitePatientBolsaFamiliaRepository(db,context),reader,new PatientFamilyLinkResolver(patients,houses,family),history);
+    var importer=new PatientImportService(patients,new OfflineCep(),new SQLiteConditionsRepository(db,context),new SQLitePatientBolsaFamiliaRepository(db,context),reader,new PatientFamilyLinkResolver(patients,houses,family),history,new PregnancyService(db,context));
     reader.Rows=[
         ["Nome","CNS","Data de nascimento","Sexo","Rua","Numero","Bairro","Cidade","Estado","Responsavel familiar","SUS do responsavel","Diabetes"],
         ["Pessoa Responsavel Sintetica","111111111111111","01/01/1980","F","Rua Sintetica","99","Centro","Cidade","SP","SIM","","SIM"],
@@ -338,6 +338,23 @@ async Task ImportIntegration()
     reader.Rows=[["Nome","CNS","Nome da mãe","Data de nascimento"],["Pessoa Sem CNS Sintetica","","Mae Sintetica","02/02/1990"]];
     await importer.ImportAsync(input,new PatientImportColumnMapDto{SusNumberColumn="CNS"});
     Check((await c.Table<PatientSusNumber>().Where(n=>n.PatientId==withoutSus.Id).ToListAsync()).Select(n=>n.Id).Order().SequenceEqual(savedNumbers.Select(n=>n.Id).Order()),"Blank imported SUS preserves existing entities and identities");
+    reader.Rows=[["Nome","CNS","Data de nascimento","Sexo","Gestante"],["Pessoa Responsavel Sintetica","111111111111111","01/01/1980","F","SIM"]];
+    await importer.ImportAsync(input,new PatientImportColumnMapDto{SusNumberColumn="CNS"});
+    var mother=(await patients.GetAllPatients())!.Single(p=>p.HasSusNumber("111111111111111"));
+    var pregnancies=await c.Table<PatientPregnancy>().Where(p=>p.PatientId==mother.Id).ToListAsync();
+    Check(pregnancies.Count(p=>p.Status==PregnancyStatus.Active)==1,"Imported pregnancy creates one active episode");
+    var pregnantFilter=new PatientListFilterDto{FilterKey=ACS_View.Domain.ValueObjects.DashboardFilterKeys.Pregnant};
+    var repo=new SQLitePatientRepository(db,context);
+    Check((await repo.GetListAsync(null,0,20,pregnantFilter)).Items.Any(p=>p.Id==mother.Id),"Imported pregnant patient appears in metric drill-down");
+    await importer.ImportAsync(input,new PatientImportColumnMapDto{SusNumberColumn="CNS"});
+    Check(await c.Table<PatientPregnancy>().CountAsync(p=>p.PatientId==mother.Id)==pregnancies.Count,"Reimport preserves pregnancy episode identity");
+    await c.ExecuteAsync("DELETE FROM PatientPregnancy WHERE PatientId=?",mother.Id);
+    await importer.ImportAsync(input,new PatientImportColumnMapDto{SusNumberColumn="CNS"});
+    Check(await c.Table<PatientPregnancy>().CountAsync(p=>p.PatientId==mother.Id && p.Status==PregnancyStatus.Active)==1,"Reimport repairs legacy pregnancy condition without episode");
+    reader.Rows[1][4]="NÃO";
+    await importer.ImportAsync(input,new PatientImportColumnMapDto{SusNumberColumn="CNS"});
+    Check(!(await repo.GetListAsync(null,0,20,pregnantFilter)).Items.Any(p=>p.Id==mother.Id),"Explicit imported no removes patient from active pregnancy metrics");
+    Check(await c.Table<PatientPregnancy>().CountAsync(p=>p.PatientId==mother.Id)==1,"Imported no preserves pregnancy history");
     await c.CloseAsync();
 }
 sealed class RowsReader : ISpreadsheetReader
@@ -356,3 +373,4 @@ sealed class NoReminders : INoteReminderService
     public Task ScheduleAsync(int id,DateTime time,string message)=>Task.CompletedTask;
     public Task CancelAsync(int id)=>Task.CompletedTask;
 }
+

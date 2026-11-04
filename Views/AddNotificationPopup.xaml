@@ -46,18 +46,17 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Data" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
-                            <DatePicker
-                                Date="{Binding SelectedDate, Mode=TwoWay}"
-                                MinimumDate="{Binding MinimumDate}"/>
-                        </Border>
+                        <DatePicker
+                            Date="{Binding SelectedDate, Mode=TwoWay}"
+                            MinimumDate="{Binding MinimumDate}"
+                            Format="dd/MM/yyyy"/>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Grid.Column="1" Spacing="4">
                         <Label Text="Horário" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
-                            <TimePicker Time="{Binding SelectedTime, Mode=TwoWay}"/>
-                        </Border>
+                        <TimePicker
+                            Time="{Binding SelectedTime, Mode=TwoWay}"
+                            Format="HH:mm"/>
                     </VerticalStackLayout>
                 </Grid>
 
@@ -114,14 +113,12 @@
 
             <VerticalStackLayout Grid.Row="1" Spacing="4">
                 <Label Text="Mensagem" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
-                    <Editor
-                        Text="{Binding Message, Mode=TwoWay}"
-                        Placeholder="Mensagem da notificação"
-                        MaxLength="{Binding MessageMaxLength}"
-                        MinimumHeightRequest="96"
-                        AutoSize="TextChanges"/>
-                </Border>
+                <Editor
+                    Text="{Binding Message, Mode=TwoWay}"
+                    Placeholder="Mensagem da notificação"
+                    MaxLength="{Binding MessageMaxLength}"
+                    MinimumHeightRequest="96"
+                    AutoSize="TextChanges"/>
                 <Label
                     Text="{Binding CharacterCountText}"
                     Style="{StaticResource BodyMuted}"
@@ -133,7 +130,7 @@
                     IsVisible="{Binding HasError}"/>
             </VerticalStackLayout>
 
-            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Grid Grid.Row="2" ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button
                     Text="Cancelar"
                     Style="{StaticResource GhostButton}"

@@ -15,9 +15,9 @@
 
     <Border
         Style="{StaticResource CardBorder}"
-        Padding="14"
+        Padding="24"
         Margin="0"
-        StrokeShape="RoundRectangle 8">
+        StrokeShape="RoundRectangle 16" StrokeThickness="0">
 
         <VerticalStackLayout Spacing="12">
             <VerticalStackLayout Spacing="4">
@@ -44,32 +44,32 @@
                     <Label Text="Data de aplicação conhecida" Style="{StaticResource BodyMuted}" VerticalTextAlignment="Center"/>
                 </HorizontalStackLayout>
                 <Label Text="Data de aplicação não informada." Style="{StaticResource BodyMuted}" IsVisible="{Binding HasUnknownApplicationDate}"/>
-                <Border Style="{StaticResource FieldBorder}" IsVisible="{Binding HasKnownApplicationDate}">
+                <Grid IsVisible="{Binding HasKnownApplicationDate}">
                     <DatePicker
                         Date="{Binding ApplicationDate, Mode=TwoWay}"
                         IsEnabled="{Binding HasKnownApplicationDate}"
                         MaximumDate="{Binding MaximumDate}"/>
-                </Border>
+                </Grid>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="4">
                 <Label Text="Lote" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
+                <Grid>
                     <Entry
                         Text="{Binding LotNumber, Mode=TwoWay}"
                         Placeholder="Opcional"/>
-                </Border>
+                </Grid>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="4">
                 <Label Text="Observação" Style="{StaticResource FieldLabel}"/>
-                <Border Style="{StaticResource FieldBorder}">
+                <Grid>
                     <Editor
                         Text="{Binding Notes, Mode=TwoWay}"
                         Placeholder="Opcional"
                         AutoSize="TextChanges"
                         MinimumHeightRequest="82"/>
-                </Border>
+                </Grid>
             </VerticalStackLayout>
 
             <Label
@@ -78,7 +78,7 @@
                 TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
                 IsVisible="{Binding HasError}"/>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button
                     Text="Cancelar"
                     Style="{StaticResource GhostButton}"

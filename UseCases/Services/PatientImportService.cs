@@ -17,7 +17,8 @@ namespace ACS_View.UseCases.Services
         IPatientBolsaFamiliaRepository bolsaFamiliaRepository,
         ISpreadsheetReader spreadsheetReader,
         PatientFamilyLinkResolver familyLinkResolver,
-        IImportHistoryService historyService) : IPatientImportService
+        IImportHistoryService historyService,
+        IPregnancyService pregnancyService) : IPatientImportService
     {
         public async Task<PatientImportResultDto> ImportAsync(
             Stream fileStream,
@@ -512,6 +513,22 @@ namespace ACS_View.UseCases.Services
             }
 
             var changed = false;
+            var selectedPregnancy = selectedConditionNames.Any(name => HealthConditionCatalog.GetKey(name) == HealthConditionCatalog.Gestante);
+            if (mappedKeys.Contains(HealthConditionCatalog.Gestante))
+            {
+                var before = await pregnancyService.GetActiveOrLatestByPatientIdAsync(patientId);
+                await pregnancyService.SyncPregnancyConditionAsync(patientId, selectedPregnancy);
+                if (selectedPregnancy && before?.Status != PregnancyStatus.Active)
+                {
+                    changes.Add("Gestação ativa sincronizada com a condição importada");
+                    changed = true;
+                }
+                else if (!selectedPregnancy && before?.Status == PregnancyStatus.Active)
+                {
+                    changes.Add("Gestação marcada como não confirmada pela condição importada");
+                    changed = true;
+                }
+            }
             var currentConditions = await conditionsRepository.GetConditionsByPatientIdAsync(patientId);
             var selectedKeys = selectedConditionNames.Select(HealthConditionCatalog.GetKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (var condition in currentConditions.Where(condition => mappedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description)) && !selectedKeys.Contains(HealthConditionCatalog.GetKey(condition.Description))))

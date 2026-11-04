@@ -55,6 +55,8 @@
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<ApplicationDisplayVersion>1.3.0</ApplicationDisplayVersion>
+		<ApplicationVersion>6</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
@@ -62,6 +64,15 @@
 		<RunAOTCompilation>false</RunAOTCompilation>
 		<AndroidPackageFormats>apk</AndroidPackageFormats>
 	</PropertyGroup>
+
+	<!-- Keep processed images beside the desktop executable as well as in MSIX.
+	     Resizetizer marks them for publishing, but a direct Debug launch also needs them. -->
+	<Target Name="CopyWindowsImagesToBuildOutput" AfterTargets="ResizetizeImages"
+	        Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ItemGroup>
+			<ContentWithTargetPath Update="@(_ResizetizerCollectedImages)" CopyToOutputDirectory="PreserveNewest" />
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 		<!-- App Icon -->

@@ -8,6 +8,7 @@ namespace ACS_View.Views;
 public partial class ParentPatientPickerPopup : Popup<PatientListItemDto>
 {
     private readonly ParentPatientPickerViewModel _viewModel;
+    private bool _isClosing;
 
     internal ParentPatientPickerPopup(IPatientService patientService, int? excludedPatientId, string title)
     {
@@ -19,16 +20,25 @@ public partial class ParentPatientPickerPopup : Popup<PatientListItemDto>
 
     private async void OnPatientSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is not PatientListItemDto selectedPatient)
+        if (_isClosing || e.CurrentSelection.FirstOrDefault() is not PatientListItemDto selectedPatient)
         {
             return;
         }
 
+        _isClosing = true;
+#if WINDOWS
+        // WinUI still updates the selected item after raising SelectionChanged.
+        // Closing inline disconnects its handler before that update can finish.
+        await Dispatcher.DispatchAsync(() => CloseAsync(selectedPatient));
+#else
         await CloseAsync(selectedPatient);
+#endif
     }
 
     private async void OnCancelClicked(object sender, EventArgs e)
     {
+        if (_isClosing) return;
+        _isClosing = true;
         await CloseAsync();
     }
 }

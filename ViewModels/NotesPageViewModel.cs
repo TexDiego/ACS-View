@@ -16,6 +16,9 @@ namespace ACS_View.ViewModels
         private readonly IPopupService _popupService;
         private int _loadedVersion = -1;
         private bool _hasLoaded;
+        private bool _loadingNotes;
+
+        [ObservableProperty] private string reminderStatus = "";
 
         [ObservableProperty] private ObservableCollection<Note> notes = [];
         [ObservableProperty] private Note note = new();
@@ -24,6 +27,11 @@ namespace ACS_View.ViewModels
         public ICommand SalvarNota => new Command(async () => await SalvarNotaAsync());
         public ICommand GoBack => new Command(async () => await NavigateBackAsync());
         public ICommand AddNotification => new Command<int>(async id => await AddNotificationAsync(id));
+        public ICommand CancelNotificationCommand => new Command<int>(async id =>
+        {
+            var existing = Notes.FirstOrDefault(n => n.Id == id);
+            if (existing is not null) await CancelNotificationAsync(existing, showAlert: true);
+        });
         public ICommand ShowActiveNotificationsCommand => new Command(async () => await ShowActiveNotificationsAsync());
         public ICommand Refresh => new Command(async () => await LoadNotesAsync(force: true));
 
@@ -71,16 +79,27 @@ namespace ACS_View.ViewModels
 
         public async Task LoadNotesAsync(bool force = false)
         {
+            if (_loadingNotes) return;
             if (!force && _hasLoaded && _loadedVersion == DataChangeTracker.NotesVersion)
             {
                 return;
             }
 
+            _loadingNotes = true;
             try
             {
                 await ExecuteWithLoadingAsync(async () =>
                 {
-                    await _reminders.ReconcileAsync();
+                    ReminderStatus = "";
+#if WINDOWS
+                    if (!ACS_View.Platforms.Windows.WindowsNoteNotificationScheduler.HasPackageIdentity)
+                        ReminderStatus = "Execução sem instalação: mantenha o ACS View aberto para receber lembretes. Na versão instalada, o Windows agenda mesmo com o aplicativo fechado.";
+#endif
+                    try { await _reminders.ReconcileAsync(); }
+                    catch (Exception)
+                    {
+                        ReminderStatus = "Não foi possível atualizar os lembretes. Suas anotações continuam disponíveis. Confira as notificações do sistema e atualize a lista para tentar novamente.";
+                    }
                     var notes = await _noteService.GetAllNotesAsync();
 
                     Notes.Clear();
@@ -98,6 +117,7 @@ namespace ACS_View.ViewModels
             {
                 await DisplayAlertAsync("Erro", "Não foi possível carregar as notas.", "Voltar");
             }
+            finally { _loadingNotes = false; }
         }
 
         private async Task AddNotificationAsync(int id)

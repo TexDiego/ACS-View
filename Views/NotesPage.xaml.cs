@@ -9,6 +9,9 @@ public partial class NotesPage : ContentPage
     public NotesPage(NotesPageViewModel vm)
     {
         InitializeComponent();
+#if WINDOWS
+        NotesCollectionView.ItemTemplate = (DataTemplate)Microsoft.Maui.Controls.Application.Current!.Resources["DesktopNoteTemplate"];
+#endif
         BindingContext = _viewModel = vm;
     }
 

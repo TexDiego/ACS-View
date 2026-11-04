@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            x:DataType="vm:RegistersViewModel" 
+            x:Class="ACS_View.Views.Desktop.DesktopRegisters" 
+            xmlns:vm="clr-namespace:ACS_View.ViewModels"
+            xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
+            xmlns:controls="clr-namespace:ACS_View.Controls" 
+            xmlns:converters="clr-namespace:ACS_View.Converters" 
+            xmlns:icons="clr-namespace:ACS_View.Controls">
+
+    <Grid 
+        Padding="{StaticResource PagePadding}" 
+        RowDefinitions="auto,auto,*" 
+        BackgroundColor="Transparent">
+
+        <Border Style="{StaticResource SearchPanel}">
+
+            <Grid 
+                ColumnDefinitions="*" 
+                BackgroundColor="Transparent">
+
+                <SearchBar
+                    x:Name="SB" 
+                    Margin="0,0,0,-1" 
+                    Placeholder="Buscar paciente ou endereço"
+                    Text="{Binding SearchText, Mode=TwoWay}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerHigh}, Dark={StaticResource DarkSurfaceContainerHigh}}"
+                    MaxLength="80" 
+                    IsSpellCheckEnabled="True"
+                    TextChanged="SB_TextChanged" />
+
+                <ImageButton 
+                    Grid.Column="0" 
+                    ToolTipProperties.Text="Filtrar"
+                    Source="{icons:ThemedIcon Icon=Filter28, Role=OnFill}"
+                    CornerRadius="10"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    HorizontalOptions="End"
+                    Margin="0,0,5,2" 
+                    Padding="2"
+                    HeightRequest="34"
+                    WidthRequest="34"
+                    Command="{Binding Filter}" />
+            </Grid>
+        </Border>
+
+        <Grid
+            ColumnDefinitions="*,auto"
+            Grid.Row="1"
+            Margin="4,-6,4,10" 
+            IsVisible="{Binding HasActiveFilters}"
+            HorizontalOptions="Fill">
+
+            <Label 
+                Grid.Column="0" 
+                HorizontalOptions="Start"
+                Text="{Binding FilterSummary}"
+                Style="{StaticResource BodyMuted}"
+                IsVisible="{Binding HasActiveFilters}" />
+
+            <Label 
+                Grid.Column="1" 
+                HorizontalOptions="End" 
+                Text="Remover filtros" 
+                Style="{StaticResource BodyMuted}" 
+                TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                IsVisible="{Binding HasActiveFilters}">
+
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ClearFiltersCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <CollectionView 
+            x:Name="collectionView" 
+            Grid.Row="2" 
+            ItemsSource="{Binding Patients}"
+            ItemsUpdatingScrollMode="KeepScrollOffset"
+            SelectionMode="None"
+            BackgroundColor="Transparent"
+            RemainingItemsThreshold="5"
+            VerticalScrollBarVisibility="Default"
+            Scrolled="CollectionView_Scrolled"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMorePatientsCommand}" 
+            ItemTemplate="{StaticResource DesktopPatientTemplate}">
+
+            <CollectionView.Footer>
+                <BoxView HeightRequest="80" BackgroundColor="Transparent" />
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <CollectionView
+            Grid.Row="2"
+            ItemsSource="{Binding SkeletonItems}" 
+            IsVisible="{Binding IsLoading}"
+            InputTransparent="True" 
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <icons:ShimmerSkeletonRow ShowTrailingBlock="True" ShowSecondaryLine="True" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator
+            Grid.Row="2" 
+            IsVisible="{Binding IsLoadingMore}"
+            IsRunning="{Binding IsLoadingMore}"
+            VerticalOptions="End" 
+            HorizontalOptions="Center" 
+            Margin="0,0,0,52" />
+
+        <Border 
+            Grid.RowSpan="3" 
+            Style="{StaticResource CountPill}">
+
+            <Label 
+                Text="{Binding TotalRecords, StringFormat='{0} registros encontrados'}" 
+                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}" 
+                FontSize="13" 
+                FontAttributes="Bold" />
+        </Border>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.RowSpan="3" 
+            Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}" 
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked" />
+    </Grid>
+</ContentView>

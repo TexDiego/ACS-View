@@ -1,0 +1,302 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+            x:DataType="vm:PersonsInfoViewModel" 
+            x:Class="ACS_View.Views.Desktop.DesktopPersonsInfo"
+            xmlns:vm="clr-namespace:ACS_View.ViewModels" 
+            xmlns:local="clr-namespace:ACS_View.Domain.Entities"
+            xmlns:values="clr-namespace:ACS_View.Domain.ValueObjects" 
+            xmlns:converters="clr-namespace:ACS_View.Converters" 
+            xmlns:icons="clr-namespace:ACS_View.Controls"
+            xmlns:tk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+
+    <Grid RowDefinitions="30,auto,*">
+        
+        <Border 
+            Grid.Row="1" 
+            Grid.RowSpan="2"
+            StrokeThickness="0"
+            Padding="20">
+                
+            <Grid 
+                HorizontalOptions="Fill" 
+                VerticalOptions="Fill"
+                BindingContext="{Binding PersonInfo}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                x:DataType="local:Patient"
+                ColumnDefinitions="*,*" 
+                ColumnSpacing="24"
+                RowSpacing="12"
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                    
+                <Label 
+                    Text="{Binding Name}" 
+                    LineBreakMode="WordWrap" 
+                    VerticalOptions="Start"
+                    HorizontalOptions="Start" 
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" 
+                    FontAttributes="Bold"
+                    FontSize="30" 
+                    Margin="0,0,0,5" 
+                    Grid.Row="0" 
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2" />
+                    
+                <Label 
+                    Text="{Binding Sexo, StringFormat='Sexo: {0}'}" 
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontSize="16" 
+                    LineBreakMode="WordWrap" 
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="1" />
+                    
+                <Label
+                    Text="{Binding MotherName, StringFormat='Mãe: {0}'}"
+                    IsVisible="{Binding MotherName, Converter={converters:NullValueToBoolConverter}}"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontSize="16"
+                    LineBreakMode="WordWrap"
+                    Grid.Row="2" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="1">
+                        
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasMotherPatientLink}" Value="True">
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                        
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.OpenLinkedParentCommand}" CommandParameter="{Binding MotherPatientId}" />
+                    </Label.GestureRecognizers>                        
+                </Label>
+
+                <Label 
+                    Text="{Binding FatherName, StringFormat='Pai: {0}'}" 
+                    IsVisible="{Binding FatherName, Converter={converters:NullValueToBoolConverter}}" 
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontSize="16" 
+                    LineBreakMode="WordWrap" 
+                    Grid.Row="2" 
+                    Grid.Column="1" 
+                    Grid.ColumnSpan="1">
+                        
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasFatherPatientLink}" Value="True">
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                        
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.OpenLinkedParentCommand}" CommandParameter="{Binding FatherPatientId}" />
+                    </Label.GestureRecognizers>                        
+                </Label>
+                    
+                <Label
+                    Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, 
+                                    Path=BindingContext.MainSus,
+                                    Converter={converters:SUSFormatConverter}, 
+                                    StringFormat='CNS: {0}'}" 
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}},
+                                        Path=BindingContext.MainSus, 
+                                        Converter={converters:NullValueToBoolConverter}}"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
+                                                Dark={StaticResource DarkTextPrimary}}" 
+                    FontSize="16" 
+                    Grid.Row="3" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="1"
+                    LineBreakMode="WordWrap" />
+                    
+                <Label 
+                    Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, 
+                                    Path=BindingContext.NisNumber,
+                                    Converter={converters:NISFormatConverter}, 
+                                    StringFormat='NIS: {0}'}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, 
+                                        Path=BindingContext.NisNumber, 
+                                        Converter={converters:NullValueToBoolConverter}}"
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
+                                                Dark={StaticResource DarkTextPrimary}}" 
+                    FontSize="16" 
+                    Grid.Row="3"
+                    Grid.Column="1" 
+                    Grid.ColumnSpan="1"
+                    LineBreakMode="WordWrap" />
+                    
+                <HorizontalStackLayout 
+                    Grid.Row="1" 
+                    Grid.Column="1" 
+                    Grid.ColumnSpan="1">
+                        
+                    <Label 
+                        Text="{Binding BirthDate, StringFormat='{0:dd/MM/yyyy}'}" 
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" 
+                        FontSize="16" />
+                    <Label 
+                        Text=" - " 
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                        FontSize="16" />
+                    <Label 
+                        Text="{Binding BirthDate, Converter={converters:DateTimeToAgeConverter}}"
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" 
+                        FontSize="16" />
+                </HorizontalStackLayout>
+                    
+                <Label 
+                    Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainPhone, Converter={converters:PhoneFormatConverter}}" 
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.MainPhone, Converter={converters:NullValueToBoolConverter}}" 
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" 
+                    FontSize="16"
+                    Grid.Row="4" 
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    LineBreakMode="WordWrap" />
+                    
+                <Label 
+                    Text="{Binding Observacao}"
+                    IsVisible="{Binding Observacao, Converter={converters:NullValueToBoolConverter}}" 
+                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                    FontSize="16"
+                    LineBreakMode="WordWrap"
+                    FontAttributes="Italic"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Start"
+                    Margin="0,0,0,5"
+                    Grid.Row="5" 
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2" />
+                    
+                <Border 
+                    Margin="0,8,0,0"
+                    Padding="8" 
+                    StrokeShape="RoundRectangle 8" 
+                    Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" 
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
+                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasPregnancyInfo}" 
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2">
+                        
+                    <VerticalStackLayout Spacing="3">
+                        <Label 
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.PregnancyInfo}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                            FontSize="15" 
+                            LineBreakMode="WordWrap" />
+                            
+                        <Label 
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.PregnancyRiskSuggestionInfo}"
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.HasPregnancyRiskSuggestionInfo}" 
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                            FontSize="13" 
+                            FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                    
+                <VerticalStackLayout 
+                    Spacing="0"
+                    Margin="0,10,0,10"
+                    Grid.Row="7" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="2">
+                        
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.GoToFamilyCommand}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                        
+                    <Label 
+                        Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Endereco}" 
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" 
+                        FontSize="16" />
+                    <Label Text="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Complemento}"
+                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Complemento, Converter={converters:NullValueToBoolConverter}}" 
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"
+                            FontSize="16" 
+                            FontAttributes="Italic" />
+                </VerticalStackLayout>
+                    
+                <FlexLayout 
+                    IsVisible="True"
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start" 
+                    Margin="0,10,0,0" 
+                    BindableLayout.ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type tk:Popup}}, Path=BindingContext.Icons}" 
+                    Grid.Row="8"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2">
+                        
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="values:HealthIcon">
+                                
+                            <Border 
+                                Padding="8" 
+                                Margin="0,0,8,8"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}"
+                                ToolTipProperties.Text="{Binding Description}" 
+                                SemanticProperties.Description="{Binding Description}">
+                                    
+                                <Grid 
+                                    ColumnDefinitions="32,*"
+                                    ColumnSpacing="10">
+                                        
+                                    <Image
+                                        Source="{Binding IconSource}" 
+                                        WidthRequest="32" 
+                                        HeightRequest="32"
+                                        Aspect="AspectFit" />
+                                        
+                                    <Label 
+                                        Grid.Column="1"
+                                        Text="{Binding Description}"
+                                        FontSize="16" 
+                                        VerticalOptions="Center"
+                                        LineBreakMode="WordWrap" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            VerticalOptions="Start"
+            HorizontalOptions="End"
+            Margin="0,0,140,0"
+            StrokeShape="RoundRectangle 15"
+            Padding="0">
+
+            <Button
+                Text="WhatsApp"
+                ImageSource="{icons:ThemedIcon Icon=PhoneChat16, Role=Surface}"
+                CornerRadius="0"
+                SemanticProperties.Description="Conversar no WhatsApp com o telefone principal"
+                ToolTipProperties.Text="Conversar no WhatsApp"
+                Command="{Binding OpenWhatsAppCommand}"/>
+        </Border>
+
+        <Border
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            VerticalOptions="Start"
+            HorizontalOptions="End"
+            Margin="0,0,10,0"
+            StrokeShape="RoundRectangle 15"
+            Padding="0">
+
+            <Button
+                Text="Editar"
+                ImageSource="{icons:ThemedIcon Icon=Pen28, Role=Surface}"
+                SemanticProperties.Description="Editar o cadastro"
+                ToolTipProperties.Text="Editar o cadastro"
+                CornerRadius="0"
+                Command="{Binding EditPerson}"/>
+        </Border>
+    </Grid>
+</ContentView>

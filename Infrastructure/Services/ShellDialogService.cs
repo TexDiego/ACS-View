@@ -50,6 +50,9 @@ internal sealed class ShellDialogService : IDialogService
     private static async Task<object?> ShowDialogAsync(DialogPopupViewModel viewModel)
     {
         var popup = new DialogPopup(viewModel);
+#if WINDOWS
+        using var desktopLayout = new Platforms.Windows.DesktopPopupLayout(popup, Shell.Current.Window);
+#endif
         var result = await Shell.Current.ShowPopupAsync<object>(popup, PopupConfigs.Default);
 
         return result is null || result.WasDismissedByTappingOutsideOfPopup

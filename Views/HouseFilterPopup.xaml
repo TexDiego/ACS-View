@@ -25,7 +25,7 @@
             <Picker Title="Paridade" ItemsSource="{Binding ParityOptions}" SelectedIndex="{Binding ParityIndex}"/>
             <Label Text="Deixe os limites vazios para pesquisar qualquer número. Casas sem número aparecem quando não há filtro numérico."
                    Style="{StaticResource BodyMuted}"/>
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button Text="Cancelar" Style="{StaticResource GhostButton}" Clicked="CancelButton_Clicked"/>
                 <Button Grid.Column="1" Text="Aplicar" Style="{StaticResource Buttons}" Clicked="ApplyButton_Clicked"/>
             </Grid>

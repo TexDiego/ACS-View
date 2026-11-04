@@ -55,6 +55,10 @@ public partial class AppShell : Shell
     {
         RegisterThemeChangeHandler();
         ApplyStatusBarTheme();
+#if WINDOWS
+        if (Window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
+            native.DispatcherQueue.TryEnqueue(() => Platforms.Windows.DesktopWindowAppearance.UpdateNavigation(native.Content));
+#endif
     }
 
     private void OnUnloaded(object? sender, EventArgs e)

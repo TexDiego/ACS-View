@@ -66,6 +66,7 @@
             <CollectionView
                 x:Name="CidCollectionView"
                 ItemsSource="{Binding Items}"
+                ItemsUpdatingScrollMode="KeepScrollOffset"
                 SelectionMode="None"
                 RemainingItemsThreshold="5"
                 RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"

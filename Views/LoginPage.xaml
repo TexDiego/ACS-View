@@ -44,7 +44,9 @@
                         MaxLength="64"
                         IsSpellCheckEnabled="False"
                         IsTextPredictionEnabled="False"
-                        HorizontalTextAlignment="Start"/>
+                        HorizontalTextAlignment="Start"
+                        ReturnType="Next"
+                        Completed="UsernameEntry_Completed"/>
 
                     <Entry
                         x:Name="PasswordEntry"
@@ -53,7 +55,9 @@
                         IsSpellCheckEnabled="False"
                         IsTextPredictionEnabled="False"
                         IsPassword="True"
-                        HorizontalTextAlignment="Start"/>
+                        HorizontalTextAlignment="Start"
+                        ReturnType="Go"
+                        Completed="PasswordEntry_Completed"/>
 
                     <Button
                         x:Name="Btn_Login"
@@ -64,7 +68,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Grid x:Name="AccountActions" IsEnabled="False" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Grid x:Name="AccountActions" IsEnabled="False" ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="8" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button
                     x:Name="RegisterUser"
                     Grid.Column="0"

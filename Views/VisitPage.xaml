@@ -14,8 +14,8 @@
 
     <Border
         Style="{StaticResource CardBorder}"
-        Padding="14"
-        StrokeShape="RoundRectangle 8"
+        Padding="24"
+        StrokeShape="RoundRectangle 16" StrokeThickness="0"
         MaximumHeightRequest="680">
         <Grid RowDefinitions="auto,*,auto" RowSpacing="12">
             <VerticalStackLayout Grid.Row="0" Spacing="12">
@@ -27,40 +27,40 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Data" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
+                        <Grid>
                             <DatePicker Date="{Binding SelectedDate, Mode=TwoWay}"/>
-                        </Border>
+                </Grid>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Grid.Column="1" Spacing="4">
                         <Label Text="Horário" Style="{StaticResource FieldLabel}"/>
-                        <Border Style="{StaticResource FieldBorder}">
+                        <Grid>
                             <TimePicker
                                 Time="{Binding SelectedTime, Mode=TwoWay}"
                                 TextColor="{AppThemeBinding Dark={StaticResource White}, Light={StaticResource Black}}"/>
-                        </Border>
+                </Grid>
                     </VerticalStackLayout>
                 </Grid>
 
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                <Grid ColumnDefinitions="{OnPlatform Default='*,*,*', WinUI='Auto,Auto,Auto'}" ColumnSpacing="6" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                     <Button
                         Text="Todos realizados"
                         LineBreakMode="WordWrap"
                         Style="{StaticResource PrimaryOutlineButton}"
-                        FontSize="12"
+                        FontSize="{OnPlatform Default=12, WinUI=15}"
                         Command="{Binding MarkAllCompletedCommand}"/>
                     <Button
                         Grid.Column="1"
                         Text="Todos ausentes"
                         LineBreakMode="WordWrap"
                         Style="{StaticResource PrimaryOutlineButton}"
-                        FontSize="12"
+                        FontSize="{OnPlatform Default=12, WinUI=15}"
                         Command="{Binding MarkAllAbsentCommand}"/>
                     <Button
                         Grid.Column="2"
                         Text="Limpar"
                         Style="{StaticResource GhostButton}"
-                        FontSize="12"
+                        FontSize="{OnPlatform Default=12, WinUI=15}"
                         Command="{Binding ClearSelectionCommand}"/>
                 </Grid>
             </VerticalStackLayout>
@@ -74,26 +74,26 @@
                             <Border
                                 Padding="10"
                                 StrokeShape="RoundRectangle 8"
-                                Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
+                                StrokeThickness="0"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
                                 <Grid ColumnDefinitions="*,150" ColumnSpacing="8">
                                     <VerticalStackLayout Spacing="3">
                                         <Label
                                             Text="{Binding PatientName}"
                                             Style="{StaticResource CardTitle}"
-                                            FontSize="14"/>
+                                            FontSize="{OnPlatform Default=14, WinUI=17}"/>
                                         <Label
                                             Text="{Binding CareLinesText}"
                                             Style="{StaticResource BodyMuted}"
-                                            FontSize="12"
+                                            FontSize="{OnPlatform Default=12, WinUI=15}"
                                             LineBreakMode="WordWrap"/>
                                     </VerticalStackLayout>
 
-                                    <Border Grid.Column="1" Style="{StaticResource FieldBorder}">
+                                    <Grid Grid.Column="1">
                                         <Picker
                                             ItemsSource="{Binding StatusOptions}"
                                             SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"/>
-                                    </Border>
+                                    </Grid>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -102,14 +102,14 @@
             </ScrollView>
 
             <VerticalStackLayout Grid.Row="2" Spacing="10">
-                <Border Style="{StaticResource FieldBorder}">
+                <Grid>
                     <Editor
                         Text="{Binding Notes, Mode=TwoWay}"
                         Placeholder="Observacao opcional"
                         AutoSize="TextChanges"
                         MinimumHeightRequest="64"
                         MaxLength="300"/>
-                </Border>
+                </Grid>
 
                 <Label
                     Text="{Binding ErrorMessage}"
@@ -117,7 +117,7 @@
                     TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
                     IsVisible="{Binding HasError}"/>
 
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                     <Button
                         Text="Cancelar"
                         Style="{StaticResource GhostButton}"

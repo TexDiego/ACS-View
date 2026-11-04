@@ -13,6 +13,9 @@ internal sealed class PopupService : IPopupService
             throw new ArgumentException("O objeto informado não é um popup MAUI.", nameof(popup));
         }
 
+#if WINDOWS
+        using var desktopLayout = new Platforms.Windows.DesktopPopupLayout(mauiPopup, Shell.Current.Window);
+#endif
         var result = parameters is null
             ? await Shell.Current.ShowPopupAsync<T>(mauiPopup, PopupConfigs.Default)
             : await Shell.Current.ShowPopupAsync<T>(mauiPopup, PopupConfigs.Default, parameters);
@@ -36,6 +39,9 @@ internal sealed class PopupService : IPopupService
             throw new ArgumentException("O objeto informado não é um popup MAUI.", nameof(popup));
         }
 
+#if WINDOWS
+        using var desktopLayout = new Platforms.Windows.DesktopPopupLayout(mauiPopup, Shell.Current.Window);
+#endif
         await Shell.Current.ShowPopupAsync(mauiPopup, PopupConfigs.Default);
     }
 }

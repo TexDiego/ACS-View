@@ -149,3 +149,8 @@ Veja [diagnóstico das notificações e checklist de Android real](docs/android-
 O iOS está fora desta distribuição: o identificador existente foi preservado e não houve validação em Mac. As permissões antigas de armazenamento Android permanecem como dívida técnica documentada no checklist.
 
 A [v1.0.0 está publicada](https://github.com/TexDiego/ACS-View/releases/tag/v1.0.0), com APK gerado no GitHub Actions e assinatura definitiva conferida novamente após download. O proprietário autorizou esta publicação para executar os testes em aparelho; o checklist físico, incluindo entrega de notificações e atualização preservando SQLite, continua pendente.
+
+## Download Windows
+
+A versão Windows x64 está disponível como ZIP portátil em [Releases](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.3.0). Veja [como executar e gerar o pacote](docs/windows-download.md).
+

@@ -179,7 +179,7 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </ScrollView>
-            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Grid Grid.Row="1" ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button
                     Text="Cancelar"
                     Style="{StaticResource GhostButton}"

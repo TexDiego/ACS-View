@@ -22,7 +22,7 @@ public sealed class TerritorialSelection
     {
         var unique = ids.Distinct().ToArray();
         if (unique.Length == 0) return;
-        if (!segments.Any(s => s.Street == street && s.StartNumber == start && s.EndNumber == end && s.Parity == parity && s.ResidenceIds.SequenceEqual(unique)))
+        if (!segments.Any(s => s.Street == street && s.StartNumber == start && s.EndNumber == end && s.Parity == parity && unique.ToHashSet().SetEquals(s.ResidenceIds)))
             segments.Add(new(Guid.NewGuid(), street, start, end, parity, unique));
         excluded.ExceptWith(unique);
         Rebuild();
@@ -42,6 +42,14 @@ public sealed class TerritorialSelection
     }
     public void Toggle(int id, string street, int? start, int? end, HouseParity parity)
     {
+        // Restore the existing batch membership instead of adding an overlapping
+        // individual segment. The unqualified Toggle retains its explicit override semantics.
+        if (!selected.Contains(id) && segments.Any(s => s.ResidenceIds.Contains(id)))
+        {
+            excluded.Remove(id);
+            Rebuild();
+            return;
+        }
         Toggle(id);
         if (!manual.Contains(id)) return;
         var index = manualSegments.FindIndex(s => s.Street == street && s.StartNumber == start && s.EndNumber == end && s.Parity == parity);

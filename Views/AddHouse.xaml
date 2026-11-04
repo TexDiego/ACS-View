@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
@@ -9,84 +9,109 @@
              Style="{StaticResource PageBackground}"
              Title="Adicionar Residência">
 
-    <ContentPage.Resources>
-        <Style TargetType="Entry">
-            <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"/>
-        </Style>
-    </ContentPage.Resources>
-
-    <Grid Padding="16">
-        <ScrollView VerticalScrollBarVisibility="Never">
-            <VerticalStackLayout
-                Padding="0,0,0,76"
-                Spacing="10"
+    <Grid
+        Padding="24" 
+        RowDefinitions="*,Auto"
+        RowSpacing="16"
+        MaximumWidthRequest="1100" 
+        HorizontalOptions="Fill">
+        
+        <ScrollView VerticalScrollBarVisibility="Default">
+            
+            <VerticalStackLayout 
+                Spacing="20" 
                 BindingContext="{Binding HouseModel}"
                 x:DataType="model:House">
+                
+                <Label Text="Endereço da residência" Style="{StaticResource SectionTitle}"/>
+                <Label Text="Preencha o CEP para buscar o endereço. Os campos com * são obrigatórios." Style="{StaticResource BodyMuted}"/>
+                
+                <Grid
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="12"
+                    MaximumWidthRequest="440"
+                    HorizontalOptions="Fill">
 
-                <Grid ColumnSpacing="8">
-                    <Entry 
-                        Text="{Binding CEP, Mode=TwoWay}" 
-                        MaxLength="8" 
-                        Keyboard="Numeric" 
-                        Placeholder="CEP *" 
-                        TextChanged="Entry_CEP_TextChanged"/>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="CEP *" Style="{StaticResource FieldLabel}"/>
+                        <Entry Text="{Binding CEP, Mode=TwoWay}" MaxLength="8" Keyboard="Numeric" Placeholder="00000000" TextChanged="Entry_CEP_TextChanged"/>
+                    </VerticalStackLayout>
                     
-                    <ImageButton
-                        Source="{icons:ThemedIcon Icon=Search32, Role=OnFill}"
-                        MaximumHeightRequest="40"
-                        Style="{StaticResource SoftIconButton}"
-                        HorizontalOptions="End"
-                        VerticalOptions="Center"
-                        Margin="0,0,8,-4"
-                        CornerRadius="8"
-                        HeightRequest="34"
-                        WidthRequest="34"
-                        Padding="2"
-                        BackgroundColor="{StaticResource Primary}"
+                    <Button
+                        Grid.Column="1"
+                        Text="Buscar CEP"
+                        ImageSource="{icons:ThemedIcon Icon=Search32, Role=OnFill, IconSize=22}"
+                        VerticalOptions="End" 
+                        Style="{StaticResource Buttons}"
                         Command="{Binding BindingContext.SearchCEP, Source={RelativeSource AncestorType={x:Type ContentPage}}}"/>
                 </Grid>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Rua, Mode=TwoWay}" 
-                    Placeholder="Logradouro *"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding NumeroCasa, Mode=TwoWay}" 
-                    MaxLength="5" 
-                    Placeholder="Número"
-                    Keyboard="Numeric"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Complemento, Mode=TwoWay}" 
-                    Placeholder="Complemento"
-                    MaxLength="30"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Bairro, Mode=TwoWay}" 
-                    Placeholder="Bairro"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Cidade, Mode=TwoWay}" 
-                    Placeholder="Cidade *"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Estado, Mode=TwoWay}" 
-                    Placeholder="Estado *"/>
-
-                <Entry 
-                    Grid.Column="1" 
-                    Text="{Binding Pais, Mode=TwoWay}" 
-                    MaxLength="20" 
-                    Placeholder="País *"/>
-                <Label Text="Organização territorial" Style="{StaticResource BodyMuted}" Margin="0,12,0,0"/>
-                <Entry Text="{Binding SetorCensitario, Mode=TwoWay}" Placeholder="Setor censitário (opcional)"/>
-                <Entry Text="{Binding NumeroQuadra, Mode=TwoWay}" Placeholder="Quadra (opcional)"/>
+                
+                <Grid
+                    ColumnDefinitions="{OnPlatform Default='*', WinUI='2*,*'}" 
+                    RowDefinitions="{OnPlatform Default='Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto', WinUI='Auto,Auto,Auto,Auto'}" 
+                    ColumnSpacing="20"
+                    RowSpacing="12">
+                    
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Logradouro *" Style="{StaticResource FieldLabel}"/>
+                        <Entry Text="{Binding Rua, Mode=TwoWay}" Placeholder="Logradouro"/>
+                    </VerticalStackLayout>
+                    
+                    <VerticalStackLayout
+                        Grid.Row="{OnPlatform Default=1, WinUI=0}"
+                        Grid.Column="{OnPlatform Default=0, WinUI=1}" 
+                        Spacing="4">                        
+                        <Label 
+                            Text="Número" 
+                            Style="{StaticResource FieldLabel}"/>
+                        <Entry 
+                            Text="{Binding NumeroCasa, Mode=TwoWay}"
+                            MaxLength="5" 
+                            Placeholder="Número"/>
+                    </VerticalStackLayout>
+                    
+                    <VerticalStackLayout
+                        Grid.Row="{OnPlatform Default=2, WinUI=1}"
+                        Spacing="4">
+                        <Label 
+                            Text="Complemento"
+                            Style="{StaticResource FieldLabel}"/>
+                        <Entry 
+                            Text="{Binding Complemento, Mode=TwoWay}"
+                            MaxLength="30" 
+                            Placeholder="Complemento"/>
+                    </VerticalStackLayout>
+                    
+                    <VerticalStackLayout 
+                        Grid.Row="{OnPlatform Default=3, WinUI=1}"
+                        Grid.Column="{OnPlatform Default=0, WinUI=1}" 
+                        Spacing="4">
+                        
+                        <Label Text="Bairro" Style="{StaticResource FieldLabel}"/>
+                        <Entry Text="{Binding Bairro, Mode=TwoWay}" Placeholder="Bairro"/>
+                    </VerticalStackLayout>
+                    
+                    <VerticalStackLayout 
+                        Grid.Row="{OnPlatform Default=4, WinUI=2}"
+                        Spacing="4">
+                        
+                        <Label 
+                            Text="Cidade *"
+                            Style="{StaticResource FieldLabel}"/>
+                        <Entry 
+                            Text="{Binding Cidade, Mode=TwoWay}"
+                            Placeholder="Cidade"/>
+                    </VerticalStackLayout>
+                    
+                    <VerticalStackLayout Grid.Row="{OnPlatform Default=5, WinUI=2}" Grid.Column="{OnPlatform Default=0, WinUI=1}" Spacing="4"><Label Text="Estado *" Style="{StaticResource FieldLabel}"/><Entry Text="{Binding Estado, Mode=TwoWay}" Placeholder="Estado"/></VerticalStackLayout>
+                    <VerticalStackLayout Grid.Row="{OnPlatform Default=6, WinUI=3}" Spacing="4"><Label Text="País *" Style="{StaticResource FieldLabel}"/><Entry Text="{Binding Pais, Mode=TwoWay}" MaxLength="20" Placeholder="País"/></VerticalStackLayout>
+                </Grid>
+                
+                <Label Text="Organização territorial" Style="{StaticResource SectionTitle}"/>
+                <Grid ColumnDefinitions="{OnPlatform Default='*', WinUI='*,*'}" RowDefinitions="{OnPlatform Default='Auto,Auto', WinUI='Auto'}" ColumnSpacing="20" RowSpacing="12">
+                    <VerticalStackLayout Spacing="4"><Label Text="Setor censitário" Style="{StaticResource FieldLabel}"/><Entry Text="{Binding SetorCensitario, Mode=TwoWay}" Placeholder="Opcional"/></VerticalStackLayout>
+                    <VerticalStackLayout Grid.Row="{OnPlatform Default=1, WinUI=0}" Grid.Column="{OnPlatform Default=0, WinUI=1}" Spacing="4"><Label Text="Quadra" Style="{StaticResource FieldLabel}"/><Entry Text="{Binding NumeroQuadra, Mode=TwoWay}" Placeholder="Opcional"/></VerticalStackLayout>
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
@@ -97,8 +122,10 @@
             WidthRequest="60"/>
 
         <Button
+            Grid.Row="1"
             VerticalOptions="End"
-            Text="Salvar"
+            Text="Salvar residência"
+            HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}"
             Style="{StaticResource Buttons}"
             Command="{Binding SalvarCommand}"/>
     </Grid>

@@ -142,7 +142,7 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,0,0,30">
+                    <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" Margin="0,0,0,30" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                         <Button Text="Cancelar" Style="{StaticResource GhostButton}" Clicked="CancelButton_Clicked"/>
                         <Button Grid.Column="1" Text="Salvar" Style="{StaticResource Buttons}" Clicked="SaveButton_Clicked"/>
                     </Grid>

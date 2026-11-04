@@ -6,6 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Domain/ValueObjects/PregnancyRiskSuggestion.cs" />
+    <Compile Include="../../Domain/ValueObjects/GestationalAge.cs" />
+    <Compile Include="../../Application/Interfaces/IPregnancyService.cs" />
+    <Compile Include="../../Application/DTOs/PregnancyDetailsDto.cs" />
+    <Compile Include="../../Domain/Entities/PatientPregnancy.cs" />
+    <Compile Include="../../Domain/Enums/PregnancyStatus.cs" />
+    <Compile Include="../../Domain/Enums/PregnancyRisk.cs" />
+    <Compile Include="../../Domain/Enums/PregnancyEndType.cs" />
     <Compile Include="../../Application/DTOs/ImportAuditEntryDto.cs" />
     <Compile Include="../../Domain/ValueObjects/PatientNameRules.cs" />
     <Compile Include="../../Domain/ValueObjects/SearchTextNormalizer.cs" />

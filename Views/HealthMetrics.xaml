@@ -81,13 +81,14 @@
     </ContentView.Resources>
 
     <CollectionView
+        icons:DesktopLayout.MetricGrid="True"
         ItemsSource="{Binding HealthDashboard}"
         VerticalScrollBarVisibility="{OnPlatform WinUI=Always, Default=Never}"
-        CanReorderItems="{OnPlatform WinUI=False, Default=True}">
+        CanReorderItems="{OnPlatform WinUI=True, Default=True}">
         <CollectionView.ItemTemplate>
             <OnPlatform x:TypeArguments="DataTemplate"
                         Default="{StaticResource SwipeMetricTemplate}">
-                <On Platform="WinUI" Value="{StaticResource PlainMetricTemplate}"/>
+                <On Platform="WinUI" Value="{StaticResource DesktopMetricTemplate}"/>
             </OnPlatform>
         </CollectionView.ItemTemplate>
     </CollectionView>

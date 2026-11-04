@@ -58,7 +58,7 @@
                             </Grid>
                         </Border>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="10" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                             <Button
                                 Text="Registros"
                                 Style="{StaticResource Buttons}"

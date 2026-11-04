@@ -50,7 +50,8 @@ var cep = Proxy.For<ICepService>((m, a) => Task.FromResult<House?>(new House { R
 var family = Proxy.For<IFamilyService>((m, a) => m == "GetMaxIdAsync" ? Task.FromResult(patients.Where(p => p.HouseId == (int)a[0]!).Select(p => p.FamilyId).DefaultIfEmpty(0).Max()) : throw new Exception(m));
 var benefits = Proxy.For<IPatientBolsaFamiliaRepository>((m, a) => m == "GetByPatientIdAsync" ? Task.FromResult<PatientBolsaFamilia?>(null) : Task.CompletedTask);
 var journal = Proxy.For<IImportHistoryService>((m, a) => { history.Add(Clone((ImportHistory)a[0]!)); return Task.CompletedTask; });
-var service = new PatientImportService(patientService, cep, conditionRepo, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal);
+var pregnancy = Proxy.For<IPregnancyService>((m, a) => m == "GetActiveOrLatestByPatientIdAsync" ? Task.FromResult<PatientPregnancy?>(null) : Task.CompletedTask);
+var service = new PatientImportService(patientService, cep, conditionRepo, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal, pregnancy);
 
 async Task<PatientImportResultDto> Import(string[][] rows, CancellationToken cancellation = default)
 {
@@ -183,7 +184,7 @@ patients.Add(new Patient { Id = linkPatientId, Name = "Só Vínculo", SusNumber 
 var linkOnly = await Import([["nome", "cns", "cep", "numero imovel"], ["Só Vínculo", "950", "01001000", "10"]]);
 Check(linkOnly.MergedCount == 1 && linkOnly.IgnoredCount == 0 && linkOnly.Entries.Single(e => e.EntityType == "Paciente").Changes.Contains("Residência"), "Alteração apenas no vínculo de residência é mesclagem auditada depois da resolução");
 var failingConditions = Proxy.For<ISQLiteConditionsRepository>((_, _) => throw new InvalidOperationException("Falha simulada após salvar paciente"));
-var partialImporter = new PatientImportService(patientService, cep, failingConditions, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal);
+var partialImporter = new PatientImportService(patientService, cep, failingConditions, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal, pregnancy);
 using (var book = Workbook([["nome", "cns", "diabetes"], ["Parcial", "951", "sim"]]))
 {
     var report = await partialImporter.ImportAsync(book, new());
@@ -293,7 +294,7 @@ Task StoreNormalizedPatient(Patient value)
 }
 var normalizedPatientService = new PatientService(normalizedRepository);
 var normalizedImporter = new PatientImportService(normalizedPatientService, cep, conditionRepo, benefits, new SpreadsheetReader(),
-    new PatientFamilyLinkResolver(normalizedPatientService, houseService, family), journal);
+    new PatientFamilyLinkResolver(normalizedPatientService, houseService, family), journal, pregnancy);
 async Task<PatientImportResultDto> ImportNormalized(string[][] rows, bool resolveLinks = false)
 {
     using var book = Workbook(rows);

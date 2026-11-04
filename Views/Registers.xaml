@@ -12,8 +12,84 @@
              Style="{StaticResource PageBackground}"
              Title="{Binding Condition}">
 
+    <ContentPage.Resources>
+        <DataTemplate x:Key="MobilePatientTemplate" x:DataType="dto:PatientListItemDto">
+            <Border Style="{StaticResource CardBorder}" Padding="{OnPlatform Default=0}" Margin="{OnPlatform Default=0, WinUI=10}">
+                <Grid
+                    ColumnDefinitions="*,auto"
+                    RowDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}"
+                    ColumnSpacing="12"
+                    RowSpacing="6"
+                    Padding="5"
+                    BackgroundColor="{AppThemeBinding
+                                        Light={StaticResource Surface},
+                                        Dark={StaticResource DarkSurface}}">
+
+                    <VerticalStackLayout
+                        Grid.Column="0"
+                        Grid.Row="0"
+                        Spacing="4"
+                        Margin="10"
+                        VerticalOptions="Center">
+                        <VerticalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                CommandParameter="{Binding .}"/>
+                        </VerticalStackLayout.GestureRecognizers>
+
+                        <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
+                        <Label Text="{Binding PrimarySusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
+                               IsVisible="{Binding PrimarySusNumber, Converter={converters:NullValueToBoolConverter}}"
+                               Style="{StaticResource BodyMuted}"/>
+                    </VerticalStackLayout>
+
+                    <ImageButton
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Source="{icons:ThemedIcon Icon=Syringe24, Role=Surface}"
+                        Margin="0,0,5,0"
+                        CornerRadius="0"
+                        ToolTipProperties.Text="Vacinas"
+                        MaximumHeightRequest="30"
+                        MaximumWidthRequest="30"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
+                        CommandParameter="{Binding Id}"/>
+
+                    <Grid
+                        ColumnDefinitions="{OnPlatform Default='0.2*,*', WinUI='Auto,Auto'}"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="1"
+                        ColumnSpacing="10"
+                        HeightRequest="{OnPlatform Default=38, WinUI=-1}" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
+
+                        <ImageButton
+                            Grid.Column="0"
+                            Style="{StaticResource DeleteImageButton}"
+                            Source="{icons:ThemedIcon Icon=Delete48, Role=OnFill}"
+                            ToolTipProperties.Text="Excluir"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                            CommandParameter="{Binding Id}"/>
+
+                        <Button
+                            Grid.Column="1"
+                            Text="Editar"
+                            Style="{StaticResource PrimaryOutlineButton}"
+                            ImageSource="{icons:ThemedIcon Icon=Pen28, Role=OnFill}"
+                            ToolTipProperties.Text="Editar"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                            CommandParameter="{Binding .}"/>
+
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </ContentPage.Resources>
+
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=PersonAdd24, Role=OnFill}" Command="{Binding AddPerson}"/>
+        <ToolbarItem 
+            Text="Adicionar cadastro"
+            IconImageSource="{icons:ThemedIcon Icon=PersonAdd24, Role=OnFill}" 
+            Command="{Binding AddPerson}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*" BackgroundColor="Transparent">
@@ -72,6 +148,7 @@
             x:Name="collectionView"
             Grid.Row="2"
             ItemsSource="{Binding Patients}"
+            ItemsUpdatingScrollMode="KeepScrollOffset"
             SelectionMode="None"
             BackgroundColor="Transparent"
             RemainingItemsThreshold="5"
@@ -80,76 +157,9 @@
             RemainingItemsThresholdReachedCommand="{Binding LoadMorePatientsCommand}">
 
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:PatientListItemDto">
-                    <Border Style="{StaticResource CardBorder}" Padding="0">
-                        <Grid
-                            ColumnDefinitions="*,auto"
-                            RowDefinitions="*,*"
-                            ColumnSpacing="12"
-                            RowSpacing="6"
-                            Padding="5"
-                            BackgroundColor="{AppThemeBinding
-                                                Light={StaticResource Surface},
-                                                Dark={StaticResource DarkSurface}}">
-
-                            <VerticalStackLayout
-                                Grid.Column="0"
-                                Grid.Row="0"
-                                Spacing="4"
-                                Margin="10"
-                                VerticalOptions="Center">
-                                <VerticalStackLayout.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                        CommandParameter="{Binding .}"/>
-                                </VerticalStackLayout.GestureRecognizers>
-
-                                <Label Text="{Binding Name}" Style="{StaticResource CardTitle}"/>
-                                <Label Text="{Binding PrimarySusNumber, Converter={converters:SUSFormatConverter}, StringFormat='CNS: {0}'}"
-                                       IsVisible="{Binding PrimarySusNumber, Converter={converters:NullValueToBoolConverter}}"
-                                       Style="{StaticResource BodyMuted}"/>
-                            </VerticalStackLayout>
-
-                            <ImageButton
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                Source="{icons:ThemedIcon Icon=Syringe24, Role=Surface}"
-                                Margin="0,0,5,0"
-                                CornerRadius="0"
-                                ToolTipProperties.Text="Vacinas"
-                                MaximumHeightRequest="30"
-                                MaximumWidthRequest="30"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.Vaccines}"
-                                CommandParameter="{Binding Id}"/>
-
-                            <Grid
-                                ColumnDefinitions="0.2*,*"
-                                Grid.ColumnSpan="2"
-                                Grid.Row="1"
-                                ColumnSpacing="10"
-                                HeightRequest="38">
-
-                                <ImageButton
-                                    Grid.Column="0"
-                                    Style="{StaticResource DeleteImageButton}"
-                                    Source="{icons:ThemedIcon Icon=Delete48, Role=OnFill}"
-                                    ToolTipProperties.Text="Excluir"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                    CommandParameter="{Binding Id}"/>
-
-                                <Button
-                                    Grid.Column="1"
-                                    Text="Editar"
-                                    Style="{StaticResource PrimaryOutlineButton}"
-                                    ImageSource="{icons:ThemedIcon Icon=Pen28, Role=OnFill}"
-                                    ToolTipProperties.Text="Editar"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                    CommandParameter="{Binding .}"/>
-
-                            </Grid>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
+                <OnPlatform x:TypeArguments="DataTemplate" Default="{StaticResource MobilePatientTemplate}">
+                    <On Platform="WinUI" Value="{StaticResource DesktopPatientTemplate}"/>
+                </OnPlatform>
             </CollectionView.ItemTemplate>
 
             <CollectionView.Footer>

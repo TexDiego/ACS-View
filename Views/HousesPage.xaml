@@ -12,8 +12,16 @@
              Title="Residências">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=Map24, Role=OnFill}" ToolTipProperties.Text="Controle Vetorial" Command="{Binding VetorialControlCommand}"/>
-        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=HomeAdd24, Role=OnFill}" ToolTipProperties.Text="Adicionar residência" Command="{Binding NewHouseCommand}"/>
+        <ToolbarItem 
+            Text="Controle vetorial"
+            IconImageSource="{icons:ThemedIcon Icon=Map24, Role=OnFill}" 
+            ToolTipProperties.Text="Controle Vetorial" 
+            Command="{Binding VetorialControlCommand}"/>
+        <ToolbarItem 
+            Text="Adicionar residência"
+            IconImageSource="{icons:ThemedIcon Icon=HomeAdd24, Role=OnFill}" 
+            ToolTipProperties.Text="Adicionar residência"
+            Command="{Binding NewHouseCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="{StaticResource PagePadding}" RowDefinitions="auto,auto,*">
@@ -27,6 +35,7 @@
                 MaxLength="80"
                 BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerHigh}, Dark={StaticResource DarkSurfaceContainerHigh}}"
                 TextChanged="SearchBar_TextChanged"/>
+                
             <ImageButton Grid.Column="1"
                          ToolTipProperties.Text="Filtrar"
                          SemanticProperties.Description="Filtrar residências"
@@ -67,6 +76,7 @@
             x:Name="HousesCollectionView"
             Grid.Row="2"
             ItemsSource="{Binding Houses}"
+            ItemsUpdatingScrollMode="KeepScrollOffset"
             SelectionMode="None"
             VerticalScrollBarVisibility="{OnPlatform WinUI=Always, Default=Never}"
             Scrolled="CollectionView_Scrolled"
@@ -81,6 +91,7 @@
                             ColumnSpacing="12"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
                             <VerticalStackLayout Grid.Column="0" Spacing="5" Margin="10">
+                                
                                 <VerticalStackLayout.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyCommand}"
@@ -88,11 +99,13 @@
                                 </VerticalStackLayout.GestureRecognizers>
 
                                 <Label Text="{Binding Rua}" Style="{StaticResource CardTitle}"/>
+                                
                                 <HorizontalStackLayout Spacing="4">
                                     <Label Text="Número" Style="{StaticResource BodyMuted}"/>
                                     <Label Text="{Binding NumeroCasa}" Style="{StaticResource BodyMuted}" FontAttributes="Bold"/>
                                     <Label Text="{Binding Complemento}" Style="{StaticResource BodyMuted}"/>
                                 </HorizontalStackLayout>
+                                
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout

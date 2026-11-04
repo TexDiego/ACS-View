@@ -61,7 +61,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Microsoft.Maui.Storage.ISecureStorage>(Microsoft.Maui.Storage.SecureStorage.Default);
         services.AddSingleton<TimeProvider>(TimeProvider.System);
         services.AddSingleton<INoteReminderStore, SQLiteNoteReminderStore>();
+#if WINDOWS
+        services.AddSingleton<INoteNotificationScheduler, ACS_View.Platforms.Windows.WindowsNoteNotificationScheduler>();
+#else
         services.AddSingleton<INoteNotificationScheduler, LocalNoteNotificationScheduler>();
+#endif
         services.AddSingleton<INoteReminderService, NoteReminderService>();
         services.AddSingleton<IUserDataCleanupService, UserDataCleanupService>();
         services.AddSingleton<IPopupService, PopupService>();

@@ -18,11 +18,12 @@
     </ContentPage.ToolbarItems>
 
     <RefreshView Command="{Binding Refresh}" IsRefreshing="{Binding IsLoading}">
-        <Grid RowDefinitions="auto,*" Padding="{StaticResource PagePadding}" RowSpacing="12">
+        <Grid RowDefinitions="{OnPlatform Default='Auto,*', WinUI='*'}" ColumnDefinitions="{OnPlatform Default=' *', WinUI='340,*'}" ColumnSpacing="24" Padding="{StaticResource PagePadding}" RowSpacing="12">
 
-            <Border Grid.Row="0" Style="{StaticResource CardBorder}">
+            <Border Grid.Row="0" Style="{StaticResource CardBorder}" VerticalOptions="Start">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Nova anotação" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="{Binding ReminderStatus}" Style="{StaticResource BodyMuted}"/>
                     <Editor
                         BindingContext="{Binding Note}"
                         x:DataType="model:Note"
@@ -30,17 +31,24 @@
                         Placeholder="Digite uma observação"
                         MaxLength="500"
                         MinimumHeightRequest="110"
-                        AutoSize="TextChanges"/>
+                        AutoSize="{OnPlatform Default=TextChanges, WinUI=Disabled}" HeightRequest="{OnPlatform Default=-1, WinUI=180}"/>
                     <Button Text="Adicionar anotação" Style="{StaticResource Buttons}" Command="{Binding SalvarNota}"/>
                 </VerticalStackLayout>
             </Border>
 
             <CollectionView
-                Grid.Row="1"
+                Grid.Row="{OnPlatform Default=1, WinUI=0}" Grid.Column="{OnPlatform Default=0, WinUI=1}"
                 x:Name="NotesCollectionView"
                 ItemsSource="{Binding Notes}"
-                VerticalScrollBarVisibility="Never"
+                VerticalScrollBarVisibility="Default"
                 Scrolled="CollectionView_Scrolled">
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" Spacing="8" VerticalOptions="Center">
+                        <Label Text="Suas anotações" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Adicione uma anotação para organizar observações e definir lembretes." Style="{StaticResource BodyMuted}"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="model:Note">
@@ -79,6 +87,15 @@
                                         <Label Text="Notificar em" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="13" FontAttributes="Bold"/>
                                         <Label Text="{Binding NotifyOn, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource BodyMuted}"/>
                                     </HorizontalStackLayout>
+                                    <FlexLayout Direction="Row" Wrap="Wrap" IsVisible="{OnPlatform Default=False, WinUI=True}">
+                                        <Button Text="Lembrete" Style="{StaticResource GhostButton}" Margin="0,4,12,0"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddNotification}" CommandParameter="{Binding Id}"/>
+                                        <Button Text="Cancelar lembrete" Style="{StaticResource GhostButton}" Margin="0,4,12,0"
+                                                IsVisible="{Binding NotifyOn, Converter={converter:NullValueToBoolConverter}}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CancelNotificationCommand}" CommandParameter="{Binding Id}"/>
+                                        <Button Text="Excluir anotação" Style="{StaticResource DangerOutlineButton}" Margin="0,4,0,0"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}" CommandParameter="{Binding Id}"/>
+                                    </FlexLayout>
                                 </VerticalStackLayout>
                             </SwipeView>
                         </Border>
@@ -92,7 +109,7 @@
 
             <ImageButton
                 x:Name="BackToTopButton"
-                Grid.RowSpan="3"
+                Grid.RowSpan="3" Grid.Column="{OnPlatform Default=0, WinUI=1}"
                 Source="{icons:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
                 Style="{StaticResource FloatingBackToTopButton}"
                 Clicked="BackToTopButton_Clicked"/>

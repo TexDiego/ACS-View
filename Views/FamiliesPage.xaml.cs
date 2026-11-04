@@ -29,6 +29,9 @@ public partial class FamiliesPage : ContentPage, IQueryAttributable
         IDialogService dialogService)
     {
         InitializeComponent();
+#if WINDOWS
+        FamiliesCollection.ItemTemplate = (DataTemplate)Microsoft.Maui.Controls.Application.Current!.Resources["DesktopFamilyTemplate"];
+#endif
         _houseService = houseService;
         _visitsService = visitsService;
         _patientService = patientService;

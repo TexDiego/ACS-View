@@ -21,20 +21,20 @@ namespace ACS_View.Views
         {
             var shell = CreateShell(isAuthenticated: false);
             var window = new Window(shell);
-            window.Stopped += (_, _) => inputLifecycle.OnStopped();
-            window.Resumed += (_, _) =>
-            {
-                _ = ReconcileRemindersAsync();
-                if (!inputLifecycle.ConsumeReset())
-                {
-                    return;
-                }
-
-                // Discard every retained page, including forms and modal inputs.
-                window.Page = CreateShell(isAuthenticated: false);
-                _ = RestoreSessionAsync(window);
-            };
-            _ = RestoreSessionAsync(window);
+#if WINDOWS
+            // Keep desktop forms and popup action bars usable at the smallest size.
+            window.MinimumWidth = 960;
+            window.MinimumHeight = 640;
+            window.Title = "ACS View";
+            var titleBar = new TitleBar { Title = "ACS View", ForegroundColor = Colors.White };
+            titleBar.SetAppThemeColor(VisualElement.BackgroundColorProperty,
+                (Color)Resources["Primary"], (Color)Resources["DarkPrimaryLight"]);
+            window.TitleBar = titleBar;
+#endif
+            // Backgrounding and minimizing preserve the authenticated Shell and
+            // unfinished inputs. A new window/process follows the startup login flow.
+            window.Resumed += (_, _) => _ = ReconcileRemindersAsync();
+            _ = PrepareStartupLoginAsync(window);
 
             return window;
         }
@@ -80,7 +80,7 @@ namespace ACS_View.Views
             });
         }
 
-        private async Task RestoreSessionAsync(Window window)
+        private async Task PrepareStartupLoginAsync(Window window)
         {
             var initialPage = window.Page;
             try
@@ -88,33 +88,17 @@ namespace ACS_View.Views
                 await appStartupService.InitializeAsync();
                 await ReconcileRemindersAsync();
 
-                var authService = ServiceProvider.GetRequiredService<IAuthService>();
-                if (initialPage is AppShell { LoginPage: { } loginPage }
-                    && !await loginPage.PrepareForLoginAsync())
+                // A closed application requires a new login. Only background/resume
+                // keeps the existing authenticated Shell in memory.
+                if (ReferenceEquals(window.Page, initialPage)
+                    && initialPage is AppShell { LoginPage: { } loginPage })
                 {
-                    return;
+                    await loginPage.PrepareForLoginAsync();
                 }
-                if (!await authService.IsAuthenticatedAsync())
-                {
-                    return;
-                }
-
-                await MainThread.InvokeOnMainThreadAsync(async () =>
-                {
-                    // A login, logout or another resume may have replaced this Shell.
-                    if (!ReferenceEquals(window.Page, initialPage))
-                    {
-                        return;
-                    }
-
-                    var authenticatedShell = CreateShell(isAuthenticated: true);
-                    window.Page = authenticatedShell;
-                    await authenticatedShell.GoToAsync("//overallview");
-                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Nao foi possivel restaurar sessao inicial: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Nao foi possivel preparar login inicial: {ex.Message}");
             }
         }
 

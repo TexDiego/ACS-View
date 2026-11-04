@@ -11,12 +11,14 @@
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem
+        <ToolbarItem 
+            Text="Adicionar família"
             IconImageSource="{icons:ThemedIcon Icon=PeopleAdd24, Role=OnFill}"
             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddFamilyCommand}"/>
     </ContentPage.ToolbarItems>
 
-    <CollectionView
+    <CollectionView 
+        x:Name="FamiliesCollection"
         ItemsSource="{Binding Families}"
         VerticalScrollBarVisibility="Never"
         Margin="10">
@@ -34,34 +36,40 @@
                         <VerticalStackLayout
                             BindableLayout.ItemsSource="{Binding PessoasFamilia}"
                             BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}">
+                            
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="models:Patient">
                                     <Label
-                                    Text="{Binding Name}"
-                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                                    Opacity="0.7"
-                                    FontSize="16"
-                                    Margin="10,5"
-                                    FontAttributes="Bold"
-                                    LineBreakMode="WordWrap">
+                                        Text="{Binding Name}"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                                        Opacity="0.7"
+                                        FontSize="16"
+                                        Margin="10,5"
+                                        FontAttributes="Bold"
+                                        LineBreakMode="WordWrap">
+                                        
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
-                                            CommandParameter="{Binding Id}"/>
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PersonInfo}"
+                                                CommandParameter="{Binding Id}"/>
                                         </Label.GestureRecognizers>
+                                        
                                     </Label>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
+
                         <BoxView
                             HeightRequest="2"
                             Margin="5"
                             Color="{StaticResource TextSecondary}"/>
+                        
                         <Grid
                             Margin="5"
-                            ColumnDefinitions="0.2*,*,0.2*"
-                            HeightRequest="38"
-                            ColumnSpacing="5">
+                            ColumnDefinitions="{OnPlatform Default='0.2*,*,0.2*', WinUI='Auto,Auto,Auto'}"
+                            HeightRequest="{OnPlatform Default=38, WinUI=-1}"
+                            ColumnSpacing="5"
+                            HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
 
                             <ImageButton
                                 Grid.Column="0"

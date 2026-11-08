@@ -37,6 +37,7 @@ namespace ACS_View.ViewModels
 namespace ACS_View.Views
 {
     public class ConditionsPopup(ICidRepository repo) { }
+    internal class RegistrationConditionPopup(ACS_View.ViewModels.AddRegisterViewModel parent, ACS_View.Domain.ValueObjects.HealthConditions condition) { }
     public class PregnancyPopup(PregnancyDetailsDto details) { }
     public class ParentPatientPickerPopup(IPatientService service, int? excludedId, string title) { }
 }

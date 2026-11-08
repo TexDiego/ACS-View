@@ -18,6 +18,7 @@ namespace ACS_View.Domain.ValueObjects
         public const string BolsaFamilia = "Beneficiário do Bolsa Família";
         public const string DependenteQuimico = "Dependente químico";
         public const string Imunodeficiente = "Imunodeficiente";
+        public const string Hiv = "HIV";
 
         public static readonly IReadOnlyList<string> Conditions =
         [
@@ -35,7 +36,8 @@ namespace ACS_View.Domain.ValueObjects
             PortadorCancer,
             BolsaFamilia,
             DependenteQuimico,
-            Imunodeficiente
+            Imunodeficiente,
+            Hiv
         ];
 
         public static readonly IReadOnlyList<string> DiabetesTypes =

@@ -11,6 +11,7 @@ public partial class ProfileViewModel(IAuthService authService) : BaseViewModel
     [ObservableProperty] private string securityStatus = string.Empty;
 
     public ICommand OpenNotesPage => new Command(async () => await NavigateToAsync("notes"));
+    public ICommand OpenBackupPage => new Command(async () => await NavigateToAsync("backup"));
     public ICommand OpenImportDataPage => new Command(async () => await NavigateToAsync("importdata"));
     public ICommand OpenDataCleanupPage => new Command(async () => await NavigateToAsync("datacleanup"));
     public ICommand OpenAccountSecurityPage => new Command(async () => await NavigateToAsync("accountsecurity"));
@@ -25,7 +26,11 @@ public partial class ProfileViewModel(IAuthService authService) : BaseViewModel
             DisplayName = user?.Username ?? "Usuario";
             SecurityStatus = string.IsNullOrEmpty(user?.RecoveryCodeHash)
                 ? "Configure seu código de recuperação com a senha atual. A pergunta de segurança foi desativada."
+#if WINDOWS
+                : "Gerencie a senha, o código de recuperação e o Windows Hello neste computador.";
+#else
                 : "Gerencie a senha, o código de recuperação e a biometria neste aparelho.";
+#endif
         }
         catch
         {
@@ -37,7 +42,11 @@ public partial class ProfileViewModel(IAuthService authService) : BaseViewModel
     {
         var confirm = await DisplayConfirmationAsync(
             "Sair da conta",
+#if WINDOWS
+            "Deseja encerrar a sessão atual? As contas lembradas e o Windows Hello serão preservados neste computador.",
+#else
             "Deseja encerrar a sessão atual? A biometria, se ativada, será desativada neste aparelho.",
+#endif
             "Sair");
 
         if (!confirm)

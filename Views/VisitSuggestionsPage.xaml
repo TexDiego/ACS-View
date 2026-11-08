@@ -50,12 +50,7 @@
                                 <VerticalStackLayout Grid.Row="1" Spacing="4">
                                     <Label Text="{Binding Reason}" Style="{StaticResource BodyMuted}"/>
                                     <Label Text="{Binding PriorityLabel}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                    <HorizontalStackLayout Spacing="4">
-                                        <Label Text="Faltam" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                        <Label Text="{Binding MissingVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
-                                        <Label Text="de" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                        <Label Text="{Binding RequiredVisits}" Style="{StaticResource BodyMuted}" FontSize="12" FontAttributes="Bold"/>
-                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding FollowUpText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
                                 </VerticalStackLayout>
                             </Grid>
                         </Border>

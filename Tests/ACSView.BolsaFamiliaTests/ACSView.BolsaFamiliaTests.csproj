@@ -20,6 +20,7 @@
     <Compile Include="../../Domain/Entities/**/*.cs" />
     <Compile Include="../../Domain/Enums/*.cs" />
     <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />
+    <Compile Include="../../Domain/ValueObjects/KinshipEngine.cs" />
     <Compile Include="../../Domain/ValueObjects/SearchTextNormalizer.cs" />
     <Compile Include="../../Domain/ValueObjects/HealthConditionCatalog.cs" />
     <Compile Include="../../Domain/ValueObjects/CommonConditions.cs" />

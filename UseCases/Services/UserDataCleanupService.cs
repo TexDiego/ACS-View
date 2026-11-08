@@ -65,6 +65,9 @@ internal sealed class UserDataCleanupService(
         connection.Execute("DELETE FROM PatientCID WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientConditions WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientBolsaFamilia WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientInfectiousFollowUp WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientGlucoseMonitoring WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM PatientStripPickup WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientInsulinDependency WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM PatientVaccineDose WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Vaccines WHERE UserId = ?", userId);
@@ -72,6 +75,7 @@ internal sealed class UserDataCleanupService(
         connection.Execute("DELETE FROM VisitBatch WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Visits WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Family WHERE UserId = ?", userId);
+        connection.Execute("DELETE FROM FamilyRelationship WHERE UserId = ?", userId);
         connection.Execute("DELETE FROM Patient WHERE UserId = ?", userId);
     }
 

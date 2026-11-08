@@ -11,6 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../../Domain/ValueObjects/VisitFollowUpCalculator.cs" />
+    <Compile Include="../../Domain/Entities/Visits.cs" />
     <Compile Include="..\..\Application\DTOs\VisitRecordDto.cs" Link="Application\DTOs\VisitRecordDto.cs" />
     <Compile Include="..\..\Application\DTOs\VisitRecordDayGroupDto.cs" Link="Application\DTOs\VisitRecordDayGroupDto.cs" />
     <Compile Include="..\..\Application\Security\PasswordHasher.cs" Link="Application\Security\PasswordHasher.cs" />

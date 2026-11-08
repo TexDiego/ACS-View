@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-base" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <Compile Include="../../Domain/**/*.cs" />
+    <Compile Include="../../Application/Backups/*.cs" />
+    <Compile Include="../../Application/DTOs/ImportAuditEntryDto.cs" />
+    <Compile Include="../../Application/Security/*.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
+    <Compile Include="../../Application/Interfaces/IDatabaseBackupService.cs" />
+    <Compile Include="../../Application/Interfaces/ICurrentUserContext.cs" />
+    <Compile Include="../../Application/Interfaces/IAuthService.cs" />
+    <Compile Include="../../Application/Interfaces/IWindowsHelloService.cs" />
+    <Compile Include="../../Application/Interfaces/ILocalBiometricVault.cs" />
+    <Compile Include="../../Infrastructure/Data/Migrations/*.cs" />
+    <Compile Include="../../Infrastructure/Data/Backups/*.cs" />
+    <Compile Include="../../Infrastructure/Services/CurrentUserContext.cs" />
+    <Compile Include="../../Infrastructure/Services/UnavailableWindowsHelloService.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseService.cs" />
+    <Compile Include="../../UseCases/Services/DatabaseBackupService.cs" />
+    <Compile Include="../../UseCases/Services/EncryptedBackupService.cs" />
+    <Compile Include="../../UseCases/Services/AuthService.cs" />
+    <Compile Include="../../UseCases/Services/WindowsHelloEnrollment.cs" />
+  </ItemGroup>
+</Project>

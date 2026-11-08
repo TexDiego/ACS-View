@@ -4,6 +4,7 @@ using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 
 VisitRecordGroupingTests.Run();
+VisitFollowUpTests.Run();
 
 var secret = "SenhaForte123";
 var otherSecret = "SenhaErrada123";

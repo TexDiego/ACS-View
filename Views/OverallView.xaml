@@ -10,8 +10,9 @@
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="{icons:ThemedIcon Icon=MoreHorizontal24, Role=OnFill}"
-                     Command="{Binding OpenMetricsMenuCommand}"/>
+        <ToolbarItem 
+            IconImageSource="{icons:ThemedIcon Icon=MoreHorizontal24, Role=OnFill}"
+            Command="{Binding OpenMetricsMenuCommand}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="16,16,16,0" RowDefinitions="auto,*" RowSpacing="14">

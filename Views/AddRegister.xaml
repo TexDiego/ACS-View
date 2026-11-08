@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:health="clr-namespace:ACS_View.Views.HealthViews"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:model="clr-namespace:ACS_View.Domain.Entities"
              xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
              xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
              xmlns:converters="clr-namespace:ACS_View.Converters"
              xmlns:icons="clr-namespace:ACS_View.Controls"
+            xmlns:kin="clr-namespace:ACS_View.Views"
              x:DataType="vm:AddRegisterViewModel"
              x:Class="ACS_View.Views.AddRegister"
              Style="{StaticResource PageBackground}"
@@ -18,7 +20,7 @@
             IconImageSource="{icons:ThemedIcon Icon=Save28, Role=Primary}"
             Command="{Binding RegisterCommand}"/>
     </ContentPage.ToolbarItems>
-    
+
     <ContentPage.Resources>
         <Style x:Key="labels" TargetType="Label">
             <Setter Property="FontSize" Value="13"/>
@@ -609,7 +611,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="objects:HealthConditions">
 
-                        <Grid RowDefinitions="auto,auto"
+                        <Grid RowDefinitions="auto,auto,auto"
                                 ColumnDefinitions="*,auto"
                                 ColumnSpacing="15"
                                 Padding="10"
@@ -633,67 +635,20 @@
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SwitchConditionCommand}"
                                 CommandParameter="{Binding .}"/>
 
-                            <VerticalStackLayout
-                                Grid.Row="1"
-                                Grid.ColumnSpan="2"
-                                Margin="18,4,0,0"
-                                Spacing="6"
-                                IsVisible="{Binding ShowDiabetesDetails}">
-
-                                <Grid ColumnDefinitions="*,auto,auto" ColumnSpacing="10">
-                                    <Label
-                                        Grid.Column="0"
-                                        Text="Tipo"
-                                        VerticalOptions="Center"
-                                        LineBreakMode="WordWrap"
-                                        FontSize="16"
-                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                                        Opacity="0.75"/>
-
-                                    <Picker
-                                        Grid.Column="1"
-                                        Title="Não especificar"
-                                        ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DiabetesTypeOptions}"
-                                        SelectedItem="{Binding SelectedDiabetesType, Mode=TwoWay}"
-                                        FontSize="14"
-                                        HorizontalOptions="End"
-                                        VerticalOptions="Center"
-                                        WidthRequest="190"/>
-
-                                    <ImageButton
-                                        Grid.Column="2"
-                                        Source="{icons:ThemedIcon Icon=DismissCircle24, Role=Danger}"
-                                        HeightRequest="22"
-                                        WidthRequest="22"
-                                        VerticalOptions="Center"
-                                        Aspect="AspectFit"
-                                        IsVisible="{Binding HasSelectedDiabetesType}"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ClearDiabetesTypeCommand}"
-                                        CommandParameter="{Binding .}"/>
-                                </Grid>
-
-                                <Grid ColumnDefinitions="*,auto" ColumnSpacing="15">
-                                    <Label
-                                        Grid.Column="0"
-                                        Text="Insulinodependente"
-                                        LineBreakMode="WordWrap"
-                                        FontSize="16"
-                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}"
-                                        Opacity="0.75"/>
-
-                                    <CheckBox
-                                        Grid.Column="1"
-                                        IsChecked="{Binding InsulinDependentSelected, Mode=TwoWay}"
-                                        Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
-                                </Grid>
-
-                            </VerticalStackLayout>
-
-                        </Grid>
+                            <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10"
+ Margin="18,4,0,0" IsVisible="{Binding ShowRegistrationDetails}">
+ <Label Text="{Binding RegistrationSummary}" VerticalOptions="Center" LineBreakMode="WordWrap" FontSize="14"/>
+ <Button Grid.Column="1" Text="Ver detalhes" Style="{StaticResource GhostButton}"
+ Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenConditionDetailsCommand}"
+ CommandParameter="{Binding .}"/>
+ </Grid>
+ </Grid>
 
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
+
 
             <Button
                 Text="Adicionar CID"
@@ -764,6 +719,7 @@
                 </Grid>
             </Border>
 
+            <kin:KinshipSection Editor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyLinks}" />
         </VerticalStackLayout>
 
     </ScrollView>

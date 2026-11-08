@@ -80,8 +80,8 @@ internal static class VectorControlTests
             await c.ExecuteAsync("DROP INDEX IX_House_User_Active_Territory");
             await c.ExecuteAsync("ALTER TABLE House DROP COLUMN SetorCensitario");
             await c.ExecuteAsync("ALTER TABLE House DROP COLUMN NumeroQuadra");
-            await c.ExecuteAsync("DELETE FROM SchemaMigration WHERE Version=5");
-            await c.ExecuteAsync("DELETE FROM SchemaPreservation WHERE MigrationVersion=5");
+            await c.ExecuteAsync("DELETE FROM SchemaMigration WHERE Version>=5");
+            await c.ExecuteAsync("DELETE FROM SchemaPreservation WHERE MigrationVersion>=5");
             await c.ExecuteAsync("PRAGMA user_version=4");
             var revision = await c.ExecuteScalarAsync<int>("SELECT RowRevision FROM House WHERE CasaId=?", classified.CasaId);
             await Reject(() => new SchemaMigrator(c) { BeforeValidation = version => { if (version == 5) throw new InvalidOperationException("Injected migration failure"); } }.RunAsync(), check, "Interrupted territory migration rolls back");
@@ -93,7 +93,7 @@ internal static class VectorControlTests
             check(migrated.Single(h => h.CasaId == classified.CasaId).SetorCensitario == "0001" && migrated.Single(h => h.CasaId == classified.CasaId).RowRevision == revision, "Existing active classification migrates preserving zeros and original revision");
             check(migrator.BackupPath != null && File.Exists(migrator.BackupPath), "Territory migration creates a recovery snapshot");
             await new SchemaMigrator(c).RunAsync();
-            check(await c.ExecuteScalarAsync<int>("PRAGMA user_version") == 5, "Territory migration is idempotent");
+            check(await c.ExecuteScalarAsync<int>("PRAGMA user_version") == SchemaMigrator.CurrentVersion, "Territory migration is idempotent");
             var results = await service.SearchTerritorialAsync("JOAO pessoa", 102, 105, HouseParity.All);
             check(results.Select(h => h.NumeroCasa).SequenceEqual(new[] { "102", "104" }), "SQLite street search ignores accents and case with numeric filtering");
             check((await service.SearchTerritorialAsync("Rua João Pessoa", 440, 460, HouseParity.Even)).Count == 2, "Street type, suffix numbers and parity work together");

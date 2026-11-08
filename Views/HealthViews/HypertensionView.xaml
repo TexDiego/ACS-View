@@ -1,0 +1,4 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:ACS_View.ViewModels.HealthViewModels" xmlns:health="clr-namespace:ACS_View.Views.HealthViews" x:Class="ACS_View.Views.HealthViews.HypertensionView" x:DataType="vm:HypertensionViewModel">
+<VerticalStackLayout Spacing="10"><ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/>
+<Label Text="{Binding Message}" Style="{StaticResource BodyMuted}"/>
+<Button Text="Tentar novamente" IsVisible="{Binding HasError}" Command="{Binding RetryCommand}"/><Label Text="Hipertensão arterial" Style="{StaticResource CardTitle}"/><Label Text="{Binding Details}"/></VerticalStackLayout></ContentView>

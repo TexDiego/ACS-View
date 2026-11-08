@@ -28,6 +28,7 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private ObservableCollection<Familia> families = [];
         [ObservableProperty] private string house = "";
 
+        public IRelayCommand EditResidenceCommand => new RelayCommand(async () => await NavigateToAsync("addhouse", new Dictionary<string, object> { { "houseId", HouseId } }));
         public IRelayCommand AddFamilyCommand => new RelayCommand(AddFamily);
         public IRelayCommand<int> DeleteFamilyCommand => new RelayCommand<int>(DeleteFamily);
         public IRelayCommand<int> EditFamilyCommand => new RelayCommand<int>(EditFamily);

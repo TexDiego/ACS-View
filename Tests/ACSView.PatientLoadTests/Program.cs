@@ -13,6 +13,7 @@ using ACS_View.ViewModels;
 using SQLite;
 
 SQLitePCL.Batteries_V2.Init();
+await HealthModuleTests.Run();
 var checks = 0;
 void Check(bool pass, string message)
 {
@@ -68,7 +69,7 @@ var insulin = new SQLitePatientInsulinDependencyRepository(database, user);
 var pregnancy = new PregnancyService(database, user);
 var phones = new PatientPhoneService(new SQLitePatientPhoneRepository(database, user, new RelationalDataService(database, user)));
 AddRegisterViewModel CreateEditor() => new(patients, cids, patientCids, conditions, bolsa, insulin, pregnancy,
-    Noop<ICareNotificationService>(), Reject<IPopupService>(), phones);
+    Noop<ICareNotificationService>(), Reject<IPopupService>(), phones, glucoseMonitoring: new GlucoseMonitoringService(database, user), infectiousFollowUp: new PatientInfectiousFollowUpService(database,user));
 
 // An existing mother can open a first pregnancy before an episode is saved.
 await db.InsertAsync(new Patient { UserId = 1, Name = "Child for first episode", MotherPatientId = 2 });
@@ -94,8 +95,10 @@ await Bench("Linked CID only", async () => { await cids.GetSubcategoryById(14999
 await Bench("Edit form: complete loading", async () => { await CreateEditor().LoadPatient(1); });
 await Bench("CID selector: search 5 results", async () => { await cids.SearchCidAsync("Synthetic", null, 0, 5); });
 
+await db.InsertAsync(new PatientConditions { UserId=1, PatientId=1, Description=HealthConditionCatalog.Imunodeficiente });
 var editor = CreateEditor();
 await editor.LoadPatient(1);
+Check(editor.CommonConditions.Single(c=>c.IsImmuneGroup).ImmunodeficiencySelected && !editor.CommonConditions.Single(c=>c.IsImmuneGroup).HivSelected, "Registration: legacy immunodeficiency does not preselect HIV");
 Check(BaseViewModel.Alerts.Count == 0 && !editor.IsLoading, "Editing completes without errors");
 Check(editor.SusEditor.Numbers.Count == 1 && editor.PhoneEditor.Phones.Count == 1, "Editing loads only this patient's SUS and phones");
 Check(editor.HealthCategories.Single().CID == "C14999", "Linked CID restored without loading the catalog");
@@ -130,19 +133,63 @@ Check(selector.SearchedConditions.Count == 0, "Cleared search discards pending r
 var newEditor = CreateEditor();
 newEditor.InitializeNewPatient();
 newEditor.CurrentPatient.Name = "Cadastro de teste";
+var immuneGroup = newEditor.CommonConditions.Single(c=>c.IsImmuneGroup);
+immuneGroup.Selected=true;immuneGroup.HivSelected=true;
+newEditor.CommonConditions.Single(c=>c.ConditionKey==HealthConditionCatalog.Tuberculose).Selected=true;
+newEditor.TuberculosisEditor.Status="Em tratamento";newEditor.TuberculosisEditor.Notes="Synthetic TB follow-up";
+newEditor.HivEditor.Status="Em acompanhamento";newEditor.HivEditor.ReferenceService="Synthetic HIV service";
+newEditor.GlucoseEditor.ChecksPerDay = "4";
+newEditor.GlucoseEditor.PickupInterval = "Mensal";
+newEditor.GlucoseEditor.StripsPerPickup = "100";
 newEditor.HealthCategories.Add(new HealthConditions { Name = "Synthetic CID 15000", CID = "C15000", Selected = true });
 await (Task)typeof(AddRegisterViewModel).GetMethod("Save", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(newEditor, null)!;
 Check(BaseViewModel.Alerts.Count == 0 && BaseViewModel.Navigations == 1, "New patient saves successfully without a preloaded CID catalog");
 Check((await patientCids.GetPatientCIDsByPatientId(newEditor.CurrentPatient.Id))!.Single().CidId == 15000, "Saving resolves the selected CID by code");
 var reopened = CreateEditor();
 await reopened.LoadPatient(newEditor.CurrentPatient.Id);
+Check(reopened.GlucoseEditor.ChecksPerDay == "4" && reopened.GlucoseEditor.StripsPerPickup == "100", "Registration saves and reloads optional monitoring with patient identity");
+reopened.GlucoseEditor.ChecksPerDay = "3";
+await new GlucoseMonitoringService(database, user).AddPickupAsync(reopened.CurrentPatient.Id, DateTime.Today, 60, "Known history");
+var reopenedGroup=reopened.CommonConditions.Single(c=>c.IsImmuneGroup);
+Check(reopenedGroup.Selected && reopenedGroup.HivSelected && !reopenedGroup.ImmunodeficiencySelected
+    && reopened.TuberculosisEditor.Notes=="Synthetic TB follow-up" && reopened.HivEditor.ReferenceService=="Synthetic HIV service",
+    "Registration: HIV suboption and both follow-ups survive save and reopening without inferring immunodeficiency");
+Check(!(await conditions.GetConditionsByPatientIdAsync(reopened.CurrentPatient.Id)).Any(c=>c.Description==HealthConditionCatalog.Imunodeficiente),"Registration: HIV-only selection persists no immunodeficiency diagnosis");
 reopened.CurrentPatient.Name = "Cadastro atualizado";
 await (Task)typeof(AddRegisterViewModel).GetMethod("Save", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(reopened, null)!;
 Check(BaseViewModel.Alerts.Count == 0 && BaseViewModel.Navigations == 2, "Existing patient saves after targeted loading");
 Check((await patients.GetPatientById(reopened.CurrentPatient.Id))!.Name == "Cadastro Atualizado"
     && (await patientCids.GetPatientCIDsByPatientId(reopened.CurrentPatient.Id))!.Single().CidId == 15000,
     "Closing, reopening and saving preserves the linked CID");
+
+var savedGlucose = new GlucoseMonitoringService(database, user);
+Check((await savedGlucose.GetAsync(reopened.CurrentPatient.Id))?.ChecksPerDay == 3 && (await savedGlucose.GetPickupsAsync(reopened.CurrentPatient.Id)).Single().Quantity == 60,
+    "Registration updates monitoring without replacing pickup history");
 Check(await db.ExecuteScalarAsync<string>("PRAGMA integrity_check") == "ok", "Database integrity preserved");
+
+var kinshipService=new KinshipService(database,user);
+var kinshipEditor=new KinshipEditorViewModel(kinshipService);
+var unsaved=new Patient{Name="Novo familiar"};await kinshipEditor.LoadAsync(unsaved);
+await kinshipEditor.StageAsync(new FamilyRelationship{FromPatientId=1,ToPatientId=0,TypeCode="parent",ForwardLabel="Mãe",ReverseLabel="Filha",Nature="Adotivo"});
+Check(unsaved.Id==0 && await db.Table<FamilyRelationship>().CountAsync()==0,"Kinship form keeps new relationships pending until patient save");
+Check(kinshipEditor.Direct.Count==1 && kinshipEditor.Direct[0].Title.Contains("Mãe"),"Kinship form displays declared roles");
+await kinshipEditor.CommitAsync(unsaved);
+Check(unsaved.Id>0 && (await kinshipService.LoadAsync()).Relationships.Count==1,"Kinship form commits patient and relationships together");
+await kinshipEditor.LoadAsync(unsaved);
+await kinshipEditor.StageAsync(new FamilyRelationship{FromPatientId=2,ToPatientId=unsaved.Id,TypeCode="godparent",ForwardLabel="Padrinho",ReverseLabel="Afilhada"});
+Check(await db.Table<FamilyRelationship>().CountAsync()==1 && kinshipEditor.Direct.Count==2,"Kinship form keeps edits pending and allows distinct semantic links");
+await kinshipEditor.CommitAsync(unsaved);
+var kinshipReadOnly=new KinshipEditorViewModel(kinshipService,true);await kinshipReadOnly.LoadAsync(unsaved);
+Check(!kinshipReadOnly.CanEdit && kinshipReadOnly.Direct.Count==2 && kinshipReadOnly.Summary.Contains("conhecidos"),"Popup family summary uses persisted scoped graph and explains counts");
+
+await kinshipEditor.LoadAsync(unsaved);var previousLinks=kinshipEditor.Direct.Count;
+try{await kinshipEditor.StageAsync(new FamilyRelationship{FromPatientId=unsaved.Id,ToPatientId=unsaved.Id,TypeCode="marriage"});throw new Exception("Self spouse accepted");}
+catch(InvalidOperationException){Check(kinshipEditor.Direct.Count==previousLinks,"Self-spouse is rejected without changing the pending form");}
+kinshipEditor.OpenEditorRequested=_=>throw new InvalidOperationException("Synthetic navigation failure");
+await kinshipEditor.AddCommand.ExecuteAsync(null);
+Check(kinshipEditor.Error.Contains("Synthetic navigation failure"),"Failure opening relationship editor becomes a visible error instead of an unhandled command");
+await kinshipEditor.StageAsync(new FamilyRelationship{FromPatientId=3,ToPatientId=unsaved.Id,TypeCode="marriage",ForwardLabel="Casamento",ReverseLabel="Casamento"});
+Check(kinshipEditor.Direct.Count==previousLinks+1,"A valid spouse can still be added after an invalid attempt");
 await db.CloseAsync();
 Console.WriteLine($"{checks} patient loading checks passed.");
 

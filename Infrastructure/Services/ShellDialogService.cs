@@ -49,11 +49,16 @@ internal sealed class ShellDialogService : IDialogService
 
     private static async Task<object?> ShowDialogAsync(DialogPopupViewModel viewModel)
     {
+        var shell = Shell.Current ?? throw new InvalidOperationException("Não há janela disponível para exibir a confirmação.");
+        // Relationship editing is modal. Hosting its confirmation on the Shell behind
+        // the editor can target the wrong native page/window on Windows.
+        Page owner = shell.Navigation.ModalStack.LastOrDefault() ?? shell.CurrentPage ?? shell;
+        while (owner is NavigationPage navigation) owner = navigation.CurrentPage;
         var popup = new DialogPopup(viewModel);
 #if WINDOWS
-        using var desktopLayout = new Platforms.Windows.DesktopPopupLayout(popup, Shell.Current.Window);
+        using var desktopLayout = new Platforms.Windows.DesktopPopupLayout(popup, owner.Window ?? shell.Window);
 #endif
-        var result = await Shell.Current.ShowPopupAsync<object>(popup, PopupConfigs.Default);
+        var result = await owner.ShowPopupAsync<object>(popup, PopupConfigs.Default);
 
         return result is null || result.WasDismissedByTappingOutsideOfPopup
             ? viewModel.SecondaryResult

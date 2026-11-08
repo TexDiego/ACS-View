@@ -9,7 +9,7 @@ namespace ACS_View.Infrastructure.Data.Migrations;
 
 internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 9;
     // Only invoked from startup before services may write. SQLite serializes each transaction.
     internal Action<int>? BeforeValidation { get; init; }
     public string? BackupPath { get; private set; }
@@ -52,6 +52,10 @@ internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
                     case 3: RelationalStore.MigrateData(c,before.Any(t=>t.Name=="PatientConditions" && t.Columns.Contains("ConditionId"))); break;
                     case 4: RelationalStore.BackfillSusNumbers(c); break;
                     case 5: AddHouseTerritory(c, before); break;
+                    case 6: KinshipSchema.Create(c); break;
+                    case 7: GlucoseMonitoringSchema.Create(c); break;
+                    case 8: InfectiousFollowUpSchema.Create(c); break;
+                    case 9: InfectiousFollowUpSchema.AddImmunodeficiency(c); break;
                 }
                 BeforeValidation?.Invoke(next);
                 ValidatePreservation(c, before);
@@ -60,7 +64,7 @@ internal sealed class SchemaMigrator(SQLiteAsyncConnection database)
                     c.Execute("INSERT INTO SchemaPreservation VALUES(?,?,?,?,?,?)",next,t.Name,t.Rows.Length,
                         c.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Quote(t.Name)}"),string.Join(",",t.Columns),Digest([t]));
                 c.Execute("INSERT INTO SchemaMigration VALUES (?, ?, ?, ?)", next,
-                    new[] { "", "legacy-expand", "relational-expand", "relational-backfill", "sus-entity-backfill", "house-territory" }[next],
+                    new[] { "", "legacy-expand", "relational-expand", "relational-backfill", "sus-entity-backfill", "house-territory", "family-relationships", "glucose-monitoring", "infectious-follow-up", "immunodeficiency-follow-up" }[next],
                     DateTime.UtcNow.ToString("O"), Digest(before));
                 c.Execute($"PRAGMA user_version = {next}");
             }

@@ -1,0 +1,15 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:ACS_View.ViewModels.HealthViewModels" xmlns:health="clr-namespace:ACS_View.Views.HealthViews" x:Class="ACS_View.Views.HealthViews.GlucoseMonitoringForm" x:DataType="vm:GlucoseMonitoringEditorViewModel">
+<VerticalStackLayout Spacing="10">
+<Label Text="Monitoramento glicêmico habitual (opcional)" Style="{StaticResource CardTitle}"/>
+<Label Text="Aferições de glicemia capilar por dia" Style="{StaticResource BodyMuted}"/>
+<Entry Text="{Binding ChecksPerDay}" Keyboard="Numeric" Placeholder="Não informado"/>
+<HorizontalStackLayout><CheckBox IsChecked="{Binding VariableFrequency}"/><Label Text="Frequência variável" VerticalOptions="Center"/></HorizontalStackLayout>
+<Picker Title="Método de monitoramento" ItemsSource="{Binding Methods}" SelectedItem="{Binding MonitoringMethod}"/>
+<Label Text="Retirada habitual declarada de fitas" Style="{StaticResource CardTitle}"/>
+<Entry Text="{Binding StripsPerPickup}" Keyboard="Numeric" Placeholder="Quantidade habitual por retirada"/>
+<Picker Title="Frequência habitual" ItemsSource="{Binding Intervals}" SelectedItem="{Binding PickupInterval}"/>
+<Entry Text="{Binding CustomIntervalDays}" Keyboard="Numeric" Placeholder="Intervalo personalizado em dias"/>
+<HorizontalStackLayout><CheckBox IsChecked="{Binding HasLastKnownPickup}"/><Label Text="Informar última retirada conhecida" VerticalOptions="Center"/></HorizontalStackLayout>
+<DatePicker Date="{Binding LastKnownPickup}" MaximumDate="{Binding Today}" IsVisible="{Binding HasLastKnownPickup}"/>
+<Editor Text="{Binding Notes}" Placeholder="Observações sobre o acompanhamento" AutoSize="TextChanges"/>
+</VerticalStackLayout></ContentView>

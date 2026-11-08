@@ -1,14 +1,16 @@
 <?xml version='1.0' encoding='utf-8'?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
-            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-            x:DataType="vm:AddRegisterViewModel" 
-            x:Class="ACS_View.Views.Desktop.DesktopAddRegister" 
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+            xmlns:health="clr-namespace:ACS_View.Views.HealthViews"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            x:DataType="vm:AddRegisterViewModel"
+            x:Class="ACS_View.Views.Desktop.DesktopAddRegister"
             xmlns:vm="clr-namespace:ACS_View.ViewModels"
-            xmlns:model="clr-namespace:ACS_View.Domain.Entities" 
-            xmlns:enums="clr-namespace:ACS_View.Domain.Enums" 
-            xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects" 
-            xmlns:converters="clr-namespace:ACS_View.Converters" 
-            xmlns:icons="clr-namespace:ACS_View.Controls">
+            xmlns:model="clr-namespace:ACS_View.Domain.Entities"
+            xmlns:enums="clr-namespace:ACS_View.Domain.Enums"
+            xmlns:objects="clr-namespace:ACS_View.Domain.ValueObjects"
+            xmlns:converters="clr-namespace:ACS_View.Converters"
+            xmlns:icons="clr-namespace:ACS_View.Controls"
+            xmlns:kin="clr-namespace:ACS_View.Views">
 
     <ContentView.Resources>
         <Style x:Key="labels" TargetType="Label">
@@ -25,7 +27,7 @@
             <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}" />
         </Style>
-        
+
         <ControlTemplate x:Key="SexOptionTemplate">
             <Border Style="{StaticResource FieldBorder}" Padding="6,4" StrokeThickness="1" StrokeShape="RoundRectangle 8" MinimumHeightRequest="36" HorizontalOptions="Fill" VerticalOptions="Fill">
                 <VisualStateManager.VisualStateGroups>
@@ -51,7 +53,7 @@
                 <Label x:Name="OptionLabel" Text="{TemplateBinding Content}" FontSize="16" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" LineBreakMode="WordWrap" InputTransparent="True" />
             </Border>
         </ControlTemplate>
-        
+
         <Style x:Key="SexOption" TargetType="RadioButton">
             <Setter Property="ControlTemplate" Value="{StaticResource SexOptionTemplate}" />
             <Setter Property="MinimumHeightRequest" Value="36" />
@@ -71,7 +73,7 @@
             <Setter Property="BackgroundColor" Value="Transparent" />
             <Setter Property="BorderWidth" Value="0" />
         </Style>
-        
+
         <ControlTemplate x:Key="NumberOptionTemplate">
             <Border Padding="4,2" StrokeThickness="0" StrokeShape="RoundRectangle 6" MinimumHeightRequest="36" HorizontalOptions="Fill">
                 <VisualStateManager.VisualStateGroups>
@@ -101,7 +103,7 @@
                 </Grid>
             </Border>
         </ControlTemplate>
-        
+
         <Style x:Key="NumberOption" TargetType="RadioButton">
             <Setter Property="ControlTemplate" Value="{StaticResource NumberOptionTemplate}" />
             <Setter Property="MinimumHeightRequest" Value="36" />
@@ -111,18 +113,18 @@
             <Setter Property="Margin" Value="0" />
         </Style>
     </ContentView.Resources>
-    
+
     <Grid >
-        <ScrollView 
-            VerticalOptions="Fill" 
+        <ScrollView
+            VerticalOptions="Fill"
             VerticalScrollBarVisibility="Default">
 
-            <Grid 
-                Padding="20" 
-                BindingContext="{Binding CurrentPatient}" 
-                x:DataType="model:Patient" 
-                ColumnDefinitions="1.3*,2,*" 
-                ColumnSpacing="24" 
+            <Grid
+                Padding="20"
+                BindingContext="{Binding CurrentPatient}"
+                x:DataType="model:Patient"
+                ColumnDefinitions="1.3*,2,*"
+                ColumnSpacing="24"
                 RowSpacing="12"
                 RowDefinitions="Auto">
 
@@ -130,93 +132,93 @@
 
                     <!-- Nome -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
+                        Style="{StaticResource FieldBorder}"
                         Padding="0"
                         Grid.Column="0" >
 
                         <Entry
                             VerticalOptions="Start"
-                            Margin="0" 
-                            MaxLength="70" 
-                            Placeholder="Nome" 
-                            Keyboard="Text" 
-                            Text="{Binding Name, Mode=TwoWay}" 
-                            FontSize="16" 
+                            Margin="0"
+                            MaxLength="70"
+                            Placeholder="Nome"
+                            Keyboard="Text"
+                            Text="{Binding Name, Mode=TwoWay}"
+                            FontSize="16"
                             MinimumHeightRequest="44" />
                     </Border>
 
                     <!-- Mãe -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
+                        Style="{StaticResource FieldBorder}"
                         Padding="0"
                         Grid.Column="0" >
 
-                        <Grid 
+                        <Grid
                             ColumnDefinitions="*,auto"
                             ColumnSpacing="8"
                             VerticalOptions="Start">
 
-                            <Entry 
+                            <Entry
                                 Grid.Column="0"
-                                VerticalOptions="Center" 
+                                VerticalOptions="Center"
                                 Margin="0"
                                 MaxLength="70"
                                 Keyboard="Text"
                                 Placeholder="Nome da mãe"
-                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                               Path=BindingContext.MotherNameInput, 
-                                               Mode=TwoWay}" 
-                                FontSize="16" 
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                               Path=BindingContext.MotherNameInput,
+                                               Mode=TwoWay}"
+                                FontSize="16"
                                 MinimumHeightRequest="44" />
 
-                            <ImageButton 
-                                Grid.Column="1" 
+                            <ImageButton
+                                Grid.Column="1"
                                 Source="{icons:ThemedIcon Icon=Search32, IconSize=20, Role=Primary}"
                                 Style="{StaticResource SoftIconButton}"
-                                HeightRequest="40" 
-                                WidthRequest="40" 
-                                CornerRadius="0" 
+                                HeightRequest="40"
+                                WidthRequest="40"
+                                CornerRadius="0"
                                 BackgroundColor="Transparent"
-                                Padding="9" 
-                                ToolTipProperties.Text="Selecionar cadastro da mãe" 
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                  Path=BindingContext.SelectMotherCommand}" 
+                                Padding="9"
+                                ToolTipProperties.Text="Selecionar cadastro da mãe"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                  Path=BindingContext.SelectMotherCommand}"
                                 Aspect="AspectFit" />
                         </Grid>
                     </Border>
 
                     <!-- Pai -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
+                        Style="{StaticResource FieldBorder}"
                         Padding="0"
                         Grid.Column="0" >
 
-                        <Grid 
-                            ColumnDefinitions="*,auto" 
+                        <Grid
+                            ColumnDefinitions="*,auto"
                             ColumnSpacing="8"
                             VerticalOptions="Start">
 
-                            <Entry 
-                                Grid.Column="0" 
+                            <Entry
+                                Grid.Column="0"
                                 VerticalOptions="Center"
                                 Margin="0"
                                 MaxLength="70"
                                 Placeholder="Nome do pai"
                                 Keyboard="Text"
-                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                               Path=BindingContext.FatherNameInput, 
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                               Path=BindingContext.FatherNameInput,
                                                Mode=TwoWay}"
                                 FontSize="16" MinimumHeightRequest="44" />
 
-                            <ImageButton 
-                                Grid.Column="1" 
+                            <ImageButton
+                                Grid.Column="1"
                                 Source="{icons:ThemedIcon Icon=Search32, IconSize=20, Role=Primary}"
                                 Style="{StaticResource SoftIconButton}"
-                                HeightRequest="40" 
-                                WidthRequest="40" 
-                                Padding="9" 
+                                HeightRequest="40"
+                                WidthRequest="40"
+                                Padding="9"
                                 CornerRadius="0"
-                                BackgroundColor="Transparent" 
+                                BackgroundColor="Transparent"
                                 ToolTipProperties.Text="Selecionar cadastro do pai"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                   Path=BindingContext.SelectFatherCommand}"
@@ -225,23 +227,23 @@
                     </Border>
 
                     <!-- CNS -->
-                    <Border 
-                        Style="{StaticResource FieldBorder}" 
-                        Padding="8" 
+                    <Border
+                        Style="{StaticResource FieldBorder}"
+                        Padding="8"
                         BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                 Path=BindingContext.SusEditor}" 
+                                                 Path=BindingContext.SusEditor}"
                         x:DataType="vm:SusNumberEditorViewModel"
-                        Grid.Column="0" 
+                        Grid.Column="0"
                         VerticalOptions="Start">
 
                         <VerticalStackLayout Spacing="4">
 
-                            <Label 
-                                Text="Números CNS" 
+                            <Label
+                                Text="Números CNS"
                                 Style="{StaticResource labels}" />
 
-                            <Grid 
-                                ColumnDefinitions="*,Auto,Auto" 
+                            <Grid
+                                ColumnDefinitions="*,Auto,Auto"
                                 ColumnSpacing="2">
 
                                 <Entry
@@ -249,21 +251,21 @@
                                     Keyboard="Numeric"
                                     Placeholder="Número CNS (15 dígitos)"
                                     Text="{Binding Input, Mode=TwoWay}"
-                                    ClearButtonVisibility="WhileEditing" 
+                                    ClearButtonVisibility="WhileEditing"
                                     ReturnType="Done"
                                     ReturnCommand="{Binding ApplyCommand}"
                                     MinimumHeightRequest="44"
-                                    FontSize="16" 
+                                    FontSize="16"
                                     MaxLength="15" />
 
-                                <ImageButton 
-                                    Grid.Column="1" 
-                                    Style="{StaticResource CompactNumberAction}" 
+                                <ImageButton
+                                    Grid.Column="1"
+                                    Style="{StaticResource CompactNumberAction}"
                                     Source="{icons:ThemedIcon Icon=AddCircle12, IconSize=20, Role=Surface}"
                                     Command="{Binding ApplyCommand}"
-                                    VerticalOptions="Center" 
+                                    VerticalOptions="Center"
                                     SemanticProperties.Description="{Binding ApplyLabel}"
-                                    ToolTipProperties.Text="{Binding ApplyLabel}" 
+                                    ToolTipProperties.Text="{Binding ApplyLabel}"
                                     Aspect="AspectFit">
 
                                     <ImageButton.Triggers>
@@ -274,38 +276,38 @@
 
                                 </ImageButton>
 
-                                <ImageButton 
-                                    Grid.Column="2" 
-                                    Style="{StaticResource CompactNumberAction}" 
-                                    Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}" 
-                                    Command="{Binding CancelCommand}" 
-                                    IsVisible="{Binding IsEditing}" 
-                                    VerticalOptions="Center" 
+                                <ImageButton
+                                    Grid.Column="2"
+                                    Style="{StaticResource CompactNumberAction}"
+                                    Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}"
+                                    Command="{Binding CancelCommand}"
+                                    IsVisible="{Binding IsEditing}"
+                                    VerticalOptions="Center"
                                     SemanticProperties.Description="Cancelar edição"
-                                    ToolTipProperties.Text="Cancelar edição" 
+                                    ToolTipProperties.Text="Cancelar edição"
                                     Aspect="AspectFit" />
                             </Grid>
 
-                            <Label 
+                            <Label
                                 Text="{Binding Error}"
                                 IsVisible="{Binding HasError}"
-                                FontSize="16" 
-                                LineBreakMode="WordWrap" 
-                                TextColor="{AppThemeBinding Light={StaticResource Error}, 
+                                FontSize="16"
+                                LineBreakMode="WordWrap"
+                                TextColor="{AppThemeBinding Light={StaticResource Error},
                                                             Dark={StaticResource DarkError}}" />
 
-                            <CollectionView 
-                                Margin="0,10,0,0" 
+                            <CollectionView
+                                Margin="0,10,0,0"
                                 ItemsSource="{Binding Numbers}"
-                                SelectionMode="None" 
-                                HeightRequest="{Binding ListHeight}" 
-                                ItemSizingStrategy="MeasureAllItems" 
+                                SelectionMode="None"
+                                HeightRequest="{Binding ListHeight}"
+                                ItemSizingStrategy="MeasureAllItems"
                                 VerticalScrollBarVisibility="Default">
 
                                 <CollectionView.EmptyView>
-                                    <Label 
-                                        Text="Nenhum número SUS adicionado." 
-                                        FontSize="16" 
+                                    <Label
+                                        Text="Nenhum número SUS adicionado."
+                                        FontSize="16"
                                         VerticalTextAlignment="Center" />
                                 </CollectionView.EmptyView>
 
@@ -317,43 +319,43 @@
                                             Margin="0,0,0,4">
 
                                             <RadioButton
-                                                Style="{StaticResource NumberOption}" 
-                                                Content="{Binding Number}" 
+                                                Style="{StaticResource NumberOption}"
+                                                Content="{Binding Number}"
                                                 IsChecked="{Binding IsPrimary, Mode=OneWay}"
-                                                CheckedChanged="OnPrimarySusCheckedChanged" 
+                                                CheckedChanged="OnPrimarySusCheckedChanged"
                                                 SemanticProperties.Description="{Binding Number, StringFormat='Selecionar {0} como principal'}"
                                                 ToolTipProperties.Text="{Binding Number, StringFormat='Selecionar {0} como principal'}" />
 
-                                            <ImageButton 
-                                                Grid.Column="1" 
-                                                Style="{StaticResource CompactNumberAction}" 
-                                                Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}" 
+                                            <ImageButton
+                                                Grid.Column="1"
+                                                Style="{StaticResource CompactNumberAction}"
+                                                Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}"
                                                 SemanticProperties.Description="Editar número SUS"
-                                                ToolTipProperties.Text="Editar número SUS" 
+                                                ToolTipProperties.Text="Editar número SUS"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}},
-                                                                  Path=EditCommand}" 
+                                                                  Path=EditCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Clicked="OnEditSusClicked"
                                                 Aspect="AspectFit" />
 
-                                            <ImageButton 
-                                                Grid.Column="2" 
-                                                Style="{StaticResource CompactNumberAction}" 
-                                                Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}" 
-                                                SemanticProperties.Description="Excluir número SUS" 
-                                                ToolTipProperties.Text="Excluir número SUS" 
+                                            <ImageButton
+                                                Grid.Column="2"
+                                                Style="{StaticResource CompactNumberAction}"
+                                                Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}"
+                                                SemanticProperties.Description="Excluir número SUS"
+                                                ToolTipProperties.Text="Excluir número SUS"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SusNumberEditorViewModel}},
-                                                                  Path=DeleteCommand}" 
-                                                CommandParameter="{Binding .}" 
+                                                                  Path=DeleteCommand}"
+                                                CommandParameter="{Binding .}"
                                                 Aspect="AspectFit" />
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
 
-                            <Label 
+                            <Label
                                 Text="Selecione o número principal."
-                                FontSize="11" 
+                                FontSize="11"
                                 TextColor="{AppThemeBinding Light={StaticResource TextSecondary},
                                                             Dark={StaticResource DarkTextSecondary}}" />
                         </VerticalStackLayout>
@@ -361,41 +363,41 @@
 
                     <!-- Sexo -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
+                        Style="{StaticResource FieldBorder}"
                         Padding="10"
                         Grid.Column="0"
                         VerticalOptions="Start">
 
                         <VerticalStackLayout Spacing="8">
 
-                            <Label 
-                                Style="{StaticResource labels}" 
+                            <Label
+                                Style="{StaticResource labels}"
                                 Text="Sexo" />
 
                             <Grid
                                 x:Name="SexOptionsGrid"
                                 RowDefinitions="Auto"
-                                ColumnDefinitions="*,*,*" 
+                                ColumnDefinitions="*,*,*"
                                 RowSpacing="4"
-                                ColumnSpacing="4" 
-                                SizeChanged="OnSexOptionsSizeChanged" 
-                                RadioButtonGroup.GroupName="Sexo" 
+                                ColumnSpacing="4"
+                                SizeChanged="OnSexOptionsSizeChanged"
+                                RadioButtonGroup.GroupName="Sexo"
                                 RadioButtonGroup.SelectedValue="{Binding Sexo, Mode=TwoWay}">
 
-                                <RadioButton 
+                                <RadioButton
                                     Grid.Row="0"
-                                    Content="Masculino" 
-                                    Value="Masculino" 
+                                    Content="Masculino"
+                                    Value="Masculino"
                                     Style="{StaticResource SexOption}" />
 
-                                <RadioButton 
+                                <RadioButton
                                     Grid.Column="1"
-                                    Content="Feminino" 
-                                    Value="Feminino" 
+                                    Content="Feminino"
+                                    Value="Feminino"
                                     Style="{StaticResource SexOption}" />
 
-                                <RadioButton 
-                                    Grid.Column="2" 
+                                <RadioButton
+                                    Grid.Column="2"
                                     Content="Indeterminado"
                                     Value="Indeterminado"
                                     Style="{StaticResource SexOption}" />
@@ -417,19 +419,19 @@
                                 Style="{StaticResource labels}"
                                 Text="Data de nascimento" />
 
-                            <DatePicker 
-                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, 
-                                                            Dark={StaticResource DarkTextPrimary}}" 
-                                HorizontalOptions="Fill" 
-                                VerticalOptions="Center" 
+                            <DatePicker
+                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
+                                                            Dark={StaticResource DarkTextPrimary}}"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Center"
                                 MinimumHeightRequest="44"
-                                FontSize="16" 
+                                FontSize="16"
                                 Format="dd/MM/yyyy"
                                 Date="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                               Path=BindingContext.BirthDateInput, 
+                                               Path=BindingContext.BirthDateInput,
                                                Mode=TwoWay}"
-                                MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                      Path=BindingContext.MinimumDate}" 
+                                MinimumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                      Path=BindingContext.MinimumDate}"
                                 MaximumDate="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                       Path=BindingContext.MaximumDate}" />
                         </VerticalStackLayout>
@@ -438,24 +440,24 @@
                     <!-- Telefones -->
                     <Border
                         Style="{StaticResource FieldBorder}"
-                        Padding="8" 
-                        BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                        Padding="8"
+                        BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                  Path=BindingContext.PhoneEditor}"
-                        x:DataType="vm:PhoneEditorViewModel" 
+                        x:DataType="vm:PhoneEditorViewModel"
                         Grid.Column="0"
                         VerticalOptions="Start">
 
                         <VerticalStackLayout Spacing="4">
 
-                            <Label 
+                            <Label
                                 Text="Telefones"
                                 Style="{StaticResource labels}" />
 
                             <Grid
-                                ColumnDefinitions="*,Auto,Auto" 
+                                ColumnDefinitions="*,Auto,Auto"
                                 ColumnSpacing="2">
 
-                                <Entry 
+                                <Entry
                                     x:Name="PhoneEntry"
                                     Keyboard="Telephone"
                                     Placeholder="Número com DDD"
@@ -463,16 +465,16 @@
                                     ClearButtonVisibility="WhileEditing"
                                     ReturnType="Done"
                                     ReturnCommand="{Binding ApplyCommand}"
-                                    MinimumHeightRequest="44" 
+                                    MinimumHeightRequest="44"
                                     FontSize="16" />
 
-                                <ImageButton 
-                                    Grid.Column="1" 
-                                    Style="{StaticResource CompactNumberAction}" 
+                                <ImageButton
+                                    Grid.Column="1"
+                                    Style="{StaticResource CompactNumberAction}"
                                     Source="{icons:ThemedIcon Icon=AddCircle12, IconSize=20, Role=Surface}"
                                     Command="{Binding ApplyCommand}"
                                     VerticalOptions="Center"
-                                    SemanticProperties.Description="{Binding ApplyLabel}" 
+                                    SemanticProperties.Description="{Binding ApplyLabel}"
                                     ToolTipProperties.Text="{Binding ApplyLabel}"
                                     Aspect="AspectFit">
 
@@ -484,29 +486,29 @@
                                 </ImageButton>
 
                                 <ImageButton
-                                    Grid.Column="2" 
+                                    Grid.Column="2"
                                     Style="{StaticResource CompactNumberAction}"
-                                    Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}" 
+                                    Source="{icons:ThemedIcon Icon=Dismiss24, IconSize=20, Role=Danger}"
                                     Command="{Binding CancelCommand}"
-                                    IsVisible="{Binding IsEditing}" 
-                                    VerticalOptions="Center" 
-                                    SemanticProperties.Description="Cancelar edição" 
+                                    IsVisible="{Binding IsEditing}"
+                                    VerticalOptions="Center"
+                                    SemanticProperties.Description="Cancelar edição"
                                     ToolTipProperties.Text="Cancelar edição"
                                     Aspect="AspectFit" />
                             </Grid>
 
-                            <Label 
+                            <Label
                                 Text="{Binding Error}"
                                 IsVisible="{Binding HasError}"
-                                FontSize="16" 
-                                LineBreakMode="WordWrap" 
-                                TextColor="{AppThemeBinding Light={StaticResource Error}, 
+                                FontSize="16"
+                                LineBreakMode="WordWrap"
+                                TextColor="{AppThemeBinding Light={StaticResource Error},
                                                             Dark={StaticResource DarkError}}" />
 
                             <CollectionView
                                 Margin="0,10,0,0"
                                 ItemsSource="{Binding Phones}"
-                                SelectionMode="None" 
+                                SelectionMode="None"
                                 HeightRequest="{Binding ListHeight}"
                                 ItemSizingStrategy="MeasureAllItems">
 
@@ -521,35 +523,35 @@
                                     <DataTemplate x:DataType="objects:Phone">
 
                                         <Grid
-                                            ColumnDefinitions="*,36,36" 
+                                            ColumnDefinitions="*,36,36"
                                             ColumnSpacing="2"
                                             Margin="0,0,0,4">
 
-                                            <RadioButton 
+                                            <RadioButton
                                                 Style="{StaticResource NumberOption}"
-                                                Content="{Binding Number, Converter={converters:PhoneFormatConverter}}" 
-                                                IsChecked="{Binding IsPrimary, Mode=OneWay}" 
+                                                Content="{Binding Number, Converter={converters:PhoneFormatConverter}}"
+                                                IsChecked="{Binding IsPrimary, Mode=OneWay}"
                                                 CheckedChanged="OnPrimaryPhoneCheckedChanged"
                                                 SemanticProperties.Description="{Binding Number, StringFormat='Selecionar {0} como principal'}"
                                                 ToolTipProperties.Text="{Binding Number, StringFormat='Selecionar {0} como principal'}" />
 
-                                            <ImageButton 
-                                                Grid.Column="1" 
-                                                Style="{StaticResource CompactNumberAction}" 
-                                                Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}" 
-                                                SemanticProperties.Description="Editar telefone" 
+                                            <ImageButton
+                                                Grid.Column="1"
+                                                Style="{StaticResource CompactNumberAction}"
+                                                Source="{icons:ThemedIcon Icon=Edit24, IconSize=18, Role=Surface}"
+                                                SemanticProperties.Description="Editar telefone"
                                                 ToolTipProperties.Text="Editar telefone"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}},
-                                                                  Path=EditCommand}" 
+                                                                  Path=EditCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Clicked="OnEditPhoneClicked"
                                                 Aspect="AspectFit" />
 
                                             <ImageButton
                                                 Grid.Column="2"
-                                                Style="{StaticResource CompactNumberAction}" 
-                                                Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}" 
-                                                SemanticProperties.Description="Excluir telefone" 
+                                                Style="{StaticResource CompactNumberAction}"
+                                                Source="{icons:ThemedIcon Icon=Delete24, IconSize=18, Role=Danger}"
+                                                SemanticProperties.Description="Excluir telefone"
                                                 ToolTipProperties.Text="Excluir telefone"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PhoneEditorViewModel}},
                                                                   Path=DeleteCommand}"
@@ -561,42 +563,42 @@
                             </CollectionView>
 
                             <Label
-                                Text="Selecione o número principal." 
+                                Text="Selecione o número principal."
                                 FontSize="11"
-                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, 
+                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary},
                                                             Dark={StaticResource DarkTextSecondary}}" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Bolsa Família -->
-                    <Border 
-                        Style="{StaticResource FieldBorder}" 
-                        Padding="10" 
-                        Grid.Column="0" 
+                    <Border
+                        Style="{StaticResource FieldBorder}"
+                        Padding="10"
+                        Grid.Column="0"
                         VerticalOptions="Start">
 
-                        <Grid 
+                        <Grid
                             RowDefinitions="*,auto,auto"
-                            RowSpacing="10" 
+                            RowSpacing="10"
                             Margin="0">
 
-                            <Grid 
+                            <Grid
                                 Grid.Row="0"
                                 ColumnDefinitions="auto,*">
 
-                                <Label 
-                                    Grid.Column="0" 
+                                <Label
+                                    Grid.Column="0"
                                     Style="{StaticResource labels}"
                                     VerticalOptions="Center"
                                     VerticalTextAlignment="Center"
                                     HorizontalOptions="Start"
                                     Text="Bolsa Família" />
 
-                                <Switch 
-                                    Grid.Column="1" 
+                                <Switch
+                                    Grid.Column="1"
                                     IsToggled="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                        Path=BindingContext.IsBolsaFamiliaSelected, 
-                                                        Mode=TwoWay}" 
+                                                        Path=BindingContext.IsBolsaFamiliaSelected,
+                                                        Mode=TwoWay}"
                                     VerticalOptions="Center"
                                     HorizontalOptions="End"
                                     ThumbColor="{AppThemeBinding Default={StaticResource Surface},
@@ -605,59 +607,59 @@
 
                             <Entry
                                 Grid.Row="1"
-                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                    Path=BindingContext.IsBolsaFamiliaSelected}" 
-                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                    Path=BindingContext.IsBolsaFamiliaSelected}"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                Path=BindingContext.BolsaFamiliaNisInput,
-                                               Mode=TwoWay}" 
+                                               Mode=TwoWay}"
                                 Placeholder="Número NIS"
-                                MaxLength="11" 
+                                MaxLength="11"
                                 Keyboard="Numeric"
-                                FontSize="16" 
+                                FontSize="16"
                                 MinimumHeightRequest="44" />
 
                             <Grid
                                 Grid.Row="2"
-                                ColumnDefinitions="*,auto,auto" 
+                                ColumnDefinitions="*,auto,auto"
                                 ColumnSpacing="8"
-                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                     Path=BindingContext.IsBolsaFamiliaSelected}">
 
-                                <Entry 
+                                <Entry
                                     Grid.Column="0"
                                     IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                        Path=BindingContext.IsBolsaFamiliaSelected}" 
-                                    Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                   Path=BindingContext.BolsaFamiliaResponsibleNameInput}" 
+                                                        Path=BindingContext.IsBolsaFamiliaSelected}"
+                                    Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                   Path=BindingContext.BolsaFamiliaResponsibleNameInput}"
                                     Placeholder="Responsável"
                                     IsReadOnly="True"
                                     IsSpellCheckEnabled="False"
-                                    FontSize="16" 
+                                    FontSize="16"
                                     MinimumHeightRequest="44" />
 
-                                <ImageButton 
-                                    Grid.Column="1" 
+                                <ImageButton
+                                    Grid.Column="1"
                                     Style="{StaticResource SoftIconButton}"
                                     Source="{icons:ThemedIcon Icon=Search32, IconSize=20, Role=OnFill}"
                                     IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                        Path=BindingContext.IsBolsaFamiliaSelected}" 
+                                                        Path=BindingContext.IsBolsaFamiliaSelected}"
                                     HeightRequest="40"
-                                    WidthRequest="40" 
-                                    Padding="8" 
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                    WidthRequest="40"
+                                    Padding="8"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                       Path=BindingContext.SelectBolsaFamiliaResponsibleCommand}"
                                     Aspect="AspectFit" />
 
                                 <ImageButton
-                                    Grid.Column="2" 
+                                    Grid.Column="2"
                                     Style="{StaticResource SoftIconButton}"
-                                    Source="{icons:ThemedIcon Icon=DismissCircle24, IconSize=20, Role=OnFill}" 
+                                    Source="{icons:ThemedIcon Icon=DismissCircle24, IconSize=20, Role=OnFill}"
                                     HeightRequest="40"
-                                    WidthRequest="40" 
-                                    Padding="8" 
+                                    WidthRequest="40"
+                                    Padding="8"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                      Path=BindingContext.ClearBolsaFamiliaResponsibleCommand}" 
-                                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                                      Path=BindingContext.ClearBolsaFamiliaResponsibleCommand}"
+                                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                         Path=BindingContext.HasBolsaFamiliaResponsible}"
                                     Aspect="AspectFit" />
                             </Grid>
@@ -666,42 +668,42 @@
 
                     <!-- Cadastro ativo -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
-                        Padding="10" 
-                        Margin="0" 
+                        Style="{StaticResource FieldBorder}"
+                        Padding="10"
+                        Margin="0"
                         Grid.Column="0"
                         VerticalOptions="Start">
 
-                        <Grid 
-                            RowDefinitions="auto,auto" 
+                        <Grid
+                            RowDefinitions="auto,auto"
                             RowSpacing="8">
 
                             <Grid ColumnDefinitions="*,auto">
 
-                                <Label 
-                                    Grid.Column="0" 
-                                    Style="{StaticResource labels}" 
-                                    VerticalOptions="Center" 
+                                <Label
+                                    Grid.Column="0"
+                                    Style="{StaticResource labels}"
+                                    VerticalOptions="Center"
                                     HorizontalOptions="Start"
                                     Text="Cadastro ativo" />
 
                                 <Switch
-                                    Grid.Column="1" 
+                                    Grid.Column="1"
                                     x:Name="PatientActiveSwitch"
                                     IsToggled="{Binding IsActive, Mode=TwoWay}"
-                                    OnColor="{AppThemeBinding Light={StaticResource Primary}, 
+                                    OnColor="{AppThemeBinding Light={StaticResource Primary},
                                                               Dark={StaticResource PrimaryLight}}"
-                                    ThumbColor="{AppThemeBinding Light={StaticResource Surface}, 
+                                    ThumbColor="{AppThemeBinding Light={StaticResource Surface},
                                                                  Dark={StaticResource DarkSurface}}" />
                             </Grid>
 
-                            <Entry 
-                                Grid.Row="1" 
+                            <Entry
+                                Grid.Row="1"
                                 IsVisible="False"
                                 Placeholder="Motivo da desativação"
-                                Keyboard="Text" 
+                                Keyboard="Text"
                                 MaxLength="50"
-                                Text="{Binding StatusReason, Mode=TwoWay}" 
+                                Text="{Binding StatusReason, Mode=TwoWay}"
                                 FontSize="16"
                                 MinimumHeightRequest="44">
 
@@ -716,19 +718,19 @@
 
                     <!-- Observações -->
                     <Border
-                        Style="{StaticResource FieldBorder}" 
-                        Padding="0" 
+                        Style="{StaticResource FieldBorder}"
+                        Padding="0"
                         Grid.Column="0">
 
                         <Entry
-                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, 
-                                                        Dark={StaticResource DarkTextPrimary}}" 
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
+                                                        Dark={StaticResource DarkTextPrimary}}"
                             MaxLength="100"
                             Placeholder="Observações"
                             Margin="0"
                             Text="{Binding Observacao, Mode=TwoWay}"
                             VerticalOptions="Start"
-                            FontSize="16" 
+                            FontSize="16"
                             MinimumHeightRequest="44" />
                     </Border>
                 </VerticalStackLayout>
@@ -747,175 +749,116 @@
                     VerticalOptions="Start">
 
                     <Label
-                        Text="Condições de saúde" 
-                        FontSize="20" 
-                        TextColor="{AppThemeBinding Default={StaticResource TextPrimary}, 
-                                                    Dark={StaticResource DarkTextPrimary}}" 
-                        HorizontalOptions="Center" 
+                        Text="Condições de saúde"
+                        FontSize="20"
+                        TextColor="{AppThemeBinding Default={StaticResource TextPrimary},
+                                                    Dark={StaticResource DarkTextPrimary}}"
+                        HorizontalOptions="Center"
                         VerticalOptions="Start"
-                        FontAttributes="Bold" 
+                        FontAttributes="Bold"
                         Margin="0,15,0,0"
-                        Grid.Row="0" 
+                        Grid.Row="0"
                         Grid.Column="0" />
 
-                    <VerticalStackLayout 
-                        Grid.Row="1" 
+                    <VerticalStackLayout
+                        Grid.Row="1"
                         Grid.Column="0"
                         VerticalOptions="Start"
-                        Spacing="8" 
-                        BindableLayout.ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                        Spacing="8"
+                        BindableLayout.ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                              Path=BindingContext.CommonConditions}">
 
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="objects:HealthConditions">
 
                                 <Grid
-                                    RowDefinitions="auto,auto"
+                                    RowDefinitions="auto,auto,auto"
                                     ColumnDefinitions="*,auto"
                                     ColumnSpacing="15"
-                                    Padding="4" 
+                                    Padding="4"
                                     Margin="0"
                                     BackgroundColor="Transparent">
 
-                                    <Label 
+                                    <Label
                                         Grid.Row="0"
                                         Grid.Column="0"
                                         Text="{Binding Name}"
                                         VerticalOptions="Center"
                                         LineBreakMode="WordWrap"
-                                        FontSize="16" 
-                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, 
+                                        FontSize="16"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
                                                                     Dark={StaticResource DarkTextPrimary}}"
                                         Opacity="0.8" />
 
-                                    <CheckBox 
-                                        Grid.Row="0" 
-                                        Grid.Column="1" 
+                                    <CheckBox
+                                        Grid.Row="0"
+                                        Grid.Column="1"
                                         HorizontalOptions="End"
-                                        IsChecked="{Binding Selected, Mode=TwoWay}" 
+                                        IsChecked="{Binding Selected, Mode=TwoWay}"
                                         Color="{AppThemeBinding Light={StaticResource Primary},
                                                                 Dark={StaticResource PrimaryLight}}"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                           Path=BindingContext.SwitchConditionCommand}"
                                         CommandParameter="{Binding .}" />
 
-                                    <VerticalStackLayout
-                                        Grid.Row="1"
-                                        Grid.ColumnSpan="2"
-                                        Margin="18,4,0,0"
-                                        Spacing="6" 
-                                        IsVisible="{Binding ShowDiabetesDetails}">
-
-                                        <Grid 
-                                            ColumnDefinitions="*,auto,auto"
-                                            ColumnSpacing="10">
-
-                                            <Label 
-                                                Grid.Column="0"
-                                                Text="Tipo" 
-                                                VerticalOptions="Center"
-                                                LineBreakMode="WordWrap"
-                                                FontSize="16" 
-                                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
-                                                                            Dark={StaticResource DarkTextPrimary}}"
-                                                Opacity="0.75" />
-
-                                            <Picker
-                                                Grid.Column="1"
-                                                ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                                      Path=BindingContext.DiabetesTypeOptions}" 
-                                                SelectedItem="{Binding SelectedDiabetesType, Mode=TwoWay}"
-                                                FontSize="16"
-                                                HorizontalOptions="End" 
-                                                VerticalOptions="Center" 
-                                                WidthRequest="190" 
-                                                MinimumHeightRequest="44" />
-
-                                            <ImageButton
-                                                Grid.Column="2"
-                                                Source="{icons:ThemedIcon Icon=DismissCircle24, IconSize=20, Role=Danger}"
-                                                HeightRequest="36" 
-                                                WidthRequest="36"
-                                                Padding="8"
-                                                VerticalOptions="Center"
-                                                Aspect="AspectFit" 
-                                                IsVisible="{Binding HasSelectedDiabetesType}"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                                  Path=BindingContext.ClearDiabetesTypeCommand}" 
-                                                CommandParameter="{Binding .}" />
-                                        </Grid>
-
-                                        <Grid 
-                                            ColumnDefinitions="*,auto"
-                                            ColumnSpacing="15">
-
-                                            <Label 
-                                                Grid.Column="0"
-                                                Text="Insulinodependente" 
-                                                LineBreakMode="WordWrap"
-                                                FontSize="16" 
-                                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
-                                                                            Dark={StaticResource DarkTextPrimary}}"
-                                                Opacity="0.75" />
-
-                                            <CheckBox
-                                                Grid.Column="1" 
-                                                HorizontalOptions="End"
-                                                IsChecked="{Binding InsulinDependentSelected, Mode=TwoWay}" 
-                                                Color="{AppThemeBinding Light={StaticResource Primary}, 
-                                                                        Dark={StaticResource PrimaryLight}}" />
-                                        </Grid>
-                                    </VerticalStackLayout>
-                                </Grid>
+                                    <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10"
+ Margin="18,4,0,0" IsVisible="{Binding ShowRegistrationDetails}">
+ <Label Text="{Binding RegistrationSummary}" VerticalOptions="Center" LineBreakMode="WordWrap" FontSize="14"/>
+ <Button Grid.Column="1" Text="Ver detalhes" Style="{StaticResource GhostButton}"
+ Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenConditionDetailsCommand}"
+ CommandParameter="{Binding .}"/>
+ </Grid>
+ </Grid>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
-                    <Button 
+
+                    <Button
                         Text="Adicionar CID"
                         HorizontalOptions="{OnPlatform Default=Fill, WinUI=Start}"
                         Style="{StaticResource Buttons}"
                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                          Path=BindingContext.OpenConditionsPopup}" 
-                        Grid.Row="2" 
-                        Grid.Column="0" 
+                                          Path=BindingContext.OpenConditionsPopup}"
+                        Grid.Row="2"
+                        Grid.Column="0"
                         VerticalOptions="Start" />
 
-                    <VerticalStackLayout 
-                        Grid.Row="3" 
-                        Grid.Column="0" 
-                        VerticalOptions="Start" 
-                        Spacing="8" 
-                        BindableLayout.ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                    <VerticalStackLayout
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        VerticalOptions="Start"
+                        Spacing="8"
+                        BindableLayout.ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                              Path=BindingContext.HealthCategories}">
 
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="objects:HealthConditions">
 
                                 <Grid
-                                    ColumnDefinitions="*,auto" 
+                                    ColumnDefinitions="*,auto"
                                     ColumnSpacing="15"
                                     Padding="4"
-                                    Margin="0" 
+                                    Margin="0"
                                     BackgroundColor="Transparent">
 
-                                    <Label 
+                                    <Label
                                         Grid.Column="0"
                                         Text="{Binding Name}"
-                                        FontSize="18" 
-                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, 
-                                                                    Dark={StaticResource DarkTextPrimary}}" 
-                                        Opacity="0.8" 
+                                        FontSize="18"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
+                                                                    Dark={StaticResource DarkTextPrimary}}"
+                                        Opacity="0.8"
                                         HorizontalOptions="Start" />
 
-                                    <ImageButton 
+                                    <ImageButton
                                         Grid.Column="1"
                                         Source="{icons:ThemedIcon Icon=DismissCircle24, IconSize=20, Role=Danger}"
-                                        MaximumHeightRequest="{OnPlatform Android=20}" 
+                                        MaximumHeightRequest="{OnPlatform Android=20}"
                                         MaximumWidthRequest="{OnPlatform Android=20}"
-                                        Margin="0,0,5,0" 
+                                        Margin="0,0,5,0"
                                         Aspect="AspectFit"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                           Path=BindingContext.RemoveConditionCommand}"
                                         CommandParameter="{Binding .}" />
                                 </Grid>
@@ -923,47 +866,48 @@
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
-                    <Border 
+                    <Border
                         Style="{StaticResource FieldBorder}"
-                        IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                        IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                             Path=BindingContext.IsPregnancySelected}"
-                        Grid.Row="4" 
+                        Grid.Row="4"
                         Grid.Column="0"
                         VerticalOptions="Start">
 
-                        <Grid 
+                        <Grid
                             RowDefinitions="auto,auto"
                             RowSpacing="8">
 
-                            <Label 
+                            <Label
                                 Grid.Row="0"
                                 Text="Gestante / Puérpera"
                                 Style="{StaticResource labels}" />
 
-                            <Grid 
-                                Grid.Row="1" 
-                                ColumnDefinitions="*,auto" 
+                            <Grid
+                                Grid.Row="1"
+                                ColumnDefinitions="*,auto"
                                 ColumnSpacing="10">
 
-                                <Label 
-                                    Grid.Column="0" 
-                                    Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
-                                                   Path=BindingContext.PregnancySummary}" 
+                                <Label
+                                    Grid.Column="0"
+                                    Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                   Path=BindingContext.PregnancySummary}"
                                     LineBreakMode="WordWrap"
-                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, 
+                                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary},
                                                                 Dark={StaticResource DarkTextPrimary}}"
-                                    FontSize="16" 
+                                    FontSize="16"
                                     Opacity="0.8" />
 
                                 <Button
-                                    Grid.Column="1" 
-                                    Text="Ver detalhes" 
+                                    Grid.Column="1"
+                                    Text="Ver detalhes"
                                     Style="{StaticResource GhostButton}"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
                                                       Path=BindingContext.OpenPregnancyDetailsCommand}" />
                             </Grid>
                         </Grid>
                     </Border>
+                    <kin:KinshipSection Editor="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FamilyLinks}" />
                 </VerticalStackLayout>
             </Grid>
         </ScrollView>

@@ -25,6 +25,10 @@ namespace ACS_View.UseCases.Services
                 // Retain the existing credential upgrade, including secure removal of plaintext.
                 // Its intentional security changes are separate from relational preservation.
                 await MigrateUserTableAsync();
+#if ANDROID || WINDOWS || IOS || MACCATALYST
+                EncryptedBackupService.ApplyRestoredSettings(Connection.DatabasePath);
+#endif
+                DatabaseRecovery.CompleteProfileActivation(Connection.DatabasePath);
                 _initialized = true;
             }
             finally { _initializeLock.Release(); }

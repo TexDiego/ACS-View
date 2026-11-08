@@ -16,23 +16,50 @@ public partial class LoginPage : ContentPage
     private bool _installerPending;
     private CancellationTokenSource? _download;
 
-    public LoginPage(IAuthService authService, IDialogService dialogService, IAppUpdateService updates)
+#if WINDOWS
+    private readonly WindowsLoginAccountsView windowsAccounts;
+#endif
+    public LoginPage(IAuthService authService, IDialogService dialogService, IAppUpdateService updates, IRememberedAccountService rememberedAccounts)
     {
         InitializeComponent();
         _authService = authService;
         _dialogService = dialogService;
         _updates = updates;
+#if WINDOWS
+        windowsAccounts = new WindowsLoginAccountsView(authService, rememberedAccounts, dialogService,
+            username => { UsernameEntry.Text = username; PasswordEntry.Text = string.Empty; PasswordEntry.Focus(); },
+            WindowsHelloLoginAsync);
+        WindowsAccountsHost.Content = windowsAccounts;
+        WindowsAccountsHost.IsVisible = true;
+        UsernameEntry.TextChanged += (_, _) => windowsAccounts.UsernameChanged(UsernameEntry.Text ?? "");
+#endif
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         InputFocusGuard.ClearTextInputFocus(this);
+        if(File.Exists(Path.Combine(FileSystem.AppDataDirectory,"profile-backup-activation.json")))
+        {
+            LoginForm.IsEnabled=AccountActions.IsEnabled=RestoreBackup.IsEnabled=false;
+            UpdateStatus.Text="Restauração preparada. Feche completamente e abra o ACS View para ativar o perfil e entrar com a senha original.";
+            UpdateStatus.IsVisible=true;
+            return;
+        }
         if (_appeared) return;
         _appeared = true;
+#if WINDOWS
+        await windowsAccounts.RefreshAsync();
+#endif
         if (!await PrepareForLoginAsync() || Window is null) return;
 
-        if (await _authService.GetBiometricStatusAsync() is { Enabled: true })
+        var biometricStatus=await _authService.GetBiometricStatusAsync(); // initializes restored settings before deciding on automatic prompts
+        if(Preferences.Get("BackupRequirePasswordOnce","")=="1")
+        {
+            Preferences.Remove("BackupRequirePasswordOnce");
+            return;
+        }
+        if (biometricStatus is { Enabled: true })
         {
             await BiometricLogin();
         }
@@ -170,16 +197,13 @@ public partial class LoginPage : ContentPage
         if (sender is Button button) button.IsEnabled = false;
         try
         {
+            LoginForm.IsEnabled = AccountActions.IsEnabled = false;
             await _authService.LoginAsync(UsernameEntry.Text ?? string.Empty, PasswordEntry.Text ?? string.Empty);
+#if WINDOWS
+            await windowsAccounts.RememberAfterLoginAsync();
+#endif
 
-            if (Microsoft.Maui.Controls.Application.Current is App app)
-            {
-                await app.ResetToAuthenticatedShellAsync();
-                PasswordEntry.Text = string.Empty;
-                var user = await _authService.GetCurrentUserAsync();
-                if (string.IsNullOrEmpty(user?.RecoveryCodeHash))
-                    await Shell.Current.GoToAsync("accountsecurity");
-            }
+            await CompleteLoginNavigationAsync();
         }
         catch (Exception ex)
         {
@@ -189,13 +213,59 @@ public partial class LoginPage : ContentPage
         {
             signingIn = false;
             if (sender is Button loginButton) loginButton.IsEnabled = true;
+            SetLoginAllowed(_loginAllowed);
         }
     }
 
+    private async Task CompleteLoginNavigationAsync()
+    {
+        PasswordEntry.Text = string.Empty;
+        if (Window is null) { await _authService.LogoutAsync(); return; }
+        if (Microsoft.Maui.Controls.Application.Current is App app)
+        {
+            await app.ResetToAuthenticatedShellAsync();
+            var user = await _authService.GetCurrentUserAsync();
+            if (string.IsNullOrEmpty(user?.RecoveryCodeHash)) await Shell.Current.GoToAsync("accountsecurity");
+        }
+    }
+#if WINDOWS
+    private async Task WindowsHelloLoginAsync(int userId)
+    {
+        if (signingIn || !_loginAllowed) return;
+        signingIn = true;
+        LoginForm.IsEnabled = AccountActions.IsEnabled = false;
+        using var interaction = (Microsoft.Maui.Controls.Application.Current as App)?.BeginExternalInteraction();
+        try
+        {
+            await _authService.LoginWithWindowsHelloAsync(userId);
+            await windowsAccounts.RememberAfterLoginAsync();
+            await CompleteLoginNavigationAsync();
+        }
+        catch (OperationCanceledException) { PasswordEntry.Focus(); }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowAlertAsync("Windows Hello", ex is InvalidOperationException ? ex.Message : "Não foi possível autenticar. Use a senha.", "OK");
+        }
+        finally
+        {
+            signingIn = false;
+            SetLoginAllowed(_loginAllowed);
+            await windowsAccounts.RefreshAsync();
+            PasswordEntry.Focus();
+        }
+    }
+#endif
+
     private async void RegisterUser_Clicked(object sender, EventArgs e)
     {
-        if (!_loginAllowed) return;
+        if (!_loginAllowed || signingIn) return;
         await Shell.Current.GoToAsync("registration");
+    }
+
+    private async void RestoreBackup_Clicked(object sender, EventArgs e)
+    {
+        if(signingIn || _download is not null || _installerPending)return;
+        await Shell.Current.GoToAsync("backup");
     }
 
     private async Task BiometricLogin()
@@ -225,7 +295,7 @@ public partial class LoginPage : ContentPage
 
     private async void Button_Clicked(object sender, EventArgs e)
     {
-        if (!_loginAllowed) return;
+        if (!_loginAllowed || signingIn) return;
         await Shell.Current.GoToAsync("forgotpassword");
     }
 

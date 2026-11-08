@@ -22,14 +22,17 @@ public partial class AddRegister : ContentPage, IQueryAttributable
         IPregnancyService pregnancyService,
         ICareNotificationService careNotificationService,
         IPopupService popupService,
-        IPatientPhoneService phoneService)
+        IPatientPhoneService phoneService,
+        IKinshipService kinshipService,
+        IGlucoseMonitoringService glucoseMonitoring,
+        IPatientInfectiousFollowUpService infectiousFollowUp)
     {
         var timer = Stopwatch.StartNew();
         InitializeComponent();
 #if WINDOWS
         Content = new Desktop.DesktopAddRegister();
 #endif
-        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService);
+        BindingContext = _viewModel = new AddRegisterViewModel(patientService, cidRepo, patientCid, conditionsRepository, bolsaFamiliaRepository, insulinDependencyRepository, pregnancyService, careNotificationService, popupService, phoneService, kinshipService, glucoseMonitoring, infectiousFollowUp);
     }
 
     private bool? _sexOptionsHorizontal;
@@ -123,6 +126,7 @@ public partial class AddRegister : ContentPage, IQueryAttributable
                 _viewModel.InitializeNewPatient();
             }
 
+            if (_viewModel.FamilyLinks is not null) await _viewModel.FamilyLinks.LoadAsync(_viewModel.CurrentPatient);
             _loaded = true;
         }
         catch (Exception ex)

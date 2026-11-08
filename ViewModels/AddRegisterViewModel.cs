@@ -5,6 +5,7 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
@@ -21,7 +22,10 @@ namespace ACS_View.ViewModels
         IPregnancyService pregnancyService,
         ICareNotificationService careNotificationService,
         IPopupService popupService,
-        IPatientPhoneService phoneService) : BaseViewModel
+        IPatientPhoneService phoneService,
+        IKinshipService? kinshipService = null,
+        IGlucoseMonitoringService? glucoseMonitoring = null,
+        IPatientInfectiousFollowUpService? infectiousFollowUp = null) : BaseViewModel
     {
         private readonly IPatientService _patientService = patientService;
         private readonly ICidRepository _cidRepo = cidRepo;
@@ -46,9 +50,16 @@ namespace ACS_View.ViewModels
         [ObservableProperty] private bool isInsulinDependent;
         [ObservableProperty] private bool isPregnancySelected;
         [ObservableProperty] private string pregnancySummary = "Detalhes gestacionais não informados";
+        public HealthViewModels.GlucoseMonitoringEditorViewModel GlucoseEditor { get; } = new();
+        public HealthViewModels.InfectiousFollowUpEditorViewModel TuberculosisEditor { get; } = new(InfectiousFollowUpRules.Tuberculosis);
+        public HealthViewModels.InfectiousFollowUpEditorViewModel HivEditor { get; } = new(InfectiousFollowUpRules.Hiv);
+        private bool _infectiousLoaded = true;
+        private bool _glucoseLoaded = true;
+        private bool _hadGlucose;
         public PhoneEditorViewModel PhoneEditor { get; } = new();
         public SusNumberEditorViewModel SusEditor { get; } = new();
         private bool _phonesLoaded = true;
+        public KinshipEditorViewModel? FamilyLinks { get; } = kinshipService is null ? null : new(kinshipService);
 
         private bool _updatingParentNameInputs;
         private bool _updatingBirthDateInput;
@@ -78,6 +89,21 @@ namespace ACS_View.ViewModels
         public ICommand SelectBolsaFamiliaResponsibleCommand => new Command(async () => await SelectBolsaFamiliaResponsibleAsync());
         public ICommand ClearBolsaFamiliaResponsibleCommand => new Command(ClearBolsaFamiliaResponsible);
         public ICommand OpenPregnancyDetailsCommand => new Command(async () => await OpenPregnancyDetailsAsync());
+
+        public ICommand OpenConditionDetailsCommand => new Command<HealthConditions>(async condition => await OpenConditionDetailsAsync(condition));
+        private bool _isOpeningConditionDetails;
+        private async Task OpenConditionDetailsAsync(HealthConditions condition)
+        {
+            if (_isOpeningConditionDetails || !condition.ShowRegistrationDetails) return;
+            _isOpeningConditionDetails = true;
+            try
+            {
+                TuberculosisEditor.ShowDetails = true;
+                HivEditor.ShowDetails = true;
+                await _popupService.ShowAsync<bool>(new RegistrationConditionPopup(this, condition));
+            }
+            finally { _isOpeningConditionDetails = false; }
+        }
 
         partial void OnMotherNameInputChanged(string value)
         {
@@ -146,6 +172,8 @@ namespace ACS_View.ViewModels
         {
             _isLoadingPatient = true;
             _phonesLoaded = false;
+            _glucoseLoaded = glucoseMonitoring is null;
+            _infectiousLoaded = infectiousFollowUp is null;
             IsLoading = true;
             var timer = Stopwatch.StartNew();
             try
@@ -166,6 +194,18 @@ namespace ACS_View.ViewModels
                 SetBirthDateInput(p.BirthDate);
                 await MeasureLoadAsync("Bolsa Familia e responsavel", () => LoadBolsaFamiliaAsync(p));
                 await MeasureLoadAsync("Insulinodependencia", () => LoadInsulinDependencyAsync(p.Id));
+                if (glucoseMonitoring is not null)
+                {
+                    _glucoseLoaded = false;
+                    var glucose = await glucoseMonitoring.GetAsync(p.Id);
+                    GlucoseEditor.Load(glucose); _hadGlucose = glucose is not null; _glucoseLoaded = true;
+                }
+                if(infectiousFollowUp is not null)
+                {
+                    TuberculosisEditor.Load(await infectiousFollowUp.GetAsync(p.Id, InfectiousFollowUpRules.Tuberculosis));
+                    HivEditor.Load(await infectiousFollowUp.GetAsync(p.Id, InfectiousFollowUpRules.Hiv));
+                    _infectiousLoaded = true;
+                }
                 await MeasureLoadAsync("Gestacao", () => LoadPregnancyAsync(p.Id));
 
                 HealthCategories.Clear();
@@ -182,6 +222,14 @@ namespace ACS_View.ViewModels
                         continue;
                     }
 
+                    if(key is HealthConditionCatalog.Imunodeficiente or HealthConditionCatalog.Hiv)
+                    {
+                        var group = CommonConditions.Single(c => c.IsImmuneGroup);
+                        group.Selected = true;
+                        if(key == HealthConditionCatalog.Hiv) group.HivSelected = true;
+                        else group.ImmunodeficiencySelected = true;
+                        continue;
+                    }
                     var fixedCondition = CommonConditions.FirstOrDefault(c => string.Equals(c.ConditionKey, key, StringComparison.OrdinalIgnoreCase));
                     if (fixedCondition == null) continue;
 
@@ -295,6 +343,12 @@ namespace ACS_View.ViewModels
                         await DisplayAlertAsync("Aviso", SusEditor.Error);
                         return;
                     }
+                    if (!_glucoseLoaded) throw new InvalidOperationException("Reabra o cadastro para carregar o monitoramento glicêmico antes de salvar.");
+                    if(!_infectiousLoaded) throw new InvalidOperationException("Reabra o cadastro para carregar os acompanhamentos antes de salvar.");
+                    var selectedConditions = GetSelectedConditions();
+                    var tuberculosisValue = TuberculosisEditor.Build();
+                    var hivValue = HivEditor.Build();
+                    var glucoseValue = GlucoseEditor.Build();
                     SusEditor.ApplyTo(CurrentPatient);
 
                     if (string.IsNullOrWhiteSpace(CurrentPatient?.Name))
@@ -335,8 +389,13 @@ namespace ACS_View.ViewModels
                     }
 
                     CurrentPatient.BirthDate = BirthDateInput.Date;
+                    if (FamilyLinks is not null) await FamilyLinks.ValidatePendingAsync();
 
-                    if (CurrentPatient.Id > 0)
+                    if (FamilyLinks is not null)
+                    {
+                        await FamilyLinks.CommitAsync(CurrentPatient);
+                    }
+                    else if (CurrentPatient.Id > 0)
                     {
                         await _patientService.UpdatePatient(CurrentPatient);
                     }
@@ -364,12 +423,13 @@ namespace ACS_View.ViewModels
                     await _patientCid.DeletePatientCIDByPatientId(CurrentPatient.Id);
                     await _conditionsRepository.DeleteConditionsByPatientIdAsync(CurrentPatient.Id);
 
-                    var selectedConditions = CommonConditions.Where(condition => condition.Selected).ToList();
                     var diabetesCondition = selectedConditions.FirstOrDefault(IsDiabetesCondition);
                     var isPregnant = selectedConditions.Any(IsPregnancyCondition);
                     await SyncBolsaFamiliaAsync();
                     await SyncInsulinDependencyAsync(diabetesCondition?.InsulinDependentSelected == true);
                     await SyncPregnancyAsync(isPregnant);
+                    if (glucoseMonitoring is not null && (_hadGlucose || GlucoseEditor.HasValues))
+                        await glucoseMonitoring.SaveAsync(CurrentPatient.Id, glucoseValue);
 
                     foreach (var condition in selectedConditions)
                     {
@@ -378,6 +438,12 @@ namespace ACS_View.ViewModels
                             PatientId = CurrentPatient.Id,
                             Description = GetPersistedConditionDescription(condition)
                         });
+                    }
+
+                    if(infectiousFollowUp is not null)
+                    {
+                        if(TuberculosisEditor.HasValues) await infectiousFollowUp.SaveAsync(CurrentPatient.Id, tuberculosisValue);
+                        if(HivEditor.HasValues) await infectiousFollowUp.SaveAsync(CurrentPatient.Id, hivValue);
                     }
 
                     foreach (var cidId in selectedCidIds)
@@ -390,6 +456,7 @@ namespace ACS_View.ViewModels
                     }
 
                     await _careNotificationService.RefreshPregnancyNotificationsAsync();
+                    CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new ACS_View.Application.Health.PatientHealthChanged(CurrentPatient.Id, CurrentPatient.UserId, "context"));
                     await NavigateBackAsync();
                 });
             }
@@ -801,7 +868,7 @@ namespace ACS_View.ViewModels
 
             if (!condition.Selected)
             {
-                condition.Name = condition.ConditionKey;
+                condition.Name = condition.IsImmuneGroup ? "Imunodeficiência / HIV" : condition.ConditionKey;
                 if (condition.ConditionKey == HealthConditionCatalog.Diabetes)
                 {
                     IsInsulinDependent = false;
@@ -810,7 +877,7 @@ namespace ACS_View.ViewModels
                 }
             }
 
-            await Task.CompletedTask;
+            if (condition.ShowRegistrationDetails) await OpenConditionDetailsAsync(condition);
         }
 
         private bool HasConditionSelectionChanged(HealthConditions condition)
@@ -883,7 +950,7 @@ namespace ACS_View.ViewModels
 
             foreach (var condition in HealthConditionCatalog.Conditions)
             {
-                if (string.Equals(condition, HealthConditionCatalog.BolsaFamilia, StringComparison.OrdinalIgnoreCase))
+                if (condition == HealthConditionCatalog.Hiv || string.Equals(condition, HealthConditionCatalog.BolsaFamilia, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -892,10 +959,24 @@ namespace ACS_View.ViewModels
                 {
                     Name = string.Equals(condition, HealthConditionCatalog.Gestante, StringComparison.OrdinalIgnoreCase)
                         ? "Gestante / Puérpera"
-                        : condition,
+                        : condition == HealthConditionCatalog.Imunodeficiente ? "Imunodeficiência / HIV" : condition,
                     ConditionKey = condition
                 });
             }
+        }
+
+        private List<HealthConditions> GetSelectedConditions()
+        {
+            var selected = CommonConditions.Where(c => c.Selected && !c.IsImmuneGroup).ToList();
+            var group = CommonConditions.FirstOrDefault(c => c.IsImmuneGroup && c.Selected);
+            if(group is not null)
+            {
+                if(!group.HivSelected && !group.ImmunodeficiencySelected)
+                    throw new ArgumentException("Em Imunodeficiência / HIV, selecione a informação que foi declarada.");
+                if(group.ImmunodeficiencySelected) selected.Add(new HealthConditions { Name = HealthConditionCatalog.Imunodeficiente, ConditionKey = HealthConditionCatalog.Imunodeficiente, Selected = true });
+                if(group.HivSelected) selected.Add(new HealthConditions { Name = HealthConditionCatalog.Hiv, ConditionKey = HealthConditionCatalog.Hiv, Selected = true });
+            }
+            return selected;
         }
 
         private static string GetPersistedConditionDescription(HealthConditions condition)

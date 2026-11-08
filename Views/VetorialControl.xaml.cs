@@ -21,4 +21,23 @@ public partial class VetorialControl : ContentPage
         InputFocusGuard.ClearTextInputFocus(this);
         base.OnDisappearing();
     }
+
+    private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+#if ANDROID
+        // MAUI accumulates scroll deltas on Android. A jump can leave that offset stale.
+        if (VectorControlCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recycler)
+        {
+            BackToTopButton.IsVisible = recycler.CanScrollVertically(-1);
+            return;
+        }
+#endif
+        BackToTopButton.IsVisible = e.VerticalOffset > 0;
+    }
+
+    private void BackToTopButton_Clicked(object sender, EventArgs e)
+    {
+        VectorControlCollectionView.ScrollTo(0, position: ScrollToPosition.Start, animate: false);
+        BackToTopButton.IsVisible = false;
+    }
 }

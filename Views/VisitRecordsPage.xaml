@@ -110,6 +110,11 @@
                                                             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
                                                             <Grid ColumnDefinitions="*,38" ColumnSpacing="8">
                                                                 <VerticalStackLayout Spacing="3">
+                                                                    <VerticalStackLayout.GestureRecognizers>
+                                                                        <TapGestureRecognizer
+                                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenPersonCommand}"
+                                                                            CommandParameter="{Binding .}"/>
+                                                                    </VerticalStackLayout.GestureRecognizers>
                                                                     <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}" FontSize="14"/>
                                                                     <Label Text="{Binding VisitDate, StringFormat='{}{0:HH:mm}'}" Style="{StaticResource BodyMuted}" FontSize="12"/>
                                                                     <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="12" FontAttributes="Bold"/>

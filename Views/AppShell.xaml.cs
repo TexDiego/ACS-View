@@ -125,9 +125,13 @@ public partial class AppShell : Shell
             return;
         }
 
+        #if WINDOWS
+        Routing.RegisterRoute("FamilyGraphPage", new ServiceProviderRouteFactory<Desktop.FamilyGraphPage>(_serviceProvider));
+#endif
         routesRegistered = true;
 
         Routing.RegisterRoute("registration", new ServiceProviderRouteFactory<RegistrationPage>(_serviceProvider));
+        Routing.RegisterRoute("backup", new ServiceProviderRouteFactory<BackupPage>(_serviceProvider));
         Routing.RegisterRoute("forgotpassword", new ServiceProviderRouteFactory<ForgotPassword>(_serviceProvider));
         Routing.RegisterRoute("accountsecurity", new ServiceProviderRouteFactory<AccountSecurityPage>(_serviceProvider));
         Routing.RegisterRoute("families", new ServiceProviderRouteFactory<FamiliesPage>(_serviceProvider));

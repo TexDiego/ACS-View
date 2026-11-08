@@ -38,8 +38,14 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddSingleton<IDatabaseService, DatabaseService>();
+        services.AddSingleton<IKinshipService, KinshipService>();
+#if WINDOWS
+        services.AddTransient<ACS_View.ViewModels.FamilyGraphViewModel>();
+        services.AddTransient<ACS_View.Views.Desktop.FamilyGraphPage>();
+#endif
         services.AddSingleton<IRelationalDataService, RelationalDataService>();
         services.AddSingleton<IDatabaseBackupService, DatabaseBackupService>();
+        services.AddTransient<ACS_View.Application.Backups.IEncryptedBackupService, EncryptedBackupService>();
         services.AddSingleton<IAppStartupService, AppStartupService>();
         services.AddSingleton<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IHouseService, HouseService>();
@@ -52,6 +58,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPatientConditionSeeder, PatientConditionsSeeder>();
         services.AddSingleton<IPersonsInfoPopupService, PersonsInfoPopupService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IRememberedAccountService, RememberedAccountService>();
+#if WINDOWS
+        services.AddSingleton<IWindowsHelloService, ACS_View.Platforms.Windows.WindowsHelloService>();
+#else
+        services.AddSingleton<IWindowsHelloService, UnavailableWindowsHelloService>();
+#endif
         services.AddSingleton<IAppUpdateService, GitHubAppUpdateService>();
 #if ANDROID
         services.AddSingleton<ILocalBiometricVault, ACS_View.Platforms.Android.AndroidBiometricVault>();
@@ -107,6 +119,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<AddRegisterViewModel>();
         services.AddTransient<ProfileViewModel>();
+        services.AddTransient<BackupViewModel>();
         services.AddTransient<AddHouseViewModel>();
         services.AddTransient<AllVisitsViewModel>();
         services.AddTransient<VisitRecordsViewModel>();
@@ -115,6 +128,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<VaccinesPageViewModel>();
         services.AddTransient<NotesPageViewModel>();
         services.AddTransient<BolsaFamiliaPageViewModel>();
+        services.AddTransient<IGlucoseMonitoringService, GlucoseMonitoringService>();
+        services.AddTransient<IPatientInfectiousFollowUpService, PatientInfectiousFollowUpService>();
+        services.AddTransient<IPatientHealthDataService, PatientHealthDataService>();
         services.AddTransient<PersonsInfoViewModel>();
         services.AddTransient<Func<PersonsInfoViewModel>>(provider => provider.GetRequiredService<PersonsInfoViewModel>);
         services.AddTransient<ImportDataViewModel>();
@@ -146,6 +162,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<FamiliesPage>();
         services.AddTransient<BolsaFamiliaPage>();
         services.AddTransient<Profile>();
+        services.AddTransient<BackupPage>();
         services.AddTransient<VaccinesPage>();
         services.AddTransient<ImportDataPage>();
         services.AddTransient<DataCleanupPage>();

@@ -5,8 +5,12 @@ namespace ACS_View.Views;
 public sealed class AccountSecurityPage : ContentPage
 {
     private readonly AccountCredentialsView form;
+#if WINDOWS
+    private readonly WindowsHelloSettingsView biometrics;
+#else
     private readonly BiometricSettingsView biometrics;
-    public AccountSecurityPage(IAuthService authService)
+#endif
+    public AccountSecurityPage(IAuthService authService, IRememberedAccountService accounts, IDialogService dialogs)
     {
         Title = "Segurança da conta";
         Style = (Style)Microsoft.Maui.Controls.Application.Current!.Resources["PageBackground"];
@@ -19,7 +23,11 @@ public sealed class AccountSecurityPage : ContentPage
                 else if (Microsoft.Maui.Controls.Application.Current is App app)
                     await app.ResetToLoginShellAsync();
             });
+#if WINDOWS
+        biometrics = new WindowsHelloSettingsView(authService, accounts, dialogs);
+#else
         biometrics = new BiometricSettingsView(authService);
+#endif
         form.RecoveryCodeShown += (_, _) => biometrics.IsVisible = false;
         Content = new ScrollView { Content = new VerticalStackLayout { Children = { biometrics, form } } };
         form.UseParentScrolling();

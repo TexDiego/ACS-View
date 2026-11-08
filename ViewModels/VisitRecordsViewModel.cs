@@ -3,6 +3,7 @@ using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Diagnostics;
@@ -13,6 +14,9 @@ namespace ACS_View.ViewModels;
 public partial class VisitRecordsViewModel : BaseViewModel
 {
     private readonly IVisitsService visitsService;
+    private readonly IPatientService patientService;
+    private readonly IPersonsInfoPopupService personsInfoPopupService;
+    private readonly ISnackbarService snackbarService;
     private readonly DateTime currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private readonly DateTime minimumMonth = new(DateTime.Today.AddYears(-1).Year, DateTime.Today.AddYears(-1).Month, 1);
     private int loadedVersion = -1;
@@ -33,9 +37,16 @@ public partial class VisitRecordsViewModel : BaseViewModel
     public ICommand PreviousMonthCommand { get; }
     public ICommand NextMonthCommand { get; }
 
-    public VisitRecordsViewModel(IVisitsService visitsService)
+    public VisitRecordsViewModel(
+        IVisitsService visitsService,
+        IPatientService patientService,
+        IPersonsInfoPopupService personsInfoPopupService,
+        ISnackbarService snackbarService)
     {
         this.visitsService = visitsService;
+        this.patientService = patientService;
+        this.personsInfoPopupService = personsInfoPopupService;
+        this.snackbarService = snackbarService;
         StatusFilters = new ObservableCollection<VisitStatusFilterOption>(
         [
             new("Todos", null, true),
@@ -129,12 +140,50 @@ public partial class VisitRecordsViewModel : BaseViewModel
 
     private async Task GoToFamilyAsync(VisitRecordFamilyGroupDto? group)
     {
-        if (group is null || group.HouseId <= 0)
+        if (group is null)
         {
             return;
         }
 
+        if (group.FamilyId <= 0)
+        {
+            await snackbarService.ShowAsync("Este registro de visita não tem uma família vinculada.", SnackbarStyle.Error);
+            return;
+        }
+
+        if (group.HouseId <= 0)
+        {
+            await snackbarService.ShowAsync("A família deste registro não tem uma residência vinculada.", SnackbarStyle.Error);
+            return;
+        }
+
         await NavigateToAsync("families", new Dictionary<string, object> { { "id", group.HouseId } });
+    }
+
+    [RelayCommand]
+    private async Task OpenPersonAsync(VisitRecordDto? visit)
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var patient = visit.PatientId > 0 ? await patientService.GetPatientById(visit.PatientId) : null;
+            if (patient is null)
+            {
+                await snackbarService.ShowAsync("O cadastro da pessoa deste registro não foi encontrado.", SnackbarStyle.Error);
+                return;
+            }
+
+            await personsInfoPopupService.ShowAsync(patient);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Erro ao abrir o cadastro da pessoa: {ex.Message}");
+            await snackbarService.ShowAsync("Não foi possível abrir o cadastro da pessoa.", SnackbarStyle.Error);
+        }
     }
 
     private string BuildFooterText(int total)

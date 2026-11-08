@@ -4,9 +4,13 @@ namespace ACS_View.Application.Interfaces;
 
 public interface IAuthService
 {
+    Task VerifyCurrentPasswordAsync(string password) => throw new InvalidOperationException("Confirmação de senha indisponível.");
     Task<bool> IsAuthenticatedAsync();
     Task LoginAsync(string username, string password);
     Task LogoutAsync();
+    Task<WindowsHelloStatus> GetWindowsHelloStatusAsync(int? userId = null);
+    Task ConfigureWindowsHelloAsync(string currentPassword, bool enable);
+    Task LoginWithWindowsHelloAsync(int userId);
     Task<User?> GetCurrentUserAsync();
     Task<string> RegisterAsync(string username, string password);
     Task<string> ResetPasswordAsync(string username, string recoveryCode, string newPassword);

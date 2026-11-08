@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
@@ -74,7 +74,9 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                 v.VisitDate,
                 v.Status,
                 v.Notes,
-                COALESCE(NULLIF(TRIM(responsible.Name), ''), 'Familia ' || v.FamilyId) AS FamilyName
+                CASE WHEN v.FamilyId <= 0 THEN 'Sem família vinculada'
+                     ELSE COALESCE(NULLIF(TRIM(responsible.Name), ''), 'Família ' || v.FamilyId)
+                END AS FamilyName
             FROM Visits v
             LEFT JOIN Patient p ON p.UserId = v.UserId AND p.Id = v.PatientId
             LEFT JOIN LegacyFamilyMap fm ON fm.UserId=v.UserId AND fm.LegacyHouseId=v.HouseId
@@ -158,71 +160,108 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         return options;
     }
 
+    public async Task<PatientVisitSummaryDto> GetPatientVisitSummaryAsync(int patientId, DateTime referenceDate)
+    {
+        var data = await LoadFollowUpDataAsync(patientId);
+        var patient = data.Patients.SingleOrDefault();
+        return patient is null ? new PatientVisitSummaryDto { PatientId = patientId } : await Task.Run(() => BuildSummary(patient, data, referenceDate));
+    }
+
     public async Task<List<VisitSuggestionDto>> GetVisitSuggestionsAsync(DateTime referenceDate)
     {
-        var userId = currentUserContext.RequireCurrentUserId();
-        await PurgeExpiredVisitsAsync(userId, referenceDate);
-        var patients = await _connection.Table<Patient>()
-            .Where(patient => patient.UserId == userId && patient.IsActive)
-            .ToListAsync();
-
-        var suggestions = new List<VisitSuggestionDto>();
-        foreach (var patient in patients)
+        var data = await LoadFollowUpDataAsync(null);
+        return await Task.Run(() => data.Patients.Select(patient =>
         {
-            var careLines = await GetCareLinesAsync(patient, referenceDate);
-            if (careLines.Count == 0)
+            var summary = BuildSummary(patient, data, referenceDate);
+            var primary = summary.Primary;
+            if (primary is null || summary.Evaluations.All(e => e.Urgency == 0)) return null;
+            var priority = VisitPriorityCalculator.Calculate(summary.Evaluations.Select(e => e.CareLine));
+            return new VisitSuggestionDto
             {
-                continue;
-            }
-
-            var priority = VisitPriorityCalculator.Calculate(careLines);
-            var lastVisit = await GetLastCompletedVisitDateAsync(userId, patient.Id);
-
-            foreach (var careLine in careLines)
-            {
-                var rule = VisitScoringRuleCatalog.GetRule(careLine);
-                if (rule is null)
-                {
-                    continue;
-                }
-
-                var completedVisits = await CountCompletedVisitDaysInReferenceMonthAsync(userId, patient.Id, referenceDate);
-                var missingVisits = Math.Max(0, rule.RequiredVisits - completedVisits);
-                if (missingVisits <= 0)
-                {
-                    continue;
-                }
-
-                suggestions.Add(new VisitSuggestionDto
-                {
-                    PatientId = patient.Id,
-                    HouseId = patient.HouseId,
-                    FamilyId = patient.FamilyId,
-                    PatientName = patient.Name,
-                    FamilyName = BuildSuggestionFamilyName(patient),
-                    CareLineType = careLine.ToString(),
-                    PriorityFactor = priority.Factor,
-                    PriorityLabel = priority.Label,
-                    RequiredVisits = rule.RequiredVisits,
-                    CompletedVisits = completedVisits,
-                    MissingVisits = missingVisits,
-                    HasNoCompletedVisitsInRecommendedPeriod = completedVisits == 0,
-                    Points = rule.Points,
-                    Reason = BuildSuggestionReason(careLine),
-                    LastVisitDate = lastVisit
-                });
-            }
-        }
-
-        return MergePatientSuggestions(suggestions)
-            .OrderByDescending(suggestion => suggestion.HasNoCompletedVisitsInRecommendedPeriod)
-            .ThenByDescending(suggestion => suggestion.PriorityFactor)
-            .ThenByDescending(suggestion => suggestion.Points)
-            .ThenByDescending(suggestion => suggestion.MissingVisits)
-            .ThenBy(suggestion => suggestion.LastVisitDate ?? DateTime.MinValue)
-            .ThenBy(suggestion => suggestion.PatientName)
-            .ToList();
+                PatientId = patient.Id, HouseId = patient.HouseId, FamilyId = patient.FamilyId,
+                PatientName = patient.Name, FamilyName = BuildSuggestionFamilyName(patient),
+                CareLineType = string.Join(", ", summary.Evaluations.Select(e => GetCareLineLabel(e.CareLine.ToString()))),
+                PriorityFactor = priority.Factor, PriorityLabel = priority.Label,
+                RequiredVisits = primary.Required, CompletedVisits = primary.Completed, MissingVisits = primary.Missing,
+                HasNoCompletedVisitsInRecommendedPeriod = primary.Completed == 0,
+                Points = summary.Evaluations.Sum(e => VisitScoringRuleCatalog.GetRule(e.CareLine)!.Points),
+                Reason = string.Join(", ", summary.Evaluations.Select(e => GetCareLineLabel(e.CareLine.ToString()))),
+                DueDate = primary.Deadline, IsOverdue = primary.Status == VisitFollowUpStatus.Overdue,
+                LastVisitDate = summary.LastCompletedVisit, Summary = summary,
+                FollowUpText = $"{primary.StatusText}. {primary.Progress}" +
+                    (primary.RecommendedDate.HasValue ? $" Planejamento: {primary.RecommendedDate:dd/MM/yyyy}." : "") +
+                    (primary.Deadline.HasValue ? $" Prazo da regra: {primary.Deadline:dd/MM/yyyy}." : "")
+            };
+        }).Where(s => s != null).Select(s => s!).OrderByDescending(s => s.Summary!.Primary!.Urgency)
+          .ThenBy(s => s.DueDate ?? DateTime.MaxValue).ThenByDescending(s => s.PriorityFactor)
+          .ThenByDescending(s => s.Points).ThenBy(s => s.PatientName).ToList());
     }
+
+    // Fixed number of scoped queries; the popup uses the same pipeline with a patient predicate.
+    private async Task<FollowUpData> LoadFollowUpDataAsync(int? patientId)
+    {
+        var user = currentUserContext.RequireCurrentUserId();
+        var args = patientId.HasValue ? new object[] { user, patientId.Value } : new object[] { user };
+        var predicate = patientId.HasValue ? " AND PatientId=?" : "";
+        var birthSql = ACS_View.Infrastructure.Data.Migrations.LegacyDateSql.AsTicks("\"BirthDate\"");
+        var patientProjection = ACS_View.Infrastructure.Data.Migrations.LegacyDateSql.Projection<Patient>()
+            .Replace(birthSql, $"COALESCE({birthSql},0)");
+        var patients = await _connection.QueryAsync<Patient>(
+            $"SELECT {patientProjection} FROM Patient WHERE UserId=?" +
+            (patientId.HasValue ? " AND Id=?" : " AND COALESCE(IsActive,1)=1"), args);
+        var conditions = await _connection.QueryAsync<PatientConditions>("SELECT * FROM PatientConditions WHERE UserId=?" + predicate,args);
+        var benefits = await _connection.QueryAsync<PatientBolsaFamilia>("SELECT * FROM PatientBolsaFamilia WHERE UserId=?" + predicate,args);
+        var pregnancies = await _connection.QueryAsync<PatientPregnancy>($"SELECT {ACS_View.Infrastructure.Data.Migrations.LegacyDateSql.Projection<PatientPregnancy>()} FROM PatientPregnancy WHERE UserId=?" + predicate,args);
+        var visits = await _connection.QueryAsync<Visits>($"SELECT {ACS_View.Infrastructure.Data.Migrations.LegacyDateSql.Projection<Visits>()} FROM Visits WHERE UserId=?" + predicate,args);
+        var lines = await _connection.QueryAsync<VisitCareLine>("SELECT vc.* FROM VisitCareLine vc INNER JOIN Visits v ON v.Id=vc.VisitId AND v.UserId=vc.UserId WHERE vc.UserId=?" +
+            (patientId.HasValue ? " AND v.PatientId=?" : ""),args);
+        return new(patients,conditions.ToLookup(c=>c.PatientId ?? 0),benefits.Select(b=>b.PatientId).ToHashSet(),
+            pregnancies.ToLookup(p=>p.PatientId),visits.ToLookup(v=>v.PatientId),lines.ToLookup(l=>l.VisitId));
+    }
+
+    private static PatientVisitSummaryDto BuildSummary(Patient patient, FollowUpData data, DateTime referenceDate)
+    {
+        var today = referenceDate.Date;
+        var lines = new HashSet<VisitCareLineType>();
+        DateTime? birth = patient.BirthDate > DateTime.MinValue && patient.BirthDate <= today ? patient.BirthDate : null;
+        if (birth > today.AddYears(-2)) lines.Add(VisitCareLineType.Child);
+        if (birth <= today.AddYears(-60)) lines.Add(VisitCareLineType.Elderly);
+        var episodes = data.Pregnancies[patient.Id].Where(p => p.CreatedAt.Date <= today).ToList();
+        var ambiguousEpisode = episodes.Count(p => p.Status == PregnancyStatus.Active) > 1;
+        var episode = episodes
+            .OrderByDescending(p => PregnancyCalculator.IsPuerperal(p,today)).ThenByDescending(p=>p.Status==PregnancyStatus.Active)
+            .ThenByDescending(p=>p.CreatedAt).ThenByDescending(p=>p.Id).FirstOrDefault();
+        if (ambiguousEpisode) episode = null;
+        if (episode != null && PregnancyCalculator.IsPuerperal(episode,today)) lines.Add(VisitCareLineType.Postpartum);
+        else if (episode?.Status == PregnancyStatus.Active || ambiguousEpisode) lines.Add(VisitCareLineType.Pregnancy);
+        foreach (var condition in data.Conditions[patient.Id])
+        {
+            var key = HealthConditionCatalog.GetKey(condition.Description ?? "");
+            var normalized = SearchTextNormalizer.Normalize(key);
+            if (key == HealthConditionCatalog.Diabetes) lines.Add(VisitCareLineType.Diabetes);
+            else if (normalized.Contains("hipertens")) lines.Add(VisitCareLineType.Hypertension);
+            else if (key == HealthConditionCatalog.Gestante && episode == null) lines.Add(VisitCareLineType.Pregnancy);
+            else if (normalized.Contains("puerper") && episode == null) lines.Add(VisitCareLineType.Postpartum);
+        }
+        if (data.Benefits.Contains(patient.Id)) lines.Add(VisitCareLineType.BolsaFamilia);
+        if (lines.Count == 0) lines.Add(VisitCareLineType.NoVulnerability);
+        var history = data.Visits[patient.Id].Where(v=>v.VisitDate.Date<=today).ToList();
+        var completed = history.Where(v=>v.Status==nameof(VisitStatus.Completed)).ToList();
+        var evaluations = lines.Select(line => VisitFollowUpCalculator.Evaluate(line,birth,episode,
+            completed.Where(v=>line == VisitCareLineType.NoVulnerability || data.Lines[v.Id].Any(l=>l.CareLineType==line.ToString())).Select(v=>v.VisitDate),
+            completed.Any(v=>!data.Lines[v.Id].Any()),today)).ToList();
+        var last = history.OrderByDescending(v=>v.VisitDate).FirstOrDefault();
+        return new PatientVisitSummaryDto { PatientId=patient.Id, ReferenceMonth=today,
+            MonthlyCompletedVisits=completed.Count(v=>v.VisitDate.Year==today.Year && v.VisitDate.Month==today.Month),
+            LastCompletedVisit=completed.Select(v=>(DateTime?)v.VisitDate).Max(), LastAttempt=last?.VisitDate,
+            LastAttemptStatus=last?.Status ?? "", Evaluations=evaluations,
+            DataQualityNote = ambiguousEpisode ? "Há mais de um episódio gestacional ativo; revisar o cadastro." :
+                birth is null ? "Nascimento ausente ou inconsistente: elegibilidade por idade não avaliada." : "" };
+    }
+
+    private sealed record FollowUpData(List<Patient> Patients, ILookup<int,PatientConditions> Conditions,
+        HashSet<int> Benefits, ILookup<int,PatientPregnancy> Pregnancies, ILookup<int,Visits> Visits,
+        ILookup<int,VisitCareLine> Lines);
 
     public async Task PurgeExpiredVisitsAsync(DateTime referenceDate)
     {
@@ -230,7 +269,38 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         await PurgeExpiredVisitsAsync(userId, referenceDate);
     }
 
-    public async Task RegisterVisitAsync(Visits visit)
+    private readonly SemaphoreSlim quickVisitGate = new(1, 1);
+
+    public async Task<bool> RegisterQuickVisitAsync(int patientId, Func<string, string, string, Task<bool>> confirm)
+    {
+        if (!await quickVisitGate.WaitAsync(0)) return false;
+        try
+        {
+            var userId = currentUserContext.RequireCurrentUserId();
+            var session = DataChangeTracker.SessionVersion;
+            var patient = await _connection.Table<Patient>().FirstOrDefaultAsync(p => p.Id == patientId && p.UserId == userId)
+                ?? throw new InvalidOperationException("Pessoa indisponível neste perfil.");
+            if (!await confirm("Registrar visita rápida",
+                $"Deseja registrar uma visita realizada agora para esta pessoa?\n\n{patient.Name}\n{DateTime.Now:dd/MM/yyyy HH:mm}", "Confirmar visita")) return false;
+            var now = DateTime.Now;
+            var existingCount = await _connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM Visits WHERE UserId=? AND PatientId=? AND Status=? AND VisitDate>=? AND VisitDate<?",
+                userId, patientId, nameof(VisitStatus.Completed), now.Date, now.Date.AddDays(1));
+            if (existingCount > 0 && !await confirm("Visita já registrada",
+                "Esta pessoa já possui uma visita registrada hoje. Deseja registrar outra visita mesmo assim?", "Registrar outra visita")) return false;
+            if (currentUserContext.RequireCurrentUserId() != userId || session != DataChangeTracker.SessionVersion)
+                throw new InvalidOperationException("O perfil foi alterado. Abra novamente o cadastro.");
+            var visit = new Visits { PatientId = patientId, HouseId = patient.HouseId, FamilyId = patient.FamilyId,
+                VisitDate = now, Date = now, Status = nameof(VisitStatus.Completed), Address = await GetAddressAsync(userId, patient.HouseId) };
+            await RegisterVisitCoreAsync(visit, true, userId, session, existingCount);
+            return true;
+        }
+        finally { quickVisitGate.Release(); }
+    }
+
+    public Task RegisterVisitAsync(Visits visit) => RegisterVisitCoreAsync(visit);
+
+    private async Task RegisterVisitCoreAsync(Visits visit, bool quick = false, int? expectedUser = null, int? expectedSession = null, int expectedCount = 0)
     {
         ArgumentNullException.ThrowIfNull(visit);
 
@@ -242,7 +312,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         visit.Description = GetStatusLabel(visit.Status);
         visit.CreatedAt = visit.CreatedAt == default ? DateTime.Now : visit.CreatedAt;
 
-        if (visit.PatientId > 0)
+        if (!quick && visit.PatientId > 0)
         {
             await EnsureNoDuplicateVisitAsync(userId, visit.PatientId, visit.VisitDate);
         }
@@ -259,7 +329,16 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         }
         await _connection.RunInTransactionAsync(c=>
         {
-            EnsureNoDuplicateVisit(c,userId,visit.PatientId,visit.VisitDate);
+            if (quick)
+            {
+                if (c.ExecuteScalar<int>("SELECT COUNT(*) FROM Visits WHERE UserId=? AND PatientId=? AND Status=? AND VisitDate>=? AND VisitDate<?",
+                    userId, visit.PatientId, nameof(VisitStatus.Completed), visit.VisitDate.Date, visit.VisitDate.Date.AddDays(1)) != expectedCount)
+                    throw new InvalidOperationException("O histórico foi alterado. Tente novamente para confirmar a nova visita.");
+                if (currentUserContext.RequireCurrentUserId() != expectedUser || DataChangeTracker.SessionVersion != expectedSession ||
+                    c.Table<Patient>().FirstOrDefault(p => p.Id == visit.PatientId && p.UserId == userId) is null)
+                    throw new InvalidOperationException("Pessoa ou perfil alterado; tente novamente.");
+            }
+            else EnsureNoDuplicateVisit(c,userId,visit.PatientId,visit.VisitDate);
             c.Insert(visit);
             foreach(var line in careLines.Distinct())
                 c.Insert(new VisitCareLine{UserId=userId,VisitId=visit.Id,CareLineType=line.ToString()});
@@ -377,44 +456,6 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
     // Kept for caller compatibility; historical events are retained until explicit deletion.
     private Task PurgeExpiredVisitsAsync(int userId, DateTime referenceDate) => Task.CompletedTask;
 
-    private static IEnumerable<VisitSuggestionDto> MergePatientSuggestions(IEnumerable<VisitSuggestionDto> suggestions)
-    {
-        return suggestions
-            .GroupBy(suggestion => suggestion.PatientId)
-            .Select(group =>
-            {
-                var orderedItems = group.OrderByDescending(item => item.Points).ToList();
-                var first = orderedItems[0];
-                var careLines = string.Join(", ", orderedItems.Select(item => GetSuggestionReasonLabel(item.CareLineType)).Where(label => !string.IsNullOrWhiteSpace(label)).Distinct());
-                var dueDates = orderedItems.Select(item => item.DueDate).Where(date => date.HasValue).ToList();
-                var lastVisitDates = orderedItems.Select(item => item.LastVisitDate).Where(date => date.HasValue).ToList();
-                var requiredVisits = orderedItems.Max(item => item.RequiredVisits);
-                var completedVisits = orderedItems.Max(item => item.CompletedVisits);
-                var missingVisits = Math.Max(0, requiredVisits - completedVisits);
-
-                return new VisitSuggestionDto
-                {
-                    PatientId = first.PatientId,
-                    HouseId = first.HouseId,
-                    FamilyId = first.FamilyId,
-                    PatientName = first.PatientName,
-                    FamilyName = first.FamilyName,
-                    CareLineType = careLines,
-                    PriorityFactor = first.PriorityFactor,
-                    PriorityLabel = first.PriorityLabel,
-                    RequiredVisits = requiredVisits,
-                    CompletedVisits = completedVisits,
-                    MissingVisits = missingVisits,
-                    HasNoCompletedVisitsInRecommendedPeriod = completedVisits == 0,
-                    Points = orderedItems.Sum(item => item.Points),
-                    Reason = careLines,
-                    DueDate = dueDates.Count > 0 ? dueDates.Min() : null,
-                    IsOverdue = orderedItems.Any(item => item.IsOverdue),
-                    LastVisitDate = lastVisitDates.Count > 0 ? lastVisitDates.Max() : null
-                };
-            });
-    }
-
     private Task<int> CountVisitsAsync(int userId, DateTime start, DateTime end, VisitStatus? status)
     {
         if (status is null)
@@ -481,7 +522,7 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         var careLines = new List<VisitCareLineType>();
 
         var hasBirthDate=await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Patient WHERE Id=? AND UserId=? AND BirthDate IS NOT NULL AND BirthDate<>0",patient.Id,patient.UserId)>0;
-        if (hasBirthDate && patient.BirthDate > referenceDate.Date.AddYears(-2))
+        if (hasBirthDate && patient.BirthDate <= referenceDate.Date && patient.BirthDate > referenceDate.Date.AddYears(-2))
         {
             careLines.Add(VisitCareLineType.Child);
         }
@@ -570,52 +611,6 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
             : null;
     }
 
-    private async Task<int> CountCompletedVisitDaysInReferenceMonthAsync(
-        int userId,
-        int patientId,
-        DateTime referenceDate)
-    {
-        var start = new DateTime(referenceDate.Year, referenceDate.Month, 1);
-        var end = start.AddMonths(1);
-
-        var visits = await _connection.QueryAsync<VisitDateRow>(
-            """
-            SELECT DISTINCT v.VisitDate
-            FROM Visits v
-            WHERE v.UserId = ?
-              AND v.PatientId = ?
-              AND v.Status = ?
-              AND v.VisitDate >= ?
-              AND v.VisitDate < ?
-            ORDER BY v.VisitDate ASC
-            """,
-            userId,
-            patientId,
-            VisitStatus.Completed.ToString(),
-            start,
-            end);
-
-        return visits
-            .Select(visit => visit.VisitDate.Date)
-            .Distinct()
-            .Count();
-    }
-
-    private Task<DateTime?> GetLastCompletedVisitDateAsync(int userId, int patientId)
-    {
-        return _connection.ExecuteScalarAsync<DateTime?>(
-            """
-            SELECT MAX(VisitDate)
-            FROM Visits
-            WHERE UserId = ?
-              AND PatientId = ?
-              AND Status = ?
-            """,
-            userId,
-            patientId,
-            VisitStatus.Completed.ToString());
-    }
-
     private async Task<string> GetAddressAsync(int userId, int houseId)
     {
         var house = await _connection.Table<House>().FirstOrDefaultAsync(item => item.UserId == userId && item.CasaId == houseId);
@@ -694,23 +689,6 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         return $"Família {patient.FamilyId}";
     }
 
-    private static string BuildSuggestionReason(VisitCareLineType careLine)
-    {
-        return GetSuggestionReasonLabel(careLine.ToString());
-    }
-
-    private static string GetSuggestionReasonLabel(string? careLine)
-    {
-        return careLine switch
-        {
-            nameof(VisitCareLineType.Child) => "Criança até 2 anos",
-            nameof(VisitCareLineType.NoVulnerability) => "Sem critérios de vulnerabilidade",
-            nameof(VisitCareLineType.Pregnancy) => "Gestante/Puérpera",
-            nameof(VisitCareLineType.Postpartum) => "Gestante/Puérpera",
-            _ => GetCareLineLabel(careLine)
-        };
-    }
-
     private sealed class VisitRecordRow
     {
         public int Id { get; set; }
@@ -730,8 +708,4 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
         public string CareLineType { get; set; } = string.Empty;
     }
 
-    private sealed class VisitDateRow
-    {
-        public DateTime VisitDate { get; set; }
-    }
 }

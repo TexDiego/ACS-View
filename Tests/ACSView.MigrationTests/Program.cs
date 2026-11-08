@@ -16,6 +16,10 @@ Directory.CreateDirectory(directory);
 // Synthetic only. Keep failed fixtures in temp for investigation, never in Git.
 await VectorControlTests.Run(directory, Check);
 await CleanInstall();
+await HealthMonitoringTests.Run(directory, Check);
+await InfectiousFollowUpTests.Run(directory, Check);
+await VisitFollowUpIntegrationTests.Run(directory, Check);
+await QuickVisitTests.Run(directory, Check);
 await StorageChecks();
 await PhoneTests.Run(directory, Check);
 WhatsAppPhoneTests.Run(Check);
@@ -258,6 +262,7 @@ async Task LegacyAndRuntime()
     await contacts.AssignTerritoryAsync(new TerritorialAssignment{HouseId=11,CensusSector="C2",SectorCode="O2"});
     Check(await c.Table<TerritorialAssignment>().CountAsync(x=>x.HouseId==11)==2 && await c.Table<TerritorialAssignment>().CountAsync(x=>x.HouseId==11 && x.ValidTo==null)==1,"Territorial classification has separate operational/census codes and history");
     var visits=new VisitsService(db,context);await visits.PurgeExpiredVisitsAsync(DateTime.Today);
+    Check((await visits.GetPatientVisitSummaryAsync(1,DateTime.Today)).LastCompletedVisit==DateTime.Today.AddYears(-3),"Migrated legacy completed visit remains visible in individual summary");
     await visits.GetVisitRecordGroupsAsync(DateTime.Today.AddYears(-3),null);
     Check(await c.Table<Visits>().CountAsync()==2,"Visit views and former purge retain historical events");
     await patients.DeleteAsync(1);
@@ -314,6 +319,12 @@ async Task ImportIntegration()
     Check(await visits.RegisterFamilyVisitBatchAsync(request)==2 && await c.Table<VisitCareLine>().CountAsync()>0,"Visit batch and care-line snapshots commit together");
     await Reject(()=>visits.RegisterFamilyVisitBatchAsync(request),"Duplicate visit batch rejected atomically");
     Check(await c.Table<VisitBatch>().CountAsync()==1 && await c.Table<Visits>().CountAsync()==2,"Failed visit batch leaves no orphan batch or event");
+    var mixedBatch = new VisitBatchRequestDto { HouseId=request.HouseId, FamilyId=request.FamilyId,
+        VisitDate=DateTime.Today.AddDays(-1), Notes="Synthetic mixed results",
+        People=importedPeople.Select((p,i)=>new VisitBatchPersonRequestDto {PatientId=p.Id, Status=i==0?VisitStatus.Absent:VisitStatus.Refused}).ToList() };
+    Check(await visits.RegisterFamilyVisitBatchAsync(mixedBatch)==2,"Mixed family batch persists both selected outcomes");
+    var mixedEvents=await c.Table<Visits>().Where(v=>v.VisitDate==mixedBatch.VisitDate).ToListAsync();
+    Check(mixedEvents.Count(v=>v.Status=="Absent")==1 && mixedEvents.Count(v=>v.Status=="Refused")==1 && mixedEvents.All(v=>v.Notes==mixedBatch.Notes && v.BatchId.HasValue),"Mixed batch preserves individual statuses, notes and batch link");
     Check(await c.Table<PatientSusNumber>().CountAsync()==3,"Imported multiple CNS synchronize normalized table");
     Check(await c.ExecuteScalarAsync<int>("SELECT ConditionId FROM PatientConditions WHERE Description='Diabetes'")==2,"Imported condition gets stable catalog identity");
     var conditionRepo=new SQLiteConditionsRepository(db,context);

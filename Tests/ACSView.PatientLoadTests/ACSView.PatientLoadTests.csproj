@@ -3,7 +3,7 @@
   <ItemGroup>
     <PackageReference Include="sqlite-net-base" Version="1.9.172" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <Compile Include="../../Domain/**/*.cs" />
     <Compile Include="../../Application/Security/*.cs" />
     <Compile Include="../../Application/Querying/*.cs" />
@@ -32,6 +32,16 @@
     <Compile Include="../../Infrastructure/Data/SQLite/SQLiteConditionsRepository.cs" />
     <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientBolsaFamiliaRepository.cs" />
     <Compile Include="../../ViewModels/AddRegisterViewModel.cs" />
+    <Compile Include="../../ViewModels/HealthViewModels/*.cs" />
+    <Compile Include="../../Application/Interfaces/IGlucoseMonitoringService.cs" />
+    <Compile Include="../../UseCases/Services/GlucoseMonitoringService.cs" />
+    <Compile Include="../../UseCases/Services/PatientInfectiousFollowUpService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientInfectiousFollowUpService.cs" />
+    <Compile Include="../../Application/Health/*.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientHealthDataService.cs" />
+    <Compile Include="../../ViewModels/KinshipEditorViewModel.cs" />
+    <Compile Include="../../Application/Interfaces/IKinshipService.cs" />
+    <Compile Include="../../UseCases/Services/KinshipService.cs" />
     <Compile Include="../../ViewModels/ConditionPopupViewModel.cs" />
     <Compile Include="../../Infrastructure/Data/SQLite/SQLiteCidRepository.cs" />
     <Compile Include="../../Infrastructure/Data/SQLite/SQLitePatientInsulinDependencyRepository.cs" />

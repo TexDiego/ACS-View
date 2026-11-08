@@ -12,6 +12,7 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem
             IconImageSource="{controls:ThemedIcon Icon=Settings24, Role=OnFill}"
+            Text="Configurar"
             ToolTipProperties.Text="Configurar residências em lote"
             Command="{Binding OptionsCommand}"/>
     </ContentPage.ToolbarItems>
@@ -104,10 +105,12 @@
         </FlexLayout>
 
         <CollectionView
+            x:Name="VectorControlCollectionView"
             Grid.Row="2"
             ItemsSource="{Binding Items}"
             ItemTemplate="{StaticResource Rows}"
             SelectionMode="None"
+            Scrolled="CollectionView_Scrolled"
             VerticalScrollBarVisibility="Never">
 
             <CollectionView.EmptyView>
@@ -120,7 +123,7 @@
             <CollectionView.Footer>
                 <BoxView
                     Background="Transparent"
-                    HeightRequest="16"/>
+                    HeightRequest="80"/>
             </CollectionView.Footer>
 
         </CollectionView>
@@ -129,6 +132,14 @@
             Grid.Row="2"
             IsRunning="{Binding IsLoading}"
             IsVisible="{Binding IsLoading}"/>
+
+        <ImageButton
+            x:Name="BackToTopButton"
+            Grid.Row="2"
+            Opacity="1"
+            Source="{controls:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
+            Style="{StaticResource FloatingBackToTopButton}"
+            Clicked="BackToTopButton_Clicked"/>
 
     </Grid>
 </ContentPage>

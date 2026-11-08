@@ -11,6 +11,11 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <Compile Include="../../Application/Security/*.cs" />
     <Compile Include="../../Application/Interfaces/IAuthService.cs" />
+    <Compile Include="../../Application/Interfaces/IWindowsHelloService.cs" />
+    <Compile Include="../../Application/Interfaces/IRememberedAccountService.cs" />
+    <Compile Include="../../Infrastructure/Services/UnavailableWindowsHelloService.cs" />
+    <Compile Include="../../UseCases/Services/RememberedAccountService.cs" />
+    <Compile Include="../../UseCases/Services/WindowsHelloEnrollment.cs" />
     <Compile Include="../../Application/Interfaces/ILocalBiometricVault.cs" />
     <Compile Include="../../Application/Interfaces/IDatabaseService.cs" />
     <Compile Include="../../Application/Interfaces/ICurrentUserContext.cs" />
@@ -23,6 +28,7 @@
     <Compile Include="../../Domain/Entities/**/*.cs" />
     <Compile Include="../../Domain/Enums/*.cs" />
     <Compile Include="../../Domain/ValueObjects/DataChangeTracker.cs" />
+    <Compile Include="../../Domain/ValueObjects/KinshipEngine.cs" />
     <Compile Include="../../Domain/ValueObjects/SearchTextNormalizer.cs" />
     <Compile Include="../../Domain/ValueObjects/HealthConditionCatalog.cs" />
     <Compile Include="../../Domain/ValueObjects/CommonConditions.cs" />

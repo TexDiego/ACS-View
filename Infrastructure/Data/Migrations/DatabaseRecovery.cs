@@ -7,6 +7,7 @@ internal static class DatabaseRecovery
     internal const string SelectionFile="database-selection.txt";
     public static string GetSelectedDatabasePath(string directory)
     {
+        RecoverProfileActivation(directory);
         var selection=Path.Combine(directory,SelectionFile);
         if(!File.Exists(selection))return Path.Combine(directory,"health_app.db");
         var name=File.ReadAllText(selection).Trim();
@@ -15,6 +16,66 @@ internal static class DatabaseRecovery
         var path=Path.Combine(directory,name);
         if(!File.Exists(path))throw new FileNotFoundException("Banco restaurado não encontrado. Não será criado um banco vazio.");
         return path;
+    }
+
+    private const string ActivationFile="profile-backup-activation.json";
+    private sealed record ProfileActivation(string Previous,string Candidate);
+    internal static void SelectProfileBackupForNextStart(string directory,string candidate,string previous)
+    {
+        var marker=Path.Combine(directory,ActivationFile);
+        if(File.Exists(marker))throw new InvalidOperationException("Já existe uma restauração aguardando reinício.");
+        if(Path.GetDirectoryName(Path.GetFullPath(previous))!=Path.GetFullPath(directory))throw new InvalidOperationException("Origem da restauração inválida.");
+        var pending=marker+".tmp";
+        File.WriteAllText(pending,System.Text.Json.JsonSerializer.Serialize(new ProfileActivation(Path.GetFileName(previous),Path.GetFileName(candidate))));
+        File.Move(pending,marker,true);
+        try { SelectDatabaseForNextStart(directory,candidate); }
+        catch { File.Delete(marker);throw; }
+    }
+
+    private static void RecoverProfileActivation(string directory)
+    {
+        var marker=Path.Combine(directory,ActivationFile);
+        if(!File.Exists(marker))return;
+        var plan=System.Text.Json.JsonSerializer.Deserialize<ProfileActivation>(File.ReadAllText(marker))
+            ?? throw new InvalidDataException("Plano de recuperação inválido.");
+        static bool ValidName(string n)=>n=="health_app.db" || (n==Path.GetFileName(n) && n.StartsWith("health_app-restored-",StringComparison.Ordinal) && n.EndsWith(".db",StringComparison.Ordinal));
+        if(!ValidName(plan.Previous) || !ValidName(plan.Candidate))throw new InvalidDataException("Caminho de recuperação inválido.");
+        var selection=Path.Combine(directory,SelectionFile);
+        if(!File.Exists(selection) || File.ReadAllText(selection).Trim()!=plan.Candidate)
+        {
+            // A crash before/during selection must also tolerate an empty/torn pointer.
+            // The journal is the authority until activation has completed.
+            var previous=Path.Combine(directory,plan.Previous);
+            using(var check=new SQLiteConnection(previous,SQLiteOpenFlags.ReadOnly))SchemaMigrator.ValidateIntegrity(check);
+            if(plan.Previous=="health_app.db") { if(File.Exists(selection))File.Delete(selection); }
+            else SelectDatabaseForNextStart(directory,previous);
+            File.Delete(marker);return;
+        }
+        try
+        {
+            using var check=new SQLiteConnection(Path.Combine(directory,plan.Candidate),SQLiteOpenFlags.ReadOnly);
+            SchemaMigrator.ValidateIntegrity(check);
+            RelationalStore.ValidateProjection(check);
+            if(check.ExecuteScalar<int>("PRAGMA user_version")!=SchemaMigrator.CurrentVersion
+                || check.ExecuteScalar<string>("SELECT group_concat(Version,',') FROM (SELECT Version FROM SchemaMigration ORDER BY Version)")!=string.Join(',',Enumerable.Range(1,SchemaMigrator.CurrentVersion)))
+                throw new InvalidDataException("Banco preparado incompatível.");
+        }
+        catch(Exception e) when(e is IOException or SQLiteException or InvalidOperationException or InvalidDataException)
+        {
+            var previous=Path.Combine(directory,plan.Previous);
+            using(var check=new SQLiteConnection(previous,SQLiteOpenFlags.ReadOnly))SchemaMigrator.ValidateIntegrity(check);
+            if(plan.Previous=="health_app.db")File.Delete(selection);
+            else SelectDatabaseForNextStart(directory,previous);
+            File.Move(marker,marker+".failed",true);
+        }
+    }
+
+    internal static void CompleteProfileActivation(string databasePath)
+    {
+        var marker=Path.Combine(Path.GetDirectoryName(databasePath)!,ActivationFile);
+        if(!File.Exists(marker))return;
+        var plan=System.Text.Json.JsonSerializer.Deserialize<ProfileActivation>(File.ReadAllText(marker));
+        if(plan?.Candidate==Path.GetFileName(databasePath))File.Delete(marker);
     }
     public static void SelectDatabaseForNextStart(string directory,string restored)
     {

@@ -11,8 +11,6 @@ namespace ACS_View.ViewModels;
 public partial class AllVisitsViewModel : BaseViewModel
 {
     private readonly IVisitsService visitsService;
-    private int loadedVersion = -1;
-    private bool hasLoaded;
 
     [ObservableProperty] private ObservableCollection<VisitOverviewMetricCard> metrics = [];
     [ObservableProperty] private ObservableCollection<VisitSuggestionDto> suggestionsPreview = [];
@@ -31,11 +29,6 @@ public partial class AllVisitsViewModel : BaseViewModel
     internal async Task LoadVisitsAsync(bool force = false)
     {
         IsLoading = true;
-        var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
-        if (!force && hasLoaded && loadedVersion == currentVersion)
-        {
-            return;
-        }
 
         try
         {
@@ -49,8 +42,6 @@ public partial class AllVisitsViewModel : BaseViewModel
                 SuggestionsPreview = new ObservableCollection<VisitSuggestionDto>(suggestions.Take(5));
                 HasSuggestions = SuggestionsPreview.Count > 0;
 
-                loadedVersion = currentVersion;
-                hasLoaded = true;
             });
         }
         catch (Exception ex)
@@ -80,12 +71,12 @@ public partial class AllVisitsViewModel : BaseViewModel
         yield return new("Realizadas", overview.CompletedVisits.ToString());
         yield return new("Ausentes", overview.AbsentVisits.ToString());
         yield return new("Recusadas", overview.RefusedVisits.ToString());
-        yield return new("Crianças", overview.ChildVisits.ToString());
-        yield return new("Gestantes/puerperas", overview.PregnancyPostpartumVisits.ToString());
-        yield return new("Hipertensão", overview.HypertensionVisits.ToString());
-        yield return new("Diabetes", overview.DiabetesVisits.ToString());
-        yield return new("Idosos", overview.ElderlyVisits.ToString());
-        yield return new("Benefícios", overview.BenefitVisits.ToString());
+        yield return new("Registros: Crianças", overview.ChildVisits.ToString());
+        yield return new("Registros: Gestantes/puerperas", overview.PregnancyPostpartumVisits.ToString());
+        yield return new("Registros: Hipertensão", overview.HypertensionVisits.ToString());
+        yield return new("Registros: Diabetes", overview.DiabetesVisits.ToString());
+        yield return new("Registros: Idosos", overview.ElderlyVisits.ToString());
+        yield return new("Registros: Benefícios", overview.BenefitVisits.ToString());
     }
 }
 

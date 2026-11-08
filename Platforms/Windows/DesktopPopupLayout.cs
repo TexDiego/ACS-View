@@ -19,7 +19,7 @@ internal sealed class DesktopPopupLayout : IDisposable
         this.window = window;
         content = popup.Content;
         hasFixedViewport = popup is Views.FilterPopup or Views.ParentPatientPickerPopup
-            or Views.VisitPage or Views.AddMetricPopup;
+            or Views.VisitPage or Views.AddMetricPopup or Views.PersonsInfo or Views.RegistrationConditionPopup;
 
         if (!hasFixedViewport)
         {
@@ -41,10 +41,12 @@ internal sealed class DesktopPopupLayout : IDisposable
 
     private void Resize()
     {
+        if(popup is Views.PersonsInfo person) { person.Resize(); return; }
         var availableWidth = Math.Max(1, window.Width - 80);
         var availableHeight = Math.Max(1, window.Height - 144);
         var preferredWidth = popup switch
         {
+            Views.RegistrationConditionPopup => 560,
             Views.DialogPopup => 480,
             Views.OverallMetricMenuPopup => 480,
             Views.HouseFilterPopup => 720,
@@ -54,7 +56,7 @@ internal sealed class DesktopPopupLayout : IDisposable
         };
         popup.WidthRequest = Math.Min(preferredWidth, availableWidth * .9);
         popup.MaximumHeightRequest = availableHeight;
-        popup.HeightRequest = hasFixedViewport ? Math.Min(820, availableHeight) : -1;
+        popup.HeightRequest = hasFixedViewport ? Math.Min(popup is Views.RegistrationConditionPopup ? 650 : 820, availableHeight) : -1;
 
         if (viewport is not null) viewport.MaximumHeightRequest = availableHeight;
 

@@ -11,17 +11,22 @@ using CommunityToolkit.Maui.Extensions;
 namespace ACS_View.ViewModels;
 
 public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
+                                          IVisitsService _visitsService,
                                           IPatientService _patientService,
                                           IPatientCidRepository _patientCidRepository,
                                           ICidRepository _cidRepository,
-                                          ISQLiteConditionsRepository _conditionsRepository,
                                           IPatientBolsaFamiliaRepository _bolsaFamiliaRepository,
-                                          IPatientInsulinDependencyRepository _insulinDependencyRepository,
-                                          IPregnancyService _pregnancyService,
                                           IPatientPhoneService _phoneService,
                                           IPatientSusService _susService,
-                                          ISnackbarService _snackbarService) : BaseViewModel
+                                          ISnackbarService _snackbarService,
+                                          IPatientHealthDataService healthData,
+                                          IGlucoseMonitoringService glucoseMonitoring,
+                                          ICurrentUserContext currentUser,
+                                          IPatientInfectiousFollowUpService infectiousFollowUp,
+                                          IKinshipService? kinshipService = null) : BaseViewModel
 {
+    public KinshipEditorViewModel? FamilyLinks { get; } = kinshipService is null ? null : new(kinshipService, true);
+
     private static readonly Dictionary<string, string> _chapterIconMap = new()
     {
         ["Algumas doenças infecciosas e parasitárias"] = "infeccoes.png",
@@ -64,7 +69,8 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         [HealthConditionCatalog.BolsaFamilia] = "bolsafamilia.png",
         [HealthConditionCatalog.Insulinodependente] = "insulina.png",
         [HealthConditionCatalog.DependenteQuimico] = "dependentequimico.png",
-        [HealthConditionCatalog.Imunodeficiente] = "hiv.png"
+        [HealthConditionCatalog.Imunodeficiente] = "hematologicas.png",
+        [HealthConditionCatalog.Hiv] = "hiv.png"
     };
     private static readonly IReadOnlyList<CidIconRule> _specificCidIconRules =
     [
@@ -89,7 +95,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     ];
 
     [ObservableProperty] private ObservableCollection<HealthIcon> icons = [];
-    [ObservableProperty] private Patient personInfo;
+    [ObservableProperty] private Patient personInfo = new();
     [ObservableProperty] private bool hasMotherPatientLink;
     [ObservableProperty] private bool hasFatherPatientLink;
 
@@ -98,14 +104,85 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     [ObservableProperty] private string nisNumber = string.Empty;
     [ObservableProperty] private string mainPhone = string.Empty;
     [ObservableProperty] private string mainSus = string.Empty;
-    [ObservableProperty] private string pregnancyInfo = string.Empty;
-    [ObservableProperty] private string pregnancyRiskSuggestionInfo = string.Empty;
-    [ObservableProperty] private bool hasPregnancyInfo;
-    [ObservableProperty] private bool hasPregnancyRiskSuggestionInfo;
+
+
+
+
+    [ObservableProperty] public partial string VisitFollowUpInfo { get; set; } = "Carregando acompanhamento...";
     private int _loadVersion;
+    private int _summaryVersion;
 
     public ICommand OpenLinkedParentCommand => new Command<object?>(async id => await OpenLinkedPatientAsync(id));
     public ICommand GoToFamilyCommand => new Command(async () => await GoToFamilyAsync());
+
+    internal string? AddressForClipboard
+    {
+        get
+        {
+            var address = Endereco.Trim(' ', ',');
+            if (address is "" or "Sem endereço" or "Carregando endereço..." or "Endereço não encontrado")
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(Complemento) ? address : $"{address}, {Complemento.Trim()}";
+        }
+    }
+
+    internal async Task CopyInformationAsync(string? value)
+    {
+        if (HealthSession is not { } session)
+        {
+            return;
+        }
+
+        try
+        {
+            session.EnsureActive();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                await _snackbarService.ShowAsync("Esta informação não está disponível.");
+                return;
+            }
+
+            await Clipboard.Default.SetTextAsync(value.Trim());
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            await _snackbarService.ShowAsync("Não foi possível copiar a informação.", SnackbarStyle.Error);
+            return;
+        }
+
+        await _snackbarService.ShowAsync("Informação copiada.");
+    }
+
+    [RelayCommand]
+    private async Task RegisterQuickVisitAsync()
+    {
+        var patientId = PersonInfo?.Id ?? 0;
+        if (patientId <= 0) return;
+        try
+        {
+            if (!await _visitsService.RegisterQuickVisitAsync(patientId,
+                (title, message, accept) => DisplayConfirmationAsync(title, message, accept))) return;
+            // Invalidate outstanding summary reads before publishing the persisted state.
+            if (PersonInfo?.Id != patientId || HealthSession is null) return;
+            HealthSession.Invalidate("visits");
+            await LoadVisitFollowUpAsync(patientId, _loadVersion);
+            await RefreshVisitsModuleAsync();
+            await _snackbarService.ShowAsync("Visita registrada com sucesso.");
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Visita rápida: {ex}");
+            await DisplayAlertAsync("Erro", "Não foi possível registrar a visita. Tente novamente.");
+        }
+    }
 
     [RelayCommand]
     private async Task OpenWhatsAppAsync()
@@ -154,8 +231,15 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     public void SetPatient(Patient patient)
     {
         var loadVersion = Interlocked.Increment(ref _loadVersion);
+        StartHealthSession(patient);
 
         PersonInfo = patient;
+        if (FamilyLinks is not null)
+        {
+            FamilyLinks.NavigateToPerson = id => OpenLinkedPatientAsync(id);
+            FamilyLinks.NavigateToTree = async id => { await Shell.Current.ClosePopupAsync(); await Shell.Current.GoToAsync($"FamilyGraphPage?patientId={id}"); };
+            _ = FamilyLinks.LoadAsync(patient);
+        }
         HasMotherPatientLink = patient.MotherPatientId is > 0;
         HasFatherPatientLink = patient.FatherPatientId is > 0;
         Endereco = "Carregando endereço...";
@@ -163,12 +247,14 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         NisNumber = string.Empty;
         MainPhone = string.Empty;
         MainSus = string.Empty;
-        PregnancyInfo = string.Empty;
-        PregnancyRiskSuggestionInfo = string.Empty;
-        HasPregnancyInfo = false;
-        HasPregnancyRiskSuggestionInfo = false;
+
+
+
+
         Icons = [];
 
+        VisitFollowUpInfo = "Carregando acompanhamento...";
+        _ = LoadVisitFollowUpAsync(patient.Id, loadVersion);
         _ = LoadPatientDetailsAsync(patient.Id, loadVersion);
     }
 
@@ -196,6 +282,30 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
         await MainThread.InvokeOnMainThreadAsync(() => SetPatient(linkedPatient));
     }
 
+    private async Task LoadVisitFollowUpAsync(int patientId, int version)
+    {
+        var summaryVersion = Interlocked.Increment(ref _summaryVersion);
+        string text;
+        try
+        {
+            var session = HealthSession;
+            if(session is null || session.PatientId != patientId) return;
+            var summary = (await healthData.GetVisitsAsync(session)).Summary;
+            session.EnsureActive();
+            text = summary.LastCompletedVisit is DateTime date ? $"Última visita: {date:dd/MM/yyyy}" : "Nenhuma visita realizada registrada.";
+        }
+        catch (OperationCanceledException) { return; }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Acompanhamento de visitas indisponível: {ex.Message}");
+            text = "Acompanhamento de visitas indisponível.";
+        }
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            if (summaryVersion == _summaryVersion && version == _loadVersion && PersonInfo?.Id == patientId) VisitFollowUpInfo = text;
+        });
+    }
+
     private async Task LoadPatientDetailsAsync(int patientId, int loadVersion)
     {
         try
@@ -203,27 +313,32 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             var addressTask = _infoService.GetAddressInfoAsync(patientId);
             var iconsTask = BuildHealthIconsAsync(patientId);
             var bolsaFamiliaTask = _bolsaFamiliaRepository.GetByPatientIdAsync(patientId);
-            var pregnancyTask = _pregnancyService.GetDetailsByPatientIdAsync(patientId);
+            var session = HealthSession!;
             var phonesTask = _phoneService.GetPhonesByPatientId(patientId);
             var susTask = _susService.GetMainSusAsync(patientId);
 
-            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask, pregnancyTask, phonesTask, susTask);
+            await Task.WhenAll(addressTask, iconsTask, bolsaFamiliaTask, phonesTask, susTask);
 
             if (loadVersion != _loadVersion)
             {
                 return;
             }
 
-            var benefit = bolsaFamiliaTask.Result;
+            var benefit = await bolsaFamiliaTask;
+            var address = await addressTask;
+            var phones = await phonesTask;
+            var sus = await susTask;
+            var healthIcons = await iconsTask;
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                Endereco = addressTask.Result.Endereco;
-                Complemento = addressTask.Result.Complemento ?? string.Empty;
+                if(loadVersion != _loadVersion || PersonInfo?.Id != patientId) return;
+                session.EnsureActive();
+                Endereco = address.Endereco;
+                Complemento = address.Complemento ?? string.Empty;
                 NisNumber = benefit?.NisNumber?.Trim() ?? string.Empty;
-                MainPhone = phonesTask.Result?.FirstOrDefault(p => p.IsPrimary)?.Number ?? string.Empty;
-                MainSus = susTask.Result;
-                SetPregnancyInfo(pregnancyTask.Result);
-                Icons = new ObservableCollection<HealthIcon>(iconsTask.Result);
+                MainPhone = phones?.FirstOrDefault(p => p.IsPrimary)?.Number ?? string.Empty;
+                MainSus = sus;
+                Icons = new ObservableCollection<HealthIcon>(healthIcons);
             });
         }
         catch (Exception ex)
@@ -237,81 +352,29 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
+                if(loadVersion != _loadVersion || PersonInfo?.Id != patientId) return;
+                try { HealthSession?.EnsureActive(); } catch(OperationCanceledException) { return; }
                 Endereco = "Endereço não encontrado";
                 Complemento = string.Empty;
                 NisNumber = string.Empty;
-                PregnancyInfo = string.Empty;
-                PregnancyRiskSuggestionInfo = string.Empty;
-                HasPregnancyInfo = false;
-                HasPregnancyRiskSuggestionInfo = false;
+
+
+
+
                 Icons = [];
             });
         }
-    }
-
-    private void SetPregnancyInfo(Application.DTOs.PregnancyDetailsDto? details)
-    {
-        if (details?.Pregnancy is null)
-        {
-            PregnancyInfo = string.Empty;
-            PregnancyRiskSuggestionInfo = string.Empty;
-            HasPregnancyInfo = false;
-            HasPregnancyRiskSuggestionInfo = false;
-            return;
-        }
-
-        var pregnancy = details.Pregnancy;
-        if (PregnancyCalculator.IsPuerperal(pregnancy))
-        {
-            var days = PregnancyCalculator.CalculatePostpartumDays(pregnancy) ?? 0;
-            var endDate = PregnancyCalculator.CalculatePuerperiumEndDate(pregnancy);
-            PregnancyInfo = $"Puérpera\n{days} dias pós-parto\nAcompanhamento até {endDate:dd/MM/yyyy}";
-            PregnancyRiskSuggestionInfo = string.Empty;
-            HasPregnancyInfo = true;
-            HasPregnancyRiskSuggestionInfo = false;
-            return;
-        }
-
-        if (pregnancy.Status != Domain.Enums.PregnancyStatus.Active)
-        {
-            PregnancyInfo = string.Empty;
-            PregnancyRiskSuggestionInfo = string.Empty;
-            HasPregnancyInfo = false;
-            HasPregnancyRiskSuggestionInfo = false;
-            return;
-        }
-
-        var parts = new List<string> { "Gestante" };
-        if (details.GestationalAge is not null)
-        {
-            parts.Add($"{details.GestationalAge.Value} · {details.Trimester}º trimestre");
-        }
-
-        if (pregnancy.ExpectedBirthDate is not null)
-        {
-            parts.Add($"DPP: {pregnancy.ExpectedBirthDate:dd/MM/yyyy}");
-        }
-
-        parts.Add($"Risco: {details.RiskText}");
-        if (pregnancy.InformedChildrenCount is not null)
-        {
-            parts.Add($"Filhos: {pregnancy.InformedChildrenCount}");
-        }
-
-        PregnancyInfo = string.Join("\n", parts);
-        PregnancyRiskSuggestionInfo = details.RiskSuggestion.Risk != pregnancy.ManualRisk
-            ? $"Sugestão: {details.SuggestedRiskText}"
-            : string.Empty;
-        HasPregnancyInfo = true;
-        HasPregnancyRiskSuggestionInfo = !string.IsNullOrWhiteSpace(PregnancyRiskSuggestionInfo);
     }
 
     private async Task<List<HealthIcon>> BuildHealthIconsAsync(int patientId)
     {
         var iconsList = new List<HealthIcon>();
         var seenSources = new HashSet<string>();
-        var patient = await _patientService.GetPatientById(patientId);
-        var pregnancyDetails = await _pregnancyService.GetDetailsByPatientIdAsync(patientId);
+        var session = HealthSession!;
+        var patient = PersonInfo;
+        var clinical = await healthData.GetClinicalAsync(session);
+        session.EnsureActive();
+        var pregnancyDetails = clinical.Pregnancy;
         var isPuerperal = pregnancyDetails?.Pregnancy is not null &&
                            PregnancyCalculator.IsPuerperal(pregnancyDetails.Pregnancy);
         var hasActivePregnancy = pregnancyDetails?.Pregnancy.Status == Domain.Enums.PregnancyStatus.Active;
@@ -325,7 +388,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             });
         }
 
-        var conditions = await _conditionsRepository.GetConditionsByPatientIdAsync(patientId);
+        var conditions = clinical.Conditions;
         foreach (var condition in conditions)
         {
             var key = HealthConditionCatalog.GetKey(condition.Description);
@@ -356,7 +419,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             });
         }
 
-        if (await _insulinDependencyRepository.GetByPatientIdAsync(patientId) is not null &&
+        if (clinical.Insulin &&
             seenSources.Add("insulina.png"))
         {
             iconsList.Add(new HealthIcon

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             x:Class="ACS_View.Views.BackupPage" x:DataType="vm:BackupViewModel"
+             Title="Backup e restauração" Style="{StaticResource PageBackground}">
+    <ScrollView>
+        <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14" MaximumWidthRequest="780" HorizontalOptions="Fill">
+            <Label Text="{Binding ProfileName}" Style="{StaticResource SectionTitle}" />
+            <VerticalStackLayout IsEnabled="{Binding ControlsEnabled}" Spacing="14">
+                <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CanExport}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Exportar backup" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Somente os dados deste perfil serão exportados. Use uma senha independente de 12 a 128 caracteres. Sem ela, o backup não poderá ser recuperado." Style="{StaticResource BodyMuted}"/>
+                        <Entry Text="{Binding AccountPassword}" IsPassword="True" Placeholder="Senha atual da conta" MaxLength="128" IsTextPredictionEnabled="False"/>
+                        <Entry Text="{Binding BackupPassword}" IsPassword="{Binding HidePasswords}" Placeholder="Criar senha do backup" MaxLength="128" IsTextPredictionEnabled="False"/>
+                        <Entry Text="{Binding ConfirmPassword}" IsPassword="{Binding HidePasswords}" Placeholder="Confirmar senha do backup" MaxLength="128" IsTextPredictionEnabled="False"/>
+                        <Entry Text="{Binding FileName}" Placeholder="Nome do arquivo .acs" MaxLength="120"/>
+                        <Button Text="Exportar backup" Command="{Binding ExportCommand}" Style="{StaticResource Buttons}"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Restaurar backup" Style="{StaticResource SectionTitle}"/>
+                        <Label Text="Recupere um perfil neste dispositivo. As demais contas serão preservadas. A ativação exige fechar e abrir o aplicativo." Style="{StaticResource BodyMuted}"/>
+                        <Button Text="Selecionar arquivo .acs" Command="{Binding SelectCommand}" Style="{StaticResource Buttons}"/>
+                        <Label Text="{Binding SelectedFile}" LineBreakMode="WordWrap"/>
+                        <Entry Text="{Binding RestorePassword}" IsPassword="{Binding HidePasswords}" Placeholder="Senha do backup" MaxLength="128" IsTextPredictionEnabled="False"/>
+                        <Button Text="Validar e ver resumo" Command="{Binding InspectCommand}" Style="{StaticResource Buttons}"/>
+                        <Label Text="{Binding Summary}" IsVisible="{Binding HasSummary}" LineBreakMode="WordWrap"/>
+                        <VerticalStackLayout IsVisible="{Binding CanExport}" Spacing="8">
+                            <HorizontalStackLayout Spacing="8">
+                                <Switch IsToggled="{Binding ReplaceCurrentProfile}"/>
+                                <Label Text="Substituir meu perfil de mesmo nome" VerticalOptions="Center" FontSize="13"/>
+                            </HorizontalStackLayout>
+                            <Label Text="Para substituir, confirme a senha atual da conta na seção de exportação." Style="{StaticResource BodyMuted}"/>
+                        </VerticalStackLayout>
+                        <Button Text="Confirmar restauração" IsVisible="{Binding HasSummary}" Command="{Binding RestoreCommand}" Style="{StaticResource Buttons}"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Button Text="Mostrar / ocultar senhas do backup" Command="{Binding TogglePasswordCommand}" Style="{StaticResource Buttons}"/>
+            </VerticalStackLayout>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <ProgressBar Progress="{Binding Progress}"/>
+            <Label Text="{Binding Status}" LineBreakMode="WordWrap" Style="{StaticResource BodyMuted}"/>
+            <Button Text="Cancelar operação" Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" Style="{StaticResource Buttons}"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

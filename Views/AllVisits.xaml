@@ -89,12 +89,13 @@
                                 <VerticalStackLayout Spacing="5">
                                     <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}"/>
                                     <Label Text="{Binding Reason}" Style="{StaticResource BodyMuted}"/>
+                                    <Label Text="{Binding FollowUpText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
                                     <Label Text="{Binding PriorityLabel}" Style="{StaticResource BodyMuted}" FontSize="12"/>
                                 </VerticalStackLayout>
 
                                 <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End">
-                                    <Label Text="{Binding MissingVisits}" Style="{StaticResource MetricNumber}" HorizontalTextAlignment="End"/>
-                                    <Label Text="faltam" Style="{StaticResource BodyMuted}" FontSize="12"/>
+                                    <Label Text="{Binding Points}" Style="{StaticResource MetricNumber}" HorizontalTextAlignment="End"/>
+                                    <Label Text="pontos" Style="{StaticResource BodyMuted}" FontSize="12"/>
                                 </VerticalStackLayout>
                             </Grid>
                         </Border>

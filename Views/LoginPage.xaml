@@ -37,6 +37,7 @@
             </Border>
             <Border x:Name="LoginForm" IsEnabled="False" Style="{StaticResource CardBorder}" Padding="18" Margin="0">
                 <VerticalStackLayout Spacing="14">
+                    <ContentView x:Name="WindowsAccountsHost" IsVisible="False" />
 
                     <Entry
                         x:Name="UsernameEntry"
@@ -68,6 +69,7 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Button x:Name="RestoreBackup" Text="Restaurar backup" Style="{StaticResource GhostButton}" Clicked="RestoreBackup_Clicked"/>
             <Grid x:Name="AccountActions" IsEnabled="False" ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="8" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
                 <Button
                     x:Name="RegisterUser"

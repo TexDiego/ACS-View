@@ -11,8 +11,6 @@ namespace ACS_View.ViewModels;
 public partial class VisitSuggestionsViewModel : BaseViewModel
 {
     private readonly IVisitsService visitsService;
-    private int loadedVersion = -1;
-    private bool hasLoaded;
 
     [ObservableProperty] private ObservableCollection<VisitSuggestionDto> suggestions = [];
     [ObservableProperty] private string footerText = string.Empty;
@@ -28,12 +26,6 @@ public partial class VisitSuggestionsViewModel : BaseViewModel
 
     internal async Task LoadAsync(bool force = false)
     {
-        var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
-        if (!force && hasLoaded && loadedVersion == currentVersion)
-        {
-            ShowEmptyView = Suggestions.Count == 0;
-            return;
-        }
 
         IsLoading = true;
         ShowEmptyView = false;
@@ -45,8 +37,6 @@ public partial class VisitSuggestionsViewModel : BaseViewModel
                 var suggestions = await visitsService.GetVisitSuggestionsAsync(DateTime.Today);
                 Suggestions = new ObservableCollection<VisitSuggestionDto>(suggestions);
                 FooterText = suggestions.Count == 1 ? "1 sugestão pendente" : $"{suggestions.Count} sugestões pendentes";
-                loadedVersion = currentVersion;
-                hasLoaded = true;
             });
         }
         catch (Exception ex)

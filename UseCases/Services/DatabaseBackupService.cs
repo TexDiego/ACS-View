@@ -10,7 +10,16 @@ internal sealed class DatabaseBackupService(IDatabaseService database) : IDataba
     public async Task<string> CreateSnapshotAsync()
     {
         await database.InitializeAsync();
-        return await DatabaseRecovery.CreateSnapshotAsync(database.Connection);
+        var path = await DatabaseRecovery.CreateSnapshotAsync(database.Connection);
+        if (!OperatingSystem.IsWindows()) return path;
+        var snapshot = new SQLiteAsyncConnection(path);
+        try
+        {
+            await snapshot.ExecuteAsync("CREATE TABLE IF NOT EXISTS LocalAuthIdentity (Id INTEGER PRIMARY KEY CHECK(Id=1), Identity TEXT NOT NULL)");
+            await snapshot.ExecuteAsync("INSERT OR REPLACE INTO LocalAuthIdentity (Id, Identity) VALUES (1, ?)", Guid.NewGuid().ToString("N"));
+        }
+        finally { await snapshot.CloseAsync(); }
+        return path;
     }
     public async Task<string> StageRestoreForNextStartAsync(string snapshot)
     {
@@ -21,7 +30,15 @@ internal sealed class DatabaseBackupService(IDatabaseService database) : IDataba
             var destination=Path.Combine(directory,$"health_app-restored-{Guid.NewGuid():N}.db");
             DatabaseRecovery.RestoreToNewPath(snapshot,destination);
             var restored=new SQLiteAsyncConnection(destination);
-            try { await new SchemaMigrator(restored).RunAsync(); }
+            try
+            {
+                await new SchemaMigrator(restored).RunAsync();
+                if (OperatingSystem.IsWindows())
+                {
+                    await restored.ExecuteAsync("CREATE TABLE IF NOT EXISTS LocalAuthIdentity (Id INTEGER PRIMARY KEY CHECK(Id=1), Identity TEXT NOT NULL)");
+                    await restored.ExecuteAsync("INSERT OR REPLACE INTO LocalAuthIdentity (Id, Identity) VALUES (1, ?)", Guid.NewGuid().ToString("N"));
+                }
+            }
             finally { await restored.CloseAsync(); }
             // Switch only after verification, on the next process startup. The live DB remains.
             DatabaseRecovery.SelectDatabaseForNextStart(directory,destination);

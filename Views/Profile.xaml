@@ -2,17 +2,29 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:controls="clr-namespace:ACS_View.Controls"
              x:DataType="vm:ProfileViewModel"
              x:Class="ACS_View.Views.Profile"
              Style="{StaticResource PageBackground}"
              Title="{Binding DisplayName}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Sair" Command="{Binding LogoutCommand}"/>
+        <ToolbarItem
+            IconImageSource="{controls:ThemedIcon Icon=SignOut24, Role=OnFill,IconSize=24}"
+            Text="Sair" 
+            Order="Primary"
+            Command="{Binding LogoutCommand}"/>
     </ContentPage.ToolbarItems>
 
     <ScrollView>
         <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Backup e restauração" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Salve uma cópia criptografada deste perfil ou recupere um arquivo .acs." Style="{StaticResource BodyMuted}"/>
+                    <Button Text="Backup e restauração" Style="{StaticResource Buttons}" Command="{Binding OpenBackupPage}"/>
+                </VerticalStackLayout>
+            </Border>
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Segurança da conta" Style="{StaticResource SectionTitle}"/>

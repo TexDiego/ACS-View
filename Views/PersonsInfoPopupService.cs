@@ -8,7 +8,8 @@ internal sealed class PersonsInfoPopupService(Func<PersonsInfoViewModel> createV
 {
     public async Task ShowAsync(Patient patient)
     {
-        var popup = new PersonsInfo(createViewModel());
+        using var vm = createViewModel();
+        var popup = new PersonsInfo(vm);
 
         popup.SetPatient(patient);
         await popupService.ShowAsync(popup);

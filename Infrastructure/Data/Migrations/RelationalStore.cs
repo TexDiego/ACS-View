@@ -165,8 +165,8 @@ internal static class RelationalStore
             """,DateTime.UtcNow);
         // CreatedAt is migration bookkeeping, never gestation onset or last menstrual period.
         // Fixed IDs do not depend on seeding order or on a translated display name.
-        var descriptions = HealthConditionCatalog.Conditions.Concat([HealthConditionCatalog.Insulinodependente]).ToArray();
-        var codes = new[] { "pregnancy", "diabetes", "hypertension", "tuberculosis", "leprosy", "bedridden", "homebound", "mental", "smoking", "alcohol", "disability", "cancer", "bolsa-familia", "drug-dependency", "immunodeficiency", "insulin" };
+        var descriptions = HealthConditionCatalog.Conditions.Where(c => c != HealthConditionCatalog.Hiv).Concat([HealthConditionCatalog.Insulinodependente, HealthConditionCatalog.Hiv]).ToArray();
+        var codes = new[] { "pregnancy", "diabetes", "hypertension", "tuberculosis", "leprosy", "bedridden", "homebound", "mental", "smoking", "alcohol", "disability", "cancer", "bolsa-familia", "drug-dependency", "immunodeficiency", "insulin", "hiv" };
         for (var i=0;i<descriptions.Length;i++)
         {
             c.Execute("INSERT OR IGNORE INTO HealthConditionDefinition VALUES(?,?,?)", i+1,codes[i],descriptions[i]);

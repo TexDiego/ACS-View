@@ -2,6 +2,8 @@ namespace ACS_View.Application.DTOs;
 
 public sealed class VisitSuggestionDto
 {
+    public PatientVisitSummaryDto? Summary { get; init; }
+    public string FollowUpText { get; init; } = string.Empty;
     public int PatientId { get; init; }
     public int HouseId { get; init; }
     public int FamilyId { get; init; }

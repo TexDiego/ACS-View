@@ -379,3 +379,9 @@ FodyWeavers.xsd
 
 # Local validation artifacts
 tmp/
+
+# Backup source code is part of the application, not a generated backup directory.
+!Application/Backups/
+!Application/Backups/*.cs
+!Infrastructure/Data/Backups/
+!Infrastructure/Data/Backups/*.cs

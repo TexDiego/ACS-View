@@ -11,6 +11,10 @@
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
+        <ToolbarItem
+            Text="Editar residência"
+            IconImageSource="{icons:ThemedIcon Icon=Pen24, Role=OnFill}"
+            Command="{Binding EditResidenceCommand}"/>
         <ToolbarItem 
             Text="Adicionar família"
             IconImageSource="{icons:ThemedIcon Icon=PeopleAdd24, Role=OnFill}"

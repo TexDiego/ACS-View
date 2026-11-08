@@ -5,6 +5,11 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <Compile Include="../../Domain/**/*.cs" />
+    <Compile Include="../../Application/Health/*.cs" />
+    <Compile Include="../../Application/Interfaces/IGlucoseMonitoringService.cs" />
+    <Compile Include="../../UseCases/Services/GlucoseMonitoringService.cs" />
+    <Compile Include="../../UseCases/Services/PatientInfectiousFollowUpService.cs" />
+    <Compile Include="../../Application/Interfaces/IPatientInfectiousFollowUpService.cs" />
     <Compile Include="../../Application/Security/*.cs" />
     <Compile Include="../../Application/Querying/*.cs" />
     <Compile Include="../../Application/DTOs/*.cs" />

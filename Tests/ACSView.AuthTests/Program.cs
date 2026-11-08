@@ -209,6 +209,7 @@ try
         Check((await restoredConnection.FindAsync<Note>(note.Id)).Content==note.Content,"Restore authentication guard preserves patient-independent user notes");
     }
     finally { await restoredConnection.CloseAsync();File.Delete(restorePath); }
+    checks += await WindowsAccountTests.RunAsync();
     Console.WriteLine($"PASS: {checks} authentication, biometric and migration checks.");
 }
 finally

@@ -208,23 +208,26 @@ internal static class WindowsAccountTests
             Check(!context.HasCurrentUser && !await auth.IsAuthenticatedAsync(), "vault removal failure cannot revive revoked in-memory session");
             vault.FailWrites = vault.FailRemoves = false;
             await auth.LoginAsync("helloAlice", password);
-            var samePath = Path.Combine(Path.GetTempPath(), $"acs-same-path-{Guid.NewGuid():N}.db");
-            var sameConnection = new SQLiteAsyncConnection(samePath);
-            var sameDb = new DatabaseService(sameConnection);
-            var beforeIdentity = await LocalDatabaseIdentity.GetAsync(sameDb);
-            await sameConnection.BackupAsync(samePath + ".copy");
-            await sameConnection.CloseAsync();
-            File.Move(samePath, samePath + ".original");
-            File.Move(samePath + ".copy", samePath);
-            var afterConnection = new SQLiteAsyncConnection(samePath);
-            try
+            if (OperatingSystem.IsWindows())
             {
-                var afterIdentity = await LocalDatabaseIdentity.GetAsync(new DatabaseService(afterConnection));
-                Check(beforeIdentity != afterIdentity, "physical replacement at identical path rejects copied database GUID");
-            }
-            finally
-            {
-                await afterConnection.CloseAsync(); File.Delete(samePath); File.Delete(samePath + ".original");
+                var samePath = Path.Combine(Path.GetTempPath(), $"acs-same-path-{Guid.NewGuid():N}.db");
+                var sameConnection = new SQLiteAsyncConnection(samePath);
+                var sameDb = new DatabaseService(sameConnection);
+                var beforeIdentity = await LocalDatabaseIdentity.GetAsync(sameDb);
+                await sameConnection.BackupAsync(samePath + ".copy");
+                await sameConnection.CloseAsync();
+                File.Move(samePath, samePath + ".original");
+                File.Move(samePath + ".copy", samePath);
+                var afterConnection = new SQLiteAsyncConnection(samePath);
+                try
+                {
+                    var afterIdentity = await LocalDatabaseIdentity.GetAsync(new DatabaseService(afterConnection));
+                    Check(beforeIdentity != afterIdentity, "physical replacement at identical path rejects copied database GUID");
+                }
+                finally
+                {
+                    await afterConnection.CloseAsync(); File.Delete(samePath); File.Delete(samePath + ".original");
+                }
             }
             return checks;
         }

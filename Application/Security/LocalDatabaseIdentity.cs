@@ -17,7 +17,6 @@ internal static class LocalDatabaseIdentity
     private static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileIdentity identity);
     private static string PhysicalIdentity(string path)
     {
-        if (!OperatingSystem.IsWindows()) return File.GetCreationTimeUtc(path).Ticks.ToString();
         using var file = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         if (!GetFileInformationByHandle(file, out var identity)) throw new IOException("Não foi possível verificar a identidade física do banco.");
         return $"{identity.Volume:X8}:{identity.IndexHigh:X8}{identity.IndexLow:X8}:{identity.CreationHigh:X8}{identity.CreationLow:X8}";
@@ -31,7 +30,7 @@ internal static class LocalDatabaseIdentity
         var identity = await connection.ExecuteScalarAsync<string>("SELECT Identity FROM LocalAuthIdentity WHERE Id=1");
         // File ID and volume detect physical replacement even when a copied DB carries its GUID.
         var path = Path.GetFullPath(connection.DatabasePath);
-        var physical = PhysicalIdentity(path);
+        var physical = OperatingSystem.IsWindows() ? PhysicalIdentity(path) : string.Empty;
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{identity}|{path}|{physical}")));
     }
 }

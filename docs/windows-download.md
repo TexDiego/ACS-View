@@ -1,6 +1,6 @@
 # ACS View para Windows
 
-Baixe o ZIP Windows x64 em [Releases](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.0), extraia todos os arquivos para uma pasta e execute `ACSView.exe`. Não execute dentro do ZIP nem mova apenas o executável. Requer Windows 10 versão 1809 ou posterior, em computador x64. O .NET e o Windows App SDK estão incluídos.
+Baixe o ZIP Windows x64 em [Releases](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.1), extraia todos os arquivos para uma pasta e execute `ACSView.exe`. Não execute dentro do ZIP nem mova apenas o executável. Requer Windows 10 versão 1809 ou posterior, em computador x64. O .NET e o Windows App SDK estão incluídos.
 
 Esta distribuição é portátil e não possui assinatura de editor. O Windows pode exibir um aviso de aplicativo não reconhecido. O arquivo SHA256SUMS.txt permite conferir a integridade do download.
 
@@ -16,4 +16,4 @@ No Windows, com o SDK e workload MAUI configurados conforme global.json:
 ./scripts/publish-windows.ps1
 ```
 
-A versão Windows é definida no grupo Windows do projeto. A versão Android permanece independente. A tag `windows-v1.4.0` não aciona o workflow Android e esta Release não substitui a versão Android marcada como Latest.
+A versão Windows é definida no grupo Windows do projeto. A versão Android permanece independente. A tag `windows-v1.4.1` não aciona o workflow Android e esta Release não substitui a versão Android marcada como Latest.

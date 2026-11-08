@@ -1,4 +1,4 @@
-# ACS View 1.4.0
+# ACS View 1.4.1
 
 - Visita rápida individual no resumo da pessoa, com proteção contra registro duplicado no mesmo dia.
 - Indicadores e sugestões de visitas por grupo de acompanhamento, com histórico individual.
@@ -7,6 +7,6 @@
 - Backup criptografado por perfil para exportação e restauração.
 - Correções nas telas de famílias, residências, visitas e controle vetorial.
 
-O APK mantém o identificador e a assinatura da distribuição Android. A atualização é opcional e usa o código de versão 7.
+O APK mantém o identificador e a assinatura da distribuição Android. A atualização é opcional e usa o código de versão 8.
 
-A versão desktop está na [release do Windows](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.0).
+A versão desktop está na [release do Windows](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.1).

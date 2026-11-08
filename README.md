@@ -153,5 +153,5 @@ A [v1.0.0 está publicada](https://github.com/TexDiego/ACS-View/releases/tag/v1.
 ## Downloads
 
 - [Android — APK assinado](https://github.com/TexDiego/ACS-View/releases/latest).
-- [Windows x64 — ZIP portátil](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.0). Veja [como executar e gerar o pacote](docs/windows-download.md).
+- [Windows x64 — ZIP portátil](https://github.com/TexDiego/ACS-View/releases/tag/windows-v1.4.1). Veja [como executar e gerar o pacote](docs/windows-download.md).
 

@@ -32,8 +32,8 @@
 		<ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">com.texdiego.acsview</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.4.1</ApplicationDisplayVersion>
-		<ApplicationVersion>8</ApplicationVersion>
+		<ApplicationDisplayVersion>1.4.2</ApplicationDisplayVersion>
+		<ApplicationVersion>9</ApplicationVersion>
 		<!-- NuGet requires the same package version in outer and platform evaluations. -->
 		<Version>$(ApplicationDisplayVersion)</Version>
 		<PackageVersion>$(ApplicationDisplayVersion)</PackageVersion>

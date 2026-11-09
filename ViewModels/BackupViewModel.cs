@@ -28,6 +28,7 @@ public partial class BackupViewModel(IEncryptedBackupService backups,IAuthServic
     private FileResult? selected;
     private CancellationTokenSource? operation;
     private bool confirmed;
+    private bool showingRestoreConfirmation;
 
     public async Task LoadAsync()
     {
@@ -99,7 +100,7 @@ public partial class BackupViewModel(IEncryptedBackupService backups,IAuthServic
     {
         if(!HasSummary)throw new InvalidOperationException("Valide o arquivo antes de restaurar.");
         var message=Summary+"\n\n"+(ReplaceCurrentProfile?"Todos os dados do perfil autenticado de mesmo nome serão substituídos. As demais contas serão preservadas.":"O perfil será acrescentado sem substituir contas existentes.")+"\n\nApós preparar a restauração, feche e abra o aplicativo para ativá-la e entrar com a senha original. Até reiniciar, o banco ficará somente para leitura.";
-        if(!await DisplayConfirmationAsync("Confirmar restauração",message,"Restaurar","Cancelar"))return;
+        if (!await ConfirmRestoreAsync(message)) return;
         ct.ThrowIfCancellationRequested();
         confirmed=true;CanCancel=false;Status="Consolidando e validando os perfis. Aguarde…";Progress=.3;
         await backups.RestoreAsync(ReplaceCurrentProfile,AccountPassword,ct);
@@ -108,6 +109,19 @@ public partial class BackupViewModel(IEncryptedBackupService backups,IAuthServic
         await DisplayAlertAsync("Reinicie o ACS View",Status);
         if(Microsoft.Maui.Controls.Application.Current is Views.App app)await app.ResetToLoginShellAsync();
     });
+
+    private async Task<bool> ConfirmRestoreAsync(string message)
+    {
+        showingRestoreConfirmation = true;
+        try
+        {
+            return await DisplayConfirmationAsync("Confirmar restauração", message, "Restaurar", "Cancelar");
+        }
+        finally
+        {
+            showingRestoreConfirmation = false;
+        }
+    }
 
     private async Task RunAsync(Func<CancellationToken,Task> action)
     {
@@ -125,6 +139,9 @@ public partial class BackupViewModel(IEncryptedBackupService backups,IAuthServic
 
     public void Leave()
     {
+        // The confirmation popup temporarily hides this page. Keep the validated backup and token.
+        if (showingRestoreConfirmation) return;
+
         if(!confirmed)operation?.Cancel();
         backups.Discard();AccountPassword=BackupPassword=ConfirmPassword=RestorePassword="";
         HasSummary=false;

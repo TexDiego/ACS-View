@@ -24,7 +24,9 @@ namespace ACS_View.UseCases.Services
                 return null;
             }
 
-            var applicationRows = await ReadApplicationsAsync(userId,patientId,null,true);
+            var applicationRows = await _database.QueryAsync<PatientVaccineDose>(
+                $"SELECT {LegacyDateSql.Projection<PatientVaccineDose>()} FROM PatientVaccineDose WHERE UserId=? AND PatientId=? AND IsApplied=1",
+                userId, patientId);
 
             var applicationByDose = applicationRows
                 .OrderBy(dose => dose.Id)
@@ -64,22 +66,90 @@ namespace ACS_View.UseCases.Services
                 throw new InvalidOperationException("A data de aplicacao nao pode ser futura.");
             }
 
-            var patientExists = await _database.Table<Patient>()
-                .CountAsync(patient => patient.Id == request.PatientId && patient.UserId == userId) > 0;
-
-            if (!patientExists)
+            await _database.RunInTransactionAsync(connection =>
             {
-                throw new InvalidOperationException("Paciente nao encontrado.");
+                var patientExists = connection.Table<Patient>()
+                    .Where(patient => patient.Id == request.PatientId && patient.UserId == userId)
+                    .Count() > 0;
+                if (!patientExists)
+                {
+                    throw new InvalidOperationException("Paciente nao encontrado.");
+                }
+
+                var existingRows = ReadDoseApplications(connection, userId, request.PatientId, request.DoseKey);
+                if (existingRows.Count > 1)
+                {
+                    throw new InvalidOperationException("Há aplicações históricas distintas desta dose. Concilie os registros antes de editar.");
+                }
+
+                SaveApplication(connection, userId, request, existingRows.SingleOrDefault());
+            });
+            DataChangeTracker.MarkPatientsChanged();
+        }
+
+        public async Task ApplyOverdueDosesAsync(
+            int patientId, int expectedUserId, IReadOnlyDictionary<string, DateTime> applicationDates)
+        {
+            var today = DateTime.Today;
+            if (applicationDates.Count == 0 ||
+                applicationDates.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase).Count != applicationDates.Count)
+            {
+                throw new ArgumentException("Informe uma data para cada dose atrasada.", nameof(applicationDates));
             }
 
-            var existingRows = await ReadApplicationsAsync(userId,request.PatientId,request.DoseKey,false);
-
-            var first = existingRows.OrderBy(dose => dose.Id).FirstOrDefault();
-            if (existingRows.Count>1)
-                throw new InvalidOperationException("Há aplicações históricas distintas desta dose. Concilie os registros antes de editar.");
-            if (first is null)
+            await _database.RunInTransactionAsync(connection =>
             {
-                await _database.InsertAsync(new PatientVaccineDose
+                if (!currentUserContext.HasCurrentUser || currentUserContext.CurrentUserId != expectedUserId)
+                {
+                    throw new InvalidOperationException("O perfil ativo mudou. Abra o cartão vacinal novamente.");
+                }
+
+                var patient = connection.Table<Patient>()
+                    .FirstOrDefault(patient => patient.Id == patientId && patient.UserId == expectedUserId)
+                    ?? throw new InvalidOperationException("Paciente não encontrado.");
+                var conditions = connection.Table<PatientConditions>()
+                    .Where(condition => condition.UserId == expectedUserId && condition.PatientId == patientId)
+                    .ToList();
+                var definitions = VaccineDoseCatalog.GetExpectedDefinitions(GetMonth(patient.BirthDate), conditions.Any(IsPregnancy))
+                    .ToDictionary(definition => definition.DoseKey, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var (doseKey, date) in applicationDates)
+                {
+                    if (date.Date > today)
+                    {
+                        throw new InvalidOperationException("A data de aplicação não pode ser futura.");
+                    }
+
+                    var existingRows = ReadDoseApplications(connection, expectedUserId, patientId, doseKey);
+                    if (!definitions.TryGetValue(doseKey, out var definition) ||
+                        VaccineStatusCalculator.Calculate(patient.BirthDate, today, definition, null) != VaccineStatus.Late ||
+                        existingRows.Count > 1 || existingRows.Any(row => row.IsApplied))
+                    {
+                        throw new InvalidOperationException("O cartão vacinal mudou ou contém registros conflitantes. Feche o lote e confira as doses.");
+                    }
+
+                    var existing = existingRows.SingleOrDefault();
+                    var request = new VaccineApplicationRequestDto(
+                        patientId, definition.DoseKey, date, existing?.LotNumber ?? string.Empty, existing?.Notes ?? string.Empty);
+                    SaveApplication(connection, expectedUserId, request, existing);
+                }
+            });
+
+            DataChangeTracker.MarkPatientsChanged();
+        }
+
+        private static List<PatientVaccineDose> ReadDoseApplications(SQLiteConnection connection, int userId, int patientId, string doseKey)
+        {
+            return connection.Query<PatientVaccineDose>(
+                $"SELECT {LegacyDateSql.Projection<PatientVaccineDose>()} FROM PatientVaccineDose WHERE UserId=? AND PatientId=? AND DoseKey=? COLLATE NOCASE",
+                userId, patientId, doseKey);
+        }
+
+        private static void SaveApplication(SQLiteConnection connection, int userId, VaccineApplicationRequestDto request, PatientVaccineDose? existing)
+        {
+            if (existing is null)
+            {
+                connection.Insert(new PatientVaccineDose
                 {
                     UserId = userId,
                     PatientId = request.PatientId,
@@ -90,36 +160,33 @@ namespace ACS_View.UseCases.Services
                     Notes = request.Notes.Trim(),
                     CreatedAt = DateTime.Now
                 });
-
-                DataChangeTracker.MarkPatientsChanged();
                 return;
             }
 
-            first.IsApplied = true;
-            first.AppliedAt = request.ApplicationDate?.Date;
-            first.LotNumber = request.LotNumber.Trim();
-            first.Notes = request.Notes.Trim();
-            await _database.ExecuteAsync("UPDATE PatientVaccineDose SET IsApplied=1,AppliedAt=?,LotNumber=?,Notes=? WHERE Id=? AND UserId=?",
-                first.AppliedAt,first.LotNumber,first.Notes,first.Id,userId);
-
-
-            DataChangeTracker.MarkPatientsChanged();
+            connection.Execute("UPDATE PatientVaccineDose SET IsApplied=1,AppliedAt=?,LotNumber=?,Notes=? WHERE Id=? AND UserId=?",
+                request.ApplicationDate?.Date, request.LotNumber.Trim(), request.Notes.Trim(), existing.Id, userId);
         }
 
         public async Task RemoveDoseApplicationAsync(int patientId, string doseKey)
         {
             var userId = currentUserContext.RequireCurrentUserId();
-            var existingRows = await ReadApplicationsAsync(userId,patientId,doseKey,false);
-
-            if(existingRows.Count>1)
-                throw new InvalidOperationException("Há aplicações históricas distintas desta dose. Concilie os registros antes de remover.");
-
-            foreach (var existing in existingRows)
+            var removed = false;
+            await _database.RunInTransactionAsync(connection =>
             {
-                await _database.DeleteAsync(existing);
-            }
+                var existingRows = ReadDoseApplications(connection, userId, patientId, doseKey);
 
-            if (existingRows.Count > 0)
+                if (existingRows.Count > 1)
+                {
+                    throw new InvalidOperationException("Há aplicações históricas distintas desta dose. Concilie os registros antes de remover.");
+                }
+
+                if (existingRows.SingleOrDefault() is { } existing)
+                {
+                    removed = connection.Delete(existing) > 0;
+                }
+            });
+
+            if (removed)
             {
                 DataChangeTracker.MarkPatientsChanged();
             }
@@ -131,12 +198,12 @@ namespace ACS_View.UseCases.Services
                 .Where(condition => condition.UserId == userId && condition.PatientId == patientId)
                 .ToListAsync();
 
-            return conditions.Any(condition =>
-                string.Equals(
-                    HealthConditionCatalog.GetKey(condition.Description),
-                    HealthConditionCatalog.Gestante,
-                    StringComparison.OrdinalIgnoreCase));
+            return conditions.Any(IsPregnancy);
         }
+
+        private static bool IsPregnancy(PatientConditions condition) =>
+            string.Equals(HealthConditionCatalog.GetKey(condition.Description), HealthConditionCatalog.Gestante,
+                StringComparison.OrdinalIgnoreCase);
 
         private static int GetMonth(DateTime birthDate)
         {
@@ -179,14 +246,6 @@ namespace ACS_View.UseCases.Services
                 application?.LotNumber ?? string.Empty,
                 application?.Notes ?? string.Empty,
                 status);
-        }
-
-        private Task<List<PatientVaccineDose>> ReadApplicationsAsync(int user,int patient,string? key,bool appliedOnly)
-        {
-            var parameters=new List<object>{user,patient};
-            var filter=appliedOnly ? " AND IsApplied=1" : "";
-            if(key!=null){filter+=" AND DoseKey=?";parameters.Add(key);}
-            return _database.QueryAsync<PatientVaccineDose>($"SELECT {LegacyDateSql.Projection<PatientVaccineDose>()} FROM PatientVaccineDose WHERE UserId=? AND PatientId=?{filter}",parameters.ToArray());
         }
     }
 }

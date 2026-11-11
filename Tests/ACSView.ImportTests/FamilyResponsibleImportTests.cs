@@ -48,7 +48,7 @@ internal static class FamilyResponsibleImportTests
             var dependent = Copy(patients[0]);
             await new PatientFamilyLinkResolver(people, houses, families).ResolveAsync(
                 [new() { RowNumber = 2, Patient = dependent, FamilyResponsibleSus = dependent.FamilyResponsibleSus ?? "" }],
-                new(), report, null, 0, 100, CancellationToken.None);
+                new(), report, _ => { }, CancellationToken.None);
             return (stored, report);
         }
 

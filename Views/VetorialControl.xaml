@@ -71,12 +71,10 @@
 
     <Grid
         Padding="16,0"
-        RowDefinitions="Auto,Auto,*"
+        RowDefinitions="Auto,*"
         RowSpacing="0">
 
         <FlexLayout
-            Grid.Row="0" 
-            Grid.RowSpan="2"
             Direction="Row"
             Wrap="Wrap" 
             AlignItems="Center"
@@ -106,7 +104,7 @@
 
         <CollectionView
             x:Name="VectorControlCollectionView"
-            Grid.Row="2"
+            Grid.Row="1"
             ItemsSource="{Binding Items}"
             ItemTemplate="{StaticResource Rows}"
             SelectionMode="None"
@@ -129,13 +127,14 @@
         </CollectionView>
 
         <ActivityIndicator
-            Grid.Row="2"
+            Grid.Row="1"
             IsRunning="{Binding IsLoading}"
             IsVisible="{Binding IsLoading}"/>
 
         <ImageButton
             x:Name="BackToTopButton"
-            Grid.Row="2"
+            Grid.RowSpan="2"
+            ZIndex="1"
             Opacity="1"
             Source="{controls:ThemedIcon Icon=ArrowCircleUp24, Role=OnContainer}"
             Style="{StaticResource FloatingBackToTopButton}"

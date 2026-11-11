@@ -6,28 +6,88 @@
              x:DataType="vm:DiabetesViewModel"
              Margin="0">
     
-<VerticalStackLayout Spacing="10" Margin="0" VerticalOptions="Start">
-    <ActivityIndicator 
-        IsRunning="{Binding IsLoading}"
-        IsVisible="{Binding IsLoading}"/>
+    <VerticalStackLayout Spacing="10" Margin="0" VerticalOptions="Start">
+        <ActivityIndicator 
+            IsRunning="{Binding IsLoading}"
+            IsVisible="{Binding IsLoading}"/>
     
-<Label 
-    Text="{Binding Message}" 
-    Style="{StaticResource BodyMuted}"/>
-<Button Text="Tentar novamente" IsVisible="{Binding HasError}" Command="{Binding RetryCommand}"/>
-<Label Text="Diabetes e insulinoterapia" Style="{StaticResource CardTitle}"/>
-<Label Text="{Binding Situation}"/>
-<health:GlucoseMonitoringForm BindingContext="{Binding Editor}"/>
-<Button Text="Salvar rotina habitual" Command="{Binding SaveCommand}"/>
-<Label Text="Estimativa de consumo" Style="{StaticResource CardTitle}"/>
-<Label Text="{Binding Estimate}" Style="{StaticResource BodyMuted}"/>
-<Label Text="Histórico de retiradas informadas" Style="{StaticResource CardTitle}"/>
-<Label Text="Rotina declarada e retiradas informadas são registros independentes." Style="{StaticResource BodyMuted}"/>
-<Label Text="{Binding HistoryInfo}"/>
-<VerticalStackLayout BindableLayout.ItemsSource="{Binding Pickups}" Spacing="8"><BindableLayout.ItemTemplate><DataTemplate x:DataType="{x:Null}"><Label Text="{Binding DisplayText}"/></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
-<HorizontalStackLayout><CheckBox IsChecked="{Binding ShowAllHistory}"/><Label Text="Exibir todo o histórico" VerticalOptions="Center"/></HorizontalStackLayout>
-<DatePicker Date="{Binding PickupDate}" MaximumDate="{Binding Today}"/>
-<Entry Text="{Binding PickupQuantity}" Keyboard="Numeric" Placeholder="Fitas retiradas"/>
-<Entry Text="{Binding PickupNotes}" Placeholder="Observação da retirada (opcional)"/>
-<Button Text="Registrar retirada informada" Command="{Binding AddPickupCommand}"/>
-</VerticalStackLayout></ContentView>
+        <Label 
+            Text="{Binding Message}" 
+            Style="{StaticResource BodyMuted}"/>
+        
+        <Button
+            Text="Tentar novamente" 
+            IsVisible="{Binding HasError}" 
+            Command="{Binding RetryCommand}"/>
+        
+        <Label
+            Text="Diabetes e insulinoterapia" 
+            Style="{StaticResource CardTitle}"/>
+        
+        <Label Text="{Binding Situation}"/>
+        
+        <health:GlucoseMonitoringForm BindingContext="{Binding Editor}"/>
+        
+        <Button
+            Text="Salvar rotina habitual"
+            Command="{Binding SaveCommand}"/>
+        
+        <Label
+            Text="Estimativa de consumo"
+            Style="{StaticResource CardTitle}"/>
+        
+        <Label
+            Text="{Binding Estimate}"
+            Style="{StaticResource BodyMuted}"/>
+        
+        <Label 
+            Text="Histórico de retiradas informadas"
+            Style="{StaticResource CardTitle}"/>
+        
+        <Label
+            Text="Rotina declarada e retiradas informadas são registros independentes." 
+            Style="{StaticResource BodyMuted}"/>
+        
+        <Label Text="{Binding HistoryInfo}"/>
+        
+        <VerticalStackLayout 
+            BindableLayout.ItemsSource="{Binding Pickups}"
+            Spacing="8">
+            
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="{x:Null}">
+                    
+                    <Label Text="{Binding DisplayText}"/>
+                    
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+        
+        <HorizontalStackLayout>
+            
+            <CheckBox IsChecked="{Binding ShowAllHistory}"/>
+            
+            <Label
+                Text="Exibir todo o histórico"
+                VerticalOptions="Center"/>
+        </HorizontalStackLayout>
+        
+        <DatePicker
+            Date="{Binding PickupDate}" 
+            MaximumDate="{Binding Today}"
+            Format="dd/MM/yyyy"/>
+        
+        <Entry 
+            Text="{Binding PickupQuantity}"
+            Keyboard="Numeric" 
+            Placeholder="Fitas retiradas"/>
+        
+        <Entry
+            Text="{Binding PickupNotes}"
+            Placeholder="Observação da retirada (opcional)"/>
+        
+        <Button 
+            Text="Registrar retirada informada" 
+            Command="{Binding AddPickupCommand}"/>
+    </VerticalStackLayout>
+</ContentView>

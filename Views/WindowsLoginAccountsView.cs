@@ -18,6 +18,7 @@ internal sealed class WindowsLoginAccountsView : ContentView
     private string selectedUsername = "";
     private bool busy;
     private int selectionVersion;
+
     public WindowsLoginAccountsView(IAuthService auth, IRememberedAccountService accounts, IDialogService dialogs, Action<string> select, Func<int, Task> login)
     {
         this.auth = auth; this.accounts = accounts; this.dialogs = dialogs; this.select = select; this.login = login;
@@ -32,11 +33,9 @@ internal sealed class WindowsLoginAccountsView : ContentView
         };
         list.ItemTemplate = new DataTemplate(() =>
         {
-            var choose = new Button { Style = (Style)resources["GhostButton"], HorizontalOptions = LayoutOptions.Fill };
+            var choose = new Button { Style = (Style)resources["GhostButton"], HorizontalOptions = LayoutOptions.Start };
             choose.SetBinding(Button.TextProperty, nameof(RememberedAccount.Username));
             SemanticProperties.SetHint(choose, "Selecionar conta e preencher o usuário. A autenticação ainda será necessária.");
-            var badge = new Label { Text = "Windows Hello", FontSize = 12, VerticalOptions = LayoutOptions.Center };
-            badge.SetBinding(IsVisibleProperty, nameof(RememberedAccount.WindowsHelloEnabled));
             var forget = new Button { Text = "Esquecer", Style = (Style)resources["GhostButton"] };
             choose.Clicked += async (_, _) =>
             {
@@ -63,7 +62,7 @@ internal sealed class WindowsLoginAccountsView : ContentView
                 Source = new ACS_View.Controls.ThemedIconExtension { Icon = MauiIcons.Fluent.FluentIcons.PersonCircle24, IconSize = 32 }.ProvideValue(null!),
                 WidthRequest = 32, HeightRequest = 32, VerticalOptions = LayoutOptions.Center
             }, 0);
-            grid.Add(new VerticalStackLayout { Children = { choose, badge } }, 1);
+            grid.Add(new VerticalStackLayout { Children = { choose } }, 1);
             grid.Add(forget, 2);
             return new Border { Style = (Style)resources["CardBorder"], Content = grid, Padding = 4, Margin = new Thickness(0, 2) };
         });

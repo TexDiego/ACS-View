@@ -4,82 +4,229 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels.HealthViewModels"
              x:Class="ACS_View.Views.HealthViews.VisitsView"
              x:DataType="vm:VisitsViewModel">
-    <VerticalStackLayout Spacing="18">
-        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-        <VerticalStackLayout Spacing="6" IsVisible="{Binding HasError}">
-            <Label Text="{Binding Message}" Style="{StaticResource BodyMuted}" />
-            <Button Text="Tentar novamente" Command="{Binding RetryCommand}" HorizontalOptions="Start" />
+    
+    <VerticalStackLayout 
+        Spacing="18"
+        VerticalOptions="Center">
+        
+        <ActivityIndicator
+            IsRunning="{Binding IsLoading}" 
+            IsVisible="{Binding IsLoading}"/>
+
+        <VerticalStackLayout
+            Spacing="6"
+            IsVisible="{Binding HasError}">
+
+            <Label 
+                Text="{Binding Message}"
+                Style="{StaticResource BodyMuted}" />
+
+            <Button 
+                Text="Tentar novamente" 
+                Command="{Binding RetryCommand}"
+                HorizontalOptions="Start" />
         </VerticalStackLayout>
 
-        <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="16"
-                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}">
+        <Border 
+            StrokeThickness="0" 
+            StrokeShape="RoundRectangle 12"
+            Padding="16"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource DarkPrimaryLight}}">
+
             <VerticalStackLayout Spacing="6">
-                <Label Text="PRÓXIMA VISITA SUGERIDA" FontSize="11" CharacterSpacing="1" />
-                <Label Text="{Binding NextVisit}" FontSize="27" FontAttributes="Bold" />
-                <Label Text="{Binding RecommendationStatus}" FontSize="13" />
+                <Label 
+                    Text="PRÓXIMA VISITA SUGERIDA" 
+                    FontSize="11" 
+                    CharacterSpacing="1" />
+
+                <Label
+                    Text="{Binding NextVisit}"
+                    FontSize="27" 
+                    FontAttributes="Bold" />
+
+                <Label
+                    Text="{Binding RecommendationStatus}" 
+                    FontSize="13" />
             </VerticalStackLayout>
         </Border>
 
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Grid
+            ColumnDefinitions="*,*"
+            ColumnSpacing="16">
+
             <VerticalStackLayout Spacing="4">
-                <Label Text="Última realizada" Style="{StaticResource BodyMuted}" FontSize="12" />
-                <Label Text="{Binding LastVisit}" FontSize="16" FontAttributes="Bold" />
+
+                <Label 
+                    Text="Última realizada"
+                    Style="{StaticResource BodyMuted}" 
+                    FontSize="12" />
+
+                <Label
+                    Text="{Binding LastVisit}"
+                    FontSize="16" 
+                    FontAttributes="Bold" />
             </VerticalStackLayout>
-            <VerticalStackLayout Grid.Column="1" Spacing="4">
-                <Label Text="Neste mês" Style="{StaticResource BodyMuted}" FontSize="12" />
-                <Label Text="{Binding MonthSummary}" FontSize="14" />
+
+            <VerticalStackLayout
+                Grid.Column="1" 
+                Spacing="4">
+
+                <Label 
+                    Text="Neste mês"
+                    Style="{StaticResource BodyMuted}"
+                    FontSize="12" />
+
+                <Label 
+                    Text="{Binding MonthSummary}" 
+                    FontSize="14" />
             </VerticalStackLayout>
         </Grid>
-        <Label Text="{Binding LastAttempt}" IsVisible="{Binding HasLastAttempt}" Style="{StaticResource BodyMuted}" FontSize="12" />
 
-        <VerticalStackLayout Spacing="12" IsVisible="{Binding HasIndicators}">
-            <Label Text="Indicadores de acompanhamento" Style="{StaticResource CardTitle}" FontSize="16" />
-            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Indicators}" Spacing="14">
+        <Label 
+            Text="{Binding LastAttempt}" 
+            IsVisible="{Binding HasLastAttempt}" 
+            Style="{StaticResource BodyMuted}" 
+            FontSize="12" />
+
+        <VerticalStackLayout 
+            Spacing="12"
+            IsVisible="{Binding HasIndicators}">
+
+            <Label
+                Text="Indicadores de acompanhamento"
+                Style="{StaticResource CardTitle}" 
+                FontSize="16" />
+
+            <VerticalStackLayout
+                BindableLayout.ItemsSource="{Binding Indicators}"
+                Spacing="14">
+
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:VisitIndicator">
+
                         <VerticalStackLayout Spacing="5">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="14" />
-                                <Label Grid.Column="1" Text="{Binding Count}" FontAttributes="Bold" FontSize="14" />
+
+                            <Grid 
+                                ColumnDefinitions="*,Auto" 
+                                ColumnSpacing="10">
+
+                                <Label
+                                    Text="{Binding Title}"
+                                    FontAttributes="Bold"
+                                    FontSize="14" />
+
+                                <Label 
+                                    Grid.Column="1" 
+                                    Text="{Binding Count}"
+                                    FontAttributes="Bold"
+                                    FontSize="14" />
                             </Grid>
-                            <ProgressBar Progress="{Binding Progress}" HeightRequest="4"
-                                         ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
-                            <Label Text="{Binding Status}" Style="{StaticResource BodyMuted}" FontSize="12" />
+
+                            <ProgressBar 
+                                Progress="{Binding Progress}" 
+                                HeightRequest="4"
+                                ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
+
+                            <Label 
+                                Text="{Binding Status}"
+                                Style="{StaticResource BodyMuted}" 
+                                FontSize="12" />
                         </VerticalStackLayout>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
-            <Button Text="{Binding CriteriaButtonText}" Command="{Binding ToggleCriteriaCommand}"
-                    BackgroundColor="Transparent" HorizontalOptions="Start" Padding="0,4"
-                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
-            <VerticalStackLayout IsVisible="{Binding ShowCriteria}" Spacing="12">
-                <Label Text="Contagem, prazos e fontes das regras" Style="{StaticResource BodyMuted}" FontSize="12" />
-                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Indicators}" Spacing="12">
+
+            <Button 
+                Text="{Binding CriteriaButtonText}" 
+                Command="{Binding ToggleCriteriaCommand}"
+                BackgroundColor="Transparent" 
+                HorizontalOptions="Start" 
+                Padding="0,4"
+                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
+
+            <VerticalStackLayout
+                IsVisible="{Binding ShowCriteria}"
+                Spacing="12">
+
+                <Label
+                    Text="Contagem, prazos e fontes das regras" 
+                    Style="{StaticResource BodyMuted}"
+                    FontSize="12" />
+
+                <VerticalStackLayout 
+                    BindableLayout.ItemsSource="{Binding Indicators}" 
+                    Spacing="12">
+
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:VisitIndicator">
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="13" />
-                                <Label Text="{Binding Explanation}" Style="{StaticResource BodyMuted}" FontSize="12" />
+
+                                <Label
+                                    Text="{Binding Title}" 
+                                    FontAttributes="Bold"
+                                    FontSize="13" />
+
+                                <Label 
+                                    Text="{Binding Explanation}"
+                                    Style="{StaticResource BodyMuted}" 
+                                    FontSize="12" />
                             </VerticalStackLayout>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </VerticalStackLayout>
-        <Label Text="{Binding DataNote}" IsVisible="{Binding HasDataNote}" Style="{StaticResource BodyMuted}" FontSize="12" />
 
-        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" />
+        <Label 
+            Text="{Binding DataNote}" 
+            IsVisible="{Binding HasDataNote}"
+            Style="{StaticResource BodyMuted}"
+            FontSize="12" />
+
+        <BoxView 
+            HeightRequest="1" 
+            Color="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}" />
+
         <VerticalStackLayout Spacing="10">
-            <Label Text="Histórico mensal" Style="{StaticResource CardTitle}" FontSize="16" />
-            <Label Text="Nenhuma visita registrada." IsVisible="{Binding HasNoHistory}" Style="{StaticResource BodyMuted}" FontSize="13" />
-            <VerticalStackLayout IsVisible="{Binding HasHistory}" Spacing="8">
-                <Picker Title="Escolher mês" ItemsSource="{Binding Months}"
-                        ItemDisplayBinding="{Binding Month, x:DataType=vm:VisitMonth}" SelectedItem="{Binding SelectedMonth}" />
-                <Label Text="{Binding SelectedMonth.Counts}" Style="{StaticResource BodyMuted}" FontSize="12" />
-                <Button Text="{Binding HistoryButtonText}" Command="{Binding ToggleHistoryRecordsCommand}"
-                        HorizontalOptions="Start" BackgroundColor="Transparent" Padding="0,4"
-                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
-                <Label Text="{Binding SelectedMonth.Details}" IsVisible="{Binding ShowHistoryRecords}" FontSize="13" />
+
+            <Label 
+                Text="Histórico mensal"
+                Style="{StaticResource CardTitle}"
+                FontSize="16" />
+
+            <Label 
+                Text="Nenhuma visita registrada."
+                IsVisible="{Binding HasNoHistory}"
+                Style="{StaticResource BodyMuted}" 
+                FontSize="13" />
+
+            <VerticalStackLayout 
+                IsVisible="{Binding HasHistory}"
+                Spacing="8">
+
+                <Picker
+                    Title="Escolher mês"
+                    ItemsSource="{Binding Months}"
+                    ItemDisplayBinding="{Binding Month, x:DataType=vm:VisitMonth}"
+                    SelectedItem="{Binding SelectedMonth}" />
+
+                <Label 
+                    Text="{Binding SelectedMonth.Counts}" 
+                    Style="{StaticResource BodyMuted}" 
+                    FontSize="12" />
+
+                <Button
+                    Text="{Binding HistoryButtonText}" 
+                    Command="{Binding ToggleHistoryRecordsCommand}"
+                    HorizontalOptions="Start"
+                    BackgroundColor="Transparent" 
+                    Padding="0,4"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}" />
+
+                <Label
+                    Text="{Binding SelectedMonth.Details}" 
+                    IsVisible="{Binding ShowHistoryRecords}" 
+                    FontSize="13" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </VerticalStackLayout>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:ACS_View.ViewModels"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    x:Class="ACS_View.Views.VaccineBatchPage"
+    x:DataType="vm:VaccineBatchViewModel"
+    BackgroundColor="{AppThemeBinding Light={StaticResource OverlayScrim}, Dark={StaticResource DarkOverlayScrim}}">
+
+    <Grid Padding="12" SafeAreaEdges="Container">
+        <Border
+            Style="{StaticResource CardBorder}"
+            Padding="{OnPlatform Default=14, WinUI=24}"
+            Margin="0"
+            StrokeShape="RoundRectangle 16"
+            StrokeThickness="0"
+            MaximumWidthRequest="600"
+            MaximumHeightRequest="680"
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12"
+                  IsEnabled="{Binding IsBusy, Converter={toolkit:InvertedBoolConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Registrar vacinas atrasadas"
+                           Style="{StaticResource SectionTitle}"
+                           HorizontalTextAlignment="Center"/>
+                    <Label Text="{Binding PatientName}"
+                           Style="{StaticResource BodyMuted}"
+                           HorizontalTextAlignment="Center"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Usar data de hoje"
+                                LineBreakMode="WordWrap"
+                                Style="{StaticResource PrimaryOutlineButton}"
+                                Command="{Binding UseTodayCommand}"/>
+                        <Button Grid.Column="1"
+                                Text="Usar datas recomendadas"
+                                LineBreakMode="WordWrap"
+                                Style="{StaticResource PrimaryOutlineButton}"
+                                Command="{Binding UseRecommendedDatesCommand}"/>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Doses}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:VaccineBatchDoseViewModel">
+                                <Border
+                                    Padding="10"
+                                    StrokeShape="RoundRectangle 8"
+                                    StrokeThickness="0"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout Spacing="3" VerticalOptions="Center">
+                                            <Label Text="{Binding Title}" Style="{StaticResource CardTitle}"/>
+                                            <Label Text="{Binding RecommendedDate, StringFormat='Recomendada: {0:dd/MM/yyyy}'}"
+                                                   Style="{StaticResource BodyMuted}"/>
+                                        </VerticalStackLayout>
+                                        <DatePicker Grid.Column="1"
+                                                    VerticalOptions="Center"
+                                                    Date="{Binding ApplicationDate, Mode=TwoWay}"
+                                                    MaximumDate="{Binding MaximumDate}"
+                                                    Format="dd/MM/yyyy"
+                                                    SemanticProperties.Description="{Binding Title, StringFormat='Data de aplicação de {0}'}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <VerticalStackLayout Grid.Row="2" Spacing="8">
+                    <Label Text="{Binding ErrorMessage}"
+                           Style="{StaticResource BodyMuted}"
+                           TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}"
+                           IsVisible="{Binding HasError}"/>
+                    <Grid ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}"
+                          ColumnSpacing="8"
+                          HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
+                        <Button Text="Cancelar" Style="{StaticResource GhostButton}" Clicked="CancelButton_Clicked"/>
+                        <Button Grid.Column="1" Text="Salvar lote" Style="{StaticResource Buttons}" Clicked="SaveButton_Clicked"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

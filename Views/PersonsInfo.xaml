@@ -11,7 +11,9 @@
         x:Class="ACS_View.Views.PersonsInfo"
         x:DataType="vm:PersonsInfoViewModel"
         BackgroundColor="Transparent"
-        Padding="0">
+        Padding="0"
+        HorizontalOptions="Center"
+        VerticalOptions="Center">
 
     <tk:Popup.Resources>
         <Style x:Key="EdgeAction" TargetType="ImageButton">
@@ -31,15 +33,16 @@
 
     <Grid
         x:Name="Composition"
-        ColumnDefinitions="*,*"
+        ColumnDefinitions="*"
+        RowDefinitions="Auto"
         ColumnSpacing="12"
-        RowDefinitions="auto"
         VerticalOptions="Center">
 
         <Grid
             x:Name="MainPanel"
             Grid.Column="0"
             RowDefinitions="22,auto,22,22"
+            MaximumHeightRequest="700"
             VerticalOptions="Center">
 
             <Border
@@ -48,11 +51,12 @@
                 StrokeShape="RoundRectangle 18"
                 Padding="16,26,16,16"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
-                VerticalOptions="Start">
+                VerticalOptions="Center">
 
                 <Grid
-                    RowDefinitions="Auto,*"
-                    RowSpacing="12">
+                    RowDefinitions="Auto,Auto"
+                    RowSpacing="12"
+                    VerticalOptions="Center">
 
                     <Grid
                         ColumnDefinitions="*,Auto"
@@ -77,7 +81,7 @@
                         </Border>
                     </Grid>
 
-                    <ScrollView Grid.Row="1">
+                    <ScrollView x:Name="PatientDetailsScroll" Grid.Row="1">
 
                         <VerticalStackLayout Spacing="10">
 
@@ -87,11 +91,17 @@
                                 FontSize="24"
                                 FontAttributes="Bold"/>
 
-                            <HorizontalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="0">
 
-                                <Label x:Name="BirthDateLabel" Text="{Binding PersonInfo.BirthDate, StringFormat='{0:dd/MM/yyyy}'}"/>
+                                <Label
+                                    x:Name="BirthDateLabel" 
+                                    Text="{Binding PersonInfo.BirthDate, 
+                                                   StringFormat='{0:dd/MM/yyyy}'}"/>
 
-                                <Label Text="{Binding PersonInfo.BirthDate, Converter={converters:DateTimeToAgeConverter}}"/>
+                                <Label
+                                    Text="{Binding PersonInfo.BirthDate,
+                                                   StringFormat='  •  {0}',
+                                                   Converter={converters:DateTimeToAgeConverter}}"/>
                             </HorizontalStackLayout>
 
                             <Label
@@ -134,29 +144,33 @@
                                 Text="{Binding MainPhone, Converter={converters:PhoneFormatConverter}}"
                                 IsVisible="{Binding MainPhone, Converter={converters:NullValueToBoolConverter}}"/>
 
-                            <Label
-                                x:Name="AddressLabel"
-                                Text="{Binding Endereco}"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}">
+                            <HorizontalStackLayout>
+                                <Label
+                                    x:Name="AddressLabel"
+                                    Text="{Binding Endereco}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryLight}}"/>
 
-                                <Label.GestureRecognizers>
+                                <Label
+                                    x:Name="AddressComplementLabel"
+                                    Text="{Binding Complemento, StringFormat='  •  {0}'}"
+                                    IsVisible="{Binding Complemento, Converter={converters:NullValueToBoolConverter}}"/>
+
+                                <HorizontalStackLayout.GestureRecognizers>
                                     <TapGestureRecognizer Buttons="Primary" Command="{Binding GoToFamilyCommand}"/>
-                                </Label.GestureRecognizers>
-                            </Label>
-
-                            <Label
-                                x:Name="AddressComplementLabel"
-                                Text="{Binding Complemento}"
-                                IsVisible="{Binding Complemento, Converter={converters:NullValueToBoolConverter}}"/>
+                                </HorizontalStackLayout.GestureRecognizers>
+                                
+                            </HorizontalStackLayout>
 
                             <Label
                                 Text="{Binding PersonInfo.Observacao}"
                                 IsVisible="{Binding PersonInfo.Observacao, Converter={converters:NullValueToBoolConverter}}"
                                 FontAttributes="Italic"/>
 
-                            <Label
-                                Text="Condições de saúde"
-                                Style="{StaticResource CardTitle}"/>
+                            <BoxView
+                                HeightRequest="1"
+                                IsVisible="{Binding HasIcons}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource DarkSurface}, Dark={StaticResource Surface}}"
+                                Opacity="0.5"/>
 
                             <FlexLayout
                                 Wrap="Wrap"
@@ -264,83 +278,73 @@
                 SemanticProperties.Description="Registrar visita agora"/>
         </Grid>
 
-        <Grid
+        <Border
             Grid.Column="1"
             x:Name="HealthPanel"
             IsVisible="{Binding IsHealthPanelVisible}"
-            Padding="0"
-            RowDefinitions="22,auto"
+            StrokeShape="RoundRectangle 18"
+            Padding="16"
+            MaximumHeightRequest="700"
+            BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
             VerticalOptions="Center"
             HorizontalOptions="Fill">
 
-            <Border
-                Grid.Row="1"
-                StrokeShape="RoundRectangle 18"
-                Padding="16"
-                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
-                VerticalOptions="Center"
-                HorizontalOptions="Fill">
+            <Grid
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                RowDefinitions="Auto,Auto,Auto,Auto"
+                RowSpacing="10">
 
                 <Grid
-                    HorizontalOptions="Fill"
-                    VerticalOptions="Center"
-                    RowDefinitions="Auto,Auto,Auto,*"
-                    RowSpacing="10">
+                    Grid.Row="0"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Fill">
 
-                    <Grid
-                        Grid.Row="0"
+                    <Label
+                        Text="Acompanhamento"
+                        Style="{StaticResource CardTitle}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Start"/>
+
+                    <ImageButton
+                        Style="{StaticResource EdgeAction}"
+                        Source="{icons:ThemedIcon Icon=Dismiss24, Role=OnFill,IconSize=22}"
                         VerticalOptions="Start"
-                        HorizontalOptions="Fill">
-                        
-                        <Label
-                            Text="Acompanhamento"
-                            Style="{StaticResource CardTitle}"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Start"/>
-
-                        <ImageButton
-                            Style="{StaticResource EdgeAction}"
-                            Source="{icons:ThemedIcon Icon=Dismiss24, Role=OnFill,IconSize=22}"
-                            VerticalOptions="Start"
-                            HorizontalOptions="End"
-                            Command="{Binding CloseHealthCommand}"/>
-                    </Grid>
-
-                    <Picker
-                        Grid.Row="1"
-                        Title="Escolher módulo"
-                        ItemsSource="{Binding HealthModules}"
-                        ItemDisplayBinding="{Binding Title}"
-                        SelectedItem="{Binding SelectedHealthModule}"/>
-
-                    <VerticalStackLayout 
-                        Grid.Row="2" 
-                        BackgroundColor="Transparent">
-
-                        <Label
-                            Text="{Binding HealthStatus}"
-                            Style="{StaticResource BodyMuted}"/>
-
-                        <Button
-                            Text="Recarregar módulos disponíveis"
-                            Command="{Binding RetryHealthCommand}"
-                            IsVisible="{Binding HealthStatus, Converter={converters:NullValueToBoolConverter}}"/>
-                    </VerticalStackLayout>
-
-                    <ScrollView 
-                        Grid.Row="3" 
-                        BackgroundColor="Transparent" 
-                        Padding="0"
-                        VerticalOptions="Center">
-                        
-                        <ContentView
-                            Content="{Binding HealthContent}" 
-                            Padding="0"
-                            Margin="0"
-                            VerticalOptions="Center"/>
-                    </ScrollView>
+                        HorizontalOptions="End"
+                        Command="{Binding CloseHealthCommand}"/>
                 </Grid>
-            </Border>
-        </Grid>
+
+                <Picker
+                    Grid.Row="1"
+                    Title="Escolher módulo"
+                    ItemsSource="{Binding HealthModules}"
+                    ItemDisplayBinding="{Binding Title}"
+                    SelectedItem="{Binding SelectedHealthModule}"/>
+
+                <VerticalStackLayout
+                    Grid.Row="2"
+                    BackgroundColor="Transparent"
+                    IsVisible="{Binding HasStatus}">
+
+                    <Label
+                        Text="{Binding HealthStatus}"
+                        Style="{StaticResource BodyMuted}"/>
+
+                    <Button
+                        Text="Recarregar módulos disponíveis"
+                        Command="{Binding RetryHealthCommand}"
+                        IsVisible="{Binding HealthStatus, Converter={converters:NullValueToBoolConverter}}"/>
+                </VerticalStackLayout>
+
+                <ScrollView
+                    x:Name="HealthDetailsScroll"
+                    Grid.Row="3"
+                    VerticalOptions="Fill"
+                    VerticalScrollBarVisibility="Never">
+                    
+                    <ContentView Content="{Binding HealthContent}"/>
+                </ScrollView>
+            </Grid>
+        </Border>
     </Grid>
 </tk:Popup>

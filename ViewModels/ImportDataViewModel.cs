@@ -55,6 +55,7 @@ public partial class ImportDataViewModel(
             ImportProgressText = "Preparando importação...";
 
             var total = new PatientImportResultDto();
+            var readPatientIds = new HashSet<int>();
             var failures = new List<string>();
             for (var index = 0; index < files.Count; index++)
             {
@@ -64,7 +65,7 @@ public partial class ImportDataViewModel(
                 var progress = new Progress<ImportProgressDto>(value =>
                 {
                     ImportProgress = (fileIndex + value.Progress) / files.Count;
-                    ImportProgressText = $"Arquivo {fileIndex + 1}/{files.Count} · {file.FileName}: {BuildProgressText(value)}";
+                    ImportProgressText = $"Arquivo {fileIndex + 1}/{files.Count} · {file.FileName}: {BuildProgressText(value)} · {FormatPatientCount(value.ProcessedItems)}";
                 });
                 try
                 {
@@ -79,14 +80,21 @@ public partial class ImportDataViewModel(
                     total.MergedCount += result.MergedCount;
                     total.IgnoredCount += result.IgnoredCount;
                     total.Errors.AddRange(result.Errors);
-                    PatientImportSummary = $"{index + 1}/{files.Count} arquivos · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount);
+                    foreach (var entry in result.Entries)
+                    {
+                        if (entry.EntityType == "Paciente" && entry.RowNumber > 0 && entry.RecordId is > 0)
+                        {
+                            readPatientIds.Add(entry.RecordId.Value);
+                        }
+                    }
+                    PatientImportSummary = $"{index + 1}/{files.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount);
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception ex) { failures.Add($"{file.FileName}: {ex.GetBaseException().Message}"); }
             }
             ImportProgress = 1;
             ImportProgressText = "Processamento dos arquivos concluído.";
-            PatientImportSummary = $"{files.Count} arquivos · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount) +
+            PatientImportSummary = $"{files.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount) +
                 ". Consulte o histórico por arquivo.";
             if (total.Errors.Count > 0 || failures.Count > 0)
             {
@@ -233,6 +241,9 @@ public partial class ImportDataViewModel(
             { DevicePlatform.macOS, ["org.openxmlformats.spreadsheetml.sheet"] }
         });
     }
+
+    private static string FormatPatientCount(int count) =>
+        count == 1 ? "1 paciente identificado" : $"{count} pacientes identificados";
 
     private static string BuildSummary(int importedCount, int updatedCount, int ignoredCount)
     {

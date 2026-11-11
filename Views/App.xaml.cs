@@ -1,5 +1,6 @@
 using ACS_View.Application.Interfaces;
 using ACS_View.Application.State;
+using System.Reflection;
 
 namespace ACS_View.Views
 {
@@ -8,6 +9,12 @@ namespace ACS_View.Views
         private readonly IAppStartupService appStartupService;
         private readonly TransientInputLifecycle inputLifecycle = new();
         public IServiceProvider ServiceProvider { get; private set; }
+        public static string InstalledVersionLabel { get; } = $"Versão {DisplayVersion()}";
+
+        private static string DisplayVersion() => typeof(App).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(attribute => attribute.Key == "ApplicationDisplayVersion")?.Value
+            ?? AppInfo.Current.VersionString;
 
         public App(IServiceProvider serviceProvider)
         {

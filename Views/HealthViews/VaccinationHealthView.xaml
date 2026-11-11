@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             x:Class="ACS_View.Views.HealthViews.VaccinationHealthView"
+             x:DataType="vm:VaccinationHealthViewModel">
+    <VerticalStackLayout Spacing="12">
+        <Label Text="Vacinação infantil" Style="{StaticResource CardTitle}"/>
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/>
+        <Label Text="{Binding Message}" Style="{StaticResource BodyMuted}"/>
+        <Button Text="Tentar novamente" Command="{Binding RetryCommand}"
+                IsVisible="{Binding HasError}" HorizontalOptions="Start"/>
+
+        <VerticalStackLayout Spacing="12" IsVisible="{Binding HasSchedule}">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Style="{StaticResource CardBorder}" Padding="6" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding Totals.Applied}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Aplicadas" Style="{StaticResource BodyMuted}"
+                               HorizontalTextAlignment="Center" FontSize="13"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}" Padding="6" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding Totals.Pending}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Pendentes" Style="{StaticResource BodyMuted}"
+                               HorizontalTextAlignment="Center" FontSize="13"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardBorder}" Padding="6" Margin="0">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding Totals.Late}" Style="{StaticResource MetricNumber}"/>
+                        <Label Text="Atrasadas" Style="{StaticResource BodyMuted}"
+                               HorizontalTextAlignment="Center" FontSize="13"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Doses}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:VaccineDoseCardViewModel">
+                        <Border Style="{StaticResource CardBorder}" Stroke="{Binding StatusColor}"
+                                Padding="12" Margin="0">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="{Binding VaccineName}" Style="{StaticResource CardTitle}"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Label Text="{Binding DoseName}" Style="{StaticResource BodyMuted}"/>
+                                    <Label Grid.Column="1" Text="{Binding StatusText}" TextColor="{Binding StatusColor}"
+                                           HorizontalTextAlignment="End" FontAttributes="Bold"/>
+                                </Grid>
+                                <Label Text="{Binding AgeLabel, StringFormat='Idade: {0}'}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding DeadlineText}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding ApplicationDateText}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding NotesText}" Style="{StaticResource BodyMuted}" IsVisible="{Binding HasNotes}"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</ContentView>

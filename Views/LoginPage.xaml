@@ -2,90 +2,169 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:icons="clr-namespace:ACS_View.Controls"
+             xmlns:views="clr-namespace:ACS_View.Views"
              x:Class="ACS_View.Views.LoginPage"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              Style="{StaticResource PageBackground}">
 
     <ScrollView>
-    <Grid Padding="24" RowDefinitions="*,auto,*" MaximumWidthRequest="600">
-        <VerticalStackLayout Grid.Row="1" Spacing="18">
-            <Image
-                Source="{icons:ThemedIcon Icon=Form24, IconSize=112, Role=Primary}"
-                HeightRequest="112"
-                WidthRequest="112"
-                HorizontalOptions="Center"/>
+        <Grid Padding="24" RowDefinitions="*,auto,*,auto" MaximumWidthRequest="600">
+            
+            <VerticalStackLayout Grid.Row="1" Spacing="10">
+                <Image
+                    Source="{icons:ThemedIcon Icon=Form24, IconSize=112, Role=Primary}"
+                    HeightRequest="112"
+                    WidthRequest="112"
+                    HorizontalOptions="Center"/>
 
-            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                <Label Text="ACS View" Style="{StaticResource PageTitle}" HorizontalTextAlignment="Center"/>
-                <Label Text="Acompanhamento comunitário" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
-            </VerticalStackLayout>
-
-            <Label x:Name="UpdateStatus" Text="Verificando atualizações…" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center" />
-            <Border x:Name="UpdateCard" IsVisible="False" Style="{StaticResource CardBorder}" Padding="18">
-                <VerticalStackLayout Spacing="10">
-                    <Label x:Name="UpdateMessage" Style="{StaticResource BodyMuted}" />
-                    <VerticalStackLayout x:Name="UpdateProgressPanel" IsVisible="False" Spacing="8">
-                        <ProgressBar x:Name="UpdateProgress" Progress="0" />
-                        <Label x:Name="UpdateProgressText" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap" />
-                        <Label Text="Aguarde para entrar enquanto a atualização está em andamento." Style="{StaticResource BodyMuted}" />
-                    </VerticalStackLayout>
-                    <Button x:Name="InstallUpdate" Text="Instalar atualização" Style="{StaticResource PrimaryButton}" Clicked="InstallUpdate_Clicked" />
-                    <Button x:Name="SkipUpdate" Text="Agora não" Style="{StaticResource GhostButton}" Clicked="SkipUpdate_Clicked" />
-                    <Button x:Name="CancelDownload" Text="Cancelar download" IsVisible="False" Style="{StaticResource GhostButton}" Clicked="CancelDownload_Clicked" />
+                <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                    <Label Text="ACS View" Style="{StaticResource PageTitle}" HorizontalTextAlignment="Center"/>
+                    <Label Text="Acompanhamento comunitário" Style="{StaticResource BodyMuted}" HorizontalTextAlignment="Center"/>
                 </VerticalStackLayout>
-            </Border>
-            <Border x:Name="LoginForm" IsEnabled="False" Style="{StaticResource CardBorder}" Padding="18" Margin="0">
-                <VerticalStackLayout Spacing="14">
-                    <ContentView x:Name="WindowsAccountsHost" IsVisible="False" />
 
-                    <Entry
-                        x:Name="UsernameEntry"
-                        Placeholder="Nome de usuário"
-                        MaxLength="64"
-                        IsSpellCheckEnabled="False"
-                        IsTextPredictionEnabled="False"
-                        HorizontalTextAlignment="Start"
-                        ReturnType="Next"
-                        Completed="UsernameEntry_Completed"/>
+                <Label 
+                    x:Name="UpdateStatus"
+                    Text="Verificando atualizações…" 
+                    Style="{StaticResource BodyMuted}"
+                    HorizontalTextAlignment="Center" />
+                
+                <!-- update -->
+                <Border 
+                    x:Name="UpdateCard" 
+                    IsVisible="False"
+                    Style="{StaticResource CardBorder}"
+                    Padding="18">
+                    
+                    <VerticalStackLayout Spacing="10">
+                        
+                        <Label 
+                            x:Name="UpdateMessage" 
+                            Style="{StaticResource BodyMuted}" />
+                        
+                        <VerticalStackLayout
+                            x:Name="UpdateProgressPanel"
+                            IsVisible="False" 
+                            Spacing="8">
+                            
+                            <ProgressBar
+                                x:Name="UpdateProgress" 
+                                Progress="0" />
+                            
+                            <Label
+                                x:Name="UpdateProgressText"
+                                Style="{StaticResource BodyMuted}"
+                                LineBreakMode="WordWrap" />
+                            
+                            <Label 
+                                Text="Aguarde para entrar enquanto a atualização está em andamento."
+                                Style="{StaticResource BodyMuted}" />
+                            
+                        </VerticalStackLayout>
+                        
+                        <Button
+                            x:Name="InstallUpdate"
+                            Text="Instalar atualização"
+                            Style="{StaticResource PrimaryButton}" 
+                            Clicked="InstallUpdate_Clicked" />
+                        
+                        <Button
+                            x:Name="SkipUpdate"
+                            Text="Agora não" 
+                            Style="{StaticResource GhostButton}"
+                            Clicked="SkipUpdate_Clicked" />
+                        
+                        <Button
+                            x:Name="CancelDownload" 
+                            Text="Cancelar download"
+                            IsVisible="False"
+                            Style="{StaticResource GhostButton}"
+                            Clicked="CancelDownload_Clicked" />
+                    </VerticalStackLayout>
+                </Border>
+            
+                <!-- login -->
+                <Border 
+                    x:Name="LoginForm" 
+                    IsEnabled="False" 
+                    Style="{StaticResource CardBorder}"
+                    Padding="18" 
+                    Margin="0">
+                    
+                    <VerticalStackLayout Spacing="14">
+                        
+                        <ContentView
+                            x:Name="WindowsAccountsHost" 
+                            IsVisible="False" />
 
-                    <Entry
-                        x:Name="PasswordEntry"
-                        Placeholder="Senha"
-                        MaxLength="128"
-                        IsSpellCheckEnabled="False"
-                        IsTextPredictionEnabled="False"
-                        IsPassword="True"
-                        HorizontalTextAlignment="Start"
-                        ReturnType="Go"
-                        Completed="PasswordEntry_Completed"/>
+                        <Entry
+                            x:Name="UsernameEntry"
+                            Placeholder="Nome de usuário"
+                            MaxLength="64"
+                            IsSpellCheckEnabled="False"
+                            IsTextPredictionEnabled="False"
+                            HorizontalTextAlignment="Start"
+                            ReturnType="Next"
+                            Completed="UsernameEntry_Completed"/>
+
+                        <Entry
+                            x:Name="PasswordEntry"
+                            Placeholder="Senha"
+                            MaxLength="128"
+                            IsSpellCheckEnabled="False"
+                            IsTextPredictionEnabled="False"
+                            IsPassword="True"
+                            HorizontalTextAlignment="Start"
+                            ReturnType="Go"
+                            Completed="PasswordEntry_Completed"/>
+
+                        <Button
+                            x:Name="Btn_Login"
+                            Text="Entrar"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="Btn_Login_Clicked"/>
+
+                    </VerticalStackLayout>
+                </Border>
+                
+                <Grid 
+                    x:Name="AccountActions"
+                    IsEnabled="False" 
+                    ColumnDefinitions="{OnPlatform Default='*,*'}" 
+                    ColumnSpacing="8" 
+                    HorizontalOptions="{OnPlatform Default=Fill}">
+                    
+                    <Button
+                        x:Name="RegisterUser"
+                        Grid.Column="0"
+                        Text="Cadastre-se"
+                        Style="{StaticResource GhostButton}"
+                        HorizontalOptions="Start"
+                        Clicked="RegisterUser_Clicked"/>
 
                     <Button
-                        x:Name="Btn_Login"
-                        Text="Entrar"
-                        Style="{StaticResource PrimaryButton}"
-                        Clicked="Btn_Login_Clicked"/>
-
-                </VerticalStackLayout>
-            </Border>
-
-            <Button x:Name="RestoreBackup" Text="Restaurar backup" Style="{StaticResource GhostButton}" Clicked="RestoreBackup_Clicked"/>
-            <Grid x:Name="AccountActions" IsEnabled="False" ColumnDefinitions="{OnPlatform Default='*,*', WinUI='Auto,Auto'}" ColumnSpacing="8" HorizontalOptions="{OnPlatform Default=Fill, WinUI=End}">
-                <Button
-                    x:Name="RegisterUser"
-                    Grid.Column="0"
-                    Text="Cadastre-se"
-                    Style="{StaticResource GhostButton}"
-                    Clicked="RegisterUser_Clicked"/>
+                        Grid.Column="1"
+                        Text="Esqueci minha senha"
+                        Style="{StaticResource GhostButton}"
+                        TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource DarkIconDanger}}"
+                        HorizontalOptions="End"
+                        Clicked="Button_Clicked"/>
+                </Grid>
 
                 <Button
-                    Grid.Column="1"
-                    Text="Esqueci minha senha"
+                    x:Name="RestoreBackup" 
+                    Text="Restaurar backup" 
                     Style="{StaticResource GhostButton}"
-                    TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource DarkIconDanger}}"
-                    Clicked="Button_Clicked"/>
-            </Grid>
-        </VerticalStackLayout>
-    </Grid>
+                    HorizontalOptions="Center"
+                    Clicked="RestoreBackup_Clicked"/>
+            </VerticalStackLayout>
+            
+            <Label 
+                Grid.Row="3"
+                Text="{x:Static views:App.InstalledVersionLabel}"
+                Style="{StaticResource BodyMuted}"
+                HorizontalTextAlignment="Center"
+                Margin="0,16,0,0" />
+        </Grid>
     </ScrollView>
 </ContentPage>

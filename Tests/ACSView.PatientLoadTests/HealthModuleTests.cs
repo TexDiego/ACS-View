@@ -12,6 +12,20 @@ internal static class HealthModuleTests
     {
         var checks = 0;
         void Check(bool value, string text) { if(!value) throw new Exception(text); checks++; Console.WriteLine("PASS: " + text); }
+        var today = new DateTime(2026, 11, 10);
+        var child = new PatientHealthContext(7, 1, "Teste", today.AddYears(-12).AddDays(1));
+        Check(child.IsChildOn(today) && !child.IsChildOn(today.AddDays(1)),
+            "Vaccination: module is available through the day before the twelfth birthday");
+        Check(!(child with { BirthDate = today.AddDays(1) }).IsChildOn(today) &&
+              !(child with { BirthDate = DateTime.MinValue }).IsChildOn(today) &&
+              !(child with { BirthDate = null }).IsChildOn(today),
+            "Vaccination: future and unknown birth dates do not enable the child module");
+
+        var definition = VaccineDoseCatalog.GetDefinition(VaccineDoseKeys.BcgInfantil)!;
+        var doses = Enum.GetValues<VaccineStatus>()
+            .Select(status => new PatientVaccineDoseDto(definition, null, today, null, null, "", "", status));
+        Check(VaccineScheduleTotals.From(doses) == new VaccineScheduleTotals(2, 1, 1),
+            "Vaccination: applied-late counts as applied and future doses do not count as pending");
         var editor = new GlucoseMonitoringEditorViewModel();
         Check(editor.Build().ChecksPerDay is null && !editor.HasValues, "Health editor: optional empty form preserves unknowns");
         editor.PickupInterval = "Quinzenal"; editor.ChecksPerDay = "4"; editor.StripsPerPickup = "60";
@@ -75,6 +89,9 @@ internal static class HealthModuleTests
     {
         public PregnancyDetailsDto? Pregnancy;
         public int DiabetesReads; public int VisitReads; public bool Fail; public TaskCompletionSource? Pause;
+        public Task<PatientVaccineScheduleDto?> GetVaccinationAsync(PatientHealthSession s) =>
+            Task.FromResult<PatientVaccineScheduleDto?>(null);
+
         public Task<PatientInfectiousFollowUp?> GetInfectiousAsync(PatientHealthSession s, string code) => s.GetAsync<PatientInfectiousFollowUp?>(code, _ => Task.FromResult<PatientInfectiousFollowUp?>(null));
         public Task<ClinicalHealthData> GetClinicalAsync(PatientHealthSession s) => s.GetAsync("clinical", _ => Task.FromResult(new ClinicalHealthData([], false, Pregnancy)));
         public Task<DiabetesHealthData> GetDiabetesAsync(PatientHealthSession s) => s.GetAsync("diabetes", async ct =>

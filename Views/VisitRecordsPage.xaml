@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
              xmlns:dto="clr-namespace:ACS_View.Application.DTOs"
              xmlns:icons="clr-namespace:ACS_View.Controls"
+             xmlns:converters="clr-namespace:ACS_View.Converters"
              x:DataType="vm:VisitRecordsViewModel"
              x:Class="ACS_View.Views.VisitRecordsPage"
              Shell.NavBarIsVisible="True"
@@ -108,18 +109,62 @@
                                                             StrokeShape="RoundRectangle 8"
                                                             Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}"
                                                             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMuted}, Dark={StaticResource DarkSurfaceMuted}}">
+                                                            
                                                             <Grid ColumnDefinitions="*,38" ColumnSpacing="8">
                                                                 <VerticalStackLayout Spacing="3">
+                                                                    
                                                                     <VerticalStackLayout.GestureRecognizers>
                                                                         <TapGestureRecognizer
                                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenPersonCommand}"
                                                                             CommandParameter="{Binding .}"/>
                                                                     </VerticalStackLayout.GestureRecognizers>
-                                                                    <Label Text="{Binding PatientName}" Style="{StaticResource CardTitle}" FontSize="14"/>
-                                                                    <Label Text="{Binding VisitDate, StringFormat='{}{0:HH:mm}'}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                                                    <Label Text="{Binding StatusText}" TextColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentLight}}" FontSize="12" FontAttributes="Bold"/>
-                                                                    <Label Text="{Binding CareLinesText}" Style="{StaticResource BodyMuted}" FontSize="12"/>
-                                                                    <Label Text="{Binding Notes}" Style="{StaticResource BodyMuted}" FontSize="12"/>
+
+                                                                    <Grid 
+                                                                        ColumnDefinitions="*,*"
+                                                                        HorizontalOptions="Fill">
+                                                                        
+                                                                        <Label
+                                                                            Grid.Column="0"
+                                                                            Text="{Binding PatientName}" 
+                                                                            Style="{StaticResource CardTitle}" 
+                                                                            FontSize="18"
+                                                                            VerticalOptions="Center"/>
+
+                                                                        <Border 
+                                                                            Grid.Column="1"
+                                                                            HorizontalOptions="Start"
+                                                                            VerticalOptions="Center"
+                                                                            WidthRequest="100"
+                                                                            Padding="10,2"
+                                                                            Margin="0"
+                                                                            BackgroundColor="{AppThemeBinding Dark={StaticResource DarkSurface}, Default={StaticResource Surface}}"
+                                                                            Stroke="{AppThemeBinding Light={StaticResource BorderSoft}, Dark={StaticResource DarkBorderSoft}}">
+                                                                            <Label 
+                                                                                Text="{Binding StatusText}" 
+                                                                                TextColor="{Binding StatusText, Converter={converters:StatusToColorConverter}}" 
+                                                                                FontSize="12" 
+                                                                                FontAttributes="Bold"
+                                                                                HorizontalOptions="Center"
+                                                                                HorizontalTextAlignment="Center"/>                                                                            
+                                                                        </Border>
+                                                                    </Grid>
+                                                                    
+                                                                    <Label 
+                                                                        Text="{Binding VisitDate, StringFormat='{}{0:HH:mm}'}"
+                                                                        Style="{StaticResource BodyMuted}" 
+                                                                        FontSize="12"/>
+                                                                    
+                                                                    
+                                                                    <Label
+                                                                        Text="{Binding CareLinesText}"
+                                                                        Style="{StaticResource BodyMuted}"
+                                                                        FontSize="12"/>
+                                                                    
+                                                                    <Label 
+                                                                        Text="{Binding Notes}"
+                                                                        Style="{StaticResource BodyMuted}" 
+                                                                        FontSize="12"
+                                                                        IsVisible="{Binding Notes, Converter={converters:NullValueToBoolConverter}}"/>
                                                                 </VerticalStackLayout>
 
                                                                 <ImageButton

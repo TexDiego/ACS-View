@@ -21,6 +21,7 @@ public partial class VisitRecordsViewModel : BaseViewModel
     private readonly DateTime minimumMonth = new(DateTime.Today.AddYears(-1).Year, DateTime.Today.AddYears(-1).Month, 1);
     private int loadedVersion = -1;
     private bool hasLoaded;
+    private bool isPersonPopupOpen;
     private VisitStatus? selectedStatus;
     private DateTime selectedMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -66,7 +67,7 @@ public partial class VisitRecordsViewModel : BaseViewModel
     internal async Task LoadAsync(bool force = false)
     {
         var currentVersion = DataChangeTracker.VisitsVersion + DataChangeTracker.PatientsVersion + DataChangeTracker.HousesVersion;
-        if (!force && hasLoaded && loadedVersion == currentVersion)
+        if (!force && (isPersonPopupOpen || (hasLoaded && loadedVersion == currentVersion)))
         {
             return;
         }
@@ -177,7 +178,20 @@ public partial class VisitRecordsViewModel : BaseViewModel
                 return;
             }
 
-            await personsInfoPopupService.ShowAsync(patient);
+            var visitsVersion = DataChangeTracker.VisitsVersion;
+            isPersonPopupOpen = true;
+            try
+            {
+                await personsInfoPopupService.ShowAsync(patient);
+            }
+            finally
+            {
+                isPersonPopupOpen = false;
+                if (visitsVersion != DataChangeTracker.VisitsVersion)
+                {
+                    await LoadAsync();
+                }
+            }
         }
         catch (Exception ex)
         {

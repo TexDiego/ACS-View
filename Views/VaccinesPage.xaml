@@ -38,11 +38,18 @@
                 </Border>
             </Grid>
 
-            <Button
-                Text="{Binding LateFilterText}"
-                Style="{StaticResource PrimaryOutlineButton}"
-                Command="{Binding ToggleLateFilterCommand}"
-                HorizontalOptions="End"/>
+            <FlexLayout Wrap="Wrap" JustifyContent="End" AlignItems="Center">
+                <Button
+                    Text="{Binding LateFilterText}"
+                    Style="{StaticResource PrimaryOutlineButton}"
+                    Command="{Binding ToggleLateFilterCommand}"/>
+                <Button
+                    Text="Registrar atrasadas em lote"
+                    Style="{StaticResource Buttons}"
+                    Margin="8,4,0,4"
+                    Command="{Binding OpenOverdueBatchCommand}"
+                    IsVisible="{Binding HasOverdueDoses}"/>
+            </FlexLayout>
         </VerticalStackLayout>
 
         <CollectionView

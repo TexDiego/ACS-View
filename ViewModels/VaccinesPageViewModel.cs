@@ -5,6 +5,7 @@ using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -17,13 +18,16 @@ namespace ACS_View.ViewModels
         private readonly IPopupService _popupService;
         private int? _loadedPatientId;
         private int _loadVersion;
+        private bool _refreshOnReturn;
 
         [ObservableProperty] private Patient? healthRecord;
         [ObservableProperty] private bool hasPatient;
         [ObservableProperty] private bool showOnlyLate;
         [ObservableProperty] private int appliedCount;
         [ObservableProperty] private int pendingCount;
-        [ObservableProperty] private int lateCount;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasOverdueDoses))]
+        private int lateCount;
 
         public ObservableCollection<VaccineDoseCardViewModel> Doses { get; } = [];
         public ObservableCollection<VaccineDoseCardViewModel> FilteredDoses { get; } = [];
@@ -35,6 +39,7 @@ namespace ACS_View.ViewModels
         public ICommand ToggleLateFilterCommand { get; }
 
         public string LateFilterText => ShowOnlyLate ? "Mostrar todas" : "Apenas atrasadas";
+        public bool HasOverdueDoses => LateCount > 0;
 
         public VaccinesPageViewModel(IPatientService patientService, IVaccineService vaccineService, IPopupService popupService)
         {
@@ -57,11 +62,12 @@ namespace ACS_View.ViewModels
                 return;
             }
 
-            if (_loadedPatientId == patientId && HealthRecord is not null && Doses.Count > 0)
+            if (!_refreshOnReturn && _loadedPatientId == patientId && HealthRecord is not null && Doses.Count > 0)
             {
                 return;
             }
 
+            _refreshOnReturn = false;
             var loadVersion = Interlocked.Increment(ref _loadVersion);
             HealthRecord = null;
             HasPatient = false;
@@ -122,6 +128,27 @@ namespace ACS_View.ViewModels
         {
             OnPropertyChanged(nameof(LateFilterText));
             RefreshFilteredDoses();
+        }
+
+        [RelayCommand]
+        private async Task OpenOverdueBatchAsync()
+        {
+            if (HealthRecord is not { } patient || _loadedPatientId != patient.Id || !HasOverdueDoses)
+            {
+                return;
+            }
+
+            var overdueDoses = Doses.Where(card => card.Status == VaccineStatus.Late).Select(card => card.Dose);
+            var viewModel = new VaccineBatchViewModel(_vaccineService, patient, overdueDoses);
+            try
+            {
+                _refreshOnReturn = true;
+                await Shell.Current.Navigation.PushModalAsync(new VaccineBatchPage(viewModel));
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Erro", ex.Message, "Voltar");
+            }
         }
 
         private async Task OpenApplicationPopupAsync(VaccineDoseCardViewModel? card)
@@ -237,9 +264,10 @@ namespace ACS_View.ViewModels
 
         private void RefreshSummaries()
         {
-            AppliedCount = Doses.Count(dose => dose.Status is VaccineStatus.Applied or VaccineStatus.AppliedLate);
-            LateCount = Doses.Count(dose => dose.Status == VaccineStatus.Late);
-            PendingCount = Doses.Count(dose => dose.Status == VaccineStatus.Due);
+            var totals = VaccineScheduleTotals.From(Doses.Select(card => card.Dose));
+            AppliedCount = totals.Applied;
+            PendingCount = totals.Pending;
+            LateCount = totals.Late;
         }
 
         private void RefreshFilteredDoses()
@@ -255,7 +283,7 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private static IEnumerable<PatientVaccineDoseDto> SortDoses(IEnumerable<PatientVaccineDoseDto> doses)
+        internal static IEnumerable<PatientVaccineDoseDto> SortDoses(IEnumerable<PatientVaccineDoseDto> doses)
         {
             return doses
                 .OrderBy(dose => GetStatusSort(dose.Status))

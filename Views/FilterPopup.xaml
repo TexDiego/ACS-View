@@ -108,26 +108,22 @@
 
                         <VerticalStackLayout Spacing="4" Grid.Column="0">
                             <Label Text="Ordenar por" Style="{StaticResource FieldLabel}"/>
-                            <Border Style="{StaticResource FieldBorder}">
-                                <Picker SelectedIndex="{Binding FilterBy}">
-                                    <Picker.Items>
-                                        <x:String>Nome</x:String>
-                                        <x:String>Idade</x:String>
-                                    </Picker.Items>
-                                </Picker>
-                            </Border>
+                            <Picker SelectedIndex="{Binding FilterBy}">
+                                <Picker.Items>
+                                    <x:String>Nome</x:String>
+                                    <x:String>Idade</x:String>
+                                </Picker.Items>
+                            </Picker>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="4" Grid.Column="1">
                             <Label Text="Direção" Style="{StaticResource FieldLabel}"/>
-                            <Border Style="{StaticResource FieldBorder}">
-                                <Picker SelectedIndex="{Binding OrderBy}">
-                                    <Picker.Items>
-                                        <x:String>Crescente</x:String>
-                                        <x:String>Decrescente</x:String>
-                                    </Picker.Items>
-                                </Picker>
-                            </Border>
+                            <Picker SelectedIndex="{Binding OrderBy}">
+                                <Picker.Items>
+                                    <x:String>Crescente</x:String>
+                                    <x:String>Decrescente</x:String>
+                                </Picker.Items>
+                            </Picker>
                         </VerticalStackLayout>
                     </Grid>
 

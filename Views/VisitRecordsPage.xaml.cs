@@ -15,7 +15,7 @@ public partial class VisitRecordsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _ = viewModel.LoadAsync(force: true);
+        _ = viewModel.LoadAsync();
     }
 
     private void CollectionView_Scrolled(object sender, ItemsViewScrolledEventArgs e)

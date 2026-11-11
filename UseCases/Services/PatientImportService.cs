@@ -81,11 +81,11 @@ namespace ACS_View.UseCases.Services
 
             var headerMap = ImportColumnMapper.Map(rows, headerMatch.Value.RowIndex, columnMap, result.Errors, result.Details);
             var columns = ResolveColumns(headerMap, columnMap);
-            var dataRowCount = Math.Max(0, rows.Count - headerMatch.Value.RowIndex - 1);
-            var totalProgressItems = Math.Max(1, dataRowCount * 3 + 5);
-            var processedProgressItems = 1;
+            var dataRowCount = rows.Skip(headerMatch.Value.RowIndex + 1)
+                .Count(row => !row.All(string.IsNullOrWhiteSpace));
+            var readPatientIds = new HashSet<int>();
 
-            Report(progress, processedProgressItems, totalProgressItems, "Importando pacientes");
+            Report(progress, 0, dataRowCount, "Importando pacientes");
 
             var rowContexts = new List<PatientImportRowContext>();
             var cepCache = new Dictionary<string, House?>();
@@ -118,7 +118,6 @@ namespace ACS_View.UseCases.Services
                 {
                     result.IgnoredCount++;
                     result.Errors.Add($"Linha {rowIndex + 1}: nome do paciente vazio; linha não importada.");
-                    processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
                     continue;
                 }
 
@@ -129,7 +128,6 @@ namespace ACS_View.UseCases.Services
                 var observation = GetCell(row, columns.ObservationIndex).Trim();
                 var birthDate = ParseDate(GetCell(row, columns.BirthDateIndex));
                 var importedSex = ParseSex(GetCell(row, columns.SexIndex));
-                if (row.All(string.IsNullOrWhiteSpace)) continue;
                 if (!string.IsNullOrWhiteSpace(GetCell(row, columns.BirthDateIndex)) && (birthDate is null || !HasValidBirthDate(birthDate.Value)))
                 {
                     result.Errors.Add($"Linha {rowIndex + 1}: data de nascimento inválida: '{GetCell(row, columns.BirthDateIndex)}'.");
@@ -316,7 +314,10 @@ namespace ACS_View.UseCases.Services
                 catch (OperationCanceledException ex) { RecordRowFailure(ex); throw; }
                 catch (Exception ex) { RecordRowFailure(ex); }
 
-                processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Importando pacientes", rowIndex);
+                if (patient.Id > 0 && readPatientIds.Add(patient.Id) && readPatientIds.Count % 5 == 0)
+                {
+                    Report(progress, readPatientIds.Count, dataRowCount, "Importando pacientes");
+                }
             }
 
             if (columnMap.EnableAutomaticFamilyLinking && rowContexts.Count > 0)
@@ -325,8 +326,8 @@ namespace ACS_View.UseCases.Services
                     p => System.Text.Json.JsonSerializer.Serialize(p));
                 try
                 {
-                    processedProgressItems = await familyLinkResolver.ResolveAsync(
-                        rowContexts, columnMap, result, progress, processedProgressItems, totalProgressItems, cancellationToken);
+                    await familyLinkResolver.ResolveAsync(rowContexts, columnMap, result,
+                        step => Report(progress, readPatientIds.Count, dataRowCount, step), cancellationToken);
                 }
                 finally
                 {
@@ -369,7 +370,7 @@ namespace ACS_View.UseCases.Services
                 }
             }
 
-            Report(progress, totalProgressItems, totalProgressItems, "Concluindo");
+            Report(progress, readPatientIds.Count, readPatientIds.Count, "Concluindo");
             return result;
         }
 
@@ -855,21 +856,6 @@ namespace ACS_View.UseCases.Services
         private static string Compact(string value)
         {
             return Regex.Replace(value, @"[^a-z0-9]", string.Empty, RegexOptions.IgnoreCase);
-        }
-
-        private static int ReportEvery(
-            IProgress<ImportProgressDto>? progress,
-            int processedItems,
-            int totalItems,
-            string currentStep,
-            int rowNumber)
-        {
-            if (rowNumber % 5 == 0 || processedItems >= totalItems)
-            {
-                Report(progress, processedItems, totalItems, currentStep);
-            }
-
-            return processedItems;
         }
 
         private static void Report(

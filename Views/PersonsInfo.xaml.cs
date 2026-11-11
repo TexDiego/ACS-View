@@ -55,16 +55,12 @@ public partial class PersonsInfo : Popup
     {
         var window = owner ?? Window ?? Shell.Current?.Window;
         var availableWidth = Math.Max(1, (window?.Width ?? 400) - 40);
-        var height = Math.Max(1, (window?.Height ?? 780) - 144);
+        var availableHeight = Math.Clamp((window?.Height ?? 780) - 64, 1, 700);
+        PatientDetailsScroll.MaximumHeightRequest = Math.Max(1, availableHeight - 150);
+        HealthDetailsScroll.MaximumHeightRequest = Math.Max(1, availableHeight - 180);
         var sideBySide = DeviceInfo.Platform == DevicePlatform.WinUI && availableWidth >= 860;
         var expanded = vm.IsHealthPanelVisible;
         WidthRequest = sideBySide && expanded ? Math.Min(1080, availableWidth) : Math.Min(460, availableWidth);
-        var mainHeight = Math.Min(500, height);
-        var healthHeight = Math.Min(760, height);
-        HeightRequest = expanded ? healthHeight : mainHeight;
-        Composition.HeightRequest = HeightRequest;
-        MainPanel.HeightRequest = mainHeight;
-        HealthPanel.HeightRequest = healthHeight;
         Composition.ColumnDefinitions.Clear();
         Composition.ColumnDefinitions.Add(new ColumnDefinition { Width = sideBySide && expanded ? new GridLength(460) : GridLength.Star });
         if(sideBySide && expanded) Composition.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });

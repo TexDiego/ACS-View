@@ -2,7 +2,14 @@ using ACS_View.Application.DTOs;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
 namespace ACS_View.Application.Health;
-public sealed record PatientHealthContext(int PatientId, int OwnerId, string Name);
+public sealed record PatientHealthContext(int PatientId, int OwnerId, string Name, DateTime? BirthDate = null)
+{
+    public bool IsUnderTwelve => IsChildOn(DateTime.Today);
+
+    public bool IsChildOn(DateTime referenceDate) =>
+        BirthDate is { } birth && birth != default &&
+        birth.Date <= referenceDate.Date && birth.Date > referenceDate.Date.AddYears(-12);
+}
 public sealed record HealthModuleOption(string Key, string Title);
 public sealed record ClinicalHealthData(IReadOnlyList<PatientConditions> Conditions, bool Insulin, PregnancyDetailsDto? Pregnancy);
 public sealed record DiabetesHealthData(PatientGlucoseMonitoring? Monitoring, IReadOnlyList<PatientStripPickup> Pickups);

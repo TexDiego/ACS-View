@@ -32,8 +32,8 @@
 		<ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">com.texdiego.acsview</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.4.2</ApplicationDisplayVersion>
-		<ApplicationVersion>9</ApplicationVersion>
+		<ApplicationDisplayVersion>1.4.3</ApplicationDisplayVersion>
+		<ApplicationVersion>10</ApplicationVersion>
 		<!-- NuGet requires the same package version in outer and platform evaluations. -->
 		<Version>$(ApplicationDisplayVersion)</Version>
 		<PackageVersion>$(ApplicationDisplayVersion)</PackageVersion>
@@ -55,8 +55,8 @@
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-		<ApplicationDisplayVersion>1.4.1</ApplicationDisplayVersion>
-		<ApplicationVersion>8</ApplicationVersion>
+		<ApplicationDisplayVersion>1.4.3</ApplicationDisplayVersion>
+		<ApplicationVersion>10</ApplicationVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
@@ -73,6 +73,10 @@
 			<ContentWithTargetPath Update="@(_ResizetizerCollectedImages)" CopyToOutputDirectory="PreserveNewest" />
 		</ItemGroup>
 	</Target>
+
+	<ItemGroup>
+		<AssemblyMetadata Include="ApplicationDisplayVersion" Value="$(ApplicationDisplayVersion)" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- App Icon -->

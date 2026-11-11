@@ -98,6 +98,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
     [ObservableProperty] private Patient personInfo = new();
     [ObservableProperty] private bool hasMotherPatientLink;
     [ObservableProperty] private bool hasFatherPatientLink;
+    [ObservableProperty] private bool hasIcons = false;
 
     [ObservableProperty] private string endereco = "Sem endereço";
     [ObservableProperty] private string complemento = string.Empty;
@@ -339,6 +340,7 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
                 MainPhone = phones?.FirstOrDefault(p => p.IsPrimary)?.Number ?? string.Empty;
                 MainSus = sus;
                 Icons = new ObservableCollection<HealthIcon>(healthIcons);
+                HasIcons = healthIcons.Any();
             });
         }
         catch (Exception ex)
@@ -437,11 +439,11 @@ public partial class PersonsInfoViewModel(IPersonsInfoService _infoService,
             }
         }
 
-        if (patient?.BirthDate > DateTime.Today.AddYears(-12))
+        if (session.Context.IsUnderTwelve)
         {
             if (seenSources.Add("criancas.png"))
             {
-                iconsList.Add(new HealthIcon { IconSource = "criancas.png", Description = "Criança" });
+                iconsList.Add(new HealthIcon { IconSource = "criancas.png", Description = "Vacinação infantil" });
             }
         }
 

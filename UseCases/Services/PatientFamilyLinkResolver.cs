@@ -13,16 +13,14 @@ internal sealed class PatientFamilyLinkResolver(
     IHouseService houseService,
     IFamilyService familyService)
 {
-    public async Task<int> ResolveAsync(
+    public async Task ResolveAsync(
         List<PatientImportRowContext> rowContexts,
         PatientImportColumnMapDto columnMap,
         PatientImportResultDto result,
-        IProgress<ImportProgressDto>? progress,
-        int processedProgressItems,
-        int totalProgressItems,
+        Action<string> reportStep,
         CancellationToken cancellationToken)
     {
-        Report(progress, processedProgressItems, totalProgressItems, "Resolvendo residencias");
+        reportStep("Resolvendo residências");
 
         rowContexts = rowContexts.GroupBy(c => c.Patient.Id).Select(g => new PatientImportRowContext
         {
@@ -117,10 +115,9 @@ internal sealed class PatientFamilyLinkResolver(
                     Description = $"CEP {pendingHouse.CEP}, número {pendingHouse.NumeroCasa}", Status = "Ignorado",
                     Reason = "Residência não importada por falta de informações ou endereço ambíguo; confira o CEP e complete o endereço." });
             }
-            processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo residencias", context.RowNumber);
         }
 
-        Report(progress, processedProgressItems, totalProgressItems, "Resolvendo vinculos familiares");
+        reportStep("Resolvendo vínculos familiares");
         var nextFamilyIdByHouse = new Dictionary<int, int>();
         var importedResponsibleContexts = rowContexts
             .Where(context => context.IsFamilyResponsible)
@@ -130,7 +127,6 @@ internal sealed class PatientFamilyLinkResolver(
         {
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureResponsibleFamilyAsync(context.Patient, columnMap, nextFamilyIdByHouse);
-            processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
         }
 
         var indexes = BuildPatientIndexes(allPatients, rowContexts);
@@ -149,14 +145,12 @@ internal sealed class PatientFamilyLinkResolver(
                 result.Errors.Add($"{(resolution.ResidenceConflict ? context.Patient.Name : $"{RowLabel(context)}: {context.Patient.Name}")}: responsável CNS '{context.FamilyResponsibleSus}' não associado: {pendingReason}");
             if (context.IsFamilyResponsible && context.Patient.FamilyId <= 0)
                 result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável identificado, família pendente de residência.");
-
-            processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo vinculos familiares", context.RowNumber);
         }
 
         indexes = BuildPatientIndexes(allPatients, rowContexts);
         var contextsByPatientId = rowContexts.ToDictionary(context => context.Patient.Id);
 
-        Report(progress, processedProgressItems, totalProgressItems, "Resolvendo mae e pai");
+        reportStep("Resolvendo mãe e pai");
         foreach (var context in rowContexts)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -191,11 +185,7 @@ internal sealed class PatientFamilyLinkResolver(
                 result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: mãe '{context.MotherName}' não associada; cadastro ausente, ambíguo ou idade incompatível.");
             if (!string.IsNullOrWhiteSpace(context.FatherName) && context.Patient.FatherPatientId is null or <= 0)
                 result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: pai '{context.FatherName}' não associado; cadastro ausente, ambíguo ou idade incompatível.");
-
-            processedProgressItems = ReportEvery(progress, processedProgressItems + 1, totalProgressItems, "Resolvendo mae e pai", context.RowNumber);
         }
-
-        return processedProgressItems;
     }
 
     private async Task EnsureResponsibleFamilyAsync(
@@ -588,35 +578,6 @@ internal sealed class PatientFamilyLinkResolver(
     private static string Compact(string value)
     {
         return Regex.Replace(value, @"[^a-z0-9]", string.Empty, RegexOptions.IgnoreCase);
-    }
-
-    private static int ReportEvery(
-        IProgress<ImportProgressDto>? progress,
-        int processedItems,
-        int totalItems,
-        string currentStep,
-        int rowNumber)
-    {
-        if (rowNumber % 5 == 0 || processedItems >= totalItems)
-        {
-            Report(progress, processedItems, totalItems, currentStep);
-        }
-
-        return processedItems;
-    }
-
-    private static void Report(
-        IProgress<ImportProgressDto>? progress,
-        int processedItems,
-        int totalItems,
-        string currentStep)
-    {
-        progress?.Report(new ImportProgressDto
-        {
-            ProcessedItems = Math.Clamp(processedItems, 0, totalItems),
-            TotalItems = totalItems,
-            CurrentStep = currentStep
-        });
     }
 
     private static string RowLabel(PatientImportRowContext context) => context.RowNumber > 0 ? $"Linha {context.RowNumber}" : $"Cadastro #{context.Patient.Id}";

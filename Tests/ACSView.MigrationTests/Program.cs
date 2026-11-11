@@ -29,6 +29,7 @@ await AdvancedFilterTests.Run(directory, Check);
 await ConcurrentInitialization();
 await InterruptedMigration();
 await LegacyBooleanVaccines();
+await VaccineBatchRegistration();
 await LegacyAndRuntime();
 await ImportIntegration();
 Console.WriteLine($"{checks} migration and relational integration checks passed.");
@@ -150,6 +151,50 @@ async Task LegacyBooleanVaccines()
     Check(await c.Table<PatientVaccineDose>().CountAsync()==1,"Repeated legacy vaccine initialization does not duplicate applications");
     await c.CloseAsync();
 }
+async Task VaccineBatchRegistration()
+{
+    var connection = new SQLiteAsyncConnection(Path.Combine(directory, "vaccine-batch.db"));
+    var database = new DatabaseService(connection);
+    await database.InitializeAsync();
+    var today = DateTime.Today;
+    var patient = new Patient { UserId = 1, Name = "Synthetic vaccination batch", BirthDate = today.AddYears(-1) };
+    await connection.InsertAsync(patient);
+
+    var context = new CurrentUserContext();
+    context.SetCurrentUser(1);
+    var service = new VaccineService(database, context);
+    var schedule = (await service.GetScheduleForPatientAsync(patient.Id))!;
+    var overdue = schedule.Doses.Where(dose => dose.Status == VaccineStatus.Late).ToArray();
+    var recommended = overdue[0];
+    var customized = overdue.First(dose => dose.RecommendedDate != recommended.RecommendedDate);
+    var dates = new Dictionary<string, DateTime>
+    {
+        [recommended.Definition.DoseKey] = recommended.RecommendedDate,
+        [customized.Definition.DoseKey] = today
+    };
+
+    context.SetCurrentUser(2);
+    await Reject(() => service.ApplyOverdueDosesAsync(patient.Id, patient.UserId, dates), "Vaccine batch rejects a changed profile");
+    context.SetCurrentUser(1);
+
+    await service.ApplyDoseAsync(new VaccineApplicationRequestDto(
+        patient.Id, customized.Definition.DoseKey, null, "Original", "Unknown date"));
+    await Reject(() => service.ApplyOverdueDosesAsync(patient.Id, patient.UserId, dates), "Vaccine batch rejects an already applied dose");
+    schedule = (await service.GetScheduleForPatientAsync(patient.Id))!;
+    Check(schedule.ApplicationsByDose.Count == 1 &&
+          schedule.ApplicationsByDose[customized.Definition.DoseKey] is { ApplicationDate: null, LotNumber: "Original" },
+        "Vaccine batch rolls back earlier doses and preserves an unknown application date");
+
+    await service.RemoveDoseApplicationAsync(patient.Id, customized.Definition.DoseKey);
+    await service.ApplyOverdueDosesAsync(patient.Id, patient.UserId, dates);
+    schedule = (await service.GetScheduleForPatientAsync(patient.Id))!;
+    Check(schedule.ApplicationsByDose.Count == dates.Count &&
+          dates.All(entry => schedule.ApplicationsByDose[entry.Key].ApplicationDate == entry.Value),
+        "Vaccine batch records each dose with its own application date");
+
+    await connection.CloseAsync();
+}
+
 async Task ConcurrentInitialization()
 {
     var path=Path.Combine(directory,"concurrent.db");

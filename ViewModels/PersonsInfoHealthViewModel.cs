@@ -17,6 +17,7 @@ public partial class PersonsInfoViewModel : IDisposable
     [ObservableProperty] public partial View? HealthContent { get; set; }
     [ObservableProperty] public partial bool IsHealthPanelVisible { get; set; }
     [ObservableProperty] public partial string HealthStatus { get; set; } = "";
+    [ObservableProperty] public partial bool HasStatus { get; set; } = false;
     private ClinicalHealthData? clinicalData;
     private readonly Dictionary<string, (View View, HealthModuleViewModel Model)> healthViews = [];
     private int moduleSelectionVersion;
@@ -34,6 +35,7 @@ public partial class PersonsInfoViewModel : IDisposable
         var owner = currentUser.RequireCurrentUserId();
         var login = DataChangeTracker.SessionVersion;
         HealthSession = new(patient.Id, owner, () => currentUser.CurrentUserId == owner && DataChangeTracker.SessionVersion == login, patient.Name);
+        HealthSession.UpdateContext(new(patient.Id, owner, patient.Name, patient.BirthDate));
         HealthModules = [new("visits", "Visitas")]; SelectedHealthModule = null;
         HealthStatus = "Preparando módulos...";
         _ = PrepareModulesAsync(HealthSession);
@@ -65,21 +67,34 @@ public partial class PersonsInfoViewModel : IDisposable
             if(HealthSession != session || versionOfContext != contextVersion || patient is null) return;
             var previous = clinicalData;
             var careChanged = previous is null || ClinicalSignature(previous) != ClinicalSignature(updated);
-            var visitsChanged = careChanged || PersonInfo.BirthDate != patient.BirthDate;
-            session.UpdateContext(new(patient.Id, session.OwnerId, patient.Name));
+            var birthDateChanged = session.Context.BirthDate != patient.BirthDate;
+            var wasChild = session.Context.IsUnderTwelve;
+            var visitsChanged = careChanged || birthDateChanged;
+            session.UpdateContext(new(patient.Id, session.OwnerId, patient.Name, patient.BirthDate));
             PersonInfo = patient; clinicalData = updated;
             HasMotherPatientLink = patient.MotherPatientId is > 0; HasFatherPatientLink = patient.FatherPatientId is > 0;
             if(visitsChanged) session.Invalidate("visits");
-            if(careChanged)
+            if(careChanged || birthDateChanged) session.Invalidate("vaccination");
+            if(careChanged || wasChild != session.Context.IsUnderTwelve)
             {
                 foreach(var module in healthViews.Values) module.Model.Dispose();
                 healthViews.Clear(); HealthContent = null;
-                HealthModules = HealthModuleRegistry.Definitions.Where(d => d.Applies(updated)).Select(d => new HealthModuleOption(d.Key,d.Title)).ToList();
+                HealthModules = HealthModuleRegistry.Definitions.Where(d => d.IsAvailable(updated, session.Context)).Select(d => new HealthModuleOption(d.Key,d.Title)).ToList();
                 var selected = SelectedHealthModule?.Key;
                 SelectedHealthModule = null;
                 if(IsHealthPanelVisible) SelectedHealthModule = HealthModules.FirstOrDefault(m => m.Key == selected) ?? HealthModules[0];
             }
-            else if(visitsChanged) await RefreshVisitsModuleAsync();
+            else if(birthDateChanged)
+            {
+                if(healthViews.TryGetValue("vaccination", out var vaccination))
+                {
+                    if(IsHealthPanelVisible && SelectedHealthModule?.Key == "vaccination")
+                        await vaccination.Model.LoadAsync();
+                    else
+                        dirtyModules.Add("vaccination");
+                }
+                await RefreshVisitsModuleAsync();
+            }
             var version = Interlocked.Increment(ref _loadVersion);
             await Task.WhenAll(LoadPatientDetailsAsync(patient.Id, version), LoadVisitFollowUpAsync(patient.Id, version));
             if(FamilyLinks is not null) await FamilyLinks.LoadAsync(patient);
@@ -102,12 +117,12 @@ public partial class PersonsInfoViewModel : IDisposable
                 if(HealthSession != session || versionOfContext != contextVersion) return;
                 clinicalData = clinical;
                 var selected = SelectedHealthModule?.Key;
-                HealthModules = HealthModuleRegistry.Definitions.Where(d => d.Applies(clinical)).Select(d => new HealthModuleOption(d.Key,d.Title)).ToList();
+                HealthModules = HealthModuleRegistry.Definitions.Where(d => d.IsAvailable(clinical, session.Context)).Select(d => new HealthModuleOption(d.Key,d.Title)).ToList();
                 if(selected is not null) SelectedHealthModule = HealthModules.FirstOrDefault(m => m.Key == selected) ?? HealthModules[0];
                 HealthStatus = "";
             });
             if(HealthSession != session || versionOfContext != contextVersion) return;
-            await Task.WhenAll(HealthModuleRegistry.Definitions.Where(d => d.Applies(clinical))
+            await Task.WhenAll(HealthModuleRegistry.Definitions.Where(d => d.IsAvailable(clinical, session.Context))
                 .Select(definition => PreloadModuleAsync(definition, session)));
         }
         catch(OperationCanceledException) { }
@@ -115,6 +130,10 @@ public partial class PersonsInfoViewModel : IDisposable
         {
             System.Diagnostics.Debug.WriteLine(ex);
             await MainThread.InvokeOnMainThreadAsync(() => { if(HealthSession == session) HealthStatus = "Alguns módulos não foram carregados. Tente novamente."; });
+        }
+        finally
+        {
+            HasStatus = !string.IsNullOrEmpty(HealthStatus);
         }
     }
 
@@ -173,6 +192,7 @@ public partial class PersonsInfoViewModel : IDisposable
                 session.EnsureActive();
                 if(HealthSession != session || version != moduleSelectionVersion) return;
                 var definition = HealthModuleRegistry.Definitions.Single(d => d.Key == option.Key);
+                if(!definition.IsAvailable(clinical, session.Context)) return;
                 module = definition.Create(session, healthData, glucoseMonitoring, infectiousFollowUp, clinical);
                 healthViews.Add(option.Key, module);
                 HealthContent = module.View;

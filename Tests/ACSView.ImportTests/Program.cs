@@ -53,18 +53,23 @@ var journal = Proxy.For<IImportHistoryService>((m, a) => { history.Add(Clone((Im
 var pregnancy = Proxy.For<IPregnancyService>((m, a) => m == "GetActiveOrLatestByPatientIdAsync" ? Task.FromResult<PatientPregnancy?>(null) : Task.CompletedTask);
 var service = new PatientImportService(patientService, cep, conditionRepo, benefits, new SpreadsheetReader(), new PatientFamilyLinkResolver(patientService, houseService, family), journal, pregnancy);
 
-async Task<PatientImportResultDto> Import(string[][] rows, CancellationToken cancellation = default)
+async Task<PatientImportResultDto> Import(string[][] rows, CancellationToken cancellation = default, IProgress<ImportProgressDto>? progress = null)
 {
     using var stream = Workbook(rows);
-    return await service.ImportAsync(stream, new PatientImportColumnMapDto { SourceFileName = "teste.xlsx" }, cancellationToken: cancellation);
+    return await service.ImportAsync(stream, new PatientImportColumnMapDto { SourceFileName = "teste.xlsx" }, progress, cancellation);
 }
 static void Check(bool condition, string message) { if (!condition) throw new Exception(message); Console.WriteLine("PASS: " + message); }
 
+var importProgress = new ImportProgressLog();
 var first = await Import([
     ["CADASTRO NOME", "NOME DA MÃE", "CADASTRO DN", "SEXO", "DIABETES", "OUTRA CONDICAO DE SAUDE", "CEP", "NUMERO IMOVEL", "RESP. FAMILIAR CNS"],
     ["José Silva", "Maria Silva", "01/02/2010", "M", "sim", "Observação A", "01001000", "10", "222"],
     ["José Silva", "Maria Silva", "01/02/2010", "", "", "Observação B", "", "", ""]
-]);
+], progress: importProgress);
+Check(importProgress.Values.Count(p => p.CurrentStep.StartsWith("Resolvendo")) == 3 &&
+    importProgress.Values.Where(p => p.CurrentStep.StartsWith("Resolvendo")).All(p => p.ProcessedItems == 1) &&
+    importProgress.Values[^1] is { ProcessedItems: 1, TotalItems: 1 },
+    "Linhas repetidas e etapas de vinculação contam um único paciente");
 Check(first.Entries.Any(e => e.EntityType == "Residência" && e.Status == "Importado"), "Residência criada na importação de pacientes também aparece na auditoria");
 Check(patients.Count == 1 && first.MergedCount == 1, "Linhas repetidas complementam o mesmo cadastro");
 Check(patients[0].Observacao.Contains("A") && patients[0].Observacao.Contains("B"), "Observações complementares preservadas");
@@ -86,7 +91,10 @@ var parent = patients.Single(p => p.SusNumber == "222");
 Check(child.MotherPatientId == parent.Id, "Mãe importada depois resolve vínculo pendente");
 Check(child.FamilyResponsiblePatientId == parent.Id && child.FamilyId == parent.FamilyId && child.FamilyId > 0, "Responsável posterior calcula família sem duplicar residência");
 
-var repeat = await Import([["nome", "cns", "usa alcool"], ["Jose Silva", "111", "SIM"]]);
+importProgress.Values.Clear();
+var repeat = await Import([["nome", "cns", "usa alcool"], ["Jose Silva", "111", "SIM"]], progress: importProgress);
+Check(importProgress.Values[0].ProcessedItems == 0 && importProgress.Values[^1] is { ProcessedItems: 1, TotalItems: 1 },
+    "Cada importação conta o cadastro existente mesmo quando não há alterações");
 Check(repeat.MergedCount == 0 && repeat.IgnoredCount == 1 && repeat.Entries.Single().Reason.Contains("nenhuma atualização"), "Paciente repetido sem alterações é ignorado e nunca mesclado");
 Check(repeat.ImportedCount == 0 && conditions.Count == 1 && houses.Count == 1, "Reimportação não duplica cadastros, condições ou residências");
 var conflict = await Import([
@@ -360,4 +368,11 @@ public sealed class CepHttpHandler : HttpMessageHandler
             Content = new StringContent("{\"cep\":\"22222-222\",\"logradouro\":\"Rua Remota\",\"bairro\":\"Centro\",\"localidade\":\"São Paulo\",\"uf\":\"SP\"}")
         });
     }
+}
+
+sealed class ImportProgressLog : IProgress<ImportProgressDto>
+{
+    public List<ImportProgressDto> Values { get; } = [];
+
+    public void Report(ImportProgressDto value) => Values.Add(value);
 }

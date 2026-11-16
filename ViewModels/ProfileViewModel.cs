@@ -10,7 +10,6 @@ public partial class ProfileViewModel(IAuthService authService) : BaseViewModel
     [ObservableProperty] private string displayName = string.Empty;
     [ObservableProperty] private string securityStatus = string.Empty;
 
-    public ICommand OpenNotesPage => new Command(async () => await NavigateToAsync("notes"));
     public ICommand OpenBackupPage => new Command(async () => await NavigateToAsync("backup"));
     public ICommand OpenImportDataPage => new Command(async () => await NavigateToAsync("importdata"));
     public ICommand OpenDataCleanupPage => new Command(async () => await NavigateToAsync("datacleanup"));

@@ -31,11 +31,11 @@ public partial class OverallViewModel : BaseViewModel
     private bool suppressMetricPreferencePersistence;
     private static readonly IReadOnlyDictionary<string, string> OptionalPregnancyMetricNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
-        [DashboardFilterKeys.PregnancyDueDateSoon] = "Gestantes com DPP proxima",
-        [DashboardFilterKeys.PregnancyThirdTrimester] = "Gestantes no 3o trimestre",
+        [DashboardFilterKeys.PregnancyDueDateSoon] = "Gestantes com DPP próxima",
+        [DashboardFilterKeys.PregnancyThirdTrimester] = "Gestantes no 3º trimestre",
         [DashboardFilterKeys.PregnancyMissingDates] = "Gestantes com DUM/DPP ausente",
         [DashboardFilterKeys.PregnancyHighRisk] = "Gestantes de alto risco",
-        [DashboardFilterKeys.PregnancyRiskNotInformed] = "Gestantes com risco nao informado"
+        [DashboardFilterKeys.PregnancyRiskNotInformed] = "Gestantes com risco não informado"
     };
 
     [ObservableProperty] private bool generalTabSelected = true;
@@ -45,10 +45,16 @@ public partial class OverallViewModel : BaseViewModel
     public ICommand GoToPageAsync => new Command<string>(async (p) => await GoToPage(p));
     public ICommand LoadSummaryCommand => new Command(async () => await LoadSummaryAsync());
     public ICommand SwitchView => new Command<string>(SwitchMetricsView);
-    public ICommand OpenMetricsMenuCommand => new Command(async () => await OpenMetricsMenuAsync());
     public ICommand AddCombinedMetricCommand => new Command(async () => await AddCombinedMetricAsync());
     public ICommand RemoveMetricCommand => new Command<Dashboard>(async metric => await RemoveMetricAsync(metric));
     public ICommand NavigateToCIDView => new Command(async () => await NavigateToAsync("cids"));
+    public ICommand OpenNotesPage => new Command(async () => await NavigateToAsync("notes"));
+    public ICommand RestoreMetrics => new Command(async () => await RestoreRemovedRootMetricAsync(HealthTabSelected ? HealthDashboard : MetricsDashboard, GetRemovedRootMetrics()));
+    public ICommand AddMetric => new Command(async () => await AddCombinedMetricAsync());
+    public ICommand OpenNotifications => new Command(async () => await popupService.ShowAsync(new CareNotificationsPopup(
+                                                                                                    careNotificationService,
+                                                                                                    patientService,
+                                                                                                    personsInfoPopupService)));
 
     public OverallViewModel(
         IDashboardMetricsService _dash,
@@ -266,41 +272,6 @@ public partial class OverallViewModel : BaseViewModel
     {
         GeneralTabSelected = page == "0";
         HealthTabSelected = page == "1";
-    }
-
-    private async Task OpenMetricsMenuAsync()
-    {
-        var targetDashboard = HealthTabSelected ? HealthDashboard : MetricsDashboard;
-        var removedRootMetrics = GetRemovedRootMetrics();
-
-        var result = await popupService.ShowAsync<OverallMetricMenuAction>(
-            new OverallMetricMenuPopup(removedRootMetrics.Count > 0, canAddMetric: true));
-
-        if (result.WasDismissed || result is null)
-        {
-            return;
-        }
-
-        switch (result.Result)
-        {
-            case OverallMetricMenuAction.OpenCids:
-                await NavigateToAsync("cids");
-                break;
-            case OverallMetricMenuAction.RestoreHiddenMetrics:
-                await RestoreRemovedRootMetricAsync(targetDashboard, removedRootMetrics);
-                break;
-            case OverallMetricMenuAction.AddMetric:
-                await AddCombinedMetricAsync();
-                break;
-            case OverallMetricMenuAction.OpenNotifications:
-                await popupService.ShowAsync(new CareNotificationsPopup(
-                    careNotificationService,
-                    patientService,
-                    personsInfoPopupService));
-                break;
-            default:
-                return;
-        }
     }
 
     private async Task AddCombinedMetricAsync()

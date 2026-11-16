@@ -12,13 +12,16 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem
             IconImageSource="{controls:ThemedIcon Icon=SignOut24, Role=OnFill,IconSize=24}"
-            Text="Sair" 
+            Text="Sair"
             Order="Primary"
             Command="{Binding LogoutCommand}"/>
     </ContentPage.ToolbarItems>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
+    <ScrollView VerticalOptions="Fill">
+        <VerticalStackLayout
+            Padding="{StaticResource PagePadding}"
+            Spacing="14"
+            VerticalOptions="Fill">
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Backup e restauração" Style="{StaticResource SectionTitle}"/>
@@ -31,15 +34,6 @@
                     <Label Text="Segurança da conta" Style="{StaticResource SectionTitle}"/>
                     <Label Text="{Binding SecurityStatus}" Style="{StaticResource BodyMuted}"/>
                     <Button Text="Senha, recuperação e biometria" Style="{StaticResource Buttons}" Command="{Binding OpenAccountSecurityPage}"/>
-                </VerticalStackLayout>
-            </Border>
-            <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Área pessoal" Style="{StaticResource SectionTitle}"/>
-                    <Label Text="Acesse anotações e lembretes do seu acompanhamento." Style="{StaticResource BodyMuted}"/>
-                    <Button Text="Abrir anotações"
-                            Style="{StaticResource Buttons}"
-                            Command="{Binding OpenNotesPage}"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -66,6 +60,7 @@
             <Label Text="{x:Static views:App.InstalledVersionLabel}"
                    Style="{StaticResource BodyMuted}"
                    HorizontalTextAlignment="Center"
+                   VerticalOptions="End"
                    Margin="0,0,0,10"/>
         </VerticalStackLayout>
     </ScrollView>

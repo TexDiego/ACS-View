@@ -10,9 +10,27 @@
              Style="{StaticResource PageBackground}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem 
-            IconImageSource="{icons:ThemedIcon Icon=MoreHorizontal24, Role=OnFill}"
-            Command="{Binding OpenMetricsMenuCommand}"/>
+        <ToolbarItem
+            Text="Notas"
+            Order="Primary"
+            IconImageSource="{icons:ThemedIcon Icon=Notepad24, Role=OnFill}"
+            Command="{Binding OpenNotesPage}"/>
+        <ToolbarItem
+            Text="Pesquisar CID"
+            Order="Secondary"
+            Command="{Binding NavigateToCIDView}"/>
+        <ToolbarItem
+            Text="Restaurar métricas ocultadas"
+            Order="Secondary"
+            Command="{Binding RestoreMetrics}"/>
+        <ToolbarItem
+            Text="Adicionar métrica"
+            Order="Secondary"
+            Command="{Binding AddMetric}"/>
+        <ToolbarItem
+            Text="Notificações"
+            Order="Secondary"
+            Command="{Binding OpenNotifications}"/>
     </ContentPage.ToolbarItems>
 
     <Grid Padding="16,16,16,0" RowDefinitions="auto,*" RowSpacing="14">

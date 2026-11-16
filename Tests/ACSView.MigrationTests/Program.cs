@@ -310,12 +310,39 @@ async Task LegacyAndRuntime()
     Check((await visits.GetPatientVisitSummaryAsync(1,DateTime.Today)).LastCompletedVisit==DateTime.Today.AddYears(-3),"Migrated legacy completed visit remains visible in individual summary");
     await visits.GetVisitRecordGroupsAsync(DateTime.Today.AddYears(-3),null);
     Check(await c.Table<Visits>().CountAsync()==2,"Visit views and former purge retain historical events");
+    var batch = new VisitBatch { UserId = 1, HouseId = 10, FamilyId = 1, VisitDate = DateTime.Today };
+    await c.InsertAsync(batch);
+    await c.ExecuteAsync("UPDATE Visits SET BatchId = ? WHERE Id IN (8, 9)", batch.Id);
+    await c.InsertAsync(new VisitCareLine { UserId = 1, VisitId = 8, CareLineType = "Synthetic" });
+    await c.ExecuteAsync("UPDATE Patient SET IsActive = 0, StatusReason = 'Arquivado' WHERE Id = 1");
+    await c.ExecuteAsync("UPDATE Patient SET MotherPatientId = 1 WHERE Id = 2");
+    await c.InsertAsync(new PatientBolsaFamilia { UserId = 1, PatientId = 2, ResponsiblePatientId = 1, NisNumber = "Synthetic" });
+
+    await patients.DeleteAsync(4);
+    Check(await c.FindAsync<Patient>(4) != null, "Individual deletion cannot remove a patient from another profile");
+    await c.ExecuteAsync("CREATE TRIGGER TestRejectPatientDeletion BEFORE DELETE ON Patient WHEN OLD.Id = 1 BEGIN SELECT RAISE(ABORT, 'Test rollback'); END");
+    await Reject(() => patients.DeleteAsync(1), "Individual deletion fails atomically when SQLite rejects the final delete");
+    Check(await c.FindAsync<Patient>(1) != null && await c.Table<PatientPregnancy>().CountAsync() == 2 &&
+          await c.Table<VisitCareLine>().CountAsync() == 1 && (await c.FindAsync<Patient>(2)).MotherPatientId == 1,
+          "Failed deletion preserves clinical records, visit details and other patients' links");
+    await c.ExecuteAsync("DROP TRIGGER TestRejectPatientDeletion");
+
     await patients.DeleteAsync(1);
-    Check(!(await c.FindAsync<Patient>(1)).IsActive && await c.Table<PatientPregnancy>().CountAsync()==2,"Individual patient deletion archives with clinical history");
+    Check(await c.FindAsync<Patient>(1) == null && await c.Table<PatientPregnancy>().CountAsync() == 0 &&
+          await c.Table<PatientVaccineDose>().CountAsync() == 0 && await c.Table<PatientSusNumber>().CountAsync(n => n.PatientId == 1) == 0 &&
+          (await patients.GetListAsync("Synthetic edited name", 0, 20, new PatientListFilterDto())).TotalCount == 0,
+          "Individual deletion permanently removes an archived patient and their dependent records");
+    Check(await c.FindAsync<Visits>(8) == null && await c.Table<VisitCareLine>().CountAsync() == 0 &&
+          await c.FindAsync<Visits>(9) != null && await c.FindAsync<VisitBatch>(batch.Id) != null,
+          "Individual deletion removes the patient's visit and preserves the shared batch");
+    Check((await c.FindAsync<Patient>(2)).MotherPatientId == null &&
+          (await c.Table<PatientBolsaFamilia>().FirstAsync(b => b.PatientId == 2)).ResponsiblePatientId == 0,
+          "Individual deletion clears links to the patient while retaining the other patient's benefit");
     await houses.DeleteAsync(await c.FindAsync<House>(11));
-    Check(!(await c.FindAsync<House>(11)).IsActive && await c.Table<Visits>().CountAsync()==2,"Individual residence removal retains historical evidence");
+    Check(!(await c.FindAsync<House>(11)).IsActive && await c.Table<Visits>().CountAsync()==1,"Individual residence removal retains historical evidence");
     await c.CloseAsync();c=new SQLiteAsyncConnection(path);db=new DatabaseService(c);await db.InitializeAsync();
-    Check(await c.Table<PatientPhone>().CountAsync()==4,"Reopen preserves contacts without duplication");
+    Check(await c.FindAsync<Patient>(1) == null && await c.Table<PatientPhone>().CountAsync() == 1,
+          "Reopen keeps the patient deleted and preserves other patients' contacts");
     Check(await c.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM SchemaMigration")==SchemaMigrator.CurrentVersion,"Restart does not rerun completed backfills");
     var cleanup=new UserDataCleanupService(db,context,new NoReminders());
     await cleanup.DeleteAsync(UserDataDeletionScope.Houses);

@@ -105,8 +105,7 @@ internal static class RelationalStore
         c.Execute("CREATE TRIGGER IF NOT EXISTS PatientCID_Catalog_Update BEFORE UPDATE OF CidId ON PatientCID WHEN NEW.CidId IS NOT OLD.CidId AND NOT EXISTS(SELECT 1 FROM CidSubcategory WHERE Id=NEW.CidId) BEGIN SELECT RAISE(ABORT,'Unknown CID'); END");
         c.Execute("CREATE TRIGGER IF NOT EXISTS Patient_Revision AFTER UPDATE ON Patient WHEN NEW.RowRevision=OLD.RowRevision BEGIN UPDATE Patient SET RowRevision=OLD.RowRevision+1 WHERE Id=NEW.Id; END");
         c.Execute("CREATE TRIGGER IF NOT EXISTS House_Revision AFTER UPDATE ON House WHEN NEW.RowRevision=OLD.RowRevision BEGIN UPDATE House SET RowRevision=OLD.RowRevision+1 WHERE CasaId=NEW.CasaId; END");
-        // Clinical history has no delete cascade. Individual Patient deletion is rejected;
-        // the repository archives it. Explicit account cleanup deletes dependents first.
+        // Patient deletion requires explicit cleanup of clinical and visit records first.
         foreach (var table in new[] { "PatientConditions", "PatientCID", "PatientVaccineDose", "PatientPregnancy", "PatientInsulinDependency", "PatientBolsaFamilia", "Visits" })
             c.Execute($"CREATE TRIGGER IF NOT EXISTS Patient_Keep_{table} BEFORE DELETE ON Patient WHEN EXISTS(SELECT 1 FROM {table} WHERE PatientId=OLD.Id AND UserId=OLD.UserId) BEGIN SELECT RAISE(ABORT,'Patient has history; archive instead'); END");
     }

@@ -16,10 +16,55 @@ internal sealed class SQLitePatientRepository(IDatabaseService databaseService, 
     public async Task DeleteAsync(int id)
     {
         var userId = currentUserContext.RequireCurrentUserId();
-        // Archive individual patients; clinical and visit history must remain recoverable.
         await _connection.RunInTransactionAsync(connection =>
         {
-            connection.Execute("UPDATE Patient SET IsActive=0, StatusReason='Arquivado', StatusChangedAt=? WHERE Id=? AND UserId=?",DateTime.UtcNow,id,userId);
+            if (currentUserContext.RequireCurrentUserId() != userId)
+                throw new InvalidOperationException("O perfil ativo mudou durante a exclusão.");
+
+            if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Patient WHERE UserId = ? AND Id = ?", userId, id) == 0)
+                return;
+
+            var visitBatches = connection.Query<VisitBatch>(
+                "SELECT DISTINCT BatchId AS Id FROM Visits WHERE UserId = ? AND PatientId = ? AND BatchId IS NOT NULL",
+                userId, id);
+            connection.Execute("""
+                DELETE FROM VisitCareLine WHERE UserId = ? AND VisitId IN
+                    (SELECT Id FROM Visits WHERE UserId = ? AND PatientId = ?)
+                """, userId, userId, id);
+
+            foreach (var table in new[]
+            {
+                "PatientPhone", "PatientSusNumber", "FamilyMember", "PatientPregnancy", "CareNotification",
+                "PatientCID", "PatientConditions", "PatientBolsaFamilia", "PatientInfectiousFollowUp",
+                "PatientGlucoseMonitoring", "PatientStripPickup", "PatientInsulinDependency", "PatientVaccineDose", "Visits"
+            })
+            {
+                connection.Execute($"DELETE FROM {table} WHERE UserId = ? AND PatientId = ?", userId, id);
+            }
+
+            foreach (var batch in visitBatches)
+            {
+                connection.Execute("""
+                    DELETE FROM VisitBatch WHERE UserId = ? AND Id = ? AND NOT EXISTS
+                        (SELECT 1 FROM Visits WHERE UserId = VisitBatch.UserId AND BatchId = VisitBatch.Id)
+                    """, userId, batch.Id);
+            }
+
+            connection.Execute("DELETE FROM Vaccines WHERE UserId = ? AND Id = ?", userId, id);
+            connection.Execute("DELETE FROM FamilyRelationship WHERE UserId = ? AND (FromPatientId = ? OR ToPatientId = ?)", userId, id, id);
+            connection.Execute("DELETE FROM MigrationIssue WHERE UserId = ? AND SourceTable = 'Patient' AND SourceId = ?", userId, id);
+
+            connection.Execute("UPDATE Family SET IdPessoa = 0 WHERE UserId = ? AND IdPessoa = ?", userId, id);
+            connection.Execute("UPDATE FamilyRecord SET ResponsiblePatientId = NULL WHERE UserId = ? AND ResponsiblePatientId = ?", userId, id);
+            connection.Execute("UPDATE PatientBolsaFamilia SET ResponsiblePatientId = 0 WHERE UserId = ? AND ResponsiblePatientId = ?", userId, id);
+            connection.Execute("UPDATE Patient SET MotherPatientId = NULL WHERE UserId = ? AND MotherPatientId = ?", userId, id);
+            connection.Execute("UPDATE Patient SET FatherPatientId = NULL WHERE UserId = ? AND FatherPatientId = ?", userId, id);
+            connection.Execute("""
+                UPDATE Patient SET FamilyResponsiblePatientId = NULL, FamilyResponsibleSus = NULL
+                WHERE UserId = ? AND FamilyResponsiblePatientId = ?
+                """, userId, id);
+
+            connection.Execute("DELETE FROM Patient WHERE UserId = ? AND Id = ?", userId, id);
         });
     }
 

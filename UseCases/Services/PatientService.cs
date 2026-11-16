@@ -11,6 +11,7 @@ namespace ACS_View.UseCases.Services
         {
             await repository.DeleteAsync(Id);
             DataChangeTracker.MarkPatientsChanged();
+            DataChangeTracker.MarkVisitsChanged();
         }
 
         public Task<List<Patient>?> GetAllPatients()

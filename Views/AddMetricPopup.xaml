@@ -27,31 +27,27 @@
                     Style="{StaticResource SectionTitle}"
                     HorizontalOptions="Center"/>
 
-                <VerticalStackLayout Spacing="4">
-                    <Label Text="Sexo" Style="{StaticResource FieldLabel}"/>
-                    <Border Style="{StaticResource FieldBorder}">
-                        <Picker
-                            ItemsSource="{Binding SexOptions}"
-                            SelectedItem="{Binding SelectedSex}"/>
-                    </Border>
-                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,2*,2*" ColumnSpacing="10">
 
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                    <VerticalStackLayout Spacing="4">
-                        <Entry
-                            Text="{Binding MinimumAge}"
-                            Keyboard="Numeric"
-                            MaxLength="3"
-                            Placeholder="Idade mínima"/>
-                    </VerticalStackLayout>
+                    <Picker
+                        Grid.Column="0"
+                        Title="Sexo"
+                        ItemsSource="{Binding SexOptions}"
+                        SelectedItem="{Binding SelectedSex}"/>
 
-                    <VerticalStackLayout Grid.Column="1" Spacing="4">
-                        <Entry
-                            Text="{Binding MaximumAge}"
-                            Keyboard="Numeric"
-                            MaxLength="3"
-                            Placeholder="Idade máxima"/>
-                    </VerticalStackLayout>
+                    <Entry
+                        Grid.Column="1"
+                        Text="{Binding MinimumAge}"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Idade mínima"/>
+
+                    <Entry
+                        Grid.Column="2"
+                        Text="{Binding MaximumAge}"
+                        Keyboard="Numeric"
+                        MaxLength="3"
+                        Placeholder="Idade máxima"/>
                 </Grid>
 
                 <Grid ColumnDefinitions="*,auto">

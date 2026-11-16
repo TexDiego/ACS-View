@@ -221,22 +221,28 @@ namespace ACS_View.ViewModels
 
         private async Task DeleteRecordAsync(int id)
         {
+            var sessionVersion = DataChangeTracker.SessionVersion;
             var confirm = await DisplayConfirmationAsync(
-                "Confirmar",
-                $"Tem certeza de que deseja excluir o cadastro?",
+                "Excluir cadastro",
+                "O cadastro e os dados vinculados, incluindo visitas e registros de saúde, serão excluídos permanentemente. Deseja continuar?",
                 "Excluir");
 
-            if (!confirm) return;
+            if (!confirm || sessionVersion != DataChangeTracker.SessionVersion) return;
 
-            var record = Patients.FirstOrDefault(r => r.Id == id);
-            if (record != null)
+            try
             {
                 await _patientService.DeletePatient(id);
-                Patients.Remove(record);
-                _loadedPatientsCount = Patients.Count;
-                TotalRecords = Math.Max(0, TotalRecords - 1);
-                _hasMorePatients = _loadedPatientsCount < TotalRecords;
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erro ao excluir cadastro: {ex.Message}");
+                if (sessionVersion == DataChangeTracker.SessionVersion)
+                    await DisplayAlertAsync("Erro", "Não foi possível excluir o cadastro.", "OK");
+                return;
+            }
+
+            if (sessionVersion == DataChangeTracker.SessionVersion)
+                await RefreshPatientsAsync(SearchText, useDebounce: false);
         }
 
         private async Task EditRecordAsync(PatientListItemDto patientListItem)

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:views="clr-namespace:ACS_View.Views"
+             x:Class="ACS_View.Views.VaccineCalendarPage"
+             Shell.NavBarIsVisible="True"
+             Title="Calendário vacinal"
+             Style="{StaticResource PageBackground}"
+             Padding="16">
+
+    <Grid
+        RowDefinitions="Auto,*,Auto"
+        RowSpacing="12">
+
+        <VerticalStackLayout
+            Spacing="6"
+            HorizontalOptions="Fill">
+
+            <Label
+                Text="Guia rápido de vacinação · 2026"
+                Style="{StaticResource SectionTitle}"
+                HorizontalTextAlignment="Center"/>
+
+            <Label
+                Text="Faixa etária ou situação"
+                Style="{StaticResource FieldLabel}"
+                HorizontalTextAlignment="Center"/>
+
+            <Picker
+                x:Name="SectionPicker"
+                HorizontalTextAlignment="Center"
+                HorizontalOptions="Center"
+                SemanticProperties.Description="Faixa etária ou situação"
+                SelectedIndexChanged="OnSectionChanged"/>
+        </VerticalStackLayout>
+
+        <ScrollView
+            x:Name="GuideScroll"
+            VerticalScrollBarVisibility="Never"
+            Grid.Row="1">
+
+            <VerticalStackLayout
+                    x:Name="GuideCards"
+                    Spacing="8">
+
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="views:VaccineCalendarEntry">
+
+                        <Border
+                                Style="{StaticResource CardBorder}"
+                                Padding="12"
+                                Margin="0">
+
+                            <VerticalStackLayout Spacing="4">
+
+                                <Label
+                                        Text="{Binding Heading}"
+                                        Style="{StaticResource CardTitle}"/>
+
+                                <Label
+                                        Text="{Binding Details}"
+                                        Style="{StaticResource BodyMuted}"
+                                        LineBreakMode="WordWrap"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Label
+            Text="Fonte: Manual do Profissional de Imunização 2026, edição enviada. Confira o histórico da pessoa e as orientações da equipe de vacinação."
+            Style="{StaticResource BodyMuted}"
+            HorizontalTextAlignment="Center"
+            LineBreakMode="WordWrap"
+            Grid.Row="2"/>
+    </Grid>
+</ContentPage>

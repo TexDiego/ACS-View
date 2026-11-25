@@ -192,7 +192,14 @@ internal class VisitsService(IDatabaseService db, ICurrentUserContext currentUse
                     (primary.RecommendedDate.HasValue ? $" Planejamento: {primary.RecommendedDate:dd/MM/yyyy}." : "") +
                     (primary.Deadline.HasValue ? $" Prazo da regra: {primary.Deadline:dd/MM/yyyy}." : "")
             };
-        }).Where(s => s != null).Select(s => s!).OrderByDescending(s => s.Summary!.Primary!.Urgency)
+        }).Where(s => s != null).Select(s => s!)
+          .OrderByDescending(s => s.Summary!.Evaluations.Any(e =>
+              e.CareLine != VisitCareLineType.NoVulnerability && e.Urgency > 0 &&
+              !e.IsExpiredTemporaryRecommendation))
+          .ThenByDescending(s => s.Summary!.Evaluations.Any(e =>
+              e.Urgency > 0 && !e.IsExpiredTemporaryRecommendation &&
+              (e.RecommendedDate is null || e.RecommendedDate.Value.Date <= referenceDate.Date)))
+          .ThenByDescending(s => s.Summary!.Primary!.Urgency)
           .ThenBy(s => s.DueDate ?? DateTime.MaxValue).ThenByDescending(s => s.PriorityFactor)
           .ThenByDescending(s => s.Points).ThenBy(s => s.PatientName).ToList());
     }

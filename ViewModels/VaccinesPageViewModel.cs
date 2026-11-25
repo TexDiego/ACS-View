@@ -34,11 +34,14 @@ namespace ACS_View.ViewModels
 
         public ICommand RegisterApplicationCommand { get; }
         public ICommand EditApplicationCommand { get; }
+        public ICommand RegisterNewDoseCommand { get; }
         public ICommand RemoveApplicationCommand { get; }
         public ICommand OpenVaccineInfoCommand { get; }
         public ICommand ToggleLateFilterCommand { get; }
+        public ICommand OpenVaccineCalendar { get; }
 
         public string LateFilterText => ShowOnlyLate ? "Mostrar todas" : "Apenas atrasadas";
+        public string ScheduleNotice => VaccineDoseCatalog.ScheduleNotice;
         public bool HasOverdueDoses => LateCount > 0;
 
         public VaccinesPageViewModel(IPatientService patientService, IVaccineService vaccineService, IPopupService popupService)
@@ -49,9 +52,11 @@ namespace ACS_View.ViewModels
 
             RegisterApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenApplicationPopupAsync(dose));
             EditApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenApplicationPopupAsync(dose));
+            RegisterNewDoseCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenApplicationPopupAsync(dose, true));
             RemoveApplicationCommand = new Command<VaccineDoseCardViewModel>(async dose => await RemoveApplicationAsync(dose));
             OpenVaccineInfoCommand = new Command<VaccineDoseCardViewModel>(async dose => await OpenVaccineInfoAsync(dose));
             ToggleLateFilterCommand = new Command(() => ShowOnlyLate = !ShowOnlyLate);
+            OpenVaccineCalendar = new Command(async () => await Shell.Current.GoToAsync(nameof(VaccineCalendarPage)));
         }
 
         public async Task LoadPatientAsync(int patientId)
@@ -151,7 +156,7 @@ namespace ACS_View.ViewModels
             }
         }
 
-        private async Task OpenApplicationPopupAsync(VaccineDoseCardViewModel? card)
+        private async Task OpenApplicationPopupAsync(VaccineDoseCardViewModel? card, bool newPeriodicDose = false)
         {
             if (card is null || _loadedPatientId is not int patientId || HealthRecord is null)
             {
@@ -159,13 +164,20 @@ namespace ACS_View.ViewModels
             }
 
             var result = await _popupService.ShowAsync<VaccineApplicationRequestDto>(
-                new VaccineApplicationPopup(patientId, card.Dose));
+                new VaccineApplicationPopup(patientId, card.Dose, newPeriodicDose));
 
             if (result.WasDismissed || result.Result is not VaccineApplicationRequestDto request)
             {
                 return;
             }
 
+            if (request.IsNewPeriodicApplication)
+            {
+                try { await _vaccineService.ApplyDoseAsync(request); }
+                catch (Exception ex) { await DisplayAlertAsync("Erro", ex.Message, "Voltar"); return; }
+                await RefreshAfterChangeAsync(patientId);
+                return;
+            }
             await ApplyApplicationOptimisticallyAsync(card, request);
         }
 
@@ -198,7 +210,9 @@ namespace ACS_View.ViewModels
             {
                 UpdateCard(card, previous);
                 await DisplayAlertAsync("Erro", ex.Message, "Voltar");
+                return;
             }
+            await RefreshAfterChangeAsync(request.PatientId);
         }
 
         private async Task RemoveApplicationAsync(VaccineDoseCardViewModel? card)
@@ -230,6 +244,22 @@ namespace ACS_View.ViewModels
             {
                 UpdateCard(card, previous);
                 await DisplayAlertAsync("Erro", ex.Message, "Voltar");
+                return;
+            }
+            await RefreshAfterChangeAsync(patientId);
+        }
+
+        private async Task RefreshAfterChangeAsync(int patientId)
+        {
+            _refreshOnReturn = true;
+            try
+            {
+                await LoadPatientAsync(patientId);
+            }
+            catch (Exception ex)
+            {
+                _refreshOnReturn = true;
+                await DisplayAlertAsync("Registro atualizado", $"A alteração foi salva, mas o cartão não pôde ser recarregado. Abra-o novamente. {ex.Message}", "Voltar");
             }
         }
 
@@ -319,9 +349,11 @@ namespace ACS_View.ViewModels
         public string VaccineName => Dose.Definition.VaccineName;
         public string DoseName => Dose.Definition.DoseLabel;
         public string AgeLabel => Dose.Definition.AgeLabel ?? FormatRecommendedAge(Dose.Definition.MinAgeMonths);
+        public string Guidance => Dose.Definition.Guidance ?? string.Empty;
         public DateTime RecommendedDate => Dose.RecommendedDate;
         public bool IsApplied => Dose.IsApplied;
         public bool CanRemove => Dose.IsApplied;
+        public bool CanRegisterNewDose => Dose.IsApplied && Dose.Definition.AllowsPeriodicApplications;
         public string PrimaryActionText => Dose.IsApplied ? "Editar aplicacao" : "Registrar aplicacao";
         public string StatusText => Dose.Status switch
         {
@@ -330,13 +362,17 @@ namespace ACS_View.ViewModels
             VaccineStatus.Late => "Atrasada",
             VaccineStatus.Applied => "Aplicada",
             VaccineStatus.AppliedLate => "Aplicada com atraso",
+            VaccineStatus.RequiresAssessment => "Conferir indicação / histórico",
+            VaccineStatus.OutsideRoutine => "Fora da rotina atual",
             _ => "Indefinida"
         };
         public string ApplicationDateText => Dose.ApplicationDate.HasValue
             ? $"Aplicada em {Dose.ApplicationDate.Value:dd/MM/yyyy}"
             : Dose.IsApplied ? "Aplicada; data não informada" : "Sem registro de aplicacao";
-        public string DeadlineText => Dose.MaximumDate.HasValue
-            ? $"Prazo maximo: {Dose.MaximumDate.Value:dd/MM/yyyy}"
+        public string DeadlineText => !Dose.HasAgeBasedSchedule ? "Aprazamento conforme avaliação do esquema"
+            : Dose.Status == VaccineStatus.OutsideRoutine ? "Limite de idade da rotina ultrapassado; avaliar resgate"
+            : Dose.MaximumDate.HasValue
+            ? $"Janela recomendada até: {Dose.MaximumDate.Value:dd/MM/yyyy}"
             : $"Recomendada em: {Dose.RecommendedDate:dd/MM/yyyy}";
         public string NotesText => string.IsNullOrWhiteSpace(Dose.Notes) ? string.Empty : Dose.Notes;
         public bool HasNotes => !string.IsNullOrWhiteSpace(Dose.Notes);
@@ -355,9 +391,11 @@ namespace ACS_View.ViewModels
             OnPropertyChanged(nameof(VaccineName));
             OnPropertyChanged(nameof(DoseName));
             OnPropertyChanged(nameof(AgeLabel));
+            OnPropertyChanged(nameof(Guidance));
             OnPropertyChanged(nameof(RecommendedDate));
             OnPropertyChanged(nameof(IsApplied));
             OnPropertyChanged(nameof(CanRemove));
+            OnPropertyChanged(nameof(CanRegisterNewDose));
             OnPropertyChanged(nameof(PrimaryActionText));
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(ApplicationDateText));

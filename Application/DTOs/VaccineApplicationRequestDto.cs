@@ -5,4 +5,5 @@ public sealed record VaccineApplicationRequestDto(
     string DoseKey,
     DateTime? ApplicationDate,
     string LotNumber,
-    string Notes);
+    string Notes,
+    bool IsNewPeriodicApplication = false);

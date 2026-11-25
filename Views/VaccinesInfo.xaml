@@ -17,6 +17,7 @@
         Margin="0"
         StrokeShape="RoundRectangle 8">
 
+        <ScrollView MaximumHeightRequest="560">
         <VerticalStackLayout Spacing="12">
             <VerticalStackLayout Spacing="4">
                 <Label
@@ -79,6 +80,9 @@
                 <Label Text="{Binding LotNumber}" Style="{StaticResource BodyMuted}"/>
             </VerticalStackLayout>
 
+            <Label Text="{Binding Guidance}" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
+            <Label Text="{Binding Source}" Style="{StaticResource BodyMuted}" FontSize="11" LineBreakMode="WordWrap"/>
+
             <VerticalStackLayout Spacing="2" IsVisible="{Binding HasNotes}">
                 <Label Text="Observacao" Style="{StaticResource FieldLabel}"/>
                 <Label
@@ -92,5 +96,6 @@
                 Style="{StaticResource GhostButton}"
                 Clicked="CloseButton_Clicked"/>
         </VerticalStackLayout>
+        </ScrollView>
     </Border>
 </tk:Popup>

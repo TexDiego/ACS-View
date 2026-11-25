@@ -47,6 +47,7 @@
                 <Grid IsVisible="{Binding HasKnownApplicationDate}">
                     <DatePicker
                         Date="{Binding ApplicationDate, Mode=TwoWay}"
+                        Format="dd/MM/yyyy"
                         IsEnabled="{Binding HasKnownApplicationDate}"
                         MaximumDate="{Binding MaximumDate}"/>
                 </Grid>

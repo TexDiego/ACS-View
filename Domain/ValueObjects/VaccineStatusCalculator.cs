@@ -19,10 +19,21 @@ public static class VaccineStatusCalculator
                 : VaccineStatus.Applied;
         }
 
+        if (!definition.IsRoutine ||
+            (definition.AdministrationAgeLimitMonthsExclusive is int limit && referenceDate.Date >= birthDate.Date.AddMonths(limit)))
+        {
+            return VaccineStatus.OutsideRoutine;
+        }
+
         var recommendedDate = GetRecommendedDate(birthDate, definition);
         if (referenceDate.Date < recommendedDate.Date)
         {
             return VaccineStatus.NotYetDue;
+        }
+
+        if (definition.RequiresAssessment || definition.RequiresPregnancy || definition.IsSeasonal || definition.RepeatIntervalMonths.HasValue)
+        {
+            return VaccineStatus.RequiresAssessment;
         }
 
         if (maximumDate.HasValue && referenceDate.Date > maximumDate.Value.Date)
@@ -35,6 +46,7 @@ public static class VaccineStatusCalculator
 
     public static DateTime GetRecommendedDate(DateTime birthDate, VaccineDoseDefinition definition)
     {
+        if (definition.ContextRecommendedDate is DateTime date) return date.Date;
         return definition.MinAgeMonths.HasValue
             ? birthDate.Date.AddMonths(definition.MinAgeMonths.Value)
             : birthDate.Date;

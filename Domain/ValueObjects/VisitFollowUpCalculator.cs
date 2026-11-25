@@ -26,8 +26,17 @@ public sealed record VisitRuleEvaluation(VisitCareLineType CareLine, int Require
     };
     public string RuleVersion => VisitScoringRuleCatalog.CurrentRuleVersion;
     public int Missing => Math.Max(0, Required - Completed);
-    public int Urgency => Status switch { VisitFollowUpStatus.Overdue => 5, VisitFollowUpStatus.DueSoon => 4,
-        VisitFollowUpStatus.Recommended => 3, VisitFollowUpStatus.InsufficientData => 2, _ => 0 };
+    public bool IsExpiredTemporaryRecommendation => Status == VisitFollowUpStatus.Overdue &&
+        CareLine is (VisitCareLineType.Child or VisitCareLineType.Pregnancy or VisitCareLineType.Postpartum);
+    public int Urgency => Status switch
+    {
+        VisitFollowUpStatus.DueSoon => 4,
+        VisitFollowUpStatus.Recommended => 3,
+        VisitFollowUpStatus.Overdue when !IsExpiredTemporaryRecommendation => 5,
+        VisitFollowUpStatus.Overdue => 2,
+        VisitFollowUpStatus.InsufficientData => 1,
+        _ => 0
+    };
     public string StatusText => Status switch { VisitFollowUpStatus.UpToDate => "Acompanhamento em dia",
         VisitFollowUpStatus.Recommended => "Visita recomendada", VisitFollowUpStatus.DueSoon => "Prazo próximo",
         VisitFollowUpStatus.Overdue => "Prazo vencido", VisitFollowUpStatus.InsufficientData => "Dados insuficientes",
@@ -62,7 +71,12 @@ public static class VisitFollowUpCalculator
                 deadline = expiry.AddDays(-1);
                 recommended = deadline;
             }
-            else if (dates.Count > 0) recommended = dates[0].AddDays(30) > today ? dates[0].AddDays(30) : today;
+            else if (selected.Count > 0)
+            {
+                // Once the rolling window loses compliance, plan from today or the next eligible day.
+                var nextEligibleDate = selected[0].AddDays(rule.MinimumDaysBetweenVisits.Value);
+                recommended = nextEligibleDate > today ? nextEligibleDate : today;
+            }
             progress = $"{Math.Min(count, rule.RequiredVisits)} de {rule.RequiredVisits} visitas válidas nos últimos 12 meses.";
         }
         else if (rule.Period == VisitRulePeriod.ChildMilestones)

@@ -30,6 +30,7 @@ await ConcurrentInitialization();
 await InterruptedMigration();
 await LegacyBooleanVaccines();
 await VaccineBatchRegistration();
+await VaccineManual2026Tests.Run(directory, Check);
 await LegacyAndRuntime();
 await ImportIntegration();
 Console.WriteLine($"{checks} migration and relational integration checks passed.");

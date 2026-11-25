@@ -305,14 +305,25 @@ public static class PatientFilterSqlBuilder
                           AND pvd.DoseKey = ? COLLATE NOCASE
                           AND COALESCE(pvd.IsApplied, 0) = 1
                     )
+                    {2}
+                    {3}
+                    {4}
                 )
                 """);
             overdueClauses[^1] = string.Format(
                 CultureInfo.InvariantCulture,
                 overdueClauses[^1],
                 PatientBirthDateSql,
-                definition.MaxAgeMonths!.Value);
+                definition.MaxAgeMonths!.Value,
+                definition.AdministrationAgeLimitMonthsExclusive is int limit
+                    ? $"AND date({PatientBirthDateSql}, '+{limit} months') > date('now', 'localtime')" : string.Empty,
+                definition.DoseKey is "TripliceViral-Infantil2" or "Varicela-Infantil1"
+                    ? "AND NOT EXISTS (SELECT 1 FROM PatientVaccineDose legacy WHERE legacy.UserId=p.UserId AND legacy.PatientId=p.Id AND legacy.DoseKey='TetraViral' COLLATE NOCASE AND COALESCE(legacy.IsApplied,0)=1)" : string.Empty,
+                definition.PreviousDoseKey is not null
+                    ? $"AND (SELECT COUNT(*) FROM PatientVaccineDose prior WHERE prior.UserId=p.UserId AND prior.PatientId=p.Id AND prior.DoseKey=? COLLATE NOCASE AND COALESCE(prior.IsApplied,0)=1 AND date({NormalizeDateSql("prior.AppliedAt")}, '+{definition.MinimumIntervalMonths} months', '+{definition.MinimumIntervalDays} days') <= date('now', 'localtime')) = 1"
+                    : string.Empty);
             parameters.Add(definition.DoseKey);
+            if (definition.PreviousDoseKey is not null) parameters.Add(definition.PreviousDoseKey);
         }
 
         if (overdueClauses.Count == 0)
@@ -321,7 +332,7 @@ public static class PatientFilterSqlBuilder
             return;
         }
 
-        whereParts.Add($"date({PatientBirthDateSql}, '+121 months') > date('now', 'localtime')");
+        whereParts.Add($"date({PatientBirthDateSql}, '+120 months') > date('now', 'localtime')");
         whereParts.Add($"({string.Join(" OR ", overdueClauses)})");
     }
 

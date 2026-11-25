@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
+             xmlns:icons="clr-namespace:ACS_View.Controls"
              x:Name="RootPage"
              x:DataType="vm:VaccinesPageViewModel"
              x:Class="ACS_View.Views.VaccinesPage"
@@ -9,11 +10,20 @@
              Style="{StaticResource PageBackground}"
              Title="{Binding HealthRecord.Name}">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            IconImageSource="{icons:ThemedIcon Icon=Info24}"
+            Text="Calendário vacinal"
+            Command="{Binding OpenVaccineCalendar}"/>
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="auto,*" Margin="15">
         <VerticalStackLayout
             Grid.Row="0"
             Spacing="12"
             IsVisible="{Binding HasPatient}">
+
+            <Label Text="{Binding ScheduleNotice}" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
 
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                 <Border Style="{StaticResource CardBorder}" Padding="10" Margin="0">
@@ -120,6 +130,13 @@
 
                             <VerticalStackLayout Grid.Row="2" Spacing="8">
                                 <Label Text="{Binding DeadlineText}" Style="{StaticResource BodyMuted}"/>
+                                <Label Text="{Binding Guidance}" Style="{StaticResource BodyMuted}" LineBreakMode="WordWrap"/>
+                                <Button Text="Registrar nova dose"
+                                        Style="{StaticResource PrimaryOutlineButton}"
+                                        HorizontalOptions="Start"
+                                        Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.RegisterNewDoseCommand}"
+                                        CommandParameter="{Binding .}"
+                                        IsVisible="{Binding CanRegisterNewDose}"/>
 
                                 <Label
                                     Text="{Binding NotesText}"

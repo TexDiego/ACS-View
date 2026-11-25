@@ -8,10 +8,10 @@ public partial class VaccineApplicationPopup : Popup<VaccineApplicationRequestDt
 {
     private readonly VaccineApplicationPopupViewModel viewModel;
 
-    public VaccineApplicationPopup(int patientId, PatientVaccineDoseDto dose)
+    public VaccineApplicationPopup(int patientId, PatientVaccineDoseDto dose, bool isNewPeriodicApplication = false)
     {
         InitializeComponent();
-        BindingContext = viewModel = new VaccineApplicationPopupViewModel(patientId, dose);
+        BindingContext = viewModel = new VaccineApplicationPopupViewModel(patientId, dose, isNewPeriodicApplication);
         Loaded += (_, _) => InputFocusGuard.ClearTextInputFocus(this);
     }
 

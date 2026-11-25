@@ -12,6 +12,8 @@ namespace ACS_View.ViewModels
         public string DoseName { get; }
         public string AgeLabel { get; }
         public string DiseaseDescription { get; }
+        public string Guidance { get; }
+        public string Source => VaccineDoseCatalog.Source;
         public string StatusText { get; }
         public string RecommendedText { get; }
         public string DeadlineText { get; }
@@ -27,16 +29,19 @@ namespace ACS_View.ViewModels
         {
             VaccineName = dose.Definition.VaccineName;
             DoseName = dose.Definition.DoseLabel;
+            Guidance = dose.Definition.Guidance ?? "Conferir esquema com a equipe de imunização.";
             AgeLabel = dose.Definition.AgeLabel ?? FormatRecommendedAge(dose.Definition.MinAgeMonths);
             DiseaseDescription = string.IsNullOrWhiteSpace(dose.Definition.DiseaseDescription)
                 ? NotAvailable
                 : dose.Definition.DiseaseDescription;
             StatusText = GetStatusText(dose.Status);
             StatusColor = GetStatusColor(dose.Status);
-            RecommendedText = $"Recomendada em {dose.RecommendedDate:dd/MM/yyyy}";
-            DeadlineText = dose.MaximumDate.HasValue
-                ? $"Prazo maximo: {dose.MaximumDate.Value:dd/MM/yyyy}"
-                : "Sem prazo maximo definido";
+            RecommendedText = dose.HasAgeBasedSchedule ? $"Recomendada em {dose.RecommendedDate:dd/MM/yyyy}" : "Conferir histórico e indicação antes de aprazar";
+            DeadlineText = dose.Definition.AdministrationAgeLimitMonthsExclusive is int limit
+                ? $"Limite da rotina: antes de completar {limit} meses"
+                : dose.HasAgeBasedSchedule && dose.MaximumDate.HasValue
+                    ? $"Janela recomendada até: {dose.MaximumDate.Value:dd/MM/yyyy}"
+                    : "Aprazamento conforme esquema e avaliação";
             HasApplication = dose.IsApplied;
             ApplicationDateText = dose.ApplicationDate.HasValue
                 ? $"Aplicada em {dose.ApplicationDate.Value:dd/MM/yyyy}"
@@ -78,6 +83,8 @@ namespace ACS_View.ViewModels
                 VaccineStatus.Late => "Atrasada",
                 VaccineStatus.Applied => "Aplicada",
                 VaccineStatus.AppliedLate => "Aplicada com atraso",
+                VaccineStatus.RequiresAssessment => "Conferir indicação / histórico",
+                VaccineStatus.OutsideRoutine => "Fora da rotina atual",
                 _ => "Indefinida"
             };
         }

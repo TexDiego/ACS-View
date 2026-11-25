@@ -31,6 +31,14 @@ internal static class VisitFollowUpIntegrationTests
             var summary=await service.GetPatientVisitSummaryAsync(patient.Id,today);
             check(summary.Evaluations.All(e=>e.Completed==2),"Two physical visits satisfy three evidenced care lines");
             check(!(await service.GetVisitSuggestionsAsync(today)).Any(s=>s.PatientId==patient.Id),"Compliant patient not repeatedly suggested each month");
+            var lastCompliantDay = new DateTime(2027, 3, 10);
+            var beforeExpiry = (await service.GetVisitSuggestionsAsync(lastCompliantDay)).Single(s => s.PatientId == patient.Id);
+            var afterExpiry = (await service.GetVisitSuggestionsAsync(lastCompliantDay.AddDays(1))).Single(s => s.PatientId == patient.Id);
+            var hypertension = afterExpiry.Summary!.Evaluations.Single(e => e.CareLine == VisitCareLineType.Hypertension);
+            check(beforeExpiry.DueDate == lastCompliantDay && hypertension.Completed == 1 &&
+                hypertension.RecommendedDate == lastCompliantDay.AddDays(1) &&
+                hypertension.Status == VisitFollowUpStatus.Recommended && !afterExpiry.IsOverdue,
+                "Expired hypertension window generates a new suggestion and preserves valid visit evidence");
             await service.RegisterVisitAsync(new Visits {PatientId=patient.Id,VisitDate=today.AddDays(-1),Status="Absent"});
             summary=await service.GetPatientVisitSummaryAsync(patient.Id,today);
             check(summary.LastCompletedVisit==new DateTime(2026,4,20) && summary.LastAttemptStatus=="Absent" && summary.Evaluations.All(e=>e.Completed==2),"Absent attempt separate from completed evidence");
@@ -66,8 +74,62 @@ internal static class VisitFollowUpIntegrationTests
             check((await service.GetPatientVisitSummaryAsync(child.Id,today)).Evaluations.All(e=>e.CareLine!=VisitCareLineType.Child),"Child exits eligible population on second birthday");
             await c.ExecuteAsync("UPDATE Patient SET BirthDate=NULL WHERE Id=?",child.Id);
             check((await service.GetPatientVisitSummaryAsync(child.Id,today)).Evaluations.All(e=>e.CareLine!=VisitCareLineType.Child),"Null birth does not materialize as newborn");
+            var overdueChild = new Patient { Name = "Synthetic overdue infant visit", BirthDate = today.AddDays(-31) };
+            var dueTodayChild = new Patient { Name = "Synthetic infant visit due today", BirthDate = today.AddDays(-30) };
+            await repo.InsertAsync(overdueChild);
+            await repo.InsertAsync(dueTodayChild);
+            var suggestions = await service.GetVisitSuggestionsAsync(today);
+            var overdue = suggestions.Single(s => s.PatientId == overdueChild.Id);
+            var dueToday = suggestions.Single(s => s.PatientId == dueTodayChild.Id);
+            var prenatal = suggestions.Single(s => s.PatientId == woman.Id);
+            check(overdue.IsOverdue && dueToday.DueDate == today && !dueToday.IsOverdue &&
+                suggestions.IndexOf(dueToday) < suggestions.IndexOf(overdue) &&
+                suggestions.IndexOf(prenatal) < suggestions.IndexOf(overdue),
+                "Visits due today and open prenatal recommendations precede expired infant visits");
+            await c.InsertAsync(new PatientConditions { UserId = 1, PatientId = overdueChild.Id, Description = "Diabetes" });
+            var mixed = (await service.GetVisitSuggestionsAsync(today)).Single(s => s.PatientId == overdueChild.Id);
+            check(mixed.Summary?.Primary?.CareLine == VisitCareLineType.Diabetes && !mixed.IsOverdue &&
+                mixed.Summary.Evaluations.Any(e => e.CareLine == VisitCareLineType.Child && e.Status == VisitFollowUpStatus.Overdue),
+                "An expired infant visit does not hide a current recommendation for the same patient");
+            var routinePatient = new Patient { Name = "Synthetic routine adult", BirthDate = today.AddYears(-35) };
+            await repo.InsertAsync(routinePatient);
+            var hypertensivePatient = new Patient { Name = "Synthetic hypertension priority", BirthDate = today.AddYears(-35) };
+            await repo.InsertAsync(hypertensivePatient);
+            await c.InsertAsync(new PatientConditions { UserId = 1, PatientId = hypertensivePatient.Id, Description = "Hipertensão" });
+            var expiredVisit = new Visits { UserId = 1, PatientId = hypertensivePatient.Id, VisitDate = today.AddYears(-1).AddDays(-1), Status = "Completed" };
+            await c.InsertAsync(expiredVisit);
+            await c.InsertAsync(new VisitCareLine { UserId = 1, VisitId = expiredVisit.Id, CareLineType = "Hypertension" });
+            foreach (var reference in new[] { today, new DateTime(2026, 11, 25), new DateTime(2027, 4, 21) })
+            {
+                var ordered = await service.GetVisitSuggestionsAsync(reference);
+                var routineIndex = ordered.FindIndex(s => s.PatientId == routinePatient.Id);
+                var riskIndex = ordered.FindIndex(s => s.PatientId == hypertensivePatient.Id);
+                check(riskIndex >= 0 && routineIndex >= 0 && riskIndex < routineIndex,
+                    "Continuous risk precedes routine visits before month end and after annual evidence expires");
+            }
+            var recentlyVisited = new Patient { Name = "AAA recently visited", BirthDate = today.AddYears(-70) };
+            var awaitingVisit = new Patient { Name = "ZZZ awaiting visit", BirthDate = today.AddYears(-70) };
+            foreach (var person in new[] { recentlyVisited, awaitingVisit })
+            {
+                await repo.InsertAsync(person);
+                foreach (var description in new[] { "Hipertensão", "Diabetes" })
+                    await c.InsertAsync(new PatientConditions { UserId = 1, PatientId = person.Id, Description = description });
+            }
+            await service.RegisterVisitAsync(new Visits { PatientId = recentlyVisited.Id, VisitDate = today.AddDays(-1), Status = "Completed" });
+            foreach (var reference in new[] { today, today.AddDays(28) })
+            {
+                var ordered = await service.GetVisitSuggestionsAsync(reference);
+                var recent = ordered.Single(s => s.PatientId == recentlyVisited.Id);
+                check(recent.Summary!.Evaluations.All(e => e.Completed == 1 && e.RecommendedDate == today.AddDays(29)) &&
+                    ordered.FindIndex(s => s.PatientId == awaitingVisit.Id) < ordered.IndexOf(recent),
+                    "Equivalent risk awaiting a visit precedes a patient waiting for the minimum interval");
+            }
+            var eligibleAgain = await service.GetVisitSuggestionsAsync(today.AddDays(29));
+            check(eligibleAgain.FindIndex(s => s.PatientId == recentlyVisited.Id) <
+                eligibleAgain.FindIndex(s => s.PatientId == awaitingVisit.Id),
+                "On the next eligible date the patient returns to normal risk ordering");
             await new DatabaseService(c).InitializeAsync();
-            check((await service.GetVisitRecordGroupsAsync(today,null)).SelectMany(g=>g.Visits).Count()==3,"Reinitialization preserves monthly history");
+            check((await service.GetVisitRecordGroupsAsync(today,null)).SelectMany(g=>g.Visits).Count()==4,"Reinitialization preserves monthly history");
         }
         finally { await c.CloseAsync(); }
     }

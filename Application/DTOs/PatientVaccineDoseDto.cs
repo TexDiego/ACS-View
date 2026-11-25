@@ -13,5 +13,6 @@ public sealed record PatientVaccineDoseDto(
     string Notes,
     VaccineStatus Status)
 {
-    public bool IsApplied => Status == VaccineStatus.Applied || ApplicationDate.HasValue;
+    public bool IsApplied => Status is VaccineStatus.Applied or VaccineStatus.AppliedLate || ApplicationDate.HasValue;
+    public bool HasAgeBasedSchedule => Status != VaccineStatus.RequiresAssessment && Definition.IsRoutine && !Definition.RequiresAssessment && !Definition.RequiresPregnancy && !Definition.IsSeasonal && !Definition.RepeatIntervalMonths.HasValue;
 }

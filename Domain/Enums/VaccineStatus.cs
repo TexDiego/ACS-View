@@ -6,5 +6,7 @@ public enum VaccineStatus
     Due,
     Late,
     Applied,
-    AppliedLate
+    AppliedLate,
+    RequiresAssessment,
+    OutsideRoutine
 }

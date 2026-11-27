@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.ValueObjects;
@@ -143,6 +143,8 @@ internal sealed class PatientFamilyLinkResolver(
             }
             if (resolution.PendingReason is { } pendingReason)
                 result.Errors.Add($"{(resolution.ResidenceConflict ? context.Patient.Name : $"{RowLabel(context)}: {context.Patient.Name}")}: responsável CNS '{context.FamilyResponsibleSus}' não associado: {pendingReason}");
+            if (context.RowNumber > 0 && context.Patient.HouseId > 0 && context.Patient.FamilyId <= 0)
+                result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: residência vinculada, mas família não identificada. Confira o responsável familiar; o cadastro está disponível na métrica 'Pacientes com residência sem família'.");
             if (context.IsFamilyResponsible && context.Patient.FamilyId <= 0)
                 result.Errors.Add($"{RowLabel(context)}: {context.Patient.Name}: responsável identificado, família pendente de residência.");
         }

@@ -1,4 +1,4 @@
-using ACS_View.Domain.ValueObjects;
+﻿using ACS_View.Domain.ValueObjects;
 using System.Globalization;
 
 namespace ACS_View.Application.Querying;
@@ -63,6 +63,9 @@ public static class PatientFilterSqlBuilder
         {
             case DashboardFilterKeys.NoHouse:
                 whereParts.Add("p.HouseId = -1");
+                return;
+            case DashboardFilterKeys.HouseWithoutFamily:
+                whereParts.Add("EXISTS (SELECT 1 FROM House h WHERE h.CasaId = p.HouseId AND h.UserId = p.UserId) AND COALESCE(p.FamilyId, 0) <= 0");
                 return;
             case DashboardFilterKeys.NoFamily:
                 whereParts.Add("p.FamilyId = -1");

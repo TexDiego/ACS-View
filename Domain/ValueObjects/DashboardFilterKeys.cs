@@ -1,4 +1,4 @@
-namespace ACS_View.Domain.ValueObjects;
+﻿namespace ACS_View.Domain.ValueObjects;
 
 public static class DashboardFilterKeys
 {
@@ -7,6 +7,7 @@ public static class DashboardFilterKeys
     public const string Families = "FAMILIES";
     public const string EmptyResidences = "EMPTY_RESIDENCES";
     public const string NoHouse = "NO_HOUSE";
+    public const string HouseWithoutFamily = "HOUSE_WITHOUT_FAMILY";
     public const string NoFamily = "NO_FAMILY";
     public const string BolsaFamilia = "BOLSA_FAMILIA";
     public const string Pregnant = "PREGNANT";

@@ -1,4 +1,4 @@
-using ACS_View.Domain.Entities;
+﻿using ACS_View.Domain.Entities;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.ValueObjects;
 using ACS_View.Application.DTOs;
@@ -450,6 +450,7 @@ namespace ACS_View.ViewModels
 
             return baseFilterKey switch
             {
+                DashboardFilterKeys.HouseWithoutFamily => "Pacientes com residência sem família",
                 DashboardFilterKeys.NoHouse => "Pacientes Sem Residência",
                 DashboardFilterKeys.NoFamily => "Pacientes Sem Família",
                 DashboardFilterKeys.BolsaFamilia => "Bolsa Família",

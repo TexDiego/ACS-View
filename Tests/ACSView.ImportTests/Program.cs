@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Entities.Health;
@@ -8,6 +8,19 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
+
+foreach (var (headers, expected) in new (string[], bool?)[]
+{
+    (["cadastro nome", "CEP", "logradouro"], true),
+    (["Nome", "SUS"], true),
+    (["logradouro", "numero imovel", "CEP"], false),
+    (["CEP", "Numero"], false),
+    (["Coluna desconhecida"], null)
+})
+{
+    using var input = Workbook([headers]);
+    Check(ImportFileClassifier.Detect(input) == expected, "Reconhece tipo pelas colunas: " + string.Join(", ", headers));
+}
 
 var patients = new List<Patient>();
 var houses = new List<House>();
@@ -72,6 +85,11 @@ Check(importProgress.Values.Count(p => p.CurrentStep.StartsWith("Resolvendo")) =
     "Linhas repetidas e etapas de vinculação contam um único paciente");
 Check(first.Entries.Any(e => e.EntityType == "Residência" && e.Status == "Importado"), "Residência criada na importação de pacientes também aparece na auditoria");
 Check(patients.Count == 1 && first.MergedCount == 1, "Linhas repetidas complementam o mesmo cadastro");
+Check(first.DuplicateRowCount == 1 && first.DuplicatePatientCount == 1 && first.Entries.Any(e => e.DuplicateOfRowNumber == 2 && e.RowNumber == 3), "Duplicidade interna registra linha original e paciente consolidado");
+Check(JsonSerializer.Deserialize<PatientImportResultDto>(JsonSerializer.Serialize(first))!.DuplicateRowCount == 1, "Histórico preserva a origem da duplicidade");
+var residenceSummary = new ResidenceImportSummaryDto();
+residenceSummary.Include(first.Entries);
+Check(residenceSummary.ImportedCount == 1 && residenceSummary.IgnoredCount == 0, "Resumo inclui residência criada por planilha de pacientes sem duplicar seu reuso");
 Check(patients[0].Observacao.Contains("A") && patients[0].Observacao.Contains("B"), "Observações complementares preservadas");
 Check(conditions.Count == 1 && patients[0].Sexo == "Masculino", "Campos vazios preservam condições e sexo");
 Check(houses.Count == 1 && patients[0].HouseId == 1, "Residência criada por CEP e número");
@@ -96,7 +114,21 @@ var repeat = await Import([["nome", "cns", "usa alcool"], ["Jose Silva", "111", 
 Check(importProgress.Values[0].ProcessedItems == 0 && importProgress.Values[^1] is { ProcessedItems: 1, TotalItems: 1 },
     "Cada importação conta o cadastro existente mesmo quando não há alterações");
 Check(repeat.MergedCount == 0 && repeat.IgnoredCount == 1 && repeat.Entries.Single().Reason.Contains("nenhuma atualização"), "Paciente repetido sem alterações é ignorado e nunca mesclado");
+residenceSummary.Include(mother.Entries);
+Check(residenceSummary.ImportedCount == 1 && residenceSummary.IgnoredCount == 0, "Dois arquivos de pacientes no mesmo lote contam a residência compartilhada uma única vez");
+var residenceReimport = new ResidenceImportSummaryDto();
+residenceReimport.Include(mother.Entries);
+Check(residenceReimport.ImportedCount == 0 && residenceReimport.IgnoredCount == 1, "Novo lote reconhece a residência existente como ignorada");
+var mixedResidenceSummary = new ResidenceImportSummaryDto();
+mixedResidenceSummary.Include(new HouseImportResultDto { ImportedCount = 1, Entries = [new() { EntityType = "Residência", RecordId = 1, Status = "Importado" }] });
+mixedResidenceSummary.Include(mother.Entries);
+Check(mixedResidenceSummary.ImportedCount == 1 && mixedResidenceSummary.IgnoredCount == 0, "Lote misto não conta novamente residência reutilizada por pacientes");
+mixedResidenceSummary.Include(new HouseImportResultDto { IgnoredCount = 2, Entries = [new() { EntityType = "Residência", Status = "Ignorado", RowNumber = 2 }] });
+Check(mixedResidenceSummary.IgnoredCount == 2, "Linhas inválidas sem residência identificada preservam contagem de ignoradas");
 Check(repeat.ImportedCount == 0 && conditions.Count == 1 && houses.Count == 1, "Reimportação não duplica cadastros, condições ou residências");
+var internalRepeat = await Import([["nome", "cns", "usa alcool"], ["Jose Silva", "111", "SIM"], ["Jose Silva", "111", "SIM"]]);
+Check(internalRepeat.DuplicateRowCount == 1 && internalRepeat.MergedCount == 0 && internalRepeat.IgnoredCount == 2 && internalRepeat.Entries.Single(e => e.DuplicateOfRowNumber.HasValue).DisplayText.Contains("linha 2"), "Repetição idêntica é visível como duplicidade mesmo sem atualizar cadastro existente");
+Check(repeat.DuplicateRowCount == 0 && second.DuplicateRowCount == 0, "Atualização de cadastro do app não é confundida com duplicidade interna");
 var conflict = await Import([
     ["nome", "cns", "nome da mae", "data nascimento", "diabetes", "coluna desconhecida"],
     ["Jose Silva", "999", "Maria Silva", "01/02/2010", "talvez", "valor externo"]

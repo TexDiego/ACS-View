@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using System.Text.Json;
@@ -32,16 +32,24 @@ public sealed class ImportHistoryPage : ContentPage
             try
             {
                 var report = JsonSerializer.Deserialize<PatientImportResultDto>(entry.ReportJson) ?? new();
-                var summary = new Label { Text = $"{entry.FileName}\nInício: {FormatDate(entry.StartedAt)}\nFim: {FormatDate(entry.FinishedAt)}\n{entry.Status}\nImportados: {report.ImportedCount} · Mesclados: {report.MergedCount} · Ignorados: {report.IgnoredCount}" };
+                var summary = new Label { Text = $"{entry.FileName}\nInício: {FormatDate(entry.StartedAt)}\nFim: {FormatDate(entry.FinishedAt)}\n{entry.Status}\nImportados: {report.ImportedCount} · Mesclados: {report.MergedCount} · Ignorados: {report.IgnoredCount}\nDuplicidades na planilha: {report.DuplicateRowCount} linhas repetidas de {report.DuplicatePatientCount} pacientes (inclui repetições sem alteração)." };
+                if (report.Entries.Any(item => item.EntityType == "Paciente"))
+                {
+                    var residences = new ResidenceImportSummaryDto();
+                    residences.Include(report.Entries);
+                    summary.Text += $"\nResidências identificadas neste arquivo: {residences.ImportedCount} importadas · {residences.UpdatedCount} mescladas · {residences.IgnoredCount} ignoradas/reutilizadas.";
+                }
+                if (report.DuplicateDetectionVersion is null)
+                    summary.Text += "\nEste relatório não registra a detecção de duplicidades internas da planilha.";
                 // Structured outcomes are authoritative for new imports. Older reports stay readable.
-                var entries = report.Entries.Select(item => (Status: item.Status, Text: item.DisplayText))
-                    .Concat(report.Errors.Select(text => (Status: "Pendência", Text: "Pendência · " + text)))
+                var entries = report.Entries.Select(item => (Status: item.Status, Text: item.DisplayText, Duplicate: item.DuplicateOfRowNumber.HasValue))
+                    .Concat(report.Errors.Select(text => (Status: "Pendência", Text: "Pendência · " + text, Duplicate: false)))
                     .Concat(report.Entries.Count == 0
-                        ? report.Details.Select(text => (Status: "Registro anterior", Text: "Registro anterior · " + text))
-                        : Enumerable.Empty<(string Status, string Text)>()).ToArray();
+                        ? report.Details.Select(text => (Status: "Registro anterior", Text: "Registro anterior · " + text, Duplicate: false))
+                        : Enumerable.Empty<(string Status, string Text, bool Duplicate)>()).ToArray();
                 var filter = new Picker { Title = "Filtrar por resultado" };
-                var statuses = new[] { "Todos", "Importado", "Mesclado", "Ignorado", "Pendência", "Vínculo ajustado", "Registro anterior" };
-                filter.ItemsSource = statuses.Select(status => status == "Todos" ? $"Todos ({entries.Length})" : $"{status} ({entries.Count(item => item.Status == status)})").ToArray();
+                var statuses = new[] { "Todos", "Duplicidade na planilha", "Importado", "Mesclado", "Ignorado", "Pendência", "Vínculo ajustado", "Registro anterior" };
+                filter.ItemsSource = statuses.Select(status => status == "Todos" ? $"Todos ({entries.Length})" : $"{status} ({entries.Count(item => status == "Duplicidade na planilha" ? item.Duplicate : item.Status == status)})").ToArray();
                 filter.SelectedIndex = 0;
                 var search = new SearchBar { Placeholder = "Buscar cadastro, linha, campo ou motivo" };
                 var count = new Label();
@@ -55,7 +63,7 @@ public sealed class ImportHistoryPage : ContentPage
                 void ApplyFilters()
                 {
                     var selected = statuses[Math.Max(0, filter.SelectedIndex)];
-                    var visible = entries.Where(item => (selected == "Todos" || item.Status == selected) &&
+                    var visible = entries.Where(item => (selected == "Todos" || (selected == "Duplicidade na planilha" ? item.Duplicate : item.Status == selected)) &&
                         (string.IsNullOrWhiteSpace(search.Text) || item.Text.Contains(search.Text, StringComparison.CurrentCultureIgnoreCase)))
                         .Select(item => item.Text).ToArray();
                     lines.ItemsSource = visible;

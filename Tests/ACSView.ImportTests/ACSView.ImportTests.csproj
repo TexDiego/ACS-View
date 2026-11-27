@@ -67,6 +67,8 @@
     <Compile Include="../../Domain/ValueObjects/BolsaFamiliaBeneficiary.cs" Link="Domain/ValueObjects/BolsaFamiliaBeneficiary.cs" />
     <Compile Include="../../Domain/Enums/Sexo.cs" Link="Domain/Enums/Sexo.cs" />
     <Compile Include="../../UseCases/Services/ImportColumnMapper.cs" />
+    <Compile Include="../../UseCases/Services/ImportFileClassifier.cs" />
+    <Compile Include="../../Application/DTOs/ResidenceImportSummaryDto.cs" />
     <Compile Include="../../UseCases/Services/HouseImportService.cs" />
     <Compile Include="../../Application/Interfaces/IHouseImportService.cs" />
     <Compile Include="../../Application/DTOs/HouseImportColumnMapDto.cs" />

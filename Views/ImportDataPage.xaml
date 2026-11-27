@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ACS_View.ViewModels"
@@ -11,13 +11,13 @@
         <VerticalStackLayout Padding="{StaticResource PagePadding}" Spacing="14">
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Pacientes" Style="{StaticResource SectionTitle}"/>
+                    <Label Text="Pacientes e residências" Style="{StaticResource SectionTitle}"/>
 
-                    <Label Text="Selecione um ou mais arquivos. As planilhas são processadas em sequência e complementam os cadastros, condições de saúde e vínculos familiares."
+                    <Label Text="Selecione arquivos de pacientes e/ou residências. O conteúdo é reconhecido automaticamente; as residências são importadas primeiro. As planilhas complementam os cadastros, condições de saúde e vínculos familiares."
                            Style="{StaticResource BodyMuted}"
                            LineBreakMode="WordWrap"/>
 
-                    <Button Text="Selecionar planilhas de pacientes"
+                    <Button Text="Selecionar planilhas"
                             Style="{StaticResource Buttons}"
                             IsEnabled="{Binding CanStartImport}"
                             Command="{Binding ImportPatientsCommand}"/>
@@ -39,35 +39,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Residências" Style="{StaticResource SectionTitle}"/>
 
-                    <Label Text="As colunas de endereços das residências são reconhecidas automaticamente."
-                           Style="{StaticResource BodyMuted}"
-                           LineBreakMode="WordWrap"/>
-
-                    <Button Text="Selecionar planilha de residências"
-                            Style="{StaticResource Buttons}"
-                            IsEnabled="{Binding CanStartHouseImport}"
-                            Command="{Binding ImportHousesCommand}"/>
-
-                    <VerticalStackLayout Spacing="8" IsVisible="{Binding IsHouseImporting}">
-                        <ProgressBar Progress="{Binding HouseImportProgress}"/>
-                        <Label Text="{Binding HouseImportProgressText}"
-                               Style="{StaticResource BodyMuted}"
-                               LineBreakMode="WordWrap"/>
-                        <Button Text="Cancelar importação"
-                                Style="{StaticResource GhostButton}"
-                                IsEnabled="{Binding CanCancelHouseImport}"
-                                Command="{Binding CancelHouseImportCommand}"/>
-                    </VerticalStackLayout>
-
-                    <Label Text="{Binding HouseImportSummary}"
-                           Style="{StaticResource BodyMuted}"
-                           LineBreakMode="WordWrap"/>
-                </VerticalStackLayout>
-            </Border>
 
             <Label 
                 Text="As colunas equivalentes são reconhecidas automaticamente. Campos ausentes ou vazios preservam o cadastro; valores preenchidos atualizam os dados. As observações são complementadas." 

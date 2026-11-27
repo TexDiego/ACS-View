@@ -1,4 +1,4 @@
-namespace ACS_View.Domain.ValueObjects;
+﻿namespace ACS_View.Domain.ValueObjects;
 
 public static class DashboardMetricCombinationRules
 {
@@ -16,6 +16,7 @@ public static class DashboardMetricCombinationRules
     private static readonly HashSet<string> PatientGeneralFilterKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         DashboardFilterKeys.NoHouse,
+        DashboardFilterKeys.HouseWithoutFamily,
         DashboardFilterKeys.NoFamily,
         DashboardFilterKeys.BolsaFamilia,
         DashboardFilterKeys.Elderly,

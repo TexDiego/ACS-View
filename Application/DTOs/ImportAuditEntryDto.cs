@@ -1,15 +1,17 @@
-namespace ACS_View.Application.DTOs;
+﻿namespace ACS_View.Application.DTOs;
 
 public sealed class ImportAuditEntryDto
 {
     public string EntityType { get; set; } = "Paciente";
     public int RowNumber { get; set; }
     public int? RecordId { get; set; }
+    public int? DuplicateOfRowNumber { get; set; }
     public string Status { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Changes { get; set; } = string.Empty;
     public string DisplayText => $"{Status} · {EntityType} · {(RowNumber > 0 ? $"Linha {RowNumber}" : "Cadastro relacionado")} · {Description}" +
+        (DuplicateOfRowNumber is { } firstRow ? $" · Duplicidade na planilha (mesmo paciente da linha {firstRow})" : "") +
         (RecordId is { } id ? $" · Cadastro #{id}" : "") + $"\n{Reason}" +
         (string.IsNullOrWhiteSpace(Changes) ? "" : $"\n{Changes}");
 

@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using ACS_View.Domain.Entities;
 using ACS_View.Domain.Enums;
@@ -26,7 +26,7 @@ namespace ACS_View.UseCases.Services
             IProgress<ImportProgressDto>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var result = new PatientImportResultDto();
+            var result = new PatientImportResultDto { DuplicateDetectionVersion = 1 };
             var history = new ImportHistory { FileName = columnMap.SourceFileName, StartedAt = DateTimeOffset.Now.ToString("O"), Status = "Concluída" };
             try
             {
@@ -84,6 +84,7 @@ namespace ACS_View.UseCases.Services
             var dataRowCount = rows.Skip(headerMatch.Value.RowIndex + 1)
                 .Count(row => !row.All(string.IsNullOrWhiteSpace));
             var readPatientIds = new HashSet<int>();
+            var firstRowByPatientId = new Dictionary<int, int>();
 
             Report(progress, 0, dataRowCount, "Importando pacientes");
 
@@ -230,10 +231,12 @@ namespace ACS_View.UseCases.Services
                     entry = new ImportAuditEntryDto
                     {
                         RowNumber = rowIndex + 1, RecordId = patient.Id, Description = patient.Name,
+                        DuplicateOfRowNumber = firstRowByPatientId.TryGetValue(patient.Id, out var firstRow) ? firstRow : null,
                         Status = !isExistingPatient ? "Importado" : patientChanged ? "Mesclado" : "Ignorado",
                         Reason = !isExistingPatient ? "Novo paciente cadastrado." : patientChanged ? "Cadastro existente atualizado com os dados da planilha." : "Paciente já cadastrado; nenhuma atualização nos dados, condições ou benefício.",
                         Changes = before == null ? "" : DescribeChanges(before, patient)
                     };
+                    firstRowByPatientId.TryAdd(patient.Id, rowIndex + 1);
                     result.Entries.Add(entry);
                     if (!isExistingPatient) result.ImportedCount++;
                     else if (patientChanged) { result.MergedCount++; result.UpdatedCount++; }

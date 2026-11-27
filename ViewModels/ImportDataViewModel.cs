@@ -1,4 +1,4 @@
-using ACS_View.Application.DTOs;
+﻿using ACS_View.Application.DTOs;
 using ACS_View.Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
@@ -17,30 +17,20 @@ public partial class ImportDataViewModel(
     [ObservableProperty] private bool canCancelImport;
     [ObservableProperty] private double importProgress;
     [ObservableProperty] private string importProgressText = string.Empty;
-    [ObservableProperty] private string houseImportSummary = string.Empty;
-    [ObservableProperty] private bool isHouseImporting;
-    [ObservableProperty] private bool canStartHouseImport = true;
-    [ObservableProperty] private bool canCancelHouseImport;
-    [ObservableProperty] private double houseImportProgress;
-    [ObservableProperty] private string houseImportProgressText = string.Empty;
-
     public ICommand OpenImportHistoryCommand => new Command(async () => await Shell.Current.Navigation.PushAsync(new ACS_View.Views.ImportHistoryPage(historyService)));
 
     public ICommand ImportPatientsCommand => new Command(async () => await ImportPatientsAsync());
-    public ICommand ImportHousesCommand => new Command(async () => await ImportHousesAsync());
     public ICommand CancelImportCommand => new Command(CancelImport);
-    public ICommand CancelHouseImportCommand => new Command(CancelHouseImport);
 
     private CancellationTokenSource? importCancellationTokenSource;
-    private CancellationTokenSource? houseImportCancellationTokenSource;
 
     private async Task ImportPatientsAsync()
     {
-        if (IsImporting || IsHouseImporting) return;
+        if (IsImporting) return;
         IsImporting = true;
         ImportProgress = 0;
         ImportProgressText = "Selecionando arquivos…";
-        CanStartImport = CanStartHouseImport = false;
+        CanStartImport = false;
         try
         {
             var files = await PickPatientSpreadsheetsAsync();
@@ -51,35 +41,65 @@ public partial class ImportDataViewModel(
             var cancellationToken = importCancellationTokenSource.Token;
 
             CanCancelImport = true;
+            PatientImportSummary = string.Empty;
             ImportProgress = 0;
             ImportProgressText = "Preparando importação...";
 
-            var total = new PatientImportResultDto();
-            var readPatientIds = new HashSet<int>();
             var failures = new List<string>();
-            for (var index = 0; index < files.Count; index++)
+            var detected = new List<(FileResult File, bool Patients)>();
+            foreach (var file in files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var file = files[index];
+                ImportProgressText = $"Identificando {file.FileName}…";
+                try
+                {
+                    await using var input = await file.OpenReadAsync();
+                    var kind = await Task.Run(() => ACS_View.UseCases.Services.ImportFileClassifier.Detect(input), cancellationToken);
+                    if (kind is null) failures.Add($"{file.FileName}: colunas não reconhecidas para pacientes ou residências.");
+                    else detected.Add((file, kind.Value));
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception ex) { failures.Add($"{file.FileName}: {ex.GetBaseException().Message}"); }
+            }
+            detected = detected.OrderBy(item => item.Patients).ToList();
+            var houseTotal = new ResidenceImportSummaryDto();
+            var houseErrorCount = 0;
+            var total = new PatientImportResultDto();
+            var readPatientIds = new HashSet<int>();
+            for (var index = 0; index < detected.Count; index++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var (file, isPatientFile) = detected[index];
                 var fileIndex = index;
                 var progress = new Progress<ImportProgressDto>(value =>
                 {
-                    ImportProgress = (fileIndex + value.Progress) / files.Count;
-                    ImportProgressText = $"Arquivo {fileIndex + 1}/{files.Count} · {file.FileName}: {BuildProgressText(value)} · {FormatPatientCount(value.ProcessedItems)}";
+                    ImportProgress = (fileIndex + value.Progress) / Math.Max(1, detected.Count);
+                    ImportProgressText = $"Arquivo {fileIndex + 1}/{detected.Count} · {file.FileName}: {BuildProgressText(value)} · {(isPatientFile ? FormatPatientCount(value.ProcessedItems) : "Residências")}";
                 });
                 try
                 {
                     await using var stream = await file.OpenReadAsync();
+                    if (!isPatientFile)
+                    {
+                        var houseMap = BuildHouseColumnMap();
+                        houseMap.SourceFileName = file.FileName;
+                        var houseResult = await Task.Run(() => houseImportService.ImportAsync(stream, houseMap, progress, cancellationToken), cancellationToken);
+                        houseTotal.Include(houseResult);
+                        houseErrorCount += houseResult.Errors.Count;
+                        continue;
+                    }
                     var columnMap = BuildPatientColumnMap();
                     columnMap.SourceFileName = file.FileName;
                     // Sequential persistence lets each spreadsheet complement the preceding ones,
                     // including pending family links, without racing identity creation.
                     var result = await Task.Run(() => patientImportService.ImportAsync(stream, columnMap, progress, cancellationToken), cancellationToken);
+                    houseTotal.Include(result.Entries);
                     total.ImportedCount += result.ImportedCount;
                     total.UpdatedCount += result.UpdatedCount;
                     total.MergedCount += result.MergedCount;
                     total.IgnoredCount += result.IgnoredCount;
                     total.Errors.AddRange(result.Errors);
+                    total.Entries.AddRange(result.Entries);
                     foreach (var entry in result.Entries)
                     {
                         if (entry.EntityType == "Paciente" && entry.RowNumber > 0 && entry.RecordId is > 0)
@@ -87,18 +107,18 @@ public partial class ImportDataViewModel(
                             readPatientIds.Add(entry.RecordId.Value);
                         }
                     }
-                    PatientImportSummary = $"{index + 1}/{files.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount);
+                    PatientImportSummary = $"{index + 1}/{detected.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount);
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception ex) { failures.Add($"{file.FileName}: {ex.GetBaseException().Message}"); }
             }
             ImportProgress = 1;
             ImportProgressText = "Processamento dos arquivos concluído.";
-            PatientImportSummary = $"{files.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount) +
-                ". Consulte o histórico por arquivo.";
-            if (total.Errors.Count > 0 || failures.Count > 0)
+            PatientImportSummary = $"{detected.Count} arquivos · {FormatPatientCount(readPatientIds.Count)} · " + BuildSummary(total.ImportedCount, total.UpdatedCount, total.IgnoredCount) +
+                $". Duplicidades nas planilhas: {total.DuplicateRowCount} linhas repetidas. Residências: {BuildSummary(houseTotal.ImportedCount, houseTotal.UpdatedCount, houseTotal.IgnoredCount)}. Consulte o histórico por arquivo.";
+            if (total.Errors.Count + houseErrorCount > 0 || failures.Count > 0)
             {
-                await DisplayAlertAsync("Importação com pendências", $"{PatientImportSummary}\nPendências: {total.Errors.Count}. Arquivos interrompidos: {failures.Count}.\n" + string.Join("\n", failures), "Voltar");
+                await DisplayAlertAsync("Importação com pendências", $"{PatientImportSummary}\nPendências: {total.Errors.Count + houseErrorCount}. Arquivos interrompidos: {failures.Count}.\n" + string.Join("\n", failures), "Voltar");
                 return;
             }
 
@@ -112,80 +132,15 @@ public partial class ImportDataViewModel(
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            await DisplayAlertAsync("Erro", BuildImportErrorMessage("Não foi possível importar a planilha de pacientes.", ex), "Voltar");
+            await DisplayAlertAsync("Erro", BuildImportErrorMessage("Não foi possível concluir a importação.", ex), "Voltar");
         }
         finally
         {
             IsImporting = false;
-            CanStartImport = CanStartHouseImport = true;
+            CanStartImport = true;
             CanCancelImport = false;
             importCancellationTokenSource?.Dispose();
             importCancellationTokenSource = null;
-        }
-    }
-
-    private async Task ImportHousesAsync()
-    {
-        if (IsImporting || IsHouseImporting) return;
-        IsHouseImporting = true;
-        HouseImportProgress = 0;
-        HouseImportProgressText = "Selecionando arquivo…";
-        CanStartImport = CanStartHouseImport = false;
-        try
-        {
-            var file = await PickSpreadsheetAsync("Selecionar planilha de residências");
-            if (file is null)
-            {
-                return;
-            }
-
-            houseImportCancellationTokenSource?.Dispose();
-            houseImportCancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = houseImportCancellationTokenSource.Token;
-
-            CanCancelHouseImport = true;
-            HouseImportProgress = 0;
-            HouseImportProgressText = "Preparando importação...";
-
-            var progress = new Progress<ImportProgressDto>(value =>
-            {
-                HouseImportProgress = value.Progress;
-                HouseImportProgressText = BuildProgressText(value);
-            });
-
-            await using var stream = await file.OpenReadAsync();
-            var columnMap = BuildHouseColumnMap();
-            columnMap.SourceFileName = file.FileName;
-            var result = await Task.Run(
-                () => houseImportService.ImportAsync(stream, columnMap, progress, cancellationToken),
-                cancellationToken);
-
-            HouseImportSummary = BuildSummary(result.ImportedCount, result.UpdatedCount, result.IgnoredCount);
-
-            if (result.Errors.Count > 0)
-            {
-                await DisplayAlertAsync("Importação", $"{HouseImportSummary}\nPendências: {result.Errors.Count}. Abra o histórico para conferir cada linha.", "Voltar");
-                return;
-            }
-
-            await DisplayAlertAsync("Importação concluída", HouseImportSummary, "Voltar");
-        }
-        catch (OperationCanceledException)
-        {
-            await DisplayAlertAsync("Importação", "Importação cancelada.", "Voltar");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex);
-            await DisplayAlertAsync("Erro", BuildImportErrorMessage("Não foi possível importar a planilha de residencias.", ex), "Voltar");
-        }
-        finally
-        {
-            IsHouseImporting = false;
-            CanStartImport = CanStartHouseImport = true;
-            CanCancelHouseImport = false;
-            houseImportCancellationTokenSource?.Dispose();
-            houseImportCancellationTokenSource = null;
         }
     }
 
@@ -201,34 +156,14 @@ public partial class ImportDataViewModel(
         }
     }
 
-    private void CancelHouseImport()
-    {
-        if (CanCancelHouseImport)
-        {
-            houseImportCancellationTokenSource?.Cancel();
-        }
-    }
-
     private static async Task<List<FileResult>> PickPatientSpreadsheetsAsync()
     {
         using var interaction = (Microsoft.Maui.Controls.Application.Current as ACS_View.Views.App)?.BeginExternalInteraction();
         return (await FilePicker.Default.PickMultipleAsync(new PickOptions
         {
-            PickerTitle = "Selecionar planilhas de pacientes",
+            PickerTitle = "Selecionar planilhas de pacientes e residências",
             FileTypes = GetExcelFileTypes()
         }))?.ToList() ?? [];
-    }
-
-    private static async Task<FileResult?> PickSpreadsheetAsync(string title)
-    {
-        // Opening the system picker is part of this screen's workflow, not an app exit.
-        using var interaction = (Microsoft.Maui.Controls.Application.Current as ACS_View.Views.App)
-            ?.BeginExternalInteraction();
-        return await FilePicker.Default.PickAsync(new PickOptions
-        {
-            PickerTitle = title,
-            FileTypes = GetExcelFileTypes()
-        });
     }
 
     private static FilePickerFileType GetExcelFileTypes()

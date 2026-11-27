@@ -1,4 +1,4 @@
-using ACS_View.Application.Interfaces;
+﻿using ACS_View.Application.Interfaces;
 using ACS_View.Application.DTOs;
 using ACS_View.Domain.Enums;
 using ACS_View.Domain.ValueObjects;
@@ -131,6 +131,12 @@ public partial class OverallViewModel : BaseViewModel
                     Name = "Pacientes Sem Residência",
                     FilterKey = DashboardFilterKeys.NoHouse,
                     Total = metrics.TotalSemResidencia
+                });
+                MetricsDashboard.Add(new Dashboard()
+                {
+                    Name = "Pacientes com residência sem família",
+                    FilterKey = DashboardFilterKeys.HouseWithoutFamily,
+                    Total = await dash.CountPatientsByFilterAsync(DashboardFilterKeys.HouseWithoutFamily)
                 });
                 MetricsDashboard.Add(new Dashboard()
                 {

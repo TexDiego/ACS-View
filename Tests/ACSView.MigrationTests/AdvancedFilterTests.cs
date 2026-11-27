@@ -46,6 +46,10 @@ internal static class AdvancedFilterTests
             await Expect(new() { WithoutMotherName = true }, missing.Id, legacy.Id);
             await Expect(new() { WithoutFatherName = true }, missing.Id, secondary.Id, legacy.Id);
             await Expect(new() { WithoutHouse = true }, missing.Id, secondary.Id, legacy.Id);
+            await Expect(new() { FilterKey = "HOUSE_WITHOUT_FAMILY" }, complete.Id);
+            await c.ExecuteAsync("UPDATE Patient SET FamilyId=1 WHERE Id=?", complete.Id);
+            await Expect(new() { FilterKey = "HOUSE_WITHOUT_FAMILY" });
+            await c.ExecuteAsync("UPDATE Patient SET FamilyId=-1 WHERE Id=?", complete.Id);
             var all = new PatientListFilterDto { WithoutSusNumber = true, WithoutPhone = true, WithoutMotherName = true, WithoutFatherName = true, WithoutHouse = true };
             await Expect(all, missing.Id);
             var clone = all.Clone();
@@ -63,6 +67,7 @@ internal static class AdvancedFilterTests
             await Expect(new() { WithoutPhone = true, FilterKey = "INACTIVE" }, inactive.Id);
             context.SetCurrentUser(2);
             await Expect(all);
+            await Expect(new() { FilterKey = "HOUSE_WITHOUT_FAMILY" });
             check((await repository.GetListAsync(null, 0, 100, new())).TotalCount == 0, "Advanced list remains isolated by account");
             context.SetCurrentUser(1);
             // The real correction cycle must remove a patient from the filtered list.
